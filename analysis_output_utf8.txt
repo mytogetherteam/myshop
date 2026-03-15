@@ -1,0 +1,11 @@
+﻿Analyzing my_shop...                                            
+
+warning - The include file 'package:flutter_lints/flutter.yaml' in 'D:\my_shop\analysis_options.yaml' can't be found when analyzing 'D:\my_shop' - analysis_options.yaml:10:10 - include_file_not_found
+warning - Unused import: 'package:flutter_svg/flutter_svg.dart' - lib\core\presentation\widgets\app_logo.dart:2:8 - unused_import
+  error - Target of URI doesn't exist: '../../menu/presentation/screens/menu_page.dart' - lib\features\main_navigation\presentation\screens\main_navigation_screen.dart:4:8 - uri_does_not_exist
+  error - The method 'MenuPage' isn't defined for the type '_MainNavigationScreenState' - lib\features\main_navigation\presentation\screens\main_navigation_screen.dart:18:5 - undefined_method
+  error - The values in a const list literal must be constants - lib\features\main_navigation\presentation\screens\main_navigation_screen.dart:18:5 - non_constant_list_element
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\main_navigation\presentation\screens\main_navigation_screen.dart:32:35 - deprecated_member_use
+warning - Unused import: 'package:phosphor_flutter/phosphor_flutter.dart' - lib\features\menu\presentation\screens\menu_page.dart:3:8 - unused_import
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\menu\presentation\widgets\menu_item_card.dart:129:13 - deprecated_member_use
+

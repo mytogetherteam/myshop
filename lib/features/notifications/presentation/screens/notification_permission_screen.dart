@@ -1,0 +1,113 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:my_shop/core/notifications/notification_service.dart';
+import 'package:my_shop/core/data/services/storage_service.dart';
+
+class NotificationPermissionScreen extends StatelessWidget {
+  const NotificationPermissionScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    const primaryColor = Color(0xFFED3A72);
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+          child: Column(
+            children: [
+              const Spacer(),
+              // Icon/Illustration placeholder
+              Container(
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  color: primaryColor.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  PhosphorIconsFill.bellRinging,
+                  size: 80,
+                  color: primaryColor,
+                ),
+              ),
+              const SizedBox(height: 48),
+              Text(
+                'Don\'t Miss Out!',
+                style: GoogleFonts.poppins(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF1E293B),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Turn on notifications to get real-time updates on your orders, special offers, and new arrivals tailored for you.',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  color: const Color(0xFF64748B),
+                  height: 1.6,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const Spacer(),
+              // Action Buttons
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    await NotificationService().requestSystemPermission();
+                    if (context.mounted) {
+                      Navigator.pushReplacementNamed(context, '/navigation');
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Allow Notifications',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () async {
+                    await StorageService.instance.setNotificationHandled(true);
+                    if (context.mounted) {
+                      Navigator.pushReplacementNamed(context, '/navigation');
+                    }
+                  },
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: Text(
+                    'Maybe Later',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF94A3B8),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
