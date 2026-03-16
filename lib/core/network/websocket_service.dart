@@ -37,7 +37,7 @@ class WebSocketService {
     }
 
     _isConnecting = true;
-    debugPrint('🔌 Connecting to WebSocket...');
+    debugPrint('⏳ [WS] Connecting to WebSocket...');
 
     final token = await AuthService.instance.getAccessToken();
     if (token == null || token.isEmpty) {
@@ -53,16 +53,16 @@ class WebSocketService {
         onWebSocketError: (dynamic error) {
           _isConnecting = false;
           connectionStatus.value = false;
-          debugPrint('❌ WebSocket Error: $error');
+          debugPrint('🚨 [WS] Error: $error');
         },
-        onDebugMessage: (String message) => debugPrint('WS Debug: $message'),
+        onDebugMessage: (String message) => debugPrint('⚙️ [WS] Debug: $message'),
         stompConnectHeaders: {
           'Authorization': 'Bearer $token',
         },
-        onStompError: (frame) => debugPrint('Stomp Error: ${frame.body}'),
+        onStompError: (frame) => debugPrint('💥 [WS] Stomp Error: ${frame.body}'),
         onDisconnect: (frame) {
           connectionStatus.value = false;
-          debugPrint('🔴 WebSocket Disconnected');
+          debugPrint('🔌 [WS] Disconnected');
         },
         heartbeatOutgoing: const Duration(milliseconds: 10000),
         heartbeatIncoming: const Duration(milliseconds: 10000),
@@ -75,7 +75,7 @@ class WebSocketService {
   void onConnect(dynamic frame) async {
     _isConnecting = false;
     connectionStatus.value = true;
-    debugPrint('🟢 WebSocket Connected');
+    debugPrint('✨ [WS] Connected Successfully');
 
     final token = await AuthService.instance.getAccessToken();
     final headers = {
@@ -99,7 +99,7 @@ class WebSocketService {
           final String orderId = raw['orderId']?.toString() ?? 'unknown';
           final String status = raw['order']?['status'] ?? raw['status'] ?? 'unknown';
           
-          debugPrint('📩 WebSocket Message Received: $type [Status: $status] for Order $orderId');
+          debugPrint('📥 [WS] Message: $type | Order: $orderId | Status: $status');
           _orderUpdateController.add(raw);
         } catch (e) {
           debugPrint('⚠️ Error parsing socket message: $e');

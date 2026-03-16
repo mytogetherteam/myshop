@@ -62,9 +62,16 @@ class NotificationModel {
     );
   }
 
-  String get displayTitle => titleMm != null && titleMm!.isNotEmpty ? '$title\n$titleMm' : title;
-  String get displayBody => bodyMm != null && bodyMm!.isNotEmpty ? '$body\n$bodyMm' : body;
-  
+  String get displayTitle {
+    if (title.isNotEmpty) return title;
+    return titleMm ?? '';
+  }
+
+  String get displayBody {
+    if (body.isNotEmpty) return body;
+    return bodyMm ?? '';
+  }
+
   String get timeAgo {
     final difference = DateTime.now().difference(sentAt);
     if (difference.inMinutes < 1) return 'Just now';

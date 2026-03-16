@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:my_shop/features/orders/data/models/order_model.dart';
 import 'package:my_shop/core/network/api_client.dart';
@@ -74,7 +75,7 @@ class OrderService {
     return false;
   }
 
-  Future<bool> confirmOrder(String orderId, Map<String, dynamic> payload) async {
+  Future<Map<String, dynamic>> confirmOrder(String orderId, Map<String, dynamic> payload) async {
     try {
       final url = '$_ordersPath/$orderId/confirm';
       debugPrint('PUT REQUEST (confirmOrder): $url, Data: $payload');
@@ -86,15 +87,20 @@ class OrderService {
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = response.data;
         debugPrint('CONFIRM ORDER RESPONSE: $data');
-        return data['success'] == true;
+        return data;
+      }
+    } on DioException catch (e) {
+      debugPrint('API Error in confirmOrder: ${e.response?.data}');
+      if (e.response?.data != null && e.response?.data is Map) {
+        return e.response?.data;
       }
     } catch (e) {
       debugPrint('API Error in confirmOrder: $e');
     }
-    return false;
+    return {'success': false, 'details': 'Failed to connect to server'};
   }
 
-  Future<bool> verifyPayment(String orderId) async {
+  Future<Map<String, dynamic>> verifyPayment(String orderId) async {
     try {
       final url = '$_ordersPath/$orderId/verify-payment';
       debugPrint('PUT REQUEST (verifyPayment): $url');
@@ -103,10 +109,109 @@ class OrderService {
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = response.data;
         debugPrint('VERIFY PAYMENT RESPONSE: $data');
-        return data['success'] == true;
+        return data;
+      }
+    } on DioException catch (e) {
+      debugPrint('API Error in verifyPayment: ${e.response?.data}');
+      if (e.response?.data != null && e.response?.data is Map) {
+        return e.response?.data;
       }
     } catch (e) {
       debugPrint('API Error in verifyPayment: $e');
+    }
+    return {'success': false, 'details': 'Failed to connect to server'};
+  }
+
+  Future<bool> prepareOrder(String orderId) async {
+    try {
+      final url = '$_ordersPath/$orderId/prepare';
+      debugPrint('PUT REQUEST (prepareOrder): $url');
+      final response = await ApiClient().dio.put(url);
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = response.data;
+        debugPrint('PREPARE ORDER RESPONSE: $data');
+        return data['success'] == true;
+      }
+    } catch (e) {
+      debugPrint('API Error in prepareOrder: $e');
+    }
+    return false;
+  }
+
+  Future<bool> requestSlip(String orderId, String reason) async {
+    try {
+      final url = '$_ordersPath/$orderId/request-slip';
+      debugPrint('PUT REQUEST (requestSlip): $url, Reason: $reason');
+      final response = await ApiClient().dio.put(
+            url,
+            queryParameters: {'reason': reason},
+          );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = response.data;
+        debugPrint('REQUEST SLIP RESPONSE: $data');
+        return data['success'] == true;
+      }
+    } catch (e) {
+      debugPrint('API Error in requestSlip: $e');
+    }
+    return false;
+  }
+
+  Future<bool> dispatchOrder(String orderId) async {
+    try {
+      final url = '$_ordersPath/$orderId/dispatch';
+      debugPrint('PUT REQUEST (dispatchOrder): $url');
+      final response = await ApiClient().dio.put(url);
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = response.data;
+        debugPrint('DISPATCH ORDER RESPONSE: $data');
+        return data['success'] == true;
+      }
+    } catch (e) {
+      debugPrint('API Error in dispatchOrder: $e');
+    }
+    return false;
+  }
+
+  Future<bool> cancelOrder(String orderId, String? reason) async {
+    try {
+      final url = '$_ordersPath/$orderId/cancel';
+      debugPrint('PUT REQUEST (cancelOrder): $url, Reason: $reason');
+      final response = await ApiClient().dio.put(
+            url,
+            queryParameters: reason != null ? {'reason': reason} : null,
+          );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = response.data;
+        debugPrint('CANCEL ORDER RESPONSE: $data');
+        return data['success'] == true;
+      }
+    } catch (e) {
+      debugPrint('API Error in cancelOrder: $e');
+    }
+    return false;
+  }
+
+  Future<bool> completeOrder(String orderId, String proofPhotoUrl) async {
+    try {
+      final url = '$_ordersPath/$orderId/complete';
+      debugPrint('PUT REQUEST (completeOrder): $url, proofPhotoUrl: $proofPhotoUrl');
+      final response = await ApiClient().dio.put(
+            url,
+            queryParameters: {'proofPhotoUrl': proofPhotoUrl},
+          );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = response.data;
+        debugPrint('COMPLETE ORDER RESPONSE: $data');
+        return data['success'] == true;
+      }
+    } catch (e) {
+      debugPrint('API Error in completeOrder: $e');
     }
     return false;
   }

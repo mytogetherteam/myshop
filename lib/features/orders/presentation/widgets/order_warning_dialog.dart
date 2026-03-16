@@ -17,24 +17,35 @@ class OrderWarningDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = Color(0xFFED3A72);
-    
+    final bool isPaymentUploaded = order.status == 'PAYMENT_UPLOADED';
+
+    // Theme values
+    final Color primaryColor = isPaymentUploaded ? const Color(0xFFED3A72) : const Color(0xFFED3A72);
+    final Color gradientSecondary = isPaymentUploaded ? const Color(0xFFED3A72) : const Color(0xFFC2185B);
+    final Color backgroundColor = isPaymentUploaded ? const Color(0xFFF9EAEB) : Colors.white;
+    final Color alertBoxColor = isPaymentUploaded ? const Color(0xFFF6D8DE) : primaryColor.withValues(alpha: 0.05);
+    final Color alertBoxBorderColor = isPaymentUploaded ? const Color(0xFFE5BBC4) : primaryColor.withValues(alpha: 0.1);
+    final Color pillColor = isPaymentUploaded ? const Color(0xFFF0BDC8) : primaryColor.withValues(alpha: 0.1);
+    final Color textColor = const Color(0xFF1E293B);
+    final IconData icon = isPaymentUploaded ? PhosphorIconsBold.exclamationMark : PhosphorIconsFill.warningCircle;
+
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
       ),
       clipBehavior: Clip.antiAlias,
       insetPadding: const EdgeInsets.all(20),
+      backgroundColor: backgroundColor,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Header with Primary Gradient and Alert Icon
+          // Header
           Container(
             padding: const EdgeInsets.symmetric(vertical: 32),
             width: double.infinity,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [primaryColor, Color(0xFFC2185B)],
+                colors: [primaryColor, gradientSecondary],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -44,13 +55,13 @@ class OrderWarningDialog extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.8),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    PhosphorIconsFill.warningCircle,
-                    color: Colors.white,
-                    size: 56,
+                  child: Icon(
+                    icon,
+                    color: primaryColor,
+                    size: isPaymentUploaded ? 40 : 56,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -76,18 +87,19 @@ class OrderWarningDialog extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1E293B),
+                    color: textColor,
                   ),
                 ),
                 const SizedBox(height: 16),
                 
                 // Alert Box for Message
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+                  width: double.infinity,
                   decoration: BoxDecoration(
-                    color: primaryColor.withOpacity(0.05),
+                    color: alertBoxColor,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: primaryColor.withOpacity(0.1)),
+                    border: Border.all(color: alertBoxBorderColor),
                   ),
                   child: Column(
                     children: [
@@ -97,15 +109,15 @@ class OrderWarningDialog extends StatelessWidget {
                         style: GoogleFonts.poppins(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF1E293B),
+                          color: textColor,
                           height: 1.5,
                         ),
                       ),
                       const SizedBox(height: 12),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                         decoration: BoxDecoration(
-                          color: primaryColor.withOpacity(0.1),
+                          color: pillColor,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -137,7 +149,7 @@ class OrderWarningDialog extends StatelessWidget {
                         child: Text(
                           'Dismiss',
                           style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                             color: const Color(0xFF64748B),
                           ),
                         ),

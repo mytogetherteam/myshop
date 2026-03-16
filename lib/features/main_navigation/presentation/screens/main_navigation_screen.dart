@@ -25,6 +25,7 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0; // Set to Order tab as default based on request
   StreamSubscription? _socketSubscription;
+  final GlobalKey<OrdersScreenState> _ordersKey = GlobalKey<OrdersScreenState>();
 
   @override
   void initState() {
@@ -108,7 +109,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     });
   }
 
-  void _navigateToOrderDetail(OrderModel order) {
+  Future<void> _navigateToOrderDetail(OrderModel order) async {
     final routeName = 'order_detail_${order.id}';
     
     // Check if we are already viewing this order
@@ -125,20 +126,38 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       return;
     }
 
-    Navigator.push(
+    final result = await Navigator.push(
       context,
-      CupertinoPageRoute(
+      PageRouteBuilder(
         settings: RouteSettings(name: routeName),
-        builder: (_) => OrderDetailScreen(order: order),
+        pageBuilder: (context, animation, secondaryAnimation) => OrderDetailScreen(order: order),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeOut;
+          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          return SlideTransition(position: animation.drive(tween), child: child);
+        },
+        reverseTransitionDuration: Duration.zero,
       ),
     );
+
+    if (result != null && result is String) {
+      if (_currentIndex != 0) {
+        setState(() => _currentIndex = 0);
+      }
+      // Wait for build if we just switched tab
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _ordersKey.currentState?.switchToStatus(result);
+      });
+    }
   }
 
-  final List<Widget> _pages = const [
-    OrdersScreen(),
-    MenuPage(),
-    ReportPage(),
-    ProfilePage(),
+  List<Widget> get _pages => [
+    OrdersScreen(key: _ordersKey),
+    const MenuPage(),
+    const ReportPage(),
+    const ProfilePage(),
   ];
 
   @override

@@ -4,13 +4,23 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../data/models/order_model.dart';
+import '../../data/services/order_service.dart';
+import '../screens/orders_screen.dart';
 import '../screens/order_detail_screen.dart';
 import 'status_progress_indicator.dart';
+import 'package:my_shop/core/presentation/widgets/animated_ellipsis_text.dart';
 
 class OrderCard extends StatelessWidget {
   final OrderModel order;
+  final bool isPaymentTab;
+  final bool isDeliveryTab;
 
-  const OrderCard({super.key, required this.order});
+  const OrderCard({
+    super.key,
+    required this.order,
+    this.isPaymentTab = false,
+    this.isDeliveryTab = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -33,13 +43,32 @@ class OrderCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
-          onTap: () => Navigator.push(
-            context,
-            CupertinoPageRoute(
-              settings: RouteSettings(name: 'order_detail_${order.id}'),
-              builder: (_) => OrderDetailScreen(order: order),
-            ),
-          ),
+          onTap: () async {
+            final result = await Navigator.push(
+              context,
+              PageRouteBuilder(
+                settings: RouteSettings(name: 'order_detail_${order.id}'),
+                pageBuilder: (context, animation, secondaryAnimation) => OrderDetailScreen(order: order),
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  const begin = Offset(1.0, 0.0);
+                  const end = Offset.zero;
+                  const curve = Curves.easeOut;
+                  var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                  return SlideTransition(position: animation.drive(tween), child: child);
+                },
+                reverseTransitionDuration: Duration.zero,
+              ),
+            );
+            if (context.mounted) {
+              final state = context.findAncestorStateOfType<OrdersScreenState>();
+              if (state != null) {
+                state.fetchOrders();
+                if (result != null && result is String) {
+                  state.switchToStatus(result);
+                }
+              }
+            }
+          },
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -89,16 +118,6 @@ class OrderCard extends StatelessWidget {
                         color: const Color(0xFF64748B),
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    Icon(PhosphorIcons.moped(), size: 14, color: const Color(0xFFED3A72)),
-                    const SizedBox(width: 4),
-                    Text(
-                      order.deliveryType == 'DELIVERY' ? 'Delivery' : 'Pickup',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: const Color(0xFF64748B),
-                      ),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -141,28 +160,38 @@ class OrderCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFFFFF1F2),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFECDD3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Customer requested cancellation',
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFFE11D48),
-            ),
+          Row(
+            children: [
+              const Icon(PhosphorIconsFill.smileySad, color: Color(0xFFEF4444), size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Order Cancelled',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFFBE123C),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            'Customer change their mind before preparation started',
-            style: GoogleFonts.poppins(
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
-              color: const Color(0xFFF43F5E),
+          if (order.cancelReason != null && order.cancelReason!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              order.cancelReason!,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: const Color(0xFF9F1239),
+                height: 1.4,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -175,13 +204,26 @@ class OrderCard extends StatelessWidget {
       return SizedBox(
         width: double.infinity,
         child: ElevatedButton(
-          onPressed: () => Navigator.push(
-            context,
-            CupertinoPageRoute(
-              settings: RouteSettings(name: 'order_detail_${order.id}'),
-              builder: (_) => OrderDetailScreen(order: order),
-            ),
-          ),
+          onPressed: () async {
+            final result = await Navigator.push(
+              context,
+              PageRouteBuilder(
+                settings: RouteSettings(name: 'order_detail_${order.id}'),
+                pageBuilder: (context, animation, secondaryAnimation) => OrderDetailScreen(order: order),
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  const begin = Offset(1.0, 0.0);
+                  const end = Offset.zero;
+                  const curve = Curves.easeOut;
+                  var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                  return SlideTransition(position: animation.drive(tween), child: child);
+                },
+                reverseTransitionDuration: Duration.zero,
+              ),
+            );
+            if (result != null && result is String && context.mounted) {
+              context.findAncestorStateOfType<OrdersScreenState>()?.switchToStatus(result);
+            }
+          },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFF1F5F9),
             foregroundColor: const Color(0xFF1E293B),
@@ -212,10 +254,11 @@ class OrderCard extends StatelessWidget {
       case 'PAYMENT_UPLOADED':
         mainButtonText = 'Check Payment';
         break;
+      case 'CONFIRMED':
       case 'PAYMENT_SLIP_REQUESTED':
         mainButtonText = 'Waiting for payment';
-        mainButtonColor = const Color(0xFFF1F5F9);
-        mainButtonTextColor = const Color(0xFFD97706); // Amber/Orange as in image
+        mainButtonColor = const Color(0xFFED3A72);
+        mainButtonTextColor = Colors.white;
         isMainButtonEnabled = false;
         mainButtonIcon = Icons.access_time_outlined;
         break;
@@ -223,44 +266,69 @@ class OrderCard extends StatelessWidget {
         mainButtonText = 'Picked Up by Rider';
         break;
       case 'ON_THE_WAY':
-        mainButtonText = 'Delivered';
+        mainButtonText = isDeliveryTab ? 'Check Delivery' : 'Delivered';
+        break;
+      case 'READY_FOR_PICKUP':
+        mainButtonText = isDeliveryTab ? 'Check Delivery' : 'Mark as Delivered';
         break;
     }
 
+    final bool canCancel = !isPaymentTab && 
+                          order.status != 'CONFIRMED' && 
+                          order.status != 'PREPARING' && 
+                          order.status != 'ON_THE_WAY' &&
+                          order.status != 'DELIVERED' &&
+                          order.status != 'CANCELLED';
+
     return Row(
       children: [
-        Expanded(
-          child: OutlinedButton(
-            onPressed: () {},
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFFED3A72),
-              side: const BorderSide(color: Color(0xFFFEE2E2)),
-              backgroundColor: const Color(0xFFFFF1F2),
-              minimumSize: const Size(0, 54),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+        if (canCancel) ...[
+          Expanded(
+            child: OutlinedButton(
+              onPressed: () => _showCancelDialog(context),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFFED3A72),
+                side: const BorderSide(color: Color(0xFFFEE2E2)),
+                backgroundColor: const Color(0xFFFFF1F2),
+                minimumSize: const Size(0, 54),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-            ),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
               ),
             ),
           ),
-        ),
-        const SizedBox(width: 12),
+          const SizedBox(width: 12),
+        ],
         Expanded(
-          flex: 2,
+          flex: isPaymentTab ? 1 : 2,
           child: ElevatedButton(
-            onPressed: isMainButtonEnabled ? () => Navigator.push(
-              context,
-              CupertinoPageRoute(
-                settings: RouteSettings(name: 'order_detail_${order.id}'),
-                builder: (_) => OrderDetailScreen(order: order),
-              ),
-            ) : null,
+            onPressed: isMainButtonEnabled ? () async {
+              final result = await Navigator.push(
+                context,
+                PageRouteBuilder(
+                  settings: RouteSettings(name: 'order_detail_${order.id}'),
+                  pageBuilder: (context, animation, secondaryAnimation) => OrderDetailScreen(order: order),
+                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                    const begin = Offset(1.0, 0.0);
+                    const end = Offset.zero;
+                    const curve = Curves.easeOut;
+                    var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                    return SlideTransition(position: animation.drive(tween), child: child);
+                  },
+                  reverseTransitionDuration: Duration.zero,
+                ),
+              );
+              if (result != null && result is String && context.mounted) {
+                context.findAncestorStateOfType<OrdersScreenState>()?.switchToStatus(result);
+              }
+            } : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: mainButtonColor,
               foregroundColor: mainButtonTextColor,
@@ -279,18 +347,173 @@ class OrderCard extends StatelessWidget {
                   Icon(mainButtonIcon, size: 18),
                   const SizedBox(width: 8),
                 ],
-                Text(
-                  mainButtonText,
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
+                if (isMainButtonEnabled)
+                  Text(
+                    mainButtonText,
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  )
+                else
+                  AnimatedEllipsisText(
+                    text: mainButtonText,
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                      color: mainButtonTextColor,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
         ),
       ],
+    );
+  }
+
+  void _showCancelDialog(BuildContext context) {
+    final TextEditingController reasonController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Cancel Order',
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Are you sure you want to cancel this order? This action cannot be undone.',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Reason for cancellation',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF475569),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: reasonController,
+                maxLines: 3,
+                autofocus: true,
+                style: GoogleFonts.poppins(fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'Enter reason here...',
+                  hintStyle: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[400]),
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.all(16),
+                ),
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        side: const BorderSide(color: Color(0xFFE2E8F0)),
+                      ),
+                      child: Text(
+                        'No, Go Back',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF64748B),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final reason = reasonController.text.trim();
+                        Navigator.pop(context); // Close bottom sheet
+                        final success = await OrderService().cancelOrder(
+                          order.id, 
+                          reason.isEmpty ? null : reason
+                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(success ? 'Order cancelled' : 'Failed to cancel order'),
+                              backgroundColor: success ? Colors.green : Colors.red,
+                              behavior: SnackBarBehavior.fixed,
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFEF4444),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Yes, Cancel Order',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

@@ -1,15 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-class StatusProgressIndicator extends StatelessWidget {
+class StatusProgressIndicator extends StatefulWidget {
   final String status;
 
   const StatusProgressIndicator({super.key, required this.status});
 
   @override
+  State<StatusProgressIndicator> createState() => _StatusProgressIndicatorState();
+}
+
+class _StatusProgressIndicatorState extends State<StatusProgressIndicator> with TickerProviderStateMixin {
+  late AnimationController _lineController;
+
+  @override
+  void initState() {
+    super.initState();
+    _lineController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _lineController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     int activeStep = 0;
-    switch (status) {
+    switch (widget.status) {
       case 'PENDING':
       case 'CONFIRMED':
       case 'AWAITING_APPROVAL':
@@ -42,7 +64,7 @@ class StatusProgressIndicator extends StatelessWidget {
           _buildLine(1, activeStep),
           _buildStep(2, activeStep, PhosphorIconsRegular.cookingPot, PhosphorIconsFill.cookingPot, 'Cooking'),
           _buildLine(2, activeStep),
-          _buildStep(3, activeStep, PhosphorIconsRegular.bicycle, PhosphorIconsFill.bicycle, 'On way'),
+          _buildStep(3, activeStep, PhosphorIconsRegular.moped, PhosphorIconsFill.moped, 'On way'),
           _buildLine(3, activeStep),
           _buildStep(4, activeStep, PhosphorIconsRegular.houseLine, PhosphorIconsFill.houseLine, 'Done'),
         ],
@@ -52,7 +74,7 @@ class StatusProgressIndicator extends StatelessWidget {
 
   Widget _buildStep(int step, int activeStep, IconData icon, IconData activeIcon, String label) {
     final bool isActive = step <= activeStep;
-    final bool isCurrent = step == activeStep;
+    final bool isCurrent = step == activeStep && widget.status != 'DELIVERED' && widget.status != 'CANCELLED';
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -97,13 +119,62 @@ class StatusProgressIndicator extends StatelessWidget {
   }
 
   Widget _buildLine(int step, int activeStep) {
-    final bool isActive = step < activeStep;
+    final bool isCompleted = step < activeStep;
+    final bool isProcessing = step == activeStep && widget.status != 'DELIVERED' && widget.status != 'CANCELLED';
+    
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.only(top: 18.0),
-        child: Container(
-          height: 2,
-          color: isActive ? const Color(0xFFED3A72) : const Color(0xFFE2E8F0),
+        child: SizedBox(
+          height: 3,
+          child: Stack(
+            children: [
+              // Background track
+              Container(
+                height: 3,
+                color: const Color(0xFFE2E8F0),
+              ),
+              if (isCompleted)
+                Container(
+                  height: 3,
+                  color: const Color(0xFFED3A72),
+                ),
+              if (isProcessing)
+                AnimatedBuilder(
+                  animation: _lineController,
+                  builder: (context, child) {
+                    return LayoutBuilder(
+                      builder: (context, constraints) {
+                        final width = constraints.maxWidth;
+                        return Stack(
+                          clipBehavior: Clip.none,
+                          fit: StackFit.loose,
+                          children: [
+                            // Growing fill line with gradient
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Container(
+                                width: width * _lineController.value,
+                                height: 3,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(2),
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      const Color(0xFFED3A72).withValues(alpha: 0.1),
+                                      const Color(0xFFED3A72),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
+            ],
+          ),
         ),
       ),
     );

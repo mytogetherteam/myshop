@@ -17,10 +17,10 @@ class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
 
   @override
-  State<OrdersScreen> createState() => _OrdersScreenState();
+  State<OrdersScreen> createState() => OrdersScreenState();
 }
 
-class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderStateMixin {
+class OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final OrderService _orderService = OrderService();
   List<OrderModel> _allOrders = [];
@@ -35,7 +35,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
       // Rebuild to update tab badges color immediately during change
       setState(() {}); 
     });
-    _fetchOrders();
+    fetchOrders();
     _setupWebSocketListener();
   }
 
@@ -56,7 +56,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     });
   }
 
-  Future<void> _fetchOrders() async {
+  Future<void> fetchOrders() async {
     setState(() => _isLoading = true);
     final orders = await _orderService.getOrders();
     
@@ -66,7 +66,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
           SnackBar(
             content: const Text('Failed to load orders. Please try again.'),
             backgroundColor: Colors.redAccent,
-            behavior: SnackBarBehavior.floating,
+            behavior: SnackBarBehavior.fixed,
           ),
         );
         setState(() => _isLoading = false);
@@ -84,6 +84,30 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     _socketSubscription?.cancel();
     _tabController.dispose();
     super.dispose();
+  }
+
+  void switchToStatus(String status) {
+    int index = 0;
+    final upperStatus = status.toUpperCase();
+    
+    // Map order status to tab index
+    if (['PENDING', 'CONFIRMED', 'AWAITING_APPROVAL'].contains(upperStatus)) {
+      index = 0; // New order
+    } else if (['PAYMENT_SLIP_REQUESTED', 'PAYMENT_UPLOADED', 'PAYMENT_VERIFIED'].contains(upperStatus)) {
+      index = 1; // Payment
+    } else if (upperStatus == 'PREPARING') {
+      index = 2; // Preparing
+    } else if (upperStatus == 'ON_THE_WAY') {
+      index = 3; // Delivering
+    } else if (upperStatus == 'DELIVERED') {
+      index = 4; // Delivered
+    } else if (upperStatus == 'CANCELLED') {
+      index = 5; // Cancelled
+    }
+    
+    if (_tabController.index != index) {
+      _tabController.animateTo(index);
+    }
   }
 
   @override
@@ -242,12 +266,16 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
     }
 
     return RefreshIndicator(
-      onRefresh: _fetchOrders,
+      onRefresh: fetchOrders,
       child: ListView.builder(
         padding: const EdgeInsets.only(top: 12, bottom: 20),
         itemCount: filteredOrders.length,
         itemBuilder: (context, index) {
-          return OrderCard(order: filteredOrders[index]);
+          return OrderCard(
+            order: filteredOrders[index],
+            isPaymentTab: tab == 'PAYMENT',
+            isDeliveryTab: tab == 'DELIVERING',
+          );
         },
       ),
     );

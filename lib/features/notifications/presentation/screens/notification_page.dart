@@ -146,13 +146,31 @@ class _NotificationPageState extends State<NotificationPage> {
     if (mounted) {
       Navigator.pop(context); // Close loading
       if (order != null) {
-        Navigator.push(
+        final result = await Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => OrderDetailScreen(order: order)),
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => OrderDetailScreen(order: order),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              const begin = Offset(1.0, 0.0);
+              const end = Offset.zero;
+              const curve = Curves.easeOut;
+              var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+              return SlideTransition(position: animation.drive(tween), child: child);
+            },
+            reverseTransitionDuration: Duration.zero,
+          ),
         );
+
+        // If we popped with a status, we might want to tell the main screen
+        // But NotificationPage is a separate page. 
+        // We can't easily find MainNavigationScreen here without a GlobalKey or similar.
+        // However, if the user returns to the list later, the status might have changed.
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not find order details.')),
+          const SnackBar(
+            content: Text('Could not find order details.'),
+            behavior: SnackBarBehavior.fixed,
+          ),
         );
       }
     }
@@ -178,20 +196,7 @@ class _NotificationPageState extends State<NotificationPage> {
             color: const Color(0xFF1E293B),
           ),
         ),
-        actions: [
-          if (_notifications.any((n) => !n.isRead))
-            TextButton(
-              onPressed: _markAllRead,
-              child: Text(
-                'Mark all read',
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFFED3A72),
-                ),
-              ),
-            ),
-        ],
+        actions: const [],
       ),
       body: (_isLoading && _showLoadingThreshold)
           ? const Center(child: CustomLoadingIndicator(color: Colors.white))
@@ -295,19 +300,22 @@ class _NotificationPageState extends State<NotificationPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    noti.displayBody,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: _isCancelMessage(noti.displayTitle, noti.displayBody) 
-                          ? const Color(0xFFEF4444) 
-                          : const Color(0xFF64748B),
-                      height: 1.4,
+                  if (noti.displayBody.isNotEmpty && 
+                      noti.displayBody.toLowerCase() != noti.displayTitle.toLowerCase()) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      noti.displayBody,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: _isCancelMessage(noti.displayTitle, noti.displayBody) 
+                            ? const Color(0xFFEF4444) 
+                            : const Color(0xFF64748B),
+                        height: 1.4,
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -371,7 +379,7 @@ class _NotificationPageState extends State<NotificationPage> {
       return PhosphorIconsFill.package;
     }
     if (lowerTitle.contains('delivery') || lowerTitle.contains('out for delivery') || lowerBody.contains('delivering')) {
-      return PhosphorIconsFill.bicycle;
+      return PhosphorIconsFill.moped;
     }
     if (lowerTitle.contains('complete') || lowerBody.contains('completed') || lowerTitle.contains('ပြီးဆုံး')) {
       return PhosphorIconsFill.checkCircle;
@@ -382,7 +390,7 @@ class _NotificationPageState extends State<NotificationPage> {
 
     switch (noti.type) {
       case NotificationType.ORDER_STATUS:
-        return PhosphorIconsFill.truck;
+        return PhosphorIconsFill.bicycle;
       default:
         return PhosphorIconsFill.bell;
     }
