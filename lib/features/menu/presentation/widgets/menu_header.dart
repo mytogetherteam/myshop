@@ -40,7 +40,7 @@ class _MenuHeaderState extends State<MenuHeader> {
           ),
           const SizedBox(width: 12),
           Text(
-            'KFC',
+            'Shop Menu',
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w600,

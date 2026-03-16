@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'features/main_navigation/presentation/screens/main_navigation_screen.dart';
 import 'features/auth/presentation/screens/login_page.dart';
 import 'features/auth/presentation/widgets/auth_wrapper.dart';
 import 'features/notifications/presentation/screens/notification_permission_screen.dart';
