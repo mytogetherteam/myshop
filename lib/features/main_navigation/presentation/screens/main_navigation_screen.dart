@@ -16,19 +16,21 @@ import 'package:flutter/services.dart';
 import 'dart:async';
 
 class MainNavigationScreen extends StatefulWidget {
-  const MainNavigationScreen({super.key});
+  final int initialIndex;
+  const MainNavigationScreen({super.key, this.initialIndex = 0});
 
   @override
   State<MainNavigationScreen> createState() => _MainNavigationScreenState();
 }
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
-  int _currentIndex = 0; // Set to Order tab as default based on request
+  late int _currentIndex;
   StreamSubscription? _socketSubscription;
 
   @override
   void initState() {
     super.initState();
+    _currentIndex = widget.initialIndex;
     _setupWebSocketListener();
   }
 

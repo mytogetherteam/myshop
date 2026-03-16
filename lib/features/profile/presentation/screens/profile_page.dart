@@ -8,6 +8,10 @@ import 'package:my_shop/core/presentation/widgets/global_modal.dart';
 import 'package:my_shop/core/presentation/widgets/confirmation_sheet.dart';
 import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:my_shop/features/notifications/presentation/widgets/notification_badge_icon.dart';
+import 'package:flutter/cupertino.dart';
+import 'edit_shop_profile_page.dart';
+import 'operating_hours_page.dart';
+import 'delivery_settings_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -68,13 +72,17 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(width: 8),
         ],
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 20),
-          _buildProfileHeader(),
-          const SizedBox(height: 32),
-          _buildMenuItems(),
-        ],
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            _buildProfileHeader(),
+            const SizedBox(height: 24),
+            _buildShopSection(),
+            const SizedBox(height: 8),
+            _buildMenuItems(),
+          ],
+        ),
       ),
     );
   }
@@ -153,9 +161,66 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Widget _buildShopSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+          child: Text(
+            'Shop',
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF94A3B8),
+              letterSpacing: 0.8,
+            ),
+          ),
+        ),
+        _buildMenuOption(
+          icon: PhosphorIconsRegular.storefront,
+          title: 'Edit shop profile',
+          onTap: () => Navigator.push(
+            context,
+            CupertinoPageRoute(builder: (_) => const EditShopProfilePage()),
+          ),
+        ),
+        _buildMenuOption(
+          icon: PhosphorIconsRegular.clock,
+          title: 'Operating hours',
+          onTap: () => Navigator.push(
+            context,
+            CupertinoPageRoute(builder: (_) => const OperatingHoursPage()),
+          ),
+        ),
+        _buildMenuOption(
+          icon: PhosphorIconsRegular.motorcycle,
+          title: 'Delivery settings',
+          onTap: () => Navigator.push(
+            context,
+            CupertinoPageRoute(builder: (_) => const DeliverySettingsPage()),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildMenuItems() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+          child: Text(
+            'Account',
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF94A3B8),
+              letterSpacing: 0.8,
+            ),
+          ),
+        ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.user,
           title: 'Account Settings',
