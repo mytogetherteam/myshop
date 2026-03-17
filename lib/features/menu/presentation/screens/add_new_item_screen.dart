@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../data/models/menu_item_model.dart';
 import '../../data/models/menu_category_model.dart';
 import '../../data/services/menu_service.dart';
+import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 
 class AddNewItemScreen extends StatefulWidget {
   final MenuItemModel? item;
@@ -26,6 +27,12 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   MenuCategoryModel? _selectedCategory;
   bool _isLoadingCategories = true;
   bool _isSaving = false;
+
+  // New state for dynamic variants
+  final List<Map<String, String>> _variants = [
+    {'name': 'Chicken Zinger Burger', 'price': '75'},
+    {'name': 'Beef Patty Burger', 'price': '115'},
+  ];
 
   @override
   void initState() {
@@ -110,34 +117,40 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        // Additional handling could go here if we needed to force a specific route,
+        // but Navigator.pop should already be taking us to the MenuPage.
+      },
+      child: Scaffold(
         backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF1E293B), size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          widget.item != null ? widget.item!.displayName : 'Add new items',
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF1E293B), size: 20),
+            onPressed: () => Navigator.pop(context),
           ),
+          title: Text(
+            widget.item != null ? widget.item!.displayName : 'Add new items',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF1E293B),
+            ),
+          ),
+          centerTitle: true,
         ),
-        centerTitle: true,
-      ),
-      body: _isLoadingCategories 
-        ? const Center(child: CircularProgressIndicator(color: Color(0xFFED3973)))
-        : SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+        body: _isLoadingCategories 
+          ? _buildSkeletonForm()
+          : SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                   const SizedBox(height: 10),
                   _buildImageUploadSection(),
                   const SizedBox(height: 32),
@@ -155,13 +168,16 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   
                   const SizedBox(height: 32),
                   
-                  // Variants Section (Static for now as per design placeholder)
+                  // Variants Section
                   _buildSectionTitle('VARIANT'),
                   const SizedBox(height: 16),
-                  _buildVariantItem('Chicken Zinger Burger', '75'),
-                  _buildVariantItem('Beef Patty Burger', '115'),
+                  ..._variants.asMap().entries.map((entry) => _buildDismissibleVariant(entry.value, entry.key)),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      setState(() {
+                        _variants.add({'name': 'Variant name', 'price': '0000'});
+                      });
+                    },
                     style: TextButton.styleFrom(padding: EdgeInsets.zero),
                     child: Text(
                       '+ Add Variant',
@@ -181,12 +197,19 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   _buildAddOnSection(),
                   
                   const SizedBox(height: 40),
-                  _buildSaveButton(),
-                  const SizedBox(height: 40),
                 ],
               ),
             ),
           ),
+      bottomNavigationBar: !_isLoadingCategories
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: _buildSaveButton(),
+              ),
+            )
+          : null,
+      ),
     );
   }
 
@@ -370,52 +393,55 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     );
   }
 
-  Widget _buildVariantItem(String name, String price) {
+  Widget _buildDismissibleVariant(Map<String, String> variant, int index) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE2E8F0), width: 0.5),
+      child: Dismissible(
+        key: Key('variant_${index}_${variant['name']}'),
+        direction: DismissDirection.endToStart,
+        onDismissed: (direction) {
+          setState(() {
+            _variants.removeAt(index);
+          });
+        },
+        background: Container(
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 20),
+          decoration: BoxDecoration(
+            color: const Color(0xFFED3973),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: const Icon(Icons.delete_outline, color: Colors.white, size: 24),
+        ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8F0), width: 0.5),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                variant['name']!,
+                style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Row(
                 children: [
                   Text(
-                    name,
-                    style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
+                    '฿ ',
+                    style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500, color: const Color(0xFF94A3B8)),
                   ),
-                  Row(
-                    children: [
-                      Text(
-                        '฿ ',
-                        style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500, color: const Color(0xFF94A3B8)),
-                      ),
-                      Text(
-                        price,
-                        style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFFED3973)),
-                      ),
-                    ],
+                  Text(
+                    variant['price']!,
+                    style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFFED3973)),
                   ),
                 ],
               ),
-            ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFED3973),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.delete_outline, color: Colors.white, size: 20),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -448,7 +474,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         _buildAddOnItem('Extra Cheese', '10'),
         _buildAddOnItem('Bacon Strips', '35'),
         const SizedBox(height: 12),
-        _buildVariantItem('Add_on name', '0000'),
+        _buildDismissibleVariant({'name': 'Add_on name', 'price': '0000'}, 999), // Placeholder for add-on list
         const SizedBox(height: 8),
         TextButton(
           onPressed: () {},
@@ -527,6 +553,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
 
   Widget _buildSaveButton() {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
           width: double.infinity,
@@ -566,6 +593,35 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           ),
         ],
       ],
+    );
+  }
+
+  Widget _buildSkeletonForm() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Image skeleton
+          const Skeleton(width: double.infinity, height: 200),
+          const SizedBox(height: 32),
+          // Title skeleton
+          const Skeleton(width: 150, height: 20),
+          const SizedBox(height: 16),
+          // Field skeletons
+          const Skeleton(width: 100, height: 16),
+          const SizedBox(height: 8),
+          const Skeleton(width: double.infinity, height: 50),
+          const SizedBox(height: 16),
+          const Skeleton(width: 100, height: 16),
+          const SizedBox(height: 8),
+          const Skeleton(width: double.infinity, height: 80),
+          const SizedBox(height: 16),
+          const Skeleton(width: 100, height: 16),
+          const SizedBox(height: 8),
+          const Skeleton(width: double.infinity, height: 50),
+        ],
+      ),
     );
   }
 }

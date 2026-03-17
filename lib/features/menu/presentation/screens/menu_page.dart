@@ -7,6 +7,7 @@ import 'add_new_item_screen.dart';
 import '../../data/services/menu_service.dart';
 import '../../data/models/menu_item_model.dart';
 import '../../data/models/menu_category_model.dart';
+import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 
 class MenuPage extends StatefulWidget {
   const MenuPage({super.key});
@@ -23,10 +24,30 @@ class _MenuPageState extends State<MenuPage> {
   bool _isLoadingCategories = true;
   bool _isLoadingItems = true;
 
+  int _currentPage = 1;
+  bool _hasMore = true;
+  bool _isLoadingMoreItems = false;
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     _fetchCategories();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      if (!_isLoadingMoreItems && _hasMore) {
+        _fetchMoreItems();
+      }
+    }
   }
 
   Future<void> _fetchCategories() async {
@@ -49,19 +70,46 @@ class _MenuPageState extends State<MenuPage> {
     }
   }
 
-  Future<void> _fetchItems() async {
+  Future<void> _fetchItems({bool refresh = true}) async {
     if (_selectedCategory == null) return;
-    setState(() => _isLoadingItems = true);
+    
+    if (refresh) {
+      setState(() {
+        _isLoadingItems = true;
+        _currentPage = 1;
+        _hasMore = true;
+      });
+    }
     
     // If id is 0, fetch all items, otherwise filter by categoryId
     final int? filterId = _selectedCategory!.id == 0 ? null : _selectedCategory!.id;
-    final items = await _menuService.getMenuItems(categoryId: filterId);
+    final items = await _menuService.getMenuItems(
+      categoryId: filterId,
+      page: _currentPage,
+      limit: 20,
+    );
     
     if (mounted) {
       setState(() {
-        _items = items ?? [];
+        if (refresh) {
+          _items = items ?? [];
+        } else {
+          if (items != null) {
+            _items.addAll(items);
+          }
+        }
+        _hasMore = items != null && items.length == 20;
         _isLoadingItems = false;
       });
+    }
+  }
+
+  Future<void> _fetchMoreItems() async {
+    setState(() => _isLoadingMoreItems = true);
+    _currentPage++;
+    await _fetchItems(refresh: false);
+    if (mounted) {
+      setState(() => _isLoadingMoreItems = false);
     }
   }
 
@@ -71,7 +119,7 @@ class _MenuPageState extends State<MenuPage> {
       _selectedCategory = category;
       _items = []; // Clear current items while loading
     });
-    _fetchItems();
+    _fetchItems(refresh: true);
   }
 
   Future<void> _toggleItemAvailability(MenuItemModel item, bool available) async {
@@ -81,7 +129,7 @@ class _MenuPageState extends State<MenuPage> {
         const SnackBar(content: Text('Failed to update availability')),
       );
       // Revert if failed
-      _fetchItems();
+      _fetchItems(refresh: true);
     }
   }
 
@@ -100,6 +148,7 @@ class _MenuPageState extends State<MenuPage> {
                 },
                 color: const Color(0xFFED3A72),
                 child: SingleChildScrollView(
+                  controller: _scrollController,
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,12 +180,7 @@ class _MenuPageState extends State<MenuPage> {
                       const SizedBox(height: 24),
                       // Menu Sections
                       if (_isLoadingCategories || _isLoadingItems)
-                        const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(40.0),
-                            child: CircularProgressIndicator(color: Color(0xFFED3A72)),
-                          ),
-                        )
+                        _buildSkeletonList()
                       else if (_items.isEmpty)
                         Center(
                           child: Padding(
@@ -149,6 +193,17 @@ class _MenuPageState extends State<MenuPage> {
                         )
                       else
                         ..._buildMenuSections(),
+                      if (_isLoadingMoreItems)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24),
+                          child: Center(
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFED3A72)),
+                            ),
+                          ),
+                        ),
                       const SizedBox(height: 20),
                     ],
                   ),
@@ -215,7 +270,8 @@ class _MenuPageState extends State<MenuPage> {
             itemCount: entry.value.length,
             itemBuilder: (context, index) {
               final item = entry.value[index];
-              return InkWell(
+              return MenuItemCard(
+                item: item,
                 onTap: () async {
                   final result = await Navigator.push(
                     context,
@@ -224,15 +280,12 @@ class _MenuPageState extends State<MenuPage> {
                     ),
                   );
                   if (result == true) {
-                    _fetchItems();
+                    _fetchItems(refresh: true);
                   }
                 },
-                child: MenuItemCard(
-                  item: item,
-                  onAvailabilityChanged: (available) {
-                    _toggleItemAvailability(item, available);
-                  },
-                ),
+                onAvailabilityChanged: (available) {
+                  _toggleItemAvailability(item, available);
+                },
               );
             },
           ),
@@ -275,6 +328,48 @@ class _MenuPageState extends State<MenuPage> {
           onChanged: _onCategoryChanged,
         ),
       ),
+    );
+  }
+
+  Widget _buildSkeletonList() {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: 5,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Image Skeleton
+              const Skeleton(width: 72, height: 72),
+              const SizedBox(width: 16),
+              // Text Content Skeleton
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: const [
+                        Skeleton(width: 120, height: 16),
+                        Skeleton(width: 32, height: 16),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Skeleton(width: double.infinity, height: 12),
+                    const SizedBox(height: 4),
+                    const Skeleton(width: 150, height: 12),
+                    const SizedBox(height: 12),
+                    const Skeleton(width: 60, height: 14),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

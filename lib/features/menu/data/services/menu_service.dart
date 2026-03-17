@@ -25,9 +25,15 @@ class MenuService {
     return null;
   }
 
-  Future<List<MenuItemModel>?> getMenuItems({int? categoryId}) async {
+  Future<List<MenuItemModel>?> getMenuItems({int? categoryId, int page = 1, int limit = 20}) async {
     try {
-      final queryParams = categoryId != null ? {'categoryId': categoryId} : null;
+      final queryParams = <String, dynamic>{
+        'page': page,
+        'limit': limit,
+      };
+      if (categoryId != null) {
+        queryParams['categoryId'] = categoryId;
+      }
       debugPrint('GET REQUEST: $_menuItemsPath, Params: $queryParams');
       final response = await ApiClient().dio.get(
         _menuItemsPath,

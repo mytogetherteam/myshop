@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:my_shop/features/categories/presentation/screens/category_list_screen.dart';
 
 class QuickActionCards extends StatelessWidget {
   const QuickActionCards({super.key});
@@ -11,10 +12,18 @@ class QuickActionCards extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: _ActionCard(
-              title: 'Manage\nCategory',
-              imagePath: 'assets/images/Category.png',
-              backgroundColor: const Color(0xFFFDE6D2), // Soft cream/orange
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CategoryListScreen()),
+                );
+              },
+              child: _ActionCard(
+                title: 'Manage\nCategory',
+                imagePath: 'assets/images/Category.png',
+                backgroundColor: const Color(0xFFFDE6D2), // Soft cream/orange
+              ),
             ),
           ),
           const SizedBox(width: 10),

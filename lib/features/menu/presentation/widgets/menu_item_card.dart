@@ -5,11 +5,13 @@ import '../../data/models/menu_item_model.dart';
 class MenuItemCard extends StatefulWidget {
   final MenuItemModel item;
   final ValueChanged<bool>? onAvailabilityChanged;
+  final VoidCallback? onTap;
 
   const MenuItemCard({
     super.key,
     required this.item,
     this.onAvailabilityChanged,
+    this.onTap,
   });
 
   @override
@@ -40,83 +42,89 @@ class _MenuItemCardState extends State<MenuItemCard> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Item Image
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: widget.item.imageUrl != null
-                ? Image.network(
-                    widget.item.imageUrl!,
-                    width: 72,
-                    height: 72,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => _buildPlaceholderImage(),
-                  )
-                : _buildPlaceholderImage(),
-          ),
-          const SizedBox(width: 16),
-          // Content
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        widget.item.displayName,
-                        style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1E293B),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    _buildInStockSwitch(),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  widget.item.displayDescription,
-                  style: GoogleFonts.poppins(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w400,
-                    color: const Color(0xFF94A3B8),
+            child: InkWell(
+              onTap: widget.onTap,
+              splashColor: Colors.black.withValues(alpha: 0.02),
+              highlightColor: Colors.black.withValues(alpha: 0.01),
+              borderRadius: BorderRadius.circular(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Item Image
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: widget.item.imageUrl != null
+                        ? Image.network(
+                            widget.item.imageUrl!,
+                            width: 72,
+                            height: 72,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => _buildPlaceholderImage(),
+                          )
+                        : _buildPlaceholderImage(),
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    if (widget.item.originalPrice != null && widget.item.originalPrice! > widget.item.price) ...[
-                      Text(
-                        '${widget.item.originalPrice!.toInt()} THB',
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF94A3B8),
-                          decoration: TextDecoration.lineThrough,
+                  const SizedBox(width: 16),
+                  // Content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.item.displayName,
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF1E293B),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    Text(
-                      '${widget.item.price.toInt()} THB',
-                      style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFFED3A72),
-                      ),
+                        const SizedBox(height: 2),
+                        Text(
+                          widget.item.displayDescription,
+                          style: GoogleFonts.poppins(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFF94A3B8),
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            if (widget.item.originalPrice != null && widget.item.originalPrice! > widget.item.price) ...[
+                              Text(
+                                '${widget.item.originalPrice!.toInt()} THB',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFF94A3B8),
+                                  decoration: TextDecoration.lineThrough,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            Text(
+                              '${widget.item.price.toInt()} THB',
+                              style: GoogleFonts.poppins(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFFED3A72),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
+          const SizedBox(width: 16),
+          _buildInStockSwitch(),
         ],
       ),
     );

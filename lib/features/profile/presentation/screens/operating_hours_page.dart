@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
+import 'package:my_shop/features/profile/data/services/profile_service.dart';
 
 class OperatingHoursPage extends StatefulWidget {
-  const OperatingHoursPage({super.key});
+  final ShopProfileModel? shopProfile;
+  const OperatingHoursPage({super.key, this.shopProfile});
 
   @override
   State<OperatingHoursPage> createState() => _OperatingHoursPageState();
@@ -32,23 +35,35 @@ class _DayHours {
 
 class _OperatingHoursPageState extends State<OperatingHoursPage> {
   bool _isOpen = true;
+  bool _isTogglingStatus = false;
   bool _hasChanges = false;
+  bool _isSaving = false;
 
-  final List<String> _days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  final List<String> _days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   late List<_DayHours> _hours;
+
+  final ProfileService _profileService = ProfileService();
 
   @override
   void initState() {
     super.initState();
-    _hours = [
-      _DayHours(openTime: const TimeOfDay(hour: 9, minute: 0), closeTime: const TimeOfDay(hour: 22, minute: 0)),
-      _DayHours(openTime: const TimeOfDay(hour: 9, minute: 0), closeTime: const TimeOfDay(hour: 22, minute: 0)),
-      _DayHours(openTime: const TimeOfDay(hour: 9, minute: 0), closeTime: const TimeOfDay(hour: 22, minute: 0)),
-      _DayHours(openTime: const TimeOfDay(hour: 9, minute: 0), closeTime: const TimeOfDay(hour: 22, minute: 0)),
-      _DayHours(openTime: const TimeOfDay(hour: 9, minute: 0), closeTime: const TimeOfDay(hour: 22, minute: 0)),
-      _DayHours(openTime: const TimeOfDay(hour: 9, minute: 0), closeTime: const TimeOfDay(hour: 22, minute: 0)),
-      _DayHours(isClosed: true, openTime: const TimeOfDay(hour: 9, minute: 0), closeTime: const TimeOfDay(hour: 22, minute: 0)),
-    ];
+    final profile = widget.shopProfile;
+    _isOpen = profile?.isOpen ?? false;
+    
+    // Initialize with default 9am-10pm closed all over
+    _hours = List.generate(7, (index) => _DayHours(isClosed: true, openTime: const TimeOfDay(hour: 9, minute: 0), closeTime: const TimeOfDay(hour: 22, minute: 0)));
+
+    if (profile != null && profile.operatingHours.isNotEmpty) {
+      for (final h in profile.operatingHours) {
+        if (h.dayOfWeek >= 0 && h.dayOfWeek <= 6) {
+          _hours[h.dayOfWeek] = _DayHours(
+            isClosed: h.isClosed,
+            openTime: TimeOfDay(hour: h.openingTime.hour, minute: h.openingTime.minute),
+            closeTime: TimeOfDay(hour: h.closingTime.hour, minute: h.closingTime.minute),
+          );
+        }
+      }
+    }
   }
 
   void _markChanged() {
@@ -139,9 +154,54 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
     return result ?? false;
   }
 
-  void _save() {
-    setState(() => _hasChanges = false);
-    Navigator.of(context).pop();
+  Future<void> _save() async {
+    setState(() => _isSaving = true);
+    
+    final activeHours = [];
+    for (int i = 0; i < _hours.length; i++) {
+        final oh = _hours[i];
+        if (!oh.isClosed) {
+            activeHours.add({
+                'dayOfWeek': i,
+                'openTime': {
+                    'hour': oh.openTime.hour,
+                    'minute': oh.openTime.minute,
+                    'second': 0,
+                    'nano': 0
+                },
+                'closeTime': {
+                    'hour': oh.closeTime.hour,
+                    'minute': oh.closeTime.minute,
+                    'second': 0,
+                    'nano': 0
+                }
+            });
+        }
+    }
+    
+    final payload = {
+      'activeHours': activeHours
+    };
+
+    final success = await _profileService.updateOperatingHours(payload);
+    
+    if (!mounted) return;
+
+    if (success) {
+      setState(() {
+          _isSaving = false;
+          _hasChanges = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Operating hours saved successfully!')),
+      );
+      Navigator.of(context).pop();
+    } else {
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to save operating hours. Please try again.')),
+      );
+    }
   }
 
   @override
@@ -173,19 +233,8 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
               if (shouldPop && mounted) Navigator.of(context).pop();
             },
           ),
-          actions: [
-            TextButton(
-              onPressed: _save,
-              child: Text(
-                'Save',
-                style: GoogleFonts.poppins(
-                  color: const Color(0xFFED3973),
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
+          actions: const [
+            SizedBox(width: 8),
           ],
           bottom: const PreferredSize(
             preferredSize: Size.fromHeight(1),
@@ -193,7 +242,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
           ),
         ),
         body: ListView(
-          padding: const EdgeInsets.only(bottom: 32),
+          padding: const EdgeInsets.only(bottom: 24),
           children: [
             const SizedBox(height: 16),
             // Open/Closed banner
@@ -236,15 +285,47 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                         ],
                       ),
                     ),
-                    Switch(
-                      value: _isOpen,
-                      activeThumbColor: const Color(0xFF10B981),
-                      inactiveThumbColor: const Color(0xFFED3973),
-                      onChanged: (v) {
-                        setState(() => _isOpen = v);
-                        _markChanged();
-                      },
-                    ),
+                    _isTogglingStatus
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFED3973)),
+                          )
+                        : SizedBox(
+                            height: 24,
+                            child: Transform.scale(
+                              scale: 0.65,
+                              child: Switch(
+                                value: _isOpen,
+                                onChanged: (v) async {
+                                  setState(() => _isTogglingStatus = true);
+                                  final success = await _profileService.toggleShopStatus(v);
+                                  if (mounted) {
+                                    if (success) {
+                                      setState(() {
+                                        _isOpen = v;
+                                        _isTogglingStatus = false;
+                                      });
+                                    } else {
+                                      setState(() => _isTogglingStatus = false);
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Failed to change shop status.')),
+                                      );
+                                    }
+                                  }
+                                },
+                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                thumbColor: WidgetStateProperty.all(Colors.white),
+                                trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+                                trackColor: WidgetStateProperty.resolveWith((states) {
+                                  if (states.contains(WidgetState.selected)) {
+                                    return const Color(0xFFED3973); // Active pink
+                                  }
+                                  return const Color(0xFFE2E8F0); // Inactive gray
+                                }),
+                              ),
+                            ),
+                          ),
                   ],
                 ),
               ),
@@ -389,6 +470,37 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
               ),
             ),
           ],
+        ),
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _isSaving ? null : _save,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFED3973),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 0,
+                ),
+                child: _isSaving 
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                  : Text(
+                      'Save',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+              ),
+            ),
+          ),
         ),
       ),
     );

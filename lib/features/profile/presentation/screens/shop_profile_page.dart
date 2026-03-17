@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-
+import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
+import 'package:my_shop/features/profile/data/services/profile_service.dart';
+import 'package:my_shop/features/profile/presentation/screens/edit_shop_profile_page.dart';
+import 'package:my_shop/features/profile/presentation/screens/operating_hours_page.dart';
+import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 // ---------------------------------------------------------------------------
 // Demo data models
 // ---------------------------------------------------------------------------
@@ -55,10 +59,39 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
     _Review(reviewer: 'Kyaw Zin', rating: 4, date: 'Mar 5, 2026', comment: 'Good portion sizes and freshly cooked.', tags: ['Fresh', 'Good value']),
   ];
 
+  final ProfileService _profileService = ProfileService();
+  ShopProfileModel? _shopProfile;
+  bool _isLoading = true;
+  String? _errorMessage;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final profile = await _profileService.getShopProfile();
+
+    if (mounted) {
+      if (profile != null) {
+        setState(() {
+          _shopProfile = profile;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = 'Failed to load shop profile. Please try again.';
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -69,6 +102,33 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return _buildSkeletonProfile();
+    }
+
+    if (_errorMessage != null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const PhosphorIcon(PhosphorIconsRegular.warningCircle, size: 48, color: Color(0xFFED3973)),
+              const SizedBox(height: 16),
+              Text(_errorMessage!, style: GoogleFonts.poppins(color: const Color(0xFF475569))),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadProfile,
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFED3973)),
+                child: const Text('Retry'),
+              )
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: NestedScrollView(
@@ -147,6 +207,15 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
                   ),
                 ),
               ),
+              // Actual cover photo if exists
+              if (_shopProfile?.coverUrl != null && _shopProfile!.coverUrl!.isNotEmpty)
+                Positioned.fill(
+                  child: Image.network(
+                    _shopProfile!.coverUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => const SizedBox(),
+                  ),
+                ),
             ],
           ),
         ),
@@ -186,8 +255,15 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
                 end: Alignment.bottomRight,
               ),
             ),
-            child: Center(
-              child: Text('B', style: GoogleFonts.poppins(fontSize: 28, fontWeight: FontWeight.w700, color: Colors.white)),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(36),
+              child: _shopProfile?.logoUrl != null && _shopProfile!.logoUrl!.isNotEmpty
+                  ? Image.network(
+                      _shopProfile!.logoUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _buildInitials(),
+                    )
+                  : _buildInitials(),
             ),
           ),
         ),
@@ -195,21 +271,41 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
     );
   }
 
+  Widget _buildInitials() {
+    final name = _shopProfile?.nameEn ?? 'B';
+    return Center(
+      child: Text(
+        name.isNotEmpty ? name[0].toUpperCase() : 'B',
+        style: GoogleFonts.poppins(fontSize: 28, fontWeight: FontWeight.w700, color: Colors.white),
+      ),
+    );
+  }
+
   // -------------------------------------------------------------------------
   // Info Section (below hero)
   // -------------------------------------------------------------------------
   Widget _buildInfoSection() {
+    final name = _shopProfile?.nameEn ?? 'Unknown Shop';
+    final category = _shopProfile?.categoryEn ?? 'Restaurant';
+
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.fromLTRB(20, 56, 20, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Name + category
-          Text('Banbann Kitchen',
-              style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B))),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(name,
+                    style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B))),
+              ),
+              _buildOpenStatusBadge(),
+            ],
+          ),
           const SizedBox(height: 2),
-          Text('Restaurant  •  Burmese • Myanmar Cuisine',
+          Text(category,
               style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF64748B))),
           const SizedBox(height: 10),
 
@@ -218,9 +314,9 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
             children: [
               const PhosphorIcon(PhosphorIconsFill.star, size: 16, color: Color(0xFFF59E0B)),
               const SizedBox(width: 4),
-              Text('4.7', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
+              Text('${_shopProfile?.ratingAvg ?? 0.0}', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
               const SizedBox(width: 4),
-              Text('(128 reviews)', style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF94A3B8))),
+              Text('(${_shopProfile?.ratingCount ?? 0} reviews)', style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF94A3B8))),
             ],
           ),
           const SizedBox(height: 12),
@@ -230,10 +326,16 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
             spacing: 8,
             runSpacing: 6,
             children: [
-              _amenityChip(PhosphorIconsRegular.car, 'Parking'),
-              _amenityChip(PhosphorIconsRegular.wifiHigh, 'WiFi'),
-              _amenityChip(PhosphorIconsRegular.motorcycle, 'Delivery'),
-              _amenityChip(PhosphorIconsRegular.moon, 'Halal'),
+              if (_shopProfile?.hasParking == true)
+                _amenityChip(PhosphorIconsRegular.car, 'Parking'),
+              if (_shopProfile?.hasWifi == true)
+                _amenityChip(PhosphorIconsRegular.wifiHigh, 'WiFi'),
+              if (_shopProfile?.hasDelivery == true)
+                _amenityChip(PhosphorIconsRegular.motorcycle, 'Delivery'),
+              if (_shopProfile?.isHalal == true)
+                _amenityChip(PhosphorIconsRegular.moon, 'Halal'),
+              if (_shopProfile?.isVegetarian == true)
+                _amenityChip(PhosphorIconsRegular.leaf, 'Vegetarian'),
             ],
           ),
           const SizedBox(height: 12),
@@ -248,11 +350,11 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
             ),
             child: Row(
               children: [
-                _infoStat(PhosphorIconsRegular.tag, 'Free', 'Delivery fee'),
+                _infoStat(PhosphorIconsRegular.tag, _shopProfile?.displayBaseDeliveryFee ?? 'N/A', 'Delivery fee'),
                 _infoStatDivider(),
-                _infoStat(PhosphorIconsRegular.clock, '25–35 min', 'Est. time'),
+                _infoStat(PhosphorIconsRegular.clock, _shopProfile?.estimatedTime ?? 'N/A', 'Est. time'),
                 _infoStatDivider(),
-                _infoStat(PhosphorIconsRegular.shoppingCart, '฿500', 'Min. order'),
+                _infoStat(PhosphorIconsRegular.shoppingCart, _shopProfile?.displayMinOrderAmount ?? 'N/A', 'Min. order'),
               ],
             ),
           ),
@@ -263,26 +365,42 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
             children: [
               Expanded(
                 child: FilledButton.icon(
-                  onPressed: () {},
-                  icon: const PhosphorIcon(PhosphorIconsRegular.motorcycle, size: 18, color: Colors.white),
-                  label: Text('Order Delivery', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14)),
+                  onPressed: () {
+                    // Navigate to Operating Hours
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => OperatingHoursPage(shopProfile: _shopProfile),
+                      ),
+                    ).then((_) => _loadProfile()); // Refresh just in case status changed
+                  },
+                  icon: const PhosphorIcon(PhosphorIconsRegular.clock, size: 18, color: Colors.white),
+                  label: Text('Operating Hours', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13)),
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFFED3973),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: const PhosphorIcon(PhosphorIconsRegular.navigationArrow, size: 18, color: Color(0xFF475569)),
-                  label: Text('Get Directions', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14, color: const Color(0xFF475569))),
+                  onPressed: () {
+                    // Navigate to Edit Shop Profile
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditShopProfilePage(shopProfile: _shopProfile),
+                      ),
+                    ).then((_) => _loadProfile()); // Refresh after edit
+                  },
+                  icon: const PhosphorIcon(PhosphorIconsRegular.pencilSimple, size: 18, color: Color(0xFF475569)),
+                  label: Text('Edit Profile', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13, color: const Color(0xFF475569))),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFFE2E8F0)),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                   ),
                 ),
               ),
@@ -306,7 +424,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('+95 9 123 456 789',
+                      Text(_shopProfile?.phone ?? 'No phone added',
                           style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
                       Text('This is the phone number currently shown to customers on your public profile.',
                           style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF94A3B8))),
@@ -317,6 +435,25 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildOpenStatusBadge() {
+    final isOpen = _shopProfile?.isOpen ?? false;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: isOpen ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        isOpen ? 'OPEN' : 'CLOSED',
+        style: GoogleFonts.poppins(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: isOpen ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+        ),
       ),
     );
   }
@@ -576,46 +713,55 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
   // Info Tab
   // -------------------------------------------------------------------------
   Widget _buildInfoTab() {
+    final address = _shopProfile?.addressEn ?? 'No address added';
+    final phone = _shopProfile?.phone ?? 'No phone added';
+    final email = _shopProfile?.email ?? 'No email added';
+    final lat = _shopProfile?.latitude?.toStringAsFixed(4) ?? '0.0000';
+    final lng = _shopProfile?.longitude?.toStringAsFixed(4) ?? '0.0000';
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         _infoCard([
-          _infoRow(PhosphorIconsRegular.mapPin, 'Address', '12 Mingalar Taung Nyunt Road, Yangon'),
-          _infoRow(PhosphorIconsRegular.phone, 'Phone', '+95 9 123 456 789'),
-          _infoRow(PhosphorIconsRegular.envelope, 'Email', 'contact@banbann.com'),
+          _infoRow(PhosphorIconsRegular.mapPin, 'Address', address),
+          _infoRow(PhosphorIconsRegular.phone, 'Phone', phone),
+          _infoRow(PhosphorIconsRegular.envelope, 'Email', email),
         ]),
         const SizedBox(height: 12),
         // Map pin placeholder
-        Container(
-          height: 140,
-          decoration: BoxDecoration(
-            color: const Color(0xFFE0F2FE),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const PhosphorIcon(PhosphorIconsRegular.mapPin, size: 32, color: Color(0xFFED3973)),
-                const SizedBox(height: 6),
-                Text('16.8409° N, 96.1735° E', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF475569))),
-              ],
+        if (_shopProfile?.latitude != null && _shopProfile?.longitude != null)
+          Container(
+            height: 140,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE0F2FE),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const PhosphorIcon(PhosphorIconsRegular.mapPin, size: 32, color: Color(0xFFED3973)),
+                  const SizedBox(height: 6),
+                  Text('$lat° N, $lng° E', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF475569))),
+                ],
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 12),
+        if (_shopProfile?.latitude != null && _shopProfile?.longitude != null)
+          const SizedBox(height: 12),
         // Operating hours
         _sectionLabel('Operating Hours'),
         _infoCard([
-          for (final entry in {
-            'Monday': '09:00 – 22:00', 'Tuesday': '09:00 – 22:00', 'Wednesday': '09:00 – 22:00',
-            'Thursday': '09:00 – 22:00', 'Friday': '09:00 – 22:00', 'Saturday': '09:00 – 23:00', 'Sunday': 'Closed',
-          }.entries)
+          if (_shopProfile?.operatingHours.isEmpty ?? true)
+            _infoRow(PhosphorIconsRegular.clock, 'Hours', 'Not set'),
+          for (final opHour in _shopProfile?.operatingHours ?? [])
             _infoRow(
-              entry.value == 'Closed' ? PhosphorIconsRegular.door : PhosphorIconsRegular.clock,
-              entry.key,
-              entry.value,
-              highlight: entry.value == 'Closed',
+              opHour.isClosed ? PhosphorIconsRegular.door : PhosphorIconsRegular.clock,
+              opHour.dayName,
+              opHour.isClosed
+                  ? 'Closed'
+                  : '${opHour.openingTime.formatTime()} – ${opHour.closingTime.formatTime()}',
+              highlight: opHour.isClosed,
             ),
         ]),
         const SizedBox(height: 12),
@@ -680,44 +826,104 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
   // Photos Tab
   // -------------------------------------------------------------------------
   Widget _buildPhotosTab() {
-    final photos = [
-      'https://delishglobe.com/wp-content/uploads/2025/02/Shan-Noodles.png',
-      'https://asianinspirations.com.au/wp-content/uploads/2023/03/MHG-6.jpg',
-      'https://www.cookeatworld.com/wp-content/uploads/2019/11/Burmese-Chicken-10.jpg',
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Shan_rice.jpg/320px-Shan_rice.jpg',
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/A_small_cup_of_coffee.JPG/320px-A_small_cup_of_coffee.JPG',
-      'https://asianinspirations.com.au/wp-content/uploads/2023/03/MHG-6.jpg',
-    ];
     return GridView.builder(
-      padding: const EdgeInsets.all(12),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 4, mainAxisSpacing: 4),
-      itemCount: photos.length,
-      itemBuilder: (_, i) => ClipRRect(
-        borderRadius: BorderRadius.circular(6),
-        child: Image.network(
-          photos[i],
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Container(
+      padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+      ),
+      itemCount: 12, // Placeholder
+      itemBuilder: (context, index) {
+        return Container(
+          decoration: BoxDecoration(
             color: const Color(0xFFE2E8F0),
-            child: const Center(child: PhosphorIcon(PhosphorIconsRegular.image, size: 24, color: Color(0xFF94A3B8))),
+            borderRadius: BorderRadius.circular(8),
           ),
+        );
+      },
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // Skeleton Loader
+  // -------------------------------------------------------------------------
+  Widget _buildSkeletonProfile() {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Cover Photo Skeleton
+            const Skeleton(width: double.infinity, height: 220),
+            // Floating Logo Skeleton
+            Transform.translate(
+              offset: const Offset(0, -36),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 20),
+                  child: Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 3),
+                    ),
+                    child: const ClipOval(child: Skeleton(width: 72, height: 72)),
+                  ),
+                ),
+              ),
+            ),
+            // Info Section Skeletons
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 16), // Account for translated logo
+                  const Skeleton(width: 200, height: 24), // Title
+                  const SizedBox(height: 8),
+                  const Skeleton(width: 120, height: 16), // Category
+                  const SizedBox(height: 16),
+                  const Skeleton(width: 150, height: 16), // Rating
+                  const SizedBox(height: 16),
+                  Row(
+                    children: const [
+                      Skeleton(width: 60, height: 24),
+                      SizedBox(width: 8),
+                      Skeleton(width: 80, height: 24),
+                      SizedBox(width: 8),
+                      Skeleton(width: 70, height: 24),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Skeleton(width: double.infinity, height: 64), // Delivery info
+                  const SizedBox(height: 16),
+                  Row(
+                    children: const [
+                      Expanded(child: Skeleton(height: 48)),
+                      SizedBox(width: 8),
+                      Expanded(child: Skeleton(height: 48)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Skeleton(width: double.infinity, height: 60), // Read-only phone
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-// ---------------------------------------------------------------------------
-// Pinned TabBar delegate
-// ---------------------------------------------------------------------------
 class _TabHeaderDelegate extends SliverPersistentHeaderDelegate {
   final TabBar tabBar;
-  const _TabHeaderDelegate(this.tabBar);
 
-  @override
-  double get minExtent => tabBar.preferredSize.height;
-  @override
-  double get maxExtent => tabBar.preferredSize.height;
+  _TabHeaderDelegate(this.tabBar);
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
@@ -728,5 +934,13 @@ class _TabHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  bool shouldRebuild(_TabHeaderDelegate oldDelegate) => false;
+  double get maxExtent => tabBar.preferredSize.height;
+
+  @override
+  double get minExtent => tabBar.preferredSize.height;
+
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
+    return false;
+  }
 }

@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:my_shop/features/main_navigation/presentation/screens/main_navigation_screen.dart';
+import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
+import 'package:my_shop/features/profile/data/services/profile_service.dart';
 
 class EditShopProfilePage extends StatefulWidget {
-  const EditShopProfilePage({super.key});
+  final ShopProfileModel? shopProfile;
+  const EditShopProfilePage({super.key, this.shopProfile});
 
   @override
   State<EditShopProfilePage> createState() => _EditShopProfilePageState();
@@ -12,6 +15,7 @@ class EditShopProfilePage extends StatefulWidget {
 
 class _EditShopProfilePageState extends State<EditShopProfilePage> {
   bool _hasChanges = false;
+  bool _isSaving = false;
 
   // Language switcher state
   String _nameLang = 'EN';
@@ -19,31 +23,69 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   String _addressLang = 'EN';
 
   // Text controllers
-  final _nameEnCtrl = TextEditingController(text: 'Banbann Kitchen');
-  final _nameMmCtrl = TextEditingController(text: 'ဘန်ဘန် မီးဖိုချောင်');
-  final _nameThCtrl = TextEditingController(text: 'ครัวบัน');
-  final _descEnCtrl = TextEditingController(text: 'Authentic Burmese cuisine in the heart of the city.');
-  final _descMmCtrl = TextEditingController(text: 'မြန်မာ့ စစ်စစ်အစားအစာများ');
-  final _descThCtrl = TextEditingController(text: 'อาหารพม่าแท้ๆ');
-  final _phoneCtrl = TextEditingController(text: '+95 9 123 456 789');
-  final _emailCtrl = TextEditingController(text: 'contact@banbann.com');
-  final _addressEnCtrl = TextEditingController(text: '12 Mingalar Taung Nyunt Road');
-  final _addressMmCtrl = TextEditingController(text: 'မင်္ဂလာတောင်ညွတ်လမ်း ၁၂');
-  final _addressThCtrl = TextEditingController(text: '12 ถนนมิงกาลาตาวน์');
-  final _districtCtrl = TextEditingController(text: 'Mingalar Taung Nyunt');
-  final _cityCtrl = TextEditingController(text: 'Yangon');
+  late final TextEditingController _nameEnCtrl;
+  late final TextEditingController _nameMmCtrl;
+  late final TextEditingController _nameThCtrl;
+  late final TextEditingController _descEnCtrl;
+  late final TextEditingController _descMmCtrl;
+  late final TextEditingController _descThCtrl;
+  late final TextEditingController _phoneCtrl;
+  late final TextEditingController _emailCtrl;
+  late final TextEditingController _addressEnCtrl;
+  late final TextEditingController _addressMmCtrl;
+  late final TextEditingController _addressThCtrl;
+  late final TextEditingController _districtCtrl;
+  late final TextEditingController _cityCtrl;
+
+  // Location
+  double? _latitude;
+  double? _longitude;
 
   // Amenity toggles
-  bool _hasParking = true;
-  bool _hasWifi = true;
-  bool _hasDelivery = true;
+  late bool _hasParking;
+  late bool _hasWifi;
+  late bool _hasDelivery;
 
   // Dietary tags
-  bool _isHalal = true;
-  bool _isVegetarian = false;
+  late bool _isHalal;
+  late bool _isVegetarian;
 
   // Price range: 0=budget, 1=mid-range, 2=premium
-  int _priceRange = 1;
+  late int _priceRange;
+
+  @override
+  void initState() {
+    super.initState();
+    final profile = widget.shopProfile;
+
+    _nameEnCtrl = TextEditingController(text: profile?.nameEn ?? '');
+    _nameMmCtrl = TextEditingController(text: profile?.nameMm ?? '');
+    _nameThCtrl = TextEditingController(text: profile?.nameTh ?? '');
+    _descEnCtrl = TextEditingController(text: profile?.descriptionEn ?? '');
+    _descMmCtrl = TextEditingController(text: profile?.descriptionMm ?? '');
+    _descThCtrl = TextEditingController(text: profile?.descriptionTh ?? '');
+    _phoneCtrl = TextEditingController(text: profile?.phone ?? '');
+    _emailCtrl = TextEditingController(text: profile?.email ?? '');
+    _addressEnCtrl = TextEditingController(text: profile?.addressEn ?? '');
+    _addressMmCtrl = TextEditingController(text: profile?.addressMm ?? '');
+    _addressThCtrl = TextEditingController(text: profile?.addressTh ?? '');
+    _districtCtrl = TextEditingController(text: profile?.districtEn ?? '');
+    _cityCtrl = TextEditingController(text: profile?.cityEn ?? ''); // Using districtEn/cityEn mostly
+
+    _latitude = profile?.latitude;
+    _longitude = profile?.longitude;
+
+    _hasParking = profile?.hasParking ?? false;
+    _hasWifi = profile?.hasWifi ?? false;
+    _hasDelivery = profile?.hasDelivery ?? false;
+    _isHalal = profile?.isHalal ?? false;
+    _isVegetarian = profile?.isVegetarian ?? false;
+
+    // Map price preference
+    _priceRange = 1; // Default
+    if (profile?.pricePreference == 'LOW') _priceRange = 0;
+    if (profile?.pricePreference == 'HIGH') _priceRange = 2;
+  }
 
   @override
   void dispose() {
@@ -92,13 +134,63 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     return result ?? false;
   }
 
-  void _save() {
-    setState(() => _hasChanges = false);
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => const MainNavigationScreen(initialIndex: 3)),
-      (route) => false,
-    );
+  Future<void> _save() async {
+    setState(() => _isSaving = true);
+    
+    // Map price preference
+    String pricePref = 'MEDIUM';
+    if (_priceRange == 0) pricePref = 'LOW';
+    if (_priceRange == 2) pricePref = 'HIGH';
+
+    final payload = {
+      'nameEn': _nameEnCtrl.text,
+      'nameMm': _nameMmCtrl.text,
+      'nameTh': _nameThCtrl.text,
+      'descriptionEn': _descEnCtrl.text,
+      'descriptionMm': _descMmCtrl.text,
+      'descriptionTh': _descThCtrl.text,
+      'phone': _phoneCtrl.text,
+      'email': _emailCtrl.text,
+      'addressEn': _addressEnCtrl.text,
+      'addressMm': _addressMmCtrl.text,
+      'addressTh': _addressThCtrl.text,
+      // For district/city assuming using the single field for all, if user only inputs 1
+      'districtEn': _districtCtrl.text,
+      'districtMm': _districtCtrl.text,
+      'districtTh': _districtCtrl.text,
+      'cityEn': _cityCtrl.text,
+      'cityMm': _cityCtrl.text,
+      'cityTh': _cityCtrl.text,
+      'latitude': _latitude ?? 16.8409, // Fallback if no location picked
+      'longitude': _longitude ?? 96.1735,
+      'hasParking': _hasParking,
+      'hasWifi': _hasWifi,
+      'hasDelivery': _hasDelivery,
+      'isHalal': _isHalal,
+      'isVegetarian': _isVegetarian,
+      'pricePreference': pricePref,
+    };
+
+    final profileService = ProfileService();
+    final success = await profileService.updateShopProfile(payload);
+
+    if (!mounted) return;
+
+    if (success) {
+      setState(() {
+        _hasChanges = false;
+        _isSaving = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile saved successfully!')),
+      );
+      Navigator.pop(context); // Go back to profile view
+    } else {
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to save profile. Please try again.')),
+      );
+    }
   }
 
   @override
@@ -142,16 +234,8 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
               }
             },
           ),
-          actions: [
-            TextButton(
-              onPressed: _save,
-              child: Text(
-                'Save',
-                style: GoogleFonts.poppins(
-                    color: const Color(0xFFED3973), fontWeight: FontWeight.w600, fontSize: 15),
-              ),
-            ),
-            const SizedBox(width: 8),
+          actions: const [
+            SizedBox(width: 8),
           ],
           bottom: const PreferredSize(
             preferredSize: Size.fromHeight(1),
@@ -159,7 +243,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
           ),
         ),
         body: ListView(
-          padding: const EdgeInsets.only(bottom: 40),
+          padding: const EdgeInsets.only(bottom: 24),
           children: [
             // Cover + Logo upload
             _buildCoverLogoUpload(),
@@ -254,7 +338,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('16.8409° N, 96.1735° E',
+                          Text('${_latitude?.toStringAsFixed(4) ?? "16.8409"}° N, ${_longitude?.toStringAsFixed(4) ?? "96.1735"}° E',
                               style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500, color: const Color(0xFF1E293B))),
                           Text('Current pin location', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF94A3B8))),
                         ],
@@ -313,6 +397,37 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             ),
             const SizedBox(height: 32),
           ],
+        ),
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _isSaving ? null : _save,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFED3973),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 0,
+                ),
+                child: _isSaving 
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                  : Text(
+                      'Save',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -522,10 +637,24 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                         child: Text(item.label,
                             style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: const Color(0xFF1E293B))),
                       ),
-                      Switch(
-                        value: item.value,
-                        activeThumbColor: const Color(0xFFED3973),
-                        onChanged: item.onChanged,
+                      SizedBox(
+                        height: 24,
+                        child: Transform.scale(
+                          scale: 0.65,
+                          child: Switch(
+                            value: item.value,
+                            onChanged: item.onChanged,
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            thumbColor: WidgetStateProperty.all(Colors.white),
+                            trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+                            trackColor: WidgetStateProperty.resolveWith((states) {
+                              if (states.contains(WidgetState.selected)) {
+                                return const Color(0xFFED3973); // Pink active
+                              }
+                              return const Color(0xFFE2E8F0); // Light gray inactive
+                            }),
+                          ),
+                        ),
                       ),
                     ],
                   ),
