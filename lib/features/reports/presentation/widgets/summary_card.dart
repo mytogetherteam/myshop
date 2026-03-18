@@ -31,6 +31,7 @@ class SummaryCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             label,
@@ -48,21 +49,21 @@ class SummaryCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
-                  Text(
-                    value,
-                    style: GoogleFonts.poppins(
-                      color: isPositive && label == "Completed" ? const Color(0xFF22C55E) : (label == "Cancelled" ? const Color(0xFFEF4444) : const Color(0xFF1E293B)),
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
+                    Text(
+                      value,
+                      style: GoogleFonts.poppins(
+                        color: isPositive && label == "Completed" ? const Color(0xFF22C55E) : (label == "Cancelled" ? const Color(0xFFEF4444) : const Color(0xFF1E293B)),
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
                   if (unit != null) ...[
                     const SizedBox(width: 4),
                     Text(
                       unit!,
                       style: GoogleFonts.poppins(
                         color: const Color(0xFF1E293B),
-                        fontSize: 12,
+                        fontSize: 20,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -81,7 +82,7 @@ class SummaryCard extends StatelessWidget {
                     trend,
                     style: GoogleFonts.poppins(
                       color: (isTrendPositive ?? isPositive) ? const Color(0xFF22C55E) : const Color(0xFFEF4444),
-                      fontSize: 12,
+                        fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

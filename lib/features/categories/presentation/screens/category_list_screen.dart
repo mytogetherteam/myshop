@@ -115,6 +115,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       itemCount: _categories.length,
       onReorder: _onReorder,
+      buildDefaultDragHandles: false,
       proxyDecorator: (child, index, animation) {
         return AnimatedBuilder(
           animation: animation,
@@ -141,6 +142,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
           padding: const EdgeInsets.only(bottom: 12),
           child: _CategoryCard(
             category: category,
+            index: index,
             onEdit: () async {
               final result = await Navigator.push(
                 context,
@@ -201,10 +203,12 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
 class _CategoryCard extends StatelessWidget {
   final MenuCategoryModel category;
   final VoidCallback onEdit;
+  final int index;
 
   const _CategoryCard({
     required this.category,
     required this.onEdit,
+    required this.index,
   });
 
   @override
@@ -217,7 +221,7 @@ class _CategoryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -225,8 +229,15 @@ class _CategoryCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.drag_indicator, color: Color(0xFF94A3B8), size: 24),
-          const SizedBox(width: 12),
+          ReorderableDragStartListener(
+            index: index,
+            child: Container(
+              color: Colors.transparent,
+              padding: const EdgeInsets.only(top: 8, bottom: 8, right: 8, left: 0),
+              child: const Icon(Icons.drag_indicator, color: Color(0xFF94A3B8), size: 24),
+            ),
+          ),
+          const SizedBox(width: 4),
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(

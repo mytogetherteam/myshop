@@ -41,9 +41,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 
   void _setupWebSocketListener() {
-    print('🚀 [MainNavigation] SETTING UP LISTENER...');
+    debugPrint('🚀 [MainNavigation] SETTING UP LISTENER...');
     _socketSubscription = WebSocketService().orderUpdates.listen((event) {
-      print('🔔 [MainNavigation] EVENT: ${event['type']}, MSG: ${event['message']}');
+      debugPrint('🔔 [MainNavigation] EVENT: ${event['type']}, MSG: ${event['message']}');
       
       final dynamic rawOrder = event['order'];
       final dynamic rawMsg = event['message'];

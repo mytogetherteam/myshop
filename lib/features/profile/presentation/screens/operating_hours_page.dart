@@ -1,8 +1,10 @@
+// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
+import 'package:my_shop/features/main_navigation/presentation/screens/main_navigation_screen.dart';
 
 class OperatingHoursPage extends StatefulWidget {
   final ShopProfileModel? shopProfile;
@@ -185,7 +187,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
 
     final success = await _profileService.updateOperatingHours(payload);
     
-    if (!mounted) return;
+    if (!context.mounted) return;
 
     if (success) {
       setState(() {
@@ -195,7 +197,12 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Operating hours saved successfully!')),
       );
-      Navigator.of(context).pop();
+      // Navigate back to the Profile tab in MainNavigationScreen (initialIndex: 3)
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const MainNavigationScreen(initialIndex: 3)),
+        (route) => false,
+      );
     } else {
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -230,7 +237,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
             icon: const PhosphorIcon(PhosphorIconsRegular.arrowLeft, size: 24, color: Color(0xFF1E293B)),
             onPressed: () async {
               final shouldPop = await _onWillPop();
-              if (shouldPop && mounted) Navigator.of(context).pop();
+              if (shouldPop && context.mounted) Navigator.of(context).pop();
             },
           ),
           actions: const [
@@ -300,7 +307,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                                 onChanged: (v) async {
                                   setState(() => _isTogglingStatus = true);
                                   final success = await _profileService.toggleShopStatus(v);
-                                  if (mounted) {
+                                  if (context.mounted) {
                                     if (success) {
                                       setState(() {
                                         _isOpen = v;

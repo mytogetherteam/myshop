@@ -7,6 +7,8 @@ import 'package:my_shop/features/reports/presentation/widgets/revenue_card.dart'
 import 'package:my_shop/features/reports/presentation/widgets/summary_card.dart';
 import 'package:my_shop/features/reports/presentation/widgets/best_seller_tile.dart';
 import 'package:my_shop/features/reports/presentation/widgets/order_history_item.dart';
+import 'package:my_shop/features/reports/presentation/screens/all_order_history_screen.dart';
+import 'package:my_shop/features/reports/presentation/screens/top_selling_items_screen.dart';
 
 class ReportPage extends StatefulWidget {
   const ReportPage({super.key});
@@ -139,39 +141,52 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
         cancelled: "3",
       ),
       const SizedBox(height: 20),
-      GridView.count(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 2.2,
-        children: const [
-          SummaryCard(
-            label: "Completed",
-            value: "44",
-            trend: "8%",
-            isPositive: true,
+      Column(
+        children: [
+          Row(
+            children: const [
+              Expanded(
+                child: SummaryCard(
+                  label: "Completed",
+                  value: "44",
+                  trend: "8%",
+                  isPositive: true,
+                ),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: SummaryCard(
+                  label: "Cancelled",
+                  value: "3",
+                  trend: "3%",
+                  isPositive: false,
+                  isTrendPositive: true,
+                ),
+              ),
+            ],
           ),
-          SummaryCard(
-            label: "Cancelled",
-            value: "3",
-            trend: "3%",
-            isPositive: false, // Down arrow
-            isTrendPositive: true, // green color as in screenshot
-          ),
-          SummaryCard(
-            label: "Avg Wait Time",
-            value: "12",
-            unit: "min",
-            trend: "3 min",
-            isPositive: true,
-          ),
-          SummaryCard(
-            label: "Items Sold",
-            value: "138",
-            trend: "7%",
-            isPositive: true,
+          const SizedBox(height: 12),
+          Row(
+            children: const [
+              Expanded(
+                child: SummaryCard(
+                  label: "Avg Wait Time",
+                  value: "12",
+                  unit: "min",
+                  trend: "3 min",
+                  isPositive: true,
+                ),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: SummaryCard(
+                  label: "Items Sold",
+                  value: "138",
+                  trend: "7%",
+                  isPositive: true,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -187,23 +202,31 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
               color: const Color(0xFF1E293B),
             ),
           ),
-          Row(
-            children: [
-              Text(
-                "See more",
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFFED3A72),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const TopSellingItemsScreen()),
+              );
+            },
+            child: Row(
+              children: [
+                Text(
+                  "See more",
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFFED3A72),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 4),
-              const PhosphorIcon(
-                PhosphorIconsRegular.arrowRight,
-                size: 16,
-                color: Color(0xFFED3A72),
-              ),
-            ],
+                const SizedBox(width: 4),
+                const PhosphorIcon(
+                  PhosphorIconsRegular.arrowRight,
+                  size: 16,
+                  color: Color(0xFFED3A72),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -242,13 +265,44 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
         progress: 0.3,
       ),
       const SizedBox(height: 32),
-      Text(
-        "Order History",
-        style: GoogleFonts.poppins(
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          color: const Color(0xFF1E293B),
-        ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            "Order History",
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1E293B),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AllOrderHistoryScreen()),
+              );
+            },
+            child: Row(
+              children: [
+                Text(
+                  "See more",
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFFED3A72),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const PhosphorIcon(
+                  PhosphorIconsRegular.arrowRight,
+                  size: 16,
+                  color: Color(0xFFED3A72),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
       const SizedBox(height: 16),
       const OrderHistoryItem(
@@ -287,16 +341,6 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
         statusColor: Color(0xFF22C55E),
       ),
       const SizedBox(height: 20),
-      Center(
-        child: Text(
-          "View All",
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFFED3A72),
-          ),
-        ),
-      ),
       const SizedBox(height: 40),
     ];
   }
@@ -305,14 +349,24 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
     return [
       const Skeleton(height: 200, borderRadius: 24),
       const SizedBox(height: 20),
-      GridView.count(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 2.2,
-        children: List.generate(4, (_) => const Skeleton(height: 60, borderRadius: 16)),
+      Column(
+        children: [
+          Row(
+            children: const [
+              Expanded(child: Skeleton(height: 100, borderRadius: 16)),
+              SizedBox(width: 12),
+              Expanded(child: Skeleton(height: 100, borderRadius: 16)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: const [
+              Expanded(child: Skeleton(height: 100, borderRadius: 16)),
+              SizedBox(width: 12),
+              Expanded(child: Skeleton(height: 100, borderRadius: 16)),
+            ],
+          ),
+        ],
       ),
       const SizedBox(height: 32),
       const Skeleton(width: 150, height: 24),

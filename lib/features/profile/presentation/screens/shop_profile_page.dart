@@ -6,6 +6,7 @@ import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import 'package:my_shop/features/profile/presentation/screens/edit_shop_profile_page.dart';
 import 'package:my_shop/features/profile/presentation/screens/operating_hours_page.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
+import 'package:my_shop/features/categories/data/services/category_service.dart';
 // ---------------------------------------------------------------------------
 // Demo data models
 // ---------------------------------------------------------------------------
@@ -43,7 +44,8 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
   late TabController _tabController;
   int _selectedCategory = 0;
 
-  final List<String> _categories = ['All', 'Rice & Noodles', 'Soups', 'Drinks', 'Desserts'];
+  final List<String> _categories = ['All'];
+  final CategoryService _categoryService = CategoryService();
 
   final List<_MenuItem> _menuItems = const [
     _MenuItem(name: 'Shan Noodles', price: 4500, imageUrl: 'https://delishglobe.com/wp-content/uploads/2025/02/Shan-Noodles.png', isPopular: true),
@@ -78,11 +80,17 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
     });
 
     final profile = await _profileService.getShopProfile();
+    final categories = await _categoryService.getCategories();
 
     if (mounted) {
       if (profile != null) {
         setState(() {
           _shopProfile = profile;
+          if (categories != null && categories.isNotEmpty) {
+            _categories.clear();
+            _categories.add('All');
+            _categories.addAll(categories.map((c) => c.displayName));
+          }
           _isLoading = false;
         });
       } else {
@@ -261,7 +269,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
                   ? Image.network(
                       _shopProfile!.logoUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _buildInitials(),
+                      errorBuilder: (_, _, _) => _buildInitials(),
                     )
                   : _buildInitials(),
             ),
@@ -554,7 +562,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
               width: 90,
               height: 80,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
+              errorBuilder: (_, _, _) => Container(
                 width: 90,
                 height: 80,
                 color: const Color(0xFFE2E8F0),

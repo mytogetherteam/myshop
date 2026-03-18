@@ -287,7 +287,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             ),
           Positioned(
             right: 16,
-            bottom: 16,
+            top: 16,
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(

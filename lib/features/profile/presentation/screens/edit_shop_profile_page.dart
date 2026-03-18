@@ -1,3 +1,4 @@
+// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -174,7 +175,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     final profileService = ProfileService();
     final success = await profileService.updateShopProfile(payload);
 
-    if (!mounted) return;
+    if (!context.mounted) return;
 
     if (success) {
       setState(() {
@@ -184,7 +185,12 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Profile saved successfully!')),
       );
-      Navigator.pop(context); // Go back to profile view
+      // Navigate back to the Profile tab in MainNavigationScreen (initialIndex: 3)
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const MainNavigationScreen(initialIndex: 3)),
+        (route) => false,
+      );
     } else {
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -225,7 +231,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             icon: const PhosphorIcon(PhosphorIconsRegular.arrowLeft, size: 24, color: Color(0xFF1E293B)),
             onPressed: () async {
               final should = await _onWillPop();
-              if (should && mounted) {
+              if (should && context.mounted) {
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => const MainNavigationScreen(initialIndex: 3)),

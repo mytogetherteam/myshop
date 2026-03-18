@@ -34,7 +34,9 @@ class AuthInterceptor extends Interceptor {
         if (newToken != null) {
           options.headers['Authorization'] = 'Bearer $newToken';
         }
-      } catch (e) {}
+      } catch (e) {
+        // Ignored proactive refresh error
+      }
     }
 
     final currentToken = await authService.getAccessToken();

@@ -26,13 +26,13 @@ class RevenueCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         gradient: const LinearGradient(
-          colors: [Color(0xFFED3A72), Color(0xFFFBB042)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          colors: [Color(0xFFED3973), Color(0xFFEFA240)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFED3A72).withValues(alpha: 0.3),
+            color: const Color(0xFFF0427A).withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -42,39 +42,12 @@ class RevenueCard extends StatelessWidget {
         children: [
           // Background food icons
           Positioned(
-            right: -10,
-            bottom: 40,
-            child: Opacity(
-              opacity: 0.15,
-              child: PhosphorIcon(
-                PhosphorIconsFill.bowlFood,
-                size: 100,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          Positioned(
             right: -20,
-            top: -10,
-            child: Opacity(
-              opacity: 0.15,
-              child: PhosphorIcon(
-                PhosphorIconsFill.hamburger,
-                size: 80,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          Positioned(
-            right: 10,
+            top: -20,
             bottom: -20,
-            child: Opacity(
-              opacity: 0.15,
-              child: PhosphorIcon(
-                PhosphorIconsFill.brandy,
-                size: 90,
-                color: Colors.white,
-              ),
+            child: Image.asset(
+              'assets/images/revenue_background_icons.png',
+              fit: BoxFit.fitHeight,
             ),
           ),
           
