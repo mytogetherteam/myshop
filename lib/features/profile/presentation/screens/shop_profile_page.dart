@@ -7,6 +7,7 @@ import 'package:my_shop/features/profile/presentation/screens/edit_shop_profile_
 import 'package:my_shop/features/profile/presentation/screens/operating_hours_page.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
+
 // ---------------------------------------------------------------------------
 // Demo data models
 // ---------------------------------------------------------------------------
@@ -18,7 +19,15 @@ class _MenuItem {
   final bool isPopular;
   final bool isVeg;
   final bool isSpicy;
-  const _MenuItem({required this.name, required this.price, required this.imageUrl, this.isHot = false, this.isPopular = false, this.isVeg = false, this.isSpicy = false});
+  const _MenuItem({
+    required this.name,
+    required this.price,
+    required this.imageUrl,
+    this.isHot = false,
+    this.isPopular = false,
+    this.isVeg = false,
+    this.isSpicy = false,
+  });
 }
 
 class _Review {
@@ -27,7 +36,13 @@ class _Review {
   final String date;
   final String comment;
   final List<String> tags;
-  const _Review({required this.reviewer, required this.rating, required this.date, required this.comment, this.tags = const []});
+  const _Review({
+    required this.reviewer,
+    required this.rating,
+    required this.date,
+    required this.comment,
+    this.tags = const [],
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -40,7 +55,8 @@ class ShopProfilePage extends StatefulWidget {
   State<ShopProfilePage> createState() => _ShopProfilePageState();
 }
 
-class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProviderStateMixin {
+class _ShopProfilePageState extends State<ShopProfilePage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _selectedCategory = 0;
 
@@ -48,17 +64,65 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
   final CategoryService _categoryService = CategoryService();
 
   final List<_MenuItem> _menuItems = const [
-    _MenuItem(name: 'Shan Noodles', price: 4500, imageUrl: 'https://delishglobe.com/wp-content/uploads/2025/02/Shan-Noodles.png', isPopular: true),
-    _MenuItem(name: 'Mohinga', price: 3500, imageUrl: 'https://asianinspirations.com.au/wp-content/uploads/2023/03/MHG-6.jpg', isHot: true, isSpicy: true),
-    _MenuItem(name: 'Tofu Kyaw', price: 3000, imageUrl: 'https://www.cookeatworld.com/wp-content/uploads/2019/11/Burmese-Chicken-10.jpg', isVeg: true),
-    _MenuItem(name: 'Shan Rice', price: 5000, imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Shan_rice.jpg/320px-Shan_rice.jpg', isPopular: true),
-    _MenuItem(name: 'Laphet Yay', price: 1500, imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/A_small_cup_of_coffee.JPG/320px-A_small_cup_of_coffee.JPG'),
+    _MenuItem(
+      name: 'Shan Noodles',
+      price: 4500,
+      imageUrl:
+          'https://delishglobe.com/wp-content/uploads/2025/02/Shan-Noodles.png',
+      isPopular: true,
+    ),
+    _MenuItem(
+      name: 'Mohinga',
+      price: 3500,
+      imageUrl:
+          'https://asianinspirations.com.au/wp-content/uploads/2023/03/MHG-6.jpg',
+      isHot: true,
+      isSpicy: true,
+    ),
+    _MenuItem(
+      name: 'Tofu Kyaw',
+      price: 3000,
+      imageUrl:
+          'https://www.cookeatworld.com/wp-content/uploads/2019/11/Burmese-Chicken-10.jpg',
+      isVeg: true,
+    ),
+    _MenuItem(
+      name: 'Shan Rice',
+      price: 5000,
+      imageUrl:
+          'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Shan_rice.jpg/320px-Shan_rice.jpg',
+      isPopular: true,
+    ),
+    _MenuItem(
+      name: 'Laphet Yay',
+      price: 1500,
+      imageUrl:
+          'https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/A_small_cup_of_coffee.JPG/320px-A_small_cup_of_coffee.JPG',
+    ),
   ];
 
   final List<_Review> _reviews = const [
-    _Review(reviewer: 'Aung Kyaw', rating: 5, date: 'Mar 10, 2026', comment: 'The food is absolutely amazing! Shan noodles are my favourite.', tags: ['Great food', 'Fast delivery']),
-    _Review(reviewer: 'Phyu Phyu', rating: 4, date: 'Mar 8, 2026', comment: 'Very tasty and affordable. The mohinga is just like home.', tags: ['Authentic', 'Affordable']),
-    _Review(reviewer: 'Kyaw Zin', rating: 4, date: 'Mar 5, 2026', comment: 'Good portion sizes and freshly cooked.', tags: ['Fresh', 'Good value']),
+    _Review(
+      reviewer: 'Aung Kyaw',
+      rating: 5,
+      date: 'Mar 10, 2026',
+      comment: 'The food is absolutely amazing! Shan noodles are my favourite.',
+      tags: ['Great food', 'Fast delivery'],
+    ),
+    _Review(
+      reviewer: 'Phyu Phyu',
+      rating: 4,
+      date: 'Mar 8, 2026',
+      comment: 'Very tasty and affordable. The mohinga is just like home.',
+      tags: ['Authentic', 'Affordable'],
+    ),
+    _Review(
+      reviewer: 'Kyaw Zin',
+      rating: 4,
+      date: 'Mar 5, 2026',
+      comment: 'Good portion sizes and freshly cooked.',
+      tags: ['Fresh', 'Good value'],
+    ),
   ];
 
   final ProfileService _profileService = ProfileService();
@@ -122,15 +186,24 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const PhosphorIcon(PhosphorIconsRegular.warningCircle, size: 48, color: Color(0xFFED3973)),
+              const PhosphorIcon(
+                PhosphorIconsRegular.warningCircle,
+                size: 48,
+                color: Color(0xFFED3973),
+              ),
               const SizedBox(height: 16),
-              Text(_errorMessage!, style: GoogleFonts.poppins(color: const Color(0xFF475569))),
+              Text(
+                _errorMessage!,
+                style: GoogleFonts.poppins(color: const Color(0xFF475569)),
+              ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _loadProfile,
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFED3973)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFED3973),
+                ),
                 child: const Text('Retry'),
-              )
+              ),
             ],
           ),
         ),
@@ -152,8 +225,14 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
                 unselectedLabelColor: const Color(0xFF64748B),
                 indicatorColor: const Color(0xFFED3973),
                 indicatorWeight: 2,
-                labelStyle: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600),
-                unselectedLabelStyle: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500),
+                labelStyle: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+                unselectedLabelStyle: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
                 tabs: const [
                   Tab(text: 'Menu'),
                   Tab(text: 'Reviews'),
@@ -200,7 +279,13 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
               Positioned.fill(
                 child: Opacity(
                   opacity: 0.1,
-                  child: GridPaper(color: Colors.white, divisions: 1, subdivisions: 1, interval: 40, child: Container()),
+                  child: GridPaper(
+                    color: Colors.white,
+                    divisions: 1,
+                    subdivisions: 1,
+                    interval: 40,
+                    child: Container(),
+                  ),
                 ),
               ),
               // Gradient overlay for readability
@@ -210,18 +295,23 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [Colors.transparent, Colors.black.withValues(alpha: 0.3)],
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.3),
+                      ],
                     ),
                   ),
                 ),
               ),
               // Actual cover photo if exists
-              if (_shopProfile?.coverUrl != null && _shopProfile!.coverUrl!.isNotEmpty)
+              if (_shopProfile?.coverUrl != null &&
+                  _shopProfile!.coverUrl!.isNotEmpty)
                 Positioned.fill(
                   child: Image.network(
                     _shopProfile!.coverUrl!,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const SizedBox(),
+                    errorBuilder: (context, error, stackTrace) =>
+                        const SizedBox(),
                   ),
                 ),
             ],
@@ -239,7 +329,11 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
                 onTap: () => Navigator.of(context).pop(),
                 child: const Padding(
                   padding: EdgeInsets.all(8),
-                  child: PhosphorIcon(PhosphorIconsRegular.arrowLeft, size: 22, color: Colors.white),
+                  child: PhosphorIcon(
+                    PhosphorIconsRegular.arrowLeft,
+                    size: 22,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -256,7 +350,13 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
               shape: BoxShape.circle,
               color: Colors.white,
               border: Border.all(color: Colors.white, width: 3),
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 8, offset: const Offset(0, 2))],
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
               gradient: const LinearGradient(
                 colors: [Color(0xFFED3973), Color(0xFFFF8C69)],
                 begin: Alignment.topLeft,
@@ -265,11 +365,13 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(36),
-              child: _shopProfile?.logoUrl != null && _shopProfile!.logoUrl!.isNotEmpty
+              child:
+                  _shopProfile?.logoUrl != null &&
+                      _shopProfile!.logoUrl!.isNotEmpty
                   ? Image.network(
                       _shopProfile!.logoUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => _buildInitials(),
+                      errorBuilder: (_, __, ___) => _buildInitials(),
                     )
                   : _buildInitials(),
             ),
@@ -284,7 +386,11 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
     return Center(
       child: Text(
         name.isNotEmpty ? name[0].toUpperCase() : 'B',
-        style: GoogleFonts.poppins(fontSize: 28, fontWeight: FontWeight.w700, color: Colors.white),
+        style: GoogleFonts.poppins(
+          fontSize: 28,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
       ),
     );
   }
@@ -306,25 +412,53 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Text(name,
-                    style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B))),
+                child: Text(
+                  name,
+                  style: GoogleFonts.poppins(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1E293B),
+                  ),
+                ),
               ),
               _buildOpenStatusBadge(),
             ],
           ),
           const SizedBox(height: 2),
-          Text(category,
-              style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF64748B))),
+          Text(
+            category,
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              color: const Color(0xFF64748B),
+            ),
+          ),
           const SizedBox(height: 10),
 
           // Rating
           Row(
             children: [
-              const PhosphorIcon(PhosphorIconsFill.star, size: 16, color: Color(0xFFF59E0B)),
+              const PhosphorIcon(
+                PhosphorIconsFill.star,
+                size: 16,
+                color: Color(0xFFF59E0B),
+              ),
               const SizedBox(width: 4),
-              Text('${_shopProfile?.ratingAvg ?? 0.0}', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
+              Text(
+                '${_shopProfile?.ratingAvg ?? 0.0}',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
               const SizedBox(width: 4),
-              Text('(${_shopProfile?.ratingCount ?? 0} reviews)', style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF94A3B8))),
+              Text(
+                '(${_shopProfile?.ratingCount ?? 0} reviews)',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  color: const Color(0xFF94A3B8),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -358,11 +492,23 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
             ),
             child: Row(
               children: [
-                _infoStat(PhosphorIconsRegular.tag, _shopProfile?.displayBaseDeliveryFee ?? 'N/A', 'Delivery fee'),
+                _infoStat(
+                  PhosphorIconsRegular.tag,
+                  _shopProfile?.displayBaseDeliveryFee ?? 'N/A',
+                  'Delivery fee',
+                ),
                 _infoStatDivider(),
-                _infoStat(PhosphorIconsRegular.clock, _shopProfile?.estimatedTime ?? 'N/A', 'Est. time'),
+                _infoStat(
+                  PhosphorIconsRegular.clock,
+                  _shopProfile?.estimatedTime ?? 'N/A',
+                  'Est. time',
+                ),
                 _infoStatDivider(),
-                _infoStat(PhosphorIconsRegular.shoppingCart, _shopProfile?.displayMinOrderAmount ?? 'N/A', 'Min. order'),
+                _infoStat(
+                  PhosphorIconsRegular.shoppingCart,
+                  _shopProfile?.displayMinOrderAmount ?? 'N/A',
+                  'Min. order',
+                ),
               ],
             ),
           ),
@@ -378,16 +524,34 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => OperatingHoursPage(shopProfile: _shopProfile),
+                        builder: (context) =>
+                            OperatingHoursPage(shopProfile: _shopProfile),
                       ),
-                    ).then((_) => _loadProfile()); // Refresh just in case status changed
+                    ).then(
+                      (_) => _loadProfile(),
+                    ); // Refresh just in case status changed
                   },
-                  icon: const PhosphorIcon(PhosphorIconsRegular.clock, size: 18, color: Colors.white),
-                  label: Text('Operating Hours', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13)),
+                  icon: const PhosphorIcon(
+                    PhosphorIconsRegular.clock,
+                    size: 18,
+                    color: Colors.white,
+                  ),
+                  label: Text(
+                    'Operating Hours',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFFED3973),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 8,
+                    ),
                   ),
                 ),
               ),
@@ -399,16 +563,33 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => EditShopProfilePage(shopProfile: _shopProfile),
+                        builder: (context) =>
+                            EditShopProfilePage(shopProfile: _shopProfile),
                       ),
                     ).then((_) => _loadProfile()); // Refresh after edit
                   },
-                  icon: const PhosphorIcon(PhosphorIconsRegular.pencilSimple, size: 18, color: Color(0xFF475569)),
-                  label: Text('Edit Profile', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 13, color: const Color(0xFF475569))),
+                  icon: const PhosphorIcon(
+                    PhosphorIconsRegular.pencilSimple,
+                    size: 18,
+                    color: Color(0xFF475569),
+                  ),
+                  label: Text(
+                    'Edit Profile',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: const Color(0xFF475569),
+                    ),
+                  ),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFFE2E8F0)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 8,
+                    ),
                   ),
                 ),
               ),
@@ -426,16 +607,31 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
             ),
             child: Row(
               children: [
-                const PhosphorIcon(PhosphorIconsRegular.phone, size: 18, color: Color(0xFF475569)),
+                const PhosphorIcon(
+                  PhosphorIconsRegular.phone,
+                  size: 18,
+                  color: Color(0xFF475569),
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(_shopProfile?.phone ?? 'No phone added',
-                          style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
-                      Text('This is the phone number currently shown to customers on your public profile.',
-                          style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF94A3B8))),
+                      Text(
+                        _shopProfile?.phone ?? 'No phone added',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF1E293B),
+                        ),
+                      ),
+                      Text(
+                        'This is the phone number currently shown to customers on your public profile.',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          color: const Color(0xFF94A3B8),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -478,7 +674,14 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
         children: [
           PhosphorIcon(icon, size: 13, color: const Color(0xFF64748B)),
           const SizedBox(width: 4),
-          Text(label, style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w500, color: const Color(0xFF475569))),
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF475569),
+            ),
+          ),
         ],
       ),
     );
@@ -490,8 +693,21 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
         children: [
           PhosphorIcon(icon, size: 18, color: const Color(0xFFED3973)),
           const SizedBox(height: 4),
-          Text(value, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B))),
-          Text(label, style: GoogleFonts.poppins(fontSize: 10, color: const Color(0xFF94A3B8))),
+          Text(
+            value,
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1E293B),
+            ),
+          ),
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 10,
+              color: const Color(0xFF94A3B8),
+            ),
+          ),
         ],
       ),
     );
@@ -521,14 +737,27 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
                 onTap: () => setState(() => _selectedCategory = i),
                 child: Container(
                   margin: const EdgeInsets.only(right: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: selected ? const Color(0xFFED3973) : Colors.white,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: selected ? const Color(0xFFED3973) : const Color(0xFFE2E8F0)),
+                    border: Border.all(
+                      color: selected
+                          ? const Color(0xFFED3973)
+                          : const Color(0xFFE2E8F0),
+                    ),
                   ),
-                  child: Text(_categories[i],
-                      style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500, color: selected ? Colors.white : const Color(0xFF475569))),
+                  child: Text(
+                    _categories[i],
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: selected ? Colors.white : const Color(0xFF475569),
+                    ),
+                  ),
                 ),
               );
             },
@@ -537,7 +766,14 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
         // Section title
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: Text('Rice & Noodles', style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B))),
+          child: Text(
+            'Rice & Noodles',
+            style: GoogleFonts.poppins(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1E293B),
+            ),
+          ),
         ),
         // Menu items
         ..._menuItems.map((item) => _buildMenuItemCard(item)),
@@ -556,17 +792,23 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
       child: Row(
         children: [
           ClipRRect(
-            borderRadius: const BorderRadius.horizontal(left: Radius.circular(12)),
+            borderRadius: const BorderRadius.horizontal(
+              left: Radius.circular(12),
+            ),
             child: Image.network(
               item.imageUrl,
               width: 90,
               height: 80,
               fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => Container(
+              errorBuilder: (_, __, ___) => Container(
                 width: 90,
                 height: 80,
                 color: const Color(0xFFE2E8F0),
-                child: const PhosphorIcon(PhosphorIconsRegular.forkKnife, size: 28, color: Color(0xFF94A3B8)),
+                child: const PhosphorIcon(
+                  PhosphorIconsRegular.forkKnife,
+                  size: 28,
+                  color: Color(0xFF94A3B8),
+                ),
               ),
             ),
           ),
@@ -577,19 +819,53 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item.name, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
+                  Text(
+                    item.name,
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF1E293B),
+                    ),
+                  ),
                   const SizedBox(height: 4),
                   Wrap(
                     spacing: 4,
                     children: [
-                      if (item.isHot) _badge('🔥 Hot Deal', const Color(0xFFFFF3CD), const Color(0xFF92400E)),
-                      if (item.isPopular) _badge('⭐ Popular', const Color(0xFFE0F2FE), const Color(0xFF0369A1)),
-                      if (item.isVeg) _badge('🌿 Veg', const Color(0xFFDCFCE7), const Color(0xFF166534)),
-                      if (item.isSpicy) _badge('🌶 Spicy', const Color(0xFFFFE4E6), const Color(0xFF9F1239)),
+                      if (item.isHot)
+                        _badge(
+                          '🔥 Hot Deal',
+                          const Color(0xFFFFF3CD),
+                          const Color(0xFF92400E),
+                        ),
+                      if (item.isPopular)
+                        _badge(
+                          '⭐ Popular',
+                          const Color(0xFFE0F2FE),
+                          const Color(0xFF0369A1),
+                        ),
+                      if (item.isVeg)
+                        _badge(
+                          '🌿 Veg',
+                          const Color(0xFFDCFCE7),
+                          const Color(0xFF166534),
+                        ),
+                      if (item.isSpicy)
+                        _badge(
+                          '🌶 Spicy',
+                          const Color(0xFFFFE4E6),
+                          const Color(0xFF9F1239),
+                        ),
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text('฿${item.price.toStringAsFixed(0)}', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFFED3973))),
+                  Text(
+                    '฿${item.price.toStringAsFixed(0)}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFFED3973),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -602,8 +878,18 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
   Widget _badge(String label, Color bg, Color fg) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(4)),
-      child: Text(label, style: GoogleFonts.poppins(fontSize: 9, fontWeight: FontWeight.w600, color: fg)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.poppins(
+          fontSize: 9,
+          fontWeight: FontWeight.w600,
+          color: fg,
+        ),
+      ),
     );
   }
 
@@ -617,18 +903,43 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
         // Overall score
         Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE2E8F0))),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Column(
                 children: [
-                  Text('4.7', style: GoogleFonts.poppins(fontSize: 48, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B), height: 1)),
+                  Text(
+                    '4.7',
+                    style: GoogleFonts.poppins(
+                      fontSize: 48,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1E293B),
+                      height: 1,
+                    ),
+                  ),
                   Row(
-                    children: List.generate(5, (i) => Icon(i < 5 ? Icons.star : Icons.star_border, size: 14, color: const Color(0xFFF59E0B))),
+                    children: List.generate(
+                      5,
+                      (i) => Icon(
+                        i < 5 ? Icons.star : Icons.star_border,
+                        size: 14,
+                        color: const Color(0xFFF59E0B),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 2),
-                  Text('128 reviews', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF94A3B8))),
+                  Text(
+                    '128 reviews',
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      color: const Color(0xFF94A3B8),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(width: 20),
@@ -641,15 +952,27 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
                       padding: const EdgeInsets.symmetric(vertical: 2),
                       child: Row(
                         children: [
-                          Text('$star', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF64748B))),
+                          Text(
+                            '$star',
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              color: const Color(0xFF64748B),
+                            ),
+                          ),
                           const SizedBox(width: 4),
-                          const Icon(Icons.star, size: 10, color: Color(0xFFF59E0B)),
+                          const Icon(
+                            Icons.star,
+                            size: 10,
+                            color: Color(0xFFF59E0B),
+                          ),
                           const SizedBox(width: 6),
                           Expanded(
                             child: LinearProgressIndicator(
                               value: vals[i],
                               backgroundColor: const Color(0xFFE2E8F0),
-                              valueColor: const AlwaysStoppedAnimation(Color(0xFFF59E0B)),
+                              valueColor: const AlwaysStoppedAnimation(
+                                Color(0xFFF59E0B),
+                              ),
                               minHeight: 6,
                               borderRadius: BorderRadius.circular(3),
                             ),
@@ -673,7 +996,11 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE2E8F0))),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -682,34 +1009,83 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
               CircleAvatar(
                 radius: 18,
                 backgroundColor: const Color(0xFFED3973).withValues(alpha: 0.1),
-                child: Text(r.reviewer[0], style: GoogleFonts.poppins(color: const Color(0xFFED3973), fontWeight: FontWeight.w700, fontSize: 14)),
+                child: Text(
+                  r.reviewer[0],
+                  style: GoogleFonts.poppins(
+                    color: const Color(0xFFED3973),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(r.reviewer, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
-                    Text(r.date, style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF94A3B8))),
+                    Text(
+                      r.reviewer,
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1E293B),
+                      ),
+                    ),
+                    Text(
+                      r.date,
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: const Color(0xFF94A3B8),
+                      ),
+                    ),
                   ],
                 ),
               ),
               Row(
-                children: List.generate(5, (i) => Icon(i < r.rating ? Icons.star : Icons.star_border, size: 13, color: const Color(0xFFF59E0B))),
+                children: List.generate(
+                  5,
+                  (i) => Icon(
+                    i < r.rating ? Icons.star : Icons.star_border,
+                    size: 13,
+                    color: const Color(0xFFF59E0B),
+                  ),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          Text(r.comment, style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF475569))),
+          Text(
+            r.comment,
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              color: const Color(0xFF475569),
+            ),
+          ),
           if (r.tags.isNotEmpty) ...[
             const SizedBox(height: 8),
             Wrap(
               spacing: 6,
-              children: r.tags.map((t) => Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(20)),
-                child: Text(t, style: GoogleFonts.poppins(fontSize: 10, color: const Color(0xFF64748B))),
-              )).toList(),
+              children: r.tags
+                  .map(
+                    (t) => Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        t,
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: const Color(0xFF64748B),
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
             ),
           ],
         ],
@@ -748,9 +1124,19 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const PhosphorIcon(PhosphorIconsRegular.mapPin, size: 32, color: Color(0xFFED3973)),
+                  const PhosphorIcon(
+                    PhosphorIconsRegular.mapPin,
+                    size: 32,
+                    color: Color(0xFFED3973),
+                  ),
                   const SizedBox(height: 6),
-                  Text('$lat° N, $lng° E', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF475569))),
+                  Text(
+                    '$lat° N, $lng° E',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: const Color(0xFF475569),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -764,7 +1150,9 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
             _infoRow(PhosphorIconsRegular.clock, 'Hours', 'Not set'),
           for (final opHour in _shopProfile?.operatingHours ?? [])
             _infoRow(
-              opHour.isClosed ? PhosphorIconsRegular.door : PhosphorIconsRegular.clock,
+              opHour.isClosed
+                  ? PhosphorIconsRegular.door
+                  : PhosphorIconsRegular.clock,
               opHour.dayName,
               opHour.isClosed
                   ? 'Closed'
@@ -776,8 +1164,16 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
         // Delivery tiers
         _sectionLabel('Delivery Options'),
         _infoCard([
-          _infoRow(PhosphorIconsRegular.motorcycle, 'Standard', 'Free  •  25–35 min'),
-          _infoRow(PhosphorIconsRegular.lightning, 'Express', '฿50  •  15–20 min'),
+          _infoRow(
+            PhosphorIconsRegular.motorcycle,
+            'Standard',
+            'Free  •  25–35 min',
+          ),
+          _infoRow(
+            PhosphorIconsRegular.lightning,
+            'Express',
+            '฿50  •  15–20 min',
+          ),
         ]),
         const SizedBox(height: 12),
         // Payment
@@ -785,7 +1181,11 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
         _infoCard([
           _infoRow(PhosphorIconsRegular.money, 'Cash on Delivery', 'Accepted'),
           _infoRow(PhosphorIconsRegular.creditCard, 'Card', 'Accepted'),
-          _infoRow(PhosphorIconsRegular.deviceMobile, 'Mobile Pay', 'KBZPay, AYAPay, WavePay'),
+          _infoRow(
+            PhosphorIconsRegular.deviceMobile,
+            'Mobile Pay',
+            'KBZPay, AYAPay, WavePay',
+          ),
         ]),
       ],
     );
@@ -794,25 +1194,53 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
   Widget _sectionLabel(String label) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: Text(label, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF475569))),
+      child: Text(
+        label,
+        style: GoogleFonts.poppins(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF475569),
+        ),
+      ),
     );
   }
 
   Widget _infoCard(List<Widget> rows) {
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE2E8F0))),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
       child: Column(
-        children: rows.asMap().entries.map((e) => Column(
-          children: [
-            e.value,
-            if (e.key < rows.length - 1) const Divider(height: 1, color: Color(0xFFE2E8F0), indent: 14, endIndent: 14),
-          ],
-        )).toList(),
+        children: rows
+            .asMap()
+            .entries
+            .map(
+              (e) => Column(
+                children: [
+                  e.value,
+                  if (e.key < rows.length - 1)
+                    const Divider(
+                      height: 1,
+                      color: Color(0xFFE2E8F0),
+                      indent: 14,
+                      endIndent: 14,
+                    ),
+                ],
+              ),
+            )
+            .toList(),
       ),
     );
   }
 
-  Widget _infoRow(IconData icon, String label, String value, {bool highlight = false}) {
+  Widget _infoRow(
+    IconData icon,
+    String label,
+    String value, {
+    bool highlight = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       child: Row(
@@ -820,10 +1248,28 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
         children: [
           PhosphorIcon(icon, size: 18, color: const Color(0xFF94A3B8)),
           const SizedBox(width: 10),
-          SizedBox(width: 90, child: Text(label, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500, color: const Color(0xFF475569)))),
+          SizedBox(
+            width: 90,
+            child: Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF475569),
+              ),
+            ),
+          ),
           Expanded(
-            child: Text(value,
-                style: GoogleFonts.poppins(fontSize: 13, color: highlight ? const Color(0xFFED3973) : const Color(0xFF1E293B), fontWeight: highlight ? FontWeight.w600 : FontWeight.w400)),
+            child: Text(
+              value,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                color: highlight
+                    ? const Color(0xFFED3973)
+                    : const Color(0xFF1E293B),
+                fontWeight: highlight ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
           ),
         ],
       ),
@@ -879,7 +1325,9 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 3),
                     ),
-                    child: const ClipOval(child: Skeleton(width: 72, height: 72)),
+                    child: const ClipOval(
+                      child: Skeleton(width: 72, height: 72),
+                    ),
                   ),
                 ),
               ),
@@ -907,7 +1355,10 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
                     ],
                   ),
                   const SizedBox(height: 16),
-                  const Skeleton(width: double.infinity, height: 64), // Delivery info
+                  const Skeleton(
+                    width: double.infinity,
+                    height: 64,
+                  ), // Delivery info
                   const SizedBox(height: 16),
                   Row(
                     children: const [
@@ -917,7 +1368,10 @@ class _ShopProfilePageState extends State<ShopProfilePage> with SingleTickerProv
                     ],
                   ),
                   const SizedBox(height: 16),
-                  const Skeleton(width: double.infinity, height: 60), // Read-only phone
+                  const Skeleton(
+                    width: double.infinity,
+                    height: 60,
+                  ), // Read-only phone
                 ],
               ),
             ),
@@ -934,11 +1388,12 @@ class _TabHeaderDelegate extends SliverPersistentHeaderDelegate {
   _TabHeaderDelegate(this.tabBar);
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(
-      color: Colors.white,
-      child: tabBar,
-    );
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(color: Colors.white, child: tabBar);
   }
 
   @override
