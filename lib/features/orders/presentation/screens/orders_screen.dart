@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/features/orders/data/models/order_model.dart';
 import 'package:my_shop/features/orders/data/services/order_service.dart';
 import 'package:my_shop/features/orders/presentation/widgets/order_card.dart';
-import 'package:my_shop/features/orders/presentation/widgets/new_order_dialog.dart';
-import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
 import 'dart:async';
 import 'package:my_shop/core/network/websocket_service.dart';
-import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/features/notifications/presentation/widgets/notification_badge_icon.dart';
 

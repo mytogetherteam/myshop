@@ -16,20 +16,22 @@ import 'package:flutter/services.dart';
 import 'dart:async';
 
 class MainNavigationScreen extends StatefulWidget {
-  const MainNavigationScreen({super.key});
+  final int initialIndex;
+  const MainNavigationScreen({super.key, this.initialIndex = 0});
 
   @override
   State<MainNavigationScreen> createState() => _MainNavigationScreenState();
 }
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
-  int _currentIndex = 0; // Set to Order tab as default based on request
+  late int _currentIndex;
   StreamSubscription? _socketSubscription;
   final GlobalKey<OrdersScreenState> _ordersKey = GlobalKey<OrdersScreenState>();
 
   @override
   void initState() {
     super.initState();
+    _currentIndex = widget.initialIndex;
     _setupWebSocketListener();
   }
 
@@ -40,9 +42,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 
   void _setupWebSocketListener() {
-    print('🚀 [MainNavigation] SETTING UP LISTENER...');
+    debugPrint('🚀 [MainNavigation] SETTING UP LISTENER...');
     _socketSubscription = WebSocketService().orderUpdates.listen((event) {
-      print('🔔 [MainNavigation] EVENT: ${event['type']}, MSG: ${event['message']}');
+      debugPrint('🔔 [MainNavigation] EVENT: ${event['type']}, MSG: ${event['message']}');
       
       final dynamic rawOrder = event['order'];
       final dynamic rawMsg = event['message'];

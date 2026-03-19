@@ -1,20 +1,20 @@
 import 'package:intl/intl.dart';
 
 enum NotificationType {
-  ORDER_STATUS,
-  NEW_ORDER,
-  URGENT_PENDING,
-  UNKNOWN;
+  orderStatus,
+  newOrder,
+  urgentPending,
+  unknown;
 
   static NotificationType fromString(String? value) {
-    if (value == null) return NotificationType.UNKNOWN;
+    if (value == null) return NotificationType.unknown;
     try {
       return NotificationType.values.firstWhere(
-        (e) => e.name == value,
-        orElse: () => NotificationType.UNKNOWN,
+        (e) => e.name.toUpperCase() == value.toUpperCase(),
+        orElse: () => NotificationType.unknown,
       );
     } catch (_) {
-      return NotificationType.UNKNOWN;
+      return NotificationType.unknown;
     }
   }
 }

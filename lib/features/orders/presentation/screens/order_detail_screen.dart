@@ -464,11 +464,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
 
-  void _playAlertSound() {
-    // In a real app, use a package like audioplayers
-    HapticFeedback.vibrate();
-    debugPrint('PLAYING ALERT SOUND');
-  }
+
 
   void _handleBack() {
     Navigator.pop(context, _currentOrder.status);

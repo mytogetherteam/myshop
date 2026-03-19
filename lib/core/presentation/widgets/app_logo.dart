@@ -5,10 +5,10 @@ class AppLogo extends StatelessWidget {
   final BoxFit fit;
 
   const AppLogo({
-    Key? key,
+    super.key,
     this.size = 120,
     this.fit = BoxFit.contain,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

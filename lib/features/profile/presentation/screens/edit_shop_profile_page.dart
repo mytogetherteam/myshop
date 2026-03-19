@@ -1,0 +1,721 @@
+// ignore_for_file: use_build_context_synchronously
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:my_shop/features/main_navigation/presentation/screens/main_navigation_screen.dart';
+import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
+import 'package:my_shop/features/profile/data/services/profile_service.dart';
+
+class EditShopProfilePage extends StatefulWidget {
+  final ShopProfileModel? shopProfile;
+  const EditShopProfilePage({super.key, this.shopProfile});
+
+  @override
+  State<EditShopProfilePage> createState() => _EditShopProfilePageState();
+}
+
+class _EditShopProfilePageState extends State<EditShopProfilePage> {
+  bool _hasChanges = false;
+  bool _isSaving = false;
+
+  // Language switcher state
+  String _nameLang = 'EN';
+  String _descLang = 'EN';
+  String _addressLang = 'EN';
+
+  // Text controllers
+  late final TextEditingController _nameEnCtrl;
+  late final TextEditingController _nameMmCtrl;
+  late final TextEditingController _nameThCtrl;
+  late final TextEditingController _descEnCtrl;
+  late final TextEditingController _descMmCtrl;
+  late final TextEditingController _descThCtrl;
+  late final TextEditingController _phoneCtrl;
+  late final TextEditingController _emailCtrl;
+  late final TextEditingController _addressEnCtrl;
+  late final TextEditingController _addressMmCtrl;
+  late final TextEditingController _addressThCtrl;
+  late final TextEditingController _districtCtrl;
+  late final TextEditingController _cityCtrl;
+
+  // Location
+  double? _latitude;
+  double? _longitude;
+
+  // Amenity toggles
+  late bool _hasParking;
+  late bool _hasWifi;
+  late bool _hasDelivery;
+
+  // Dietary tags
+  late bool _isHalal;
+  late bool _isVegetarian;
+
+  // Price range: 0=budget, 1=mid-range, 2=premium
+  late int _priceRange;
+
+  @override
+  void initState() {
+    super.initState();
+    final profile = widget.shopProfile;
+
+    _nameEnCtrl = TextEditingController(text: profile?.nameEn ?? '');
+    _nameMmCtrl = TextEditingController(text: profile?.nameMm ?? '');
+    _nameThCtrl = TextEditingController(text: profile?.nameTh ?? '');
+    _descEnCtrl = TextEditingController(text: profile?.descriptionEn ?? '');
+    _descMmCtrl = TextEditingController(text: profile?.descriptionMm ?? '');
+    _descThCtrl = TextEditingController(text: profile?.descriptionTh ?? '');
+    _phoneCtrl = TextEditingController(text: profile?.phone ?? '');
+    _emailCtrl = TextEditingController(text: profile?.email ?? '');
+    _addressEnCtrl = TextEditingController(text: profile?.addressEn ?? '');
+    _addressMmCtrl = TextEditingController(text: profile?.addressMm ?? '');
+    _addressThCtrl = TextEditingController(text: profile?.addressTh ?? '');
+    _districtCtrl = TextEditingController(text: profile?.districtEn ?? '');
+    _cityCtrl = TextEditingController(text: profile?.cityEn ?? ''); // Using districtEn/cityEn mostly
+
+    _latitude = profile?.latitude;
+    _longitude = profile?.longitude;
+
+    _hasParking = profile?.hasParking ?? false;
+    _hasWifi = profile?.hasWifi ?? false;
+    _hasDelivery = profile?.hasDelivery ?? false;
+    _isHalal = profile?.isHalal ?? false;
+    _isVegetarian = profile?.isVegetarian ?? false;
+
+    // Map price preference
+    _priceRange = 1; // Default
+    if (profile?.pricePreference == 'LOW') _priceRange = 0;
+    if (profile?.pricePreference == 'HIGH') _priceRange = 2;
+  }
+
+  @override
+  void dispose() {
+    for (final c in [
+      _nameEnCtrl, _nameMmCtrl, _nameThCtrl,
+      _descEnCtrl, _descMmCtrl, _descThCtrl,
+      _phoneCtrl, _emailCtrl,
+      _addressEnCtrl, _addressMmCtrl, _addressThCtrl,
+      _districtCtrl, _cityCtrl,
+    ]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void _markChanged() {
+    if (!_hasChanges) setState(() => _hasChanges = true);
+  }
+
+  Future<bool> _onWillPop() async {
+    if (!_hasChanges) return true;
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Discard changes?',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 16)),
+        content: Text(
+          'You have unsaved changes. Do you want to discard them?',
+          style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF475569)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text('Continue Editing',
+                style: GoogleFonts.poppins(color: const Color(0xFF475569), fontWeight: FontWeight.w500)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text('Discard',
+                style: GoogleFonts.poppins(color: const Color(0xFFED3973), fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  Future<void> _save() async {
+    setState(() => _isSaving = true);
+    
+    // Map price preference
+    String pricePref = 'MEDIUM';
+    if (_priceRange == 0) pricePref = 'LOW';
+    if (_priceRange == 2) pricePref = 'HIGH';
+
+    final payload = {
+      'nameEn': _nameEnCtrl.text,
+      'nameMm': _nameMmCtrl.text,
+      'nameTh': _nameThCtrl.text,
+      'descriptionEn': _descEnCtrl.text,
+      'descriptionMm': _descMmCtrl.text,
+      'descriptionTh': _descThCtrl.text,
+      'phone': _phoneCtrl.text,
+      'email': _emailCtrl.text,
+      'addressEn': _addressEnCtrl.text,
+      'addressMm': _addressMmCtrl.text,
+      'addressTh': _addressThCtrl.text,
+      // For district/city assuming using the single field for all, if user only inputs 1
+      'districtEn': _districtCtrl.text,
+      'districtMm': _districtCtrl.text,
+      'districtTh': _districtCtrl.text,
+      'cityEn': _cityCtrl.text,
+      'cityMm': _cityCtrl.text,
+      'cityTh': _cityCtrl.text,
+      'latitude': _latitude ?? 16.8409, // Fallback if no location picked
+      'longitude': _longitude ?? 96.1735,
+      'hasParking': _hasParking,
+      'hasWifi': _hasWifi,
+      'hasDelivery': _hasDelivery,
+      'isHalal': _isHalal,
+      'isVegetarian': _isVegetarian,
+      'pricePreference': pricePref,
+    };
+
+    final profileService = ProfileService();
+    final success = await profileService.updateShopProfile(payload);
+
+    if (!context.mounted) return;
+
+    if (success) {
+      setState(() {
+        _hasChanges = false;
+        _isSaving = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile saved successfully!')),
+      );
+      // Navigate back to the Profile tab in MainNavigationScreen (initialIndex: 3)
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const MainNavigationScreen(initialIndex: 3)),
+        (route) => false,
+      );
+    } else {
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to save profile. Please try again.')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: !_hasChanges,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final should = await _onWillPop();
+        if (should && context.mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const MainNavigationScreen(initialIndex: 3)),
+            (route) => false,
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        appBar: AppBar(
+          title: Text(
+            'Edit Shop Profile',
+            style: GoogleFonts.poppins(
+              color: const Color(0xFF1E293B),
+              fontWeight: FontWeight.w700,
+              fontSize: 18,
+            ),
+          ),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const PhosphorIcon(PhosphorIconsRegular.arrowLeft, size: 24, color: Color(0xFF1E293B)),
+            onPressed: () async {
+              final should = await _onWillPop();
+              if (should && context.mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MainNavigationScreen(initialIndex: 3)),
+                  (route) => false,
+                );
+              }
+            },
+          ),
+          actions: const [
+            SizedBox(width: 8),
+          ],
+          bottom: const PreferredSize(
+            preferredSize: Size.fromHeight(1),
+            child: Divider(height: 1, color: Color(0xFFE2E8F0)),
+          ),
+        ),
+        body: ListView(
+          padding: const EdgeInsets.only(bottom: 24),
+          children: [
+            // Cover + Logo upload
+            _buildCoverLogoUpload(),
+
+            // Shop name
+            _buildSection(
+              label: 'Shop Name',
+              child: _buildLangField(
+                selectedLang: _nameLang,
+                onLangChanged: (l) => setState(() => _nameLang = l),
+                controller: _nameLang == 'EN' ? _nameEnCtrl : _nameLang == 'MM' ? _nameMmCtrl : _nameThCtrl,
+                hint: 'Enter shop name',
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Description
+            _buildSection(
+              label: 'Description',
+              child: _buildLangField(
+                selectedLang: _descLang,
+                onLangChanged: (l) => setState(() => _descLang = l),
+                controller: _descLang == 'EN' ? _descEnCtrl : _descLang == 'MM' ? _descMmCtrl : _descThCtrl,
+                hint: 'Enter description',
+                maxLines: 3,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Phone
+            _buildSection(
+              label: 'Phone Number',
+              child: _buildTextField(_phoneCtrl, '+95 9 XXX XXX XXX', icon: PhosphorIconsRegular.phone),
+            ),
+            const SizedBox(height: 16),
+
+            // Email
+            _buildSection(
+              label: 'Email',
+              child: _buildTextField(_emailCtrl, 'shop@example.com', icon: PhosphorIconsRegular.envelope),
+            ),
+            const SizedBox(height: 16),
+
+            // Street address
+            _buildSection(
+              label: 'Street Address',
+              child: _buildLangField(
+                selectedLang: _addressLang,
+                onLangChanged: (l) => setState(() => _addressLang = l),
+                controller: _addressLang == 'EN'
+                    ? _addressEnCtrl
+                    : _addressLang == 'MM'
+                        ? _addressMmCtrl
+                        : _addressThCtrl,
+                hint: 'Enter street address',
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // District + City
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _buildSection(label: 'District', child: _buildTextField(_districtCtrl, 'District')),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildSection(label: 'City', child: _buildTextField(_cityCtrl, 'City')),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Map pin
+            _buildSection(
+              label: 'Map Location',
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Row(
+                  children: [
+                    const PhosphorIcon(PhosphorIconsRegular.mapPin, size: 20, color: Color(0xFFED3973)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('${_latitude?.toStringAsFixed(4) ?? "16.8409"}° N, ${_longitude?.toStringAsFixed(4) ?? "96.1735"}° E',
+                              style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500, color: const Color(0xFF1E293B))),
+                          Text('Current pin location', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF94A3B8))),
+                        ],
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: _markChanged,
+                      icon: const PhosphorIcon(PhosphorIconsRegular.pencilSimple, size: 14, color: Color(0xFF475569)),
+                      label: Text('Reposition', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF475569))),
+                      style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Amenities
+            _buildToggleSection(
+              title: 'Amenities',
+              items: [
+                _ToggleItem(icon: PhosphorIconsRegular.car, label: 'Parking', value: _hasParking, onChanged: (v) { setState(() => _hasParking = v); _markChanged(); }),
+                _ToggleItem(icon: PhosphorIconsRegular.wifiHigh, label: 'WiFi', value: _hasWifi, onChanged: (v) { setState(() => _hasWifi = v); _markChanged(); }),
+                _ToggleItem(icon: PhosphorIconsRegular.motorcycle, label: 'Delivery', value: _hasDelivery, onChanged: (v) { setState(() => _hasDelivery = v); _markChanged(); }),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Dietary tags
+            _buildToggleSection(
+              title: 'Dietary Tags',
+              items: [
+                _ToggleItem(icon: PhosphorIconsRegular.moon, label: 'Halal', value: _isHalal, onChanged: (v) { setState(() => _isHalal = v); _markChanged(); }),
+                _ToggleItem(icon: PhosphorIconsRegular.leaf, label: 'Vegetarian', value: _isVegetarian, onChanged: (v) { setState(() => _isVegetarian = v); _markChanged(); }),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Price range
+            _buildSection(
+              label: 'Price Range',
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Row(
+                  children: [
+                    _PriceOption(label: '฿ Budget', index: 0, selected: _priceRange == 0, onTap: () { setState(() => _priceRange = 0); _markChanged(); }),
+                    _PriceOption(label: '฿฿ Mid-range', index: 1, selected: _priceRange == 1, onTap: () { setState(() => _priceRange = 1); _markChanged(); }),
+                    _PriceOption(label: '฿฿฿ Premium', index: 2, selected: _priceRange == 2, onTap: () { setState(() => _priceRange = 2); _markChanged(); }),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _isSaving ? null : _save,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFED3973),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 0,
+                ),
+                child: _isSaving 
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                  : Text(
+                      'Save',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCoverLogoUpload() {
+    return Column(
+      children: [
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // Cover
+            GestureDetector(
+              onTap: _markChanged,
+              child: Container(
+                height: 180,
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFFED3973), Color(0xFFFF8C69)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    // Placeholder pattern
+                    Positioned.fill(
+                      child: Opacity(
+                        opacity: 0.15,
+                        child: GridPaper(
+                          color: Colors.white,
+                          divisions: 1,
+                          subdivisions: 1,
+                          interval: 40,
+                          child: Container(),
+                        ),
+                      ),
+                    ),
+                    Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const PhosphorIcon(PhosphorIconsRegular.camera, size: 32, color: Colors.white),
+                          const SizedBox(height: 8),
+                          Text('Tap to change cover photo',
+                              style: GoogleFonts.poppins(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Logo
+            Positioned(
+              bottom: -36,
+              left: 20,
+              child: GestureDetector(
+                onTap: _markChanged,
+                child: Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    border: Border.all(color: Colors.white, width: 3),
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 8, offset: const Offset(0, 2))],
+                  ),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [Color(0xFFED3973), Color(0xFFFF8C69)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: const Center(
+                      child: PhosphorIcon(PhosphorIconsRegular.camera, size: 24, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        // Spacer: 36 px logo overflow + 20 px breathing room before first label
+        const SizedBox(height: 56),
+      ],
+    );
+  }
+
+  Widget _buildSection({required String label, required Widget child, EdgeInsets? padding}) {
+    return Padding(
+      padding: padding ?? const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF475569))),
+          const SizedBox(height: 8),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLangField({
+    required String selectedLang,
+    required ValueChanged<String> onLangChanged,
+    required TextEditingController controller,
+    required String hint,
+    int maxLines = 1,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 8),
+        // Language switcher
+        Row(
+          children: ['EN', 'MM', 'TH'].map((lang) {
+            final selected = selectedLang == lang;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: GestureDetector(
+                onTap: () => onLangChanged(lang),
+                child: Container(
+                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: selected ? const Color(0xFFED3973) : Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: selected ? const Color(0xFFED3973) : const Color(0xFFE2E8F0)),
+                  ),
+                  child: Text(lang,
+                      style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: selected ? Colors.white : const Color(0xFF64748B))),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          onChanged: (_) => _markChanged(),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: GoogleFonts.poppins(color: const Color(0xFFCBD5E1), fontSize: 14),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFED3973), width: 1.5)),
+          ),
+          style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTextField(TextEditingController ctrl, String hint, {IconData? icon}) {
+    return TextField(
+      controller: ctrl,
+      onChanged: (_) => _markChanged(),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: GoogleFonts.poppins(color: const Color(0xFFCBD5E1), fontSize: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        prefixIcon: icon != null ? PhosphorIcon(icon, size: 18, color: const Color(0xFF94A3B8)) : null,
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFED3973), width: 1.5)),
+      ),
+      style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B)),
+    );
+  }
+
+  Widget _buildToggleSection({required String title, required List<_ToggleItem> items}) {
+    return _buildSection(
+      label: title,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: Column(
+          children: items.asMap().entries.map((entry) {
+            final i = entry.key;
+            final item = entry.value;
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                  child: Row(
+                    children: [
+                      PhosphorIcon(item.icon, size: 20, color: const Color(0xFF475569)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(item.label,
+                            style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: const Color(0xFF1E293B))),
+                      ),
+                      SizedBox(
+                        height: 24,
+                        child: Transform.scale(
+                          scale: 0.65,
+                          child: Switch(
+                            value: item.value,
+                            onChanged: item.onChanged,
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            thumbColor: WidgetStateProperty.all(Colors.white),
+                            trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+                            trackColor: WidgetStateProperty.resolveWith((states) {
+                              if (states.contains(WidgetState.selected)) {
+                                return const Color(0xFFED3973); // Pink active
+                              }
+                              return const Color(0xFFE2E8F0); // Light gray inactive
+                            }),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (i < items.length - 1)
+                  const Divider(height: 1, color: Color(0xFFE2E8F0), indent: 14, endIndent: 14),
+              ],
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+class _ToggleItem {
+  final IconData icon;
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  const _ToggleItem({required this.icon, required this.label, required this.value, required this.onChanged});
+}
+
+class _PriceOption extends StatelessWidget {
+  final String label;
+  final int index;
+  final bool selected;
+  final VoidCallback onTap;
+  const _PriceOption({required this.label, required this.index, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: selected ? const Color(0xFFED3973) : Colors.transparent,
+            borderRadius: BorderRadius.horizontal(
+              left: index == 0 ? const Radius.circular(10) : Radius.zero,
+              right: index == 2 ? const Radius.circular(10) : Radius.zero,
+            ),
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: selected ? Colors.white : const Color(0xFF64748B),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

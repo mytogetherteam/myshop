@@ -125,7 +125,7 @@ class _NotificationPageState extends State<NotificationPage> {
 
     // Deep Navigation Logic
     if (mounted && noti.referenceId != null) {
-      if (noti.type == NotificationType.ORDER_STATUS || noti.type == NotificationType.NEW_ORDER) {
+      if (noti.type == NotificationType.orderStatus || noti.type == NotificationType.newOrder) {
         _navigateToOrder(noti.referenceId!);
       }
     }
@@ -352,11 +352,11 @@ class _NotificationPageState extends State<NotificationPage> {
     final lowerTitle = noti.title.toLowerCase();
     final lowerBody = noti.body.toLowerCase();
 
-    if (noti.type == NotificationType.NEW_ORDER || lowerTitle.contains('new order') || lowerTitle.contains('အော်ဒါအသစ်')) {
+    if (noti.type == NotificationType.newOrder || lowerTitle.contains('new order') || lowerTitle.contains('အော်ဒါအသစ်')) {
       return PhosphorIconsFill.shoppingBagOpen;
     }
 
-    if (noti.type == NotificationType.URGENT_PENDING) {
+    if (noti.type == NotificationType.urgentPending) {
       return PhosphorIconsFill.warning;
     }
 
