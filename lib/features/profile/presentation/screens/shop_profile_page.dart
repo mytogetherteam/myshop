@@ -371,7 +371,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                   ? Image.network(
                       _shopProfile!.logoUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _buildInitials(),
+                      errorBuilder: (_, _, _) => _buildInitials(),
                     )
                   : _buildInitials(),
             ),
@@ -800,7 +800,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
               width: 90,
               height: 80,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
+              errorBuilder: (_, _, _) => Container(
                 width: 90,
                 height: 80,
                 color: const Color(0xFFE2E8F0),
