@@ -9,7 +9,7 @@ allprojects {
     }
 }
 
-rootProject.layout.buildDirectory.set(rootProject.layout.projectDirectory.dir("../../build"))
+rootProject.layout.buildDirectory.set(rootProject.layout.projectDirectory.dir("../build"))
 
 subprojects {
     project.layout.buildDirectory.set(rootProject.layout.buildDirectory.dir(project.name))

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -484,7 +483,7 @@ class OrderCard extends StatelessWidget {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(success ? 'Order cancelled' : 'Failed to cancel order'),
-                              backgroundColor: success ? Colors.green : Colors.red,
+                              backgroundColor: success ? const Color(0xFFED3A72) : const Color(0xFFEF4444),
                               behavior: SnackBarBehavior.fixed,
                             ),
                           );

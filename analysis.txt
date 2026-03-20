@@ -1,5 +1,0 @@
-Analyzing my_shop...                                            
-
-warning - The include file 'package:flutter_lints/lints.yaml' in 'D:\my_shop\analysis_options.yaml' can't be found when analyzing 'D:\my_shop' - analysis_options.yaml:10:10 - include_file_not_found
-warning - Unused import: 'package:my_shop/core/network/websocket_service.dart' - lib\features\orders\presentation\screens\orders_screen.dart:7:8 - unused_import
-

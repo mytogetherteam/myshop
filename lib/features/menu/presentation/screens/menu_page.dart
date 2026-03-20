@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../widgets/menu_header.dart';
+import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import '../widgets/quick_action_cards.dart';
 import '../widgets/menu_item_card.dart';
 import 'add_new_item_screen.dart';
@@ -16,7 +16,7 @@ class MenuPage extends StatefulWidget {
   State<MenuPage> createState() => _MenuPageState();
 }
 
-class _MenuPageState extends State<MenuPage> {
+class _MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
   final MenuService _menuService = MenuService();
   List<MenuCategoryModel> _categories = [];
   List<MenuItemModel> _items = [];
@@ -28,6 +28,9 @@ class _MenuPageState extends State<MenuPage> {
   bool _hasMore = true;
   bool _isLoadingMoreItems = false;
   final ScrollController _scrollController = ScrollController();
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -126,7 +129,10 @@ class _MenuPageState extends State<MenuPage> {
     final success = await _menuService.toggleAvailability(item.id, available);
     if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update availability')),
+        const SnackBar(
+          content: Text('Failed to update availability'),
+          backgroundColor: Color(0xFFEF4444),
+        ),
       );
       // Revert if failed
       _fetchItems(refresh: true);
@@ -135,12 +141,13 @@ class _MenuPageState extends State<MenuPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
-            const MenuHeader(),
+            // Header removed, handled by global AppBar
             Expanded(
               child: RefreshIndicator(
                 onRefresh: () async {
@@ -197,11 +204,7 @@ class _MenuPageState extends State<MenuPage> {
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 24),
                           child: Center(
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFED3A72)),
-                            ),
+                            child: CustomLoadingIndicator(size: 24, color: Color(0xFFED3A72)),
                           ),
                         ),
                       const SizedBox(height: 20),

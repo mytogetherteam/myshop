@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
+import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/features/main_navigation/presentation/screens/main_navigation_screen.dart';
 
 class OperatingHoursPage extends StatefulWidget {
@@ -123,7 +124,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
           '${_days[sourceIndex]}\'s hours copied to all days',
           style: GoogleFonts.poppins(fontSize: 13),
         ),
-        backgroundColor: const Color(0xFF1E293B),
+        backgroundColor: const Color(0xFFED3A72),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
@@ -195,7 +196,10 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
           _hasChanges = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Operating hours saved successfully!')),
+        const SnackBar(
+          content: Text('Operating hours saved successfully!'),
+          backgroundColor: Color(0xFFED3A72),
+        ),
       );
       // Navigate back to the Profile tab in MainNavigationScreen (initialIndex: 3)
       Navigator.pushAndRemoveUntil(
@@ -206,7 +210,10 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
     } else {
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to save operating hours. Please try again.')),
+        const SnackBar(
+          content: Text('Failed to save operating hours. Please try again.'),
+          backgroundColor: Color(0xFFEF4444),
+        ),
       );
     }
   }
@@ -223,30 +230,28 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
-          title: Text(
-            'Operating Hours',
-            style: GoogleFonts.poppins(
-              color: const Color(0xFF1E293B),
-              fontWeight: FontWeight.w700,
-              fontSize: 18,
-            ),
-          ),
           backgroundColor: Colors.white,
           elevation: 0,
+          scrolledUnderElevation: 0,
           leading: IconButton(
-            icon: const PhosphorIcon(PhosphorIconsRegular.arrowLeft, size: 24, color: Color(0xFF1E293B)),
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
             onPressed: () async {
               final shouldPop = await _onWillPop();
               if (shouldPop && context.mounted) Navigator.of(context).pop();
             },
           ),
+          title: Text(
+            'Operating Hours',
+            style: GoogleFonts.poppins(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF1E293B),
+            ),
+          ),
+          centerTitle: false,
           actions: const [
             SizedBox(width: 8),
           ],
-          bottom: const PreferredSize(
-            preferredSize: Size.fromHeight(1),
-            child: Divider(height: 1, color: Color(0xFFE2E8F0)),
-          ),
         ),
         body: ListView(
           padding: const EdgeInsets.only(bottom: 24),
@@ -293,11 +298,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                       ),
                     ),
                     _isTogglingStatus
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFED3973)),
-                          )
+                        ? const CustomLoadingIndicator(size: 24, color: Color(0xFFED3973))
                         : SizedBox(
                             height: 24,
                             child: Transform.scale(
@@ -316,7 +317,10 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                                     } else {
                                       setState(() => _isTogglingStatus = false);
                                       ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Failed to change shop status.')),
+                                        const SnackBar(
+                                          content: Text('Failed to change shop status.'),
+                                          backgroundColor: Color(0xFFEF4444),
+                                        ),
                                       );
                                     }
                                   }
@@ -492,11 +496,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                   elevation: 0,
                 ),
                 child: _isSaving 
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                    )
+                  ? const CustomLoadingIndicator(size: 24, color: Colors.white)
                   : Text(
                       'Save',
                       style: GoogleFonts.poppins(

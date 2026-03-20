@@ -57,18 +57,18 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        titleSpacing: 0,
         title: Text(
           'Category',
           style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
             color: const Color(0xFF1E293B),
           ),
         ),
+        centerTitle: false,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8),

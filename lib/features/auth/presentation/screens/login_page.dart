@@ -75,21 +75,21 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.error_outline_rounded, color: Colors.white, size: 18),
-            const SizedBox(width: 10),
+            const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 message,
                 style: GoogleFonts.poppins(
                   color: Colors.white,
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ),
           ],
         ),
-        backgroundColor: const Color(0xFFED3973),
+        backgroundColor: const Color(0xFFEF4444),
         behavior: SnackBarBehavior.fixed,
         duration: const Duration(seconds: 4),
         elevation: 0,

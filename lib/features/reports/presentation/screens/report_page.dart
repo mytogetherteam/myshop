@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
-import 'package:my_shop/features/notifications/presentation/widgets/notification_badge_icon.dart';
 import 'package:my_shop/features/reports/presentation/widgets/revenue_card.dart';
 import 'package:my_shop/features/reports/presentation/widgets/summary_card.dart';
 import 'package:my_shop/features/reports/presentation/widgets/best_seller_tile.dart';
@@ -17,9 +16,12 @@ class ReportPage extends StatefulWidget {
   State<ReportPage> createState() => _ReportPageState();
 }
 
-class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateMixin {
+class _ReportPageState extends State<ReportPage> with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late TabController _tabController;
-  bool _isLoading = true;
+  bool _isLoading = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -29,9 +31,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+    // Mock loading already complete or not needed for initial view
     if (mounted) {
       setState(() => _isLoading = false);
     }
@@ -45,33 +45,19 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: false,
-        title: Text(
-          'Reports',
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF1E293B),
-          ),
-        ),
-        actions: [
-          const NotificationBadgeIcon(),
-          const SizedBox(width: 8),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      body: Column(
+        children: [
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 8),
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
               tabAlignment: TabAlignment.start,
-              padding: EdgeInsets.zero,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               indicatorColor: Colors.transparent,
               dividerColor: Colors.transparent,
               labelColor: Colors.white,
@@ -94,15 +80,17 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
               ],
             ),
           ),
-        ),
-      ),
-      body: RefreshIndicator(
-        onRefresh: _loadData,
-        color: const Color(0xFFED3A72),
-        child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: _isLoading ? _buildSkeletons() : _buildContent(),
-        ),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _loadData,
+              color: const Color(0xFFED3A72),
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: _isLoading ? _buildSkeletons() : _buildContent(),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -111,20 +99,32 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
     bool isSelected = _tabController.index == index;
     return Tab(
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFED3A72) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? const Color(0xFFED3A72) : const Color(0xFFE2E8F0),
+            color: isSelected ? Colors.transparent : const Color(0xFFE2E8F0),
           ),
         ),
-        child: Text(
-          text,
-          style: GoogleFonts.poppins(
-            color: isSelected ? Colors.white : const Color(0xFF64748B),
-            fontSize: 14,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+        child: Material(
+          color: isSelected ? const Color(0xFFED3A72) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: () {
+              _tabController.animateTo(index);
+              setState(() {});
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                text,
+                style: GoogleFonts.poppins(
+                  color: isSelected ? Colors.white : const Color(0xFF64748B),
+                  fontSize: 14,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -144,7 +144,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
       Column(
         children: [
           Row(
-            children: const [
+            children: [
               Expanded(
                 child: SummaryCard(
                   label: "Completed",
@@ -167,7 +167,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
           ),
           const SizedBox(height: 12),
           Row(
-            children: const [
+            children: [
               Expanded(
                 child: SummaryCard(
                   label: "Avg Wait Time",
@@ -352,7 +352,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
       Column(
         children: [
           Row(
-            children: const [
+            children: [
               Expanded(child: Skeleton(height: 100, borderRadius: 16)),
               SizedBox(width: 12),
               Expanded(child: Skeleton(height: 100, borderRadius: 16)),
@@ -360,7 +360,7 @@ class _ReportPageState extends State<ReportPage> with SingleTickerProviderStateM
           ),
           const SizedBox(height: 12),
           Row(
-            children: const [
+            children: [
               Expanded(child: Skeleton(height: 100, borderRadius: 16)),
               SizedBox(width: 12),
               Expanded(child: Skeleton(height: 100, borderRadius: 16)),

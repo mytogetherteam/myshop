@@ -329,8 +329,8 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                 onTap: () => Navigator.of(context).pop(),
                 child: const Padding(
                   padding: EdgeInsets.all(8),
-                  child: PhosphorIcon(
-                    PhosphorIconsRegular.arrowLeft,
+                  child: Icon(
+                    Icons.arrow_back,
                     size: 22,
                     color: Colors.white,
                   ),

@@ -65,8 +65,9 @@ class _NotificationBadgeIconState extends State<NotificationBadgeIcon> {
           Positioned(
             right: 8,
             top: 8,
-            child: Container(
-              padding: const EdgeInsets.all(4),
+            child: IgnorePointer(
+              child: Container(
+                padding: const EdgeInsets.all(4),
               decoration: const BoxDecoration(
                 color: Color(0xFFED3A72),
                 shape: BoxShape.circle,
@@ -86,6 +87,7 @@ class _NotificationBadgeIconState extends State<NotificationBadgeIcon> {
               ),
             ),
           ),
+        ),
       ],
     );
   }

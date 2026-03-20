@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import 'package:my_shop/features/main_navigation/presentation/screens/main_navigation_screen.dart';
+import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
 
@@ -183,18 +183,20 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         _isSaving = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile saved successfully!')),
+        const SnackBar(
+          content: Text('Profile saved successfully!'),
+          backgroundColor: Color(0xFFED3A72),
+        ),
       );
-      // Navigate back to the Profile tab in MainNavigationScreen (initialIndex: 3)
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const MainNavigationScreen(initialIndex: 3)),
-        (route) => false,
-      );
+      // Navigate back
+      Navigator.pop(context, true);
     } else {
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to save profile. Please try again.')),
+        const SnackBar(
+          content: Text('Failed to save profile. Please try again.'),
+          backgroundColor: Color(0xFFEF4444),
+        ),
       );
     }
   }
@@ -207,46 +209,36 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         if (didPop) return;
         final should = await _onWillPop();
         if (should && context.mounted) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const MainNavigationScreen(initialIndex: 3)),
-            (route) => false,
-          );
+          Navigator.pop(context);
         }
       },
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
-          title: Text(
-            'Edit Shop Profile',
-            style: GoogleFonts.poppins(
-              color: const Color(0xFF1E293B),
-              fontWeight: FontWeight.w700,
-              fontSize: 18,
-            ),
-          ),
           backgroundColor: Colors.white,
           elevation: 0,
+          scrolledUnderElevation: 0,
           leading: IconButton(
-            icon: const PhosphorIcon(PhosphorIconsRegular.arrowLeft, size: 24, color: Color(0xFF1E293B)),
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
             onPressed: () async {
               final should = await _onWillPop();
               if (should && context.mounted) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const MainNavigationScreen(initialIndex: 3)),
-                  (route) => false,
-                );
+                Navigator.pop(context);
               }
             },
           ),
+          title: Text(
+            'Edit Shop Profile',
+            style: GoogleFonts.poppins(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF1E293B),
+            ),
+          ),
+          centerTitle: false,
           actions: const [
             SizedBox(width: 8),
           ],
-          bottom: const PreferredSize(
-            preferredSize: Size.fromHeight(1),
-            child: Divider(height: 1, color: Color(0xFFE2E8F0)),
-          ),
         ),
         body: ListView(
           padding: const EdgeInsets.only(bottom: 24),
@@ -404,33 +396,37 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             const SizedBox(height: 32),
           ],
         ),
-        bottomNavigationBar: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: _isSaving ? null : _save,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFED3973),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 0,
-                ),
-                child: _isSaving 
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                    )
-                  : Text(
-                      'Save',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(
+              top: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
+            ),
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: SizedBox(
+                width: double.infinity,
+                height: 64,
+                child: ElevatedButton(
+                  onPressed: _isSaving ? null : _save,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFED3973),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    elevation: 0,
+                  ),
+                  child: _isSaving 
+                    ? const CustomLoadingIndicator(size: 24, color: Colors.white)
+                    : Text(
+                        'Save',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
+                ),
               ),
             ),
           ),

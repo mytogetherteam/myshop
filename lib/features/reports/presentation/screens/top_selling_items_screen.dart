@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
+import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/features/reports/presentation/widgets/best_seller_tile.dart';
 
 class TopSellingItemsScreen extends StatefulWidget {
@@ -68,7 +69,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
       _items.clear();
     });
     
-    await Future.delayed(const Duration(seconds: 2));
+
     
     if (mounted) {
       setState(() {
@@ -83,7 +84,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
     
     setState(() => _isLoadingMore = true);
     
-    await Future.delayed(const Duration(seconds: 1));
+
     
     if (mounted) {
       setState(() {
@@ -102,19 +103,20 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Top Selling items',
           style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: 
-            FontWeight.w600,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
             color: const Color(0xFF1E293B),
           ),
         ),
+        centerTitle: false,
         actions: [
           TextButton.icon(
             onPressed: () {},
@@ -188,7 +190,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                         return const Padding(
                           padding: EdgeInsets.symmetric(vertical: 16),
                           child: Center(
-                            child: CircularProgressIndicator(color: Color(0xFFED3A72)),
+                            child: CustomLoadingIndicator(size: 24, color: Color(0xFFED3A72)),
                           ),
                         );
                       }

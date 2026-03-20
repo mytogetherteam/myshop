@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
 
 class CreateCategoryScreen extends StatefulWidget {
@@ -46,7 +47,10 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
       } else {
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to create category')),
+          const SnackBar(
+            content: Text('Failed to create category'),
+            backgroundColor: Color(0xFFEF4444),
+          ),
         );
       }
     }
@@ -59,18 +63,20 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Create Category',
           style: GoogleFonts.poppins(
-            fontSize: 18,
+            fontSize: 20,
             fontWeight: FontWeight.w600,
             color: const Color(0xFF1E293B),
           ),
         ),
+        centerTitle: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -182,7 +188,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
                   elevation: 0,
                 ),
                 child: _isSaving
-                    ? const CircularProgressIndicator(color: Colors.white)
+                    ? const CustomLoadingIndicator(size: 24, color: Colors.white)
                     : Text(
                         'Create category',
                         style: GoogleFonts.poppins(

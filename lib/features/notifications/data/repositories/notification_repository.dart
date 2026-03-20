@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/notification_model.dart';
@@ -38,11 +38,12 @@ class NotificationRepository {
 
   Future<int> getUnreadCount() async {
     try {
+      debugPrint('🔍 [DEBUG] FETCHING UNREAD COUNT FROM NotificationRepository...');
       final response = await _dio.get('/api/shop/notifications/unread-count');
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data;
         if (data['success'] == true && data['data'] != null) {
-          final count = data['data'] as int;
+          final count = data['data']['count'] as int;
           unreadCount.value = count;
           return count;
         }

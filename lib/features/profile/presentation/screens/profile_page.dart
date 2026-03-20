@@ -7,11 +7,10 @@ import 'package:my_shop/features/auth/data/services/auth_service.dart';
 import 'package:my_shop/core/presentation/widgets/global_modal.dart';
 import 'package:my_shop/core/presentation/widgets/confirmation_sheet.dart';
 import 'package:my_shop/core/network/websocket_service.dart';
-import 'package:my_shop/features/notifications/presentation/widgets/notification_badge_icon.dart';
 import 'package:flutter/cupertino.dart';
 import 'edit_shop_profile_page.dart';
 import 'operating_hours_page.dart';
-import 'delivery_settings_page.dart';
+import 'app_permissions_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -20,8 +19,11 @@ class ProfilePage extends StatefulWidget {
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClientMixin {
   UserInfo? _userInfo;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -53,25 +55,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: Text(
-          'Profile',
-          style: GoogleFonts.poppins(
-            color: Colors.black,
-            fontWeight: FontWeight.w700,
-            fontSize: 20,
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: false,
-        actions: [
-          const NotificationBadgeIcon(),
-          const SizedBox(width: 8),
-        ],
-      ),
+      // AppBar removed, handled by global AppBar
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -193,14 +180,7 @@ class _ProfilePageState extends State<ProfilePage> {
             CupertinoPageRoute(builder: (_) => const OperatingHoursPage()),
           ),
         ),
-        _buildMenuOption(
-          icon: PhosphorIconsRegular.motorcycle,
-          title: 'Delivery settings',
-          onTap: () => Navigator.push(
-            context,
-            CupertinoPageRoute(builder: (_) => const DeliverySettingsPage()),
-          ),
-        ),
+
       ],
     );
   }
@@ -227,14 +207,12 @@ class _ProfilePageState extends State<ProfilePage> {
           onTap: () {},
         ),
         _buildMenuOption(
-          icon: PhosphorIconsRegular.bell,
-          title: 'Notifications',
-          onTap: () {},
-        ),
-        _buildMenuOption(
           icon: PhosphorIconsRegular.shieldCheck,
-          title: 'Privacy & Security',
-          onTap: () {},
+          title: 'App Permissions',
+          onTap: () => Navigator.push(
+            context,
+            CupertinoPageRoute(builder: (_) => const AppPermissionsPage()),
+          ),
         ),
         const SizedBox(height: 24),
         _buildMenuOption(

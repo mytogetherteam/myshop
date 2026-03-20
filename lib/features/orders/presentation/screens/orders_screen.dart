@@ -6,7 +6,6 @@ import 'package:my_shop/features/orders/presentation/widgets/order_card.dart';
 import 'dart:async';
 import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
-import 'package:my_shop/features/notifications/presentation/widgets/notification_badge_icon.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -15,12 +14,15 @@ class OrdersScreen extends StatefulWidget {
   State<OrdersScreen> createState() => OrdersScreenState();
 }
 
-class OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderStateMixin {
+class OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late TabController _tabController;
   final OrderService _orderService = OrderService();
   List<OrderModel> _allOrders = [];
   bool _isLoading = true;
   StreamSubscription? _socketSubscription;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -58,10 +60,9 @@ class OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSta
     if (mounted) {
       if (orders == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Failed to load orders. Please try again.'),
-            backgroundColor: Colors.redAccent,
-            behavior: SnackBarBehavior.fixed,
+          const SnackBar(
+            content: Text('Failed to load orders. Please try again.'),
+            backgroundColor: Color(0xFFEF4444),
           ),
         );
         setState(() => _isLoading = false);
@@ -107,64 +108,57 @@ class OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSta
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          'Orders',
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
-          ),
-        ),
-        centerTitle: false,
-        actions: [
-          const NotificationBadgeIcon(),
-          const SizedBox(width: 8),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          tabAlignment: TabAlignment.start,
-          labelPadding: const EdgeInsets.symmetric(horizontal: 16),
-          labelColor: const Color(0xFFED3A72),
-          unselectedLabelColor: const Color(0xFF94A3B8),
-          indicatorColor: const Color(0xFFED3A72),
-          indicatorSize: TabBarIndicatorSize.label,
-          labelStyle: GoogleFonts.poppins(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-          unselectedLabelStyle: GoogleFonts.poppins(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-          tabs: [
-            _buildTab('New order', _getCount('NEW'), 0),
-            _buildTab('Payment', _getCount('PAYMENT'), 1),
-            _buildTab('Preparing', _getCount('PREPARING'), 2),
-            _buildTab('Delivering', _getCount('DELIVERING'), 3),
-            _buildTab('Delivered', _getCount('DELIVERED'), 4),
-            _buildTab('Cancelled', _getCount('CANCELLED'), 5),
-          ],
-        ),
-      ),
-      body: _isLoading
-          ? _buildSkeletonList()
-          : TabBarView(
+      body: Column(
+        children: [
+          Container(
+            color: Colors.white,
+            child: TabBar(
               controller: _tabController,
-              children: [
-                _buildOrderList('NEW'),
-                _buildOrderList('PAYMENT'),
-                _buildOrderList('PREPARING'),
-                _buildOrderList('DELIVERING'),
-                _buildOrderList('DELIVERED'),
-                _buildOrderList('CANCELLED'),
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              labelPadding: const EdgeInsets.symmetric(horizontal: 16),
+              labelColor: const Color(0xFFED3A72),
+              unselectedLabelColor: const Color(0xFF94A3B8),
+              indicatorColor: const Color(0xFFED3A72),
+              indicatorSize: TabBarIndicatorSize.label,
+              labelStyle: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+              unselectedLabelStyle: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+              tabs: [
+                _buildTab('New order', _getCount('NEW'), 0),
+                _buildTab('Payment', _getCount('PAYMENT'), 1),
+                _buildTab('Preparing', _getCount('PREPARING'), 2),
+                _buildTab('Delivering', _getCount('DELIVERING'), 3),
+                _buildTab('Delivered', _getCount('DELIVERED'), 4),
+                _buildTab('Cancelled', _getCount('CANCELLED'), 5),
               ],
             ),
+          ),
+          Expanded(
+            child: _isLoading
+                ? _buildSkeletonList()
+                : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildOrderList('NEW'),
+                      _buildOrderList('PAYMENT'),
+                      _buildOrderList('PREPARING'),
+                      _buildOrderList('DELIVERING'),
+                      _buildOrderList('DELIVERED'),
+                      _buildOrderList('CANCELLED'),
+                    ],
+                  ),
+          ),
+        ],
+      ),
     );
   }
 

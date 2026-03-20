@@ -91,13 +91,6 @@ class _NotificationPageState extends State<NotificationPage> {
     await _fetchNotifications();
   }
 
-  Future<void> _markAllRead() async {
-    final success = await _notificationRepository.markAllAsRead();
-    if (success && mounted) {
-      _fetchNotifications(refresh: true);
-    }
-  }
-
   Future<void> _handleNotificationClick(NotificationModel noti) async {
     if (!noti.isRead) {
       await _notificationRepository.markAsRead(noti.id);
@@ -146,7 +139,7 @@ class _NotificationPageState extends State<NotificationPage> {
     if (mounted) {
       Navigator.pop(context); // Close loading
       if (order != null) {
-        final result = await Navigator.push(
+        await Navigator.push(
           context,
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) => OrderDetailScreen(order: order),
@@ -169,7 +162,7 @@ class _NotificationPageState extends State<NotificationPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Could not find order details.'),
-            behavior: SnackBarBehavior.fixed,
+            backgroundColor: Color(0xFFEF4444),
           ),
         );
       }
@@ -192,11 +185,12 @@ class _NotificationPageState extends State<NotificationPage> {
           'Notifications',
           style: GoogleFonts.poppins(
             fontSize: 20,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             color: const Color(0xFF1E293B),
           ),
         ),
         actions: const [],
+        centerTitle: false,
       ),
       body: (_isLoading && _showLoadingThreshold)
           ? const Center(child: CustomLoadingIndicator(color: Colors.white))
@@ -389,7 +383,7 @@ class _NotificationPageState extends State<NotificationPage> {
     }
 
     switch (noti.type) {
-      case NotificationType.ORDER_STATUS:
+      case NotificationType.orderStatus:
         return PhosphorIconsFill.bicycle;
       default:
         return PhosphorIconsFill.bell;

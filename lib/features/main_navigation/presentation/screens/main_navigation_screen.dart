@@ -11,7 +11,7 @@ import 'package:my_shop/features/orders/presentation/widgets/new_order_dialog.da
 import 'package:my_shop/features/orders/presentation/widgets/order_warning_dialog.dart';
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:my_shop/core/network/websocket_service.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:my_shop/features/notifications/presentation/widgets/notification_badge_icon.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 
@@ -162,9 +162,30 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     const ProfilePage(),
   ];
 
+  final List<String> _titles = ['Order', 'Menu', 'Report', 'Profile'];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: Text(
+          _titles[_currentIndex],
+          style: GoogleFonts.poppins(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF1E293B),
+          ),
+        ),
+        actions: [
+          const NotificationBadgeIcon(),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: _pages[_currentIndex],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(

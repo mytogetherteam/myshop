@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import '../../data/models/menu_item_model.dart';
 import '../../data/models/menu_category_model.dart';
 import '../../data/services/menu_service.dart';
@@ -98,9 +99,9 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       setState(() => _isSaving = false);
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(widget.item != null ? 'Item updated successfully' : 'Item created successfully'),
-            backgroundColor: const Color(0xFF22C55E),
+          const SnackBar(
+            content: Text('Item updated successfully'),
+            backgroundColor: Color(0xFFED3A72),
           ),
         );
         Navigator.pop(context, true); // Return true to indicate change
@@ -128,19 +129,20 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         appBar: AppBar(
           backgroundColor: Colors.white,
           elevation: 0,
+          scrolledUnderElevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF1E293B), size: 20),
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
             onPressed: () => Navigator.pop(context),
           ),
           title: Text(
             widget.item != null ? widget.item!.displayName : 'Add new items',
             style: GoogleFonts.poppins(
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: FontWeight.w600,
               color: const Color(0xFF1E293B),
             ),
           ),
-          centerTitle: true,
+          centerTitle: false,
         ),
         body: _isLoadingCategories 
           ? _buildSkeletonForm()
@@ -566,11 +568,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               elevation: 0,
             ),
             child: _isSaving 
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                )
+              ? const CustomLoadingIndicator(size: 24, color: Colors.white)
               : Text(
                   widget.item != null ? 'Update' : 'Save',
                   style: GoogleFonts.poppins(

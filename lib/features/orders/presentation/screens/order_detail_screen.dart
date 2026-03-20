@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/cupertino.dart';
+
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:intl/intl.dart';
@@ -12,7 +12,7 @@ import '../../data/services/order_service.dart';
 import '../widgets/status_progress_indicator.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
-import 'package:my_shop/features/main_navigation/presentation/screens/main_navigation_screen.dart';
+
 
 class OrderDetailScreen extends StatefulWidget {
   final OrderModel order;
@@ -169,7 +169,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(errorDetails ?? errorMessage ?? 'Operation failed. Please try again.'),
-          backgroundColor: Colors.redAccent,
+          backgroundColor: const Color(0xFFEF4444),
           behavior: SnackBarBehavior.fixed,
         ),
       );
@@ -485,7 +485,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(PhosphorIconsRegular.arrowLeft, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: _handleBack,
         ),
         title: Column(
@@ -680,7 +680,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           color: const Color(0xFFFFF1F2),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -709,7 +709,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -805,7 +805,8 @@ Widget _buildAnimatedProgress() {
             padding: const EdgeInsets.all(12),
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
+
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
@@ -921,8 +922,9 @@ Widget _buildAnimatedProgress() {
               onTap: () {
                 Clipboard.setData(ClipboardData(text: _currentOrder.deliveryAddressDetail));
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Address copied to clipboard', style: GoogleFonts.poppins()),
+                  const SnackBar(
+                    content: Text('Address copied to clipboard'),
+                    backgroundColor: Color(0xFFED3A72),
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
@@ -1551,7 +1553,8 @@ Widget _buildAnimatedProgress() {
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.black.withOpacity(0.05))),
+        border: Border(top: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
+
       ),
       child: Row(
         children: [
