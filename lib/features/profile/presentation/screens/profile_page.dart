@@ -11,6 +11,8 @@ import 'package:flutter/cupertino.dart';
 import 'edit_shop_profile_page.dart';
 import 'operating_hours_page.dart';
 import 'app_permissions_page.dart';
+import 'change_password_page.dart';
+import 'reviews_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -180,7 +182,14 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
             CupertinoPageRoute(builder: (_) => const OperatingHoursPage()),
           ),
         ),
-
+        _buildMenuOption(
+          icon: PhosphorIconsRegular.star,
+          title: 'Reviews',
+          onTap: () => Navigator.push(
+            context,
+            CupertinoPageRoute(builder: (_) => const ReviewsPage()),
+          ),
+        ),
       ],
     );
   }
@@ -212,6 +221,14 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
           onTap: () => Navigator.push(
             context,
             CupertinoPageRoute(builder: (_) => const AppPermissionsPage()),
+          ),
+        ),
+        _buildMenuOption(
+          icon: PhosphorIconsRegular.lock,
+          title: 'Change Password',
+          onTap: () => Navigator.push(
+            context,
+            CupertinoPageRoute(builder: (_) => const ChangePasswordPage()),
           ),
         ),
         const SizedBox(height: 24),

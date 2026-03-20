@@ -1,6 +1,13 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:dio/dio.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
+import 'package:my_shop/core/data/services/image_upload_service.dart';
+import 'package:my_shop/core/network/api_client.dart';
 import '../../data/models/menu_item_model.dart';
 import '../../data/models/menu_category_model.dart';
 import '../../data/services/menu_service.dart';
@@ -28,6 +35,9 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   MenuCategoryModel? _selectedCategory;
   bool _isLoadingCategories = true;
   bool _isSaving = false;
+
+  // Image state
+  XFile? _pickedImage;
 
   // New state for dynamic variants
   final List<Map<String, String>> _variants = [
@@ -80,12 +90,38 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     
     setState(() => _isSaving = true);
     
+    String? uploadedImageUrl;
+
+    // Upload image if a new one was picked
+    if (_pickedImage != null) {
+      try {
+        final formData = FormData.fromMap({
+          'image': kIsWeb
+            ? MultipartFile.fromBytes(await _pickedImage!.readAsBytes(), filename: _pickedImage!.name)
+            : await MultipartFile.fromFile(
+                _pickedImage!.path,
+                filename: _pickedImage!.name,
+              ),
+        });
+        
+        // This endpoint should return the new image URL
+        final response = await ApiClient().dio.post('/api/menu/items/upload', data: formData);
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          uploadedImageUrl = response.data['url'];
+        }
+      } catch (e) {
+        debugPrint('Item image upload error: $e');
+        // We might want to handle this error specifically, but for now we continue
+      }
+    }
+
     final payload = {
       'nameEn': _nameController.text,
       'descriptionEn': _descriptionController.text,
       'price': double.tryParse(_priceController.text) ?? 0.0,
       'categoryId': _selectedCategory?.id,
       'isAvailable': widget.item?.isAvailable ?? true,
+      'imageUrl': ?uploadedImageUrl,
     };
 
     bool success;
@@ -227,86 +263,209 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     );
   }
 
-  Widget _buildImageUploadSection() {
-    String? imageUrl = widget.item?.imageUrl;
-
-    return Container(
-      width: double.infinity,
-      height: 200,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(24),
-        image: imageUrl != null ? DecorationImage(
-          image: NetworkImage(imageUrl),
-          fit: BoxFit.cover,
-        ) : null,
-        border: imageUrl != null ? null : Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1.5,
-          style: BorderStyle.solid, 
+  Future<void> _pickImage() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE2E8F0),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Text(
+                'Upload Item Photo',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined, color: Color(0xFFED3973)),
+              title: Text('Choose from Gallery', style: GoogleFonts.poppins()),
+              onTap: () async {
+                Navigator.pop(context);
+                final result = await ImageUploadService().pickFromGallery();
+                if (result.permanentlyDenied && mounted) {
+                  _showSettingsDialog();
+                } else if (result.file != null) {
+                  setState(() => _pickedImage = result.file);
+                }
+              },
+            ),
+            const Divider(height: 1, indent: 56),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined, color: Color(0xFFED3973)),
+              title: Text('Take a Photo', style: GoogleFonts.poppins()),
+              onTap: () async {
+                Navigator.pop(context);
+                final result = await ImageUploadService().pickFromCamera();
+                if (result.permanentlyDenied && mounted) {
+                  _showSettingsDialog();
+                } else if (result.file != null) {
+                  setState(() => _pickedImage = result.file);
+                }
+              },
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text('Cancel', style: GoogleFonts.poppins()),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
-      child: Stack(
-        children: [
-          if (imageUrl == null)
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFED3973).withValues(alpha: 0.1), width: 1),
-                      color: Colors.white,
-                    ),
-                    child: const Icon(
-                      Icons.camera_alt_outlined,
-                      color: Color(0xFFED3973),
-                      size: 32,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Tap to upload',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1E293B),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'or take a photo of your receipt',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: const Color(0xFF94A3B8),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          Positioned(
-            right: 16,
-            top: 16,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: const Icon(Icons.refresh, color: Color(0xFFED3973), size: 20),
-            ),
+    );
+  }
+
+  void _showSettingsDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Permission Required',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 16)),
+        content: Text(
+          'Photo library access is required. Please enable it in Settings.',
+          style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF475569)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('Cancel', style: GoogleFonts.poppins(color: const Color(0xFF475569))),
+          ),
+          TextButton(
+            onPressed: () { Navigator.of(ctx).pop(); },
+            child: Text('Open Settings',
+                style: GoogleFonts.poppins(color: const Color(0xFFED3973), fontWeight: FontWeight.w600)),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildImageUploadSection() {
+    final existingUrl = widget.item?.imageUrl;
+
+    return GestureDetector(
+      onTap: _pickImage,
+      child: Container(
+        width: double.infinity,
+        height: 200,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(24),
+          border: _pickedImage == null && existingUrl == null 
+            ? Border.all(color: const Color(0xFFE2E8F0), width: 1.5) 
+            : null,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // ── Image Display ──────────────────────────────────────────
+              if (_pickedImage != null)
+                kIsWeb
+                  ? Image.network(_pickedImage!.path, fit: BoxFit.cover)
+                  : Image.file(File(_pickedImage!.path), fit: BoxFit.cover)
+              else if (existingUrl != null && existingUrl.isNotEmpty)
+                CachedNetworkImage(
+                  imageUrl: existingUrl,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => const Center(child: CustomLoadingIndicator(size: 24)),
+                  errorWidget: (context, url, error) => const Icon(Icons.error),
+                )
+              else
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: const Color(0xFFED3973).withValues(alpha: 0.1),
+                            width: 1,
+                          ),
+                          color: Colors.white,
+                        ),
+                        child: const Icon(
+                          Icons.camera_alt_outlined,
+                          color: Color(0xFFED3973),
+                          size: 32,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Tap to upload',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1E293B),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'add your dish photo',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                          color: const Color(0xFF94A3B8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              // ── Overlay for existing images ────────────────────────────────
+              if (_pickedImage != null || (existingUrl != null && existingUrl.isNotEmpty))
+                Positioned(
+                  right: 16,
+                  top: 16,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(Icons.refresh, color: Color(0xFFED3973), size: 20),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

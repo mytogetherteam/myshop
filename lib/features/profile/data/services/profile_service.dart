@@ -6,6 +6,7 @@ class ProfileService {
   static const String _profilePath = '/api/shop/profile';
   static const String _statusPath = '/api/shop/profile/status';
   static const String _operatingHoursPath = '/api/shop/profile/operating-hours';
+  static const String _changePasswordPath = '/api/shop/profile/change-password';
 
   Future<ShopProfileModel?> getShopProfile() async {
     try {
@@ -76,5 +77,39 @@ class ProfileService {
       debugPrint('API Error in updateOperatingHours: $e');
     }
     return false;
+  }
+
+  Future<Map<String, dynamic>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+      final payload = {
+        'current_password': currentPassword,
+        'new_password': newPassword,
+        'new_password_confirmation': confirmPassword,
+      };
+
+      debugPrint('POST REQUEST: $_changePasswordPath, Data: $payload');
+      final response = await ApiClient().dio.post(
+        _changePasswordPath,
+        data: payload,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data;
+      }
+      return {
+        'success': false,
+        'message': 'Failed to change password: ${response.statusCode}',
+      };
+    } catch (e) {
+      debugPrint('API Error in changePassword: $e');
+      return {
+        'success': false,
+        'message': 'Error: ${e.toString()}',
+      };
+    }
   }
 }

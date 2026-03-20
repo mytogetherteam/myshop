@@ -47,5 +47,13 @@
 		<true/>
 		<key>UIStatusBarHidden</key>
 		<false/>
+
+		<!-- Image Picker permissions -->
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>My Shop needs access to your photo library to let you upload shop and menu images.</string>
+		<key>NSCameraUsageDescription</key>
+		<string>My Shop needs camera access to let you take photos for your shop and menu.</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>My Shop needs permission to save photos to your library.</string>
 	</dict>
 </plist>

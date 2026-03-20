@@ -2,6 +2,16 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- Image Picker: Camera access -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Image Picker: Gallery access (Android 13+) -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <!-- Image Picker: Gallery access (Android 12 and below) -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
     <application
         android:label="My Shop"
         android:name="${applicationName}"
