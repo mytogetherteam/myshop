@@ -111,7 +111,7 @@ class _AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
       children: [
         Row(
           children: [
-            Image.network(pm.logoUrl, width: 24, height: 24, errorBuilder: (_, __, ___) => const Icon(Icons.payment, size: 24)),
+            Image.network(pm.logoUrl, width: 24, height: 24, errorBuilder: (_, _, _) => const Icon(Icons.payment, size: 24)),
             const SizedBox(width: 12),
             Text(
               pm.name,
@@ -160,7 +160,7 @@ class _AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
                   width: double.infinity,
                   height: 250,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
+                  errorBuilder: (_, _, _) => Container(
                     width: double.infinity,
                     height: 250,
                     color: Colors.grey[50],

@@ -167,7 +167,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                       'Changes will take effect after verified',
                       style: GoogleFonts.poppins(
                         fontSize: 12,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -192,7 +192,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
         children: [
           Row(
             children: [
-              Image.network(pm.logoUrl, width: 24, height: 24, errorBuilder: (_, __, ___) => const Icon(Icons.payment, size: 24)),
+              Image.network(pm.logoUrl, width: 24, height: 24, errorBuilder: (_, _, _) => const Icon(Icons.payment, size: 24)),
               const SizedBox(width: 12),
               Text(
                 pm.name,
@@ -234,7 +234,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                                     padding: const EdgeInsets.all(16),
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      border: Border.all(color: const Color(0xFFED3973).withOpacity(0.1)),
+                                      border: Border.all(color: const Color(0xFFED3973).withValues(alpha: 0.1)),
                                       color: Colors.white,
                                     ),
                                     child: const Icon(Icons.add_a_photo_outlined, size: 32, color: Color(0xFFED3973)),
@@ -271,7 +271,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                                     width: double.infinity,
                                     height: 250,
                                     fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => Container(
+                                    errorBuilder: (_, _, _) => Container(
                                       width: double.infinity,
                                       height: 250,
                                       color: Colors.grey[100],
@@ -295,7 +295,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
+                            color: Colors.black.withValues(alpha: 0.08),
                             blurRadius: 8,
                             offset: const Offset(0, 4),
                           ),
