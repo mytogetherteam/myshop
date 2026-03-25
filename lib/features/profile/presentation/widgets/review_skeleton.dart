@@ -14,8 +14,8 @@ class ReviewSkeleton extends StatelessWidget {
           child: ListView.separated(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             itemCount: 5,
-            separatorBuilder: (_, __) => const SizedBox(height: 16),
-            itemBuilder: (_, __) => const _ReviewCardSkeleton(),
+            separatorBuilder: (_, _) => const SizedBox(height: 16),
+            itemBuilder: (_, _) => const _ReviewCardSkeleton(),
           ),
         ),
       ],

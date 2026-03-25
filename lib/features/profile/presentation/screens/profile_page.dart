@@ -13,6 +13,7 @@ import 'operating_hours_page.dart';
 import 'app_permissions_page.dart';
 import 'change_password_page.dart';
 import 'reviews_page.dart';
+import 'accepted_payment_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -31,6 +32,10 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
   void initState() {
     super.initState();
     _loadUserInfo();
+  }
+
+  Future<void> _handleRefresh() async {
+    await _loadUserInfo();
   }
 
   Future<void> _loadUserInfo() async {
@@ -61,16 +66,22 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       // AppBar removed, handled by global AppBar
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            _buildProfileHeader(),
-            const SizedBox(height: 24),
-            _buildShopSection(),
-            const SizedBox(height: 8),
-            _buildMenuItems(),
-          ],
+      body: RefreshIndicator(
+        onRefresh: _handleRefresh,
+        color: const Color(0xFFED3973),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+              _buildProfileHeader(),
+              const SizedBox(height: 24),
+              _buildShopSection(),
+              const SizedBox(height: 8),
+              _buildMenuItems(),
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
     );
@@ -180,6 +191,14 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
           onTap: () => Navigator.push(
             context,
             CupertinoPageRoute(builder: (_) => const OperatingHoursPage()),
+          ),
+        ),
+        _buildMenuOption(
+          icon: PhosphorIconsRegular.creditCard,
+          title: 'Accepted payment',
+          onTap: () => Navigator.push(
+            context,
+            CupertinoPageRoute(builder: (_) => const AcceptedPaymentPage()),
           ),
         ),
         _buildMenuOption(
