@@ -22,12 +22,12 @@ class MenuCategoryModel {
   factory MenuCategoryModel.fromJson(Map<String, dynamic> json) {
     return MenuCategoryModel(
       id: json['id'] ?? 0,
-      nameEn: json['nameEn'],
+      nameEn: json['nameEn'] ?? 'Uncategorized',
       nameMm: json['nameMm'],
       nameTh: json['nameTh'],
       displayOrder: json['displayOrder'],
       isActive: json['isActive'] ?? true,
-      imageUrl: json['imageUrl'],
+      imageUrl: json['imageUrl'] ?? '',
       itemCount: json['itemCount'] ?? 0,
     );
   }

@@ -66,8 +66,8 @@ class MenuItemModel {
   factory MenuItemModel.fromJson(Map<String, dynamic> json) {
     return MenuItemModel(
       id: json['id'] ?? 0,
-      categoryId: json['categoryId'],
-      nameEn: json['nameEn'],
+      categoryId: json['categoryId'] ?? 0,
+      nameEn: json['nameEn'] ?? '',
       nameMm: json['nameMm'],
       nameTh: json['nameTh'],
       categoryNameEn: json['categoryNameEn'],
@@ -78,7 +78,7 @@ class MenuItemModel {
       originalPrice: (json['originalPrice'] as num?)?.toDouble(),
       currency: json['currency'],
       displayPrice: json['displayPrice'],
-      imageUrl: json['imageUrl'],
+      imageUrl: json['imageUrl'] ?? '',
       isAvailable: json['isAvailable'] ?? true,
       isPopular: json['isPopular'] ?? false,
       isVegetarian: json['isVegetarian'] ?? false,

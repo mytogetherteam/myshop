@@ -4,7 +4,7 @@ import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart'
 import '../widgets/quick_action_cards.dart';
 import '../widgets/menu_item_card.dart';
 import 'add_new_item_screen.dart';
-import '../../data/services/menu_service.dart';
+import '../../data/repositories/menu_repository.dart';
 import '../../data/models/menu_item_model.dart';
 import '../../data/models/menu_category_model.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
@@ -17,7 +17,7 @@ class MenuPage extends StatefulWidget {
 }
 
 class _MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
-  final MenuService _menuService = MenuService();
+  final MenuRepository _menuRepository = MenuRepository();
   List<MenuCategoryModel> _categories = [];
   List<MenuItemModel> _items = [];
   MenuCategoryModel? _selectedCategory;
@@ -55,12 +55,12 @@ class _MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin 
 
   Future<void> _fetchCategories() async {
     setState(() => _isLoadingCategories = true);
-    final categories = await _menuService.getCategories();
+    final categories = await _menuRepository.getCategories();
     if (mounted) {
       setState(() {
         _categories = [
           MenuCategoryModel(id: 0, nameEn: 'All Categories', nameMm: 'All Categories', nameTh: 'All Categories'),
-          ...categories ?? []
+          ...categories
         ];
         _isLoadingCategories = false;
         if (_categories.isNotEmpty) {
@@ -86,7 +86,7 @@ class _MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin 
     
     // If id is 0, fetch all items, otherwise filter by categoryId
     final int? filterId = _selectedCategory!.id == 0 ? null : _selectedCategory!.id;
-    final items = await _menuService.getMenuItems(
+    final items = await _menuRepository.getMenuItems(
       categoryId: filterId,
       page: _currentPage,
       limit: 20,
@@ -95,13 +95,11 @@ class _MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin 
     if (mounted) {
       setState(() {
         if (refresh) {
-          _items = items ?? [];
+          _items = items;
         } else {
-          if (items != null) {
-            _items.addAll(items);
-          }
+          _items.addAll(items);
         }
-        _hasMore = items != null && items.length == 20;
+        _hasMore = items.length == 20;
         _isLoadingItems = false;
       });
     }
@@ -126,7 +124,7 @@ class _MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin 
   }
 
   Future<void> _toggleItemAvailability(MenuItemModel item, bool available) async {
-    final success = await _menuService.toggleAvailability(item.id, available);
+    final success = await _menuRepository.toggleAvailability(item.id, available);
     if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

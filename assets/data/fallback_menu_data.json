@@ -1,0 +1,1104 @@
+{
+  "_meta": {
+    "version": "2.0.0",
+    "description": "Fallback menu data — MenuItemModel + MenuCategoryModel shapes. No shop/restaurant references.",
+    "lastUpdated": "2026-03-29",
+    "totalCategories": 9,
+    "totalItems": 20,
+    "currency": "THB (฿)"
+  },
+
+  "categories": [
+    {
+      "id": 1,
+      "nameEn": "Noodles",
+      "nameMm": "ခေါက်ဆွဲ",
+      "nameTh": "ก๋วยเตี๋ยว",
+      "slug": "noodles",
+      "icon": "🍜",
+      "displayOrder": 1,
+      "isActive": true,
+      "imageUrl": null,
+      "itemCount": 4
+    },
+    {
+      "id": 2,
+      "nameEn": "Rice",
+      "nameMm": "ထမင်း",
+      "nameTh": "ข้าว",
+      "slug": "rice",
+      "icon": "🍚",
+      "displayOrder": 2,
+      "isActive": true,
+      "imageUrl": null,
+      "itemCount": 1
+    },
+    {
+      "id": 3,
+      "nameEn": "Curries",
+      "nameMm": "ဟင်း",
+      "nameTh": "แกง",
+      "slug": "curries",
+      "icon": "🍛",
+      "displayOrder": 3,
+      "isActive": true,
+      "imageUrl": null,
+      "itemCount": 3
+    },
+    {
+      "id": 4,
+      "nameEn": "Salads",
+      "nameMm": "သုပ်",
+      "nameTh": "ยำ",
+      "slug": "salads",
+      "icon": "🥗",
+      "displayOrder": 4,
+      "isActive": true,
+      "imageUrl": null,
+      "itemCount": 6
+    },
+    {
+      "id": 5,
+      "nameEn": "Soups",
+      "nameMm": "ဟင်းချိုရည်",
+      "nameTh": "ซุป",
+      "slug": "soups",
+      "icon": "🍲",
+      "displayOrder": 5,
+      "isActive": true,
+      "imageUrl": null,
+      "itemCount": 1
+    },
+    {
+      "id": 6,
+      "nameEn": "Snacks",
+      "nameMm": "အဆာပြေ",
+      "nameTh": "ของว่าง",
+      "slug": "snacks",
+      "icon": "🥟",
+      "displayOrder": 6,
+      "isActive": true,
+      "imageUrl": null,
+      "itemCount": 1
+    },
+    {
+      "id": 7,
+      "nameEn": "Beverages",
+      "nameMm": "အဖျော်ယမကာ",
+      "nameTh": "เครื่องดื่ม",
+      "slug": "beverages",
+      "icon": "🧋",
+      "displayOrder": 7,
+      "isActive": true,
+      "imageUrl": null,
+      "itemCount": 2
+    },
+    {
+      "id": 8,
+      "nameEn": "Desserts",
+      "nameMm": "မုန့်",
+      "nameTh": "ของหวาน",
+      "slug": "desserts",
+      "icon": "🍮",
+      "displayOrder": 8,
+      "isActive": true,
+      "imageUrl": null,
+      "itemCount": 3
+    },
+    {
+      "id": 9,
+      "nameEn": "Seafood",
+      "nameMm": "ငါးနှင့်ပင်လယ်စာ",
+      "nameTh": "อาหารทะเล",
+      "slug": "seafood",
+      "icon": "🐟",
+      "displayOrder": 9,
+      "isActive": true,
+      "imageUrl": null,
+      "itemCount": 1
+    }
+  ],
+
+  "items": [
+    {
+      "id": 1,
+      "categoryId": 1,
+      "nameEn": "Mohinga",
+      "nameMm": "မုန့်ဟင်းခါး",
+      "nameTh": "โมฮิงกา",
+      "slug": "mohinga",
+      "description": "Myanmar's national noodle soup — fish broth with rice noodles, banana stem and crispy fritters.",
+      "price": 180.0,
+      "originalPrice": 250.0,
+      "displayPrice": "฿180",
+      "displayOriginalPrice": "฿250",
+      "currency": "฿",
+      "discountPercentage": 28,
+      "discountLabel": "28% Off",
+      "imageUrl": "https://delishglobe.com/wp-content/uploads/2025/02/Burmese-Mohinga-Fish-Noodle-Soup.png",
+      "photoUrls": [
+        "https://delishglobe.com/wp-content/uploads/2025/02/Burmese-Mohinga-Fish-Noodle-Soup.png"
+      ],
+      "isAvailable": true,
+      "isPopular": true,
+      "isVegetarian": false,
+      "isSpicy": false,
+      "isRecommended": true,
+      "isHotDeal": true,
+      "isCombo": false,
+      "rating": 4.8,
+      "reviewCount": 210,
+      "variants": [
+        {
+          "id": 11,
+          "nameEn": "Regular",
+          "nameMm": "ပုံမှန်",
+          "price": 180.0,
+          "displayPrice": "฿180",
+          "isAvailable": true
+        },
+        {
+          "id": 12,
+          "nameEn": "Large",
+          "nameMm": "ကြီး",
+          "price": 210.0,
+          "displayPrice": "฿210",
+          "isAvailable": true
+        }
+      ],
+      "optionGroups": [
+        {
+          "id": 101,
+          "nameEn": "Spice Level",
+          "nameMm": "အစပ်ဆင့်",
+          "groupType": "SINGLE_SELECT",
+          "isRequired": false,
+          "minSelection": 0,
+          "maxSelection": 1,
+          "options": [
+            { "id": 1011, "nameEn": "No Spice", "nameMm": "အစပ်မပါ", "price": 0.0, "displayPrice": "Free" },
+            { "id": 1012, "nameEn": "Mild",     "nameMm": "နည်းငယ်",  "price": 0.0, "displayPrice": "Free" },
+            { "id": 1013, "nameEn": "Medium",   "nameMm": "အလတ်",    "price": 0.0, "displayPrice": "Free" },
+            { "id": 1014, "nameEn": "Hot",      "nameMm": "စပ်",      "price": 0.0, "displayPrice": "Free" },
+            { "id": 1015, "nameEn": "Extra Hot","nameMm": "အစပ်ဆုံး","price": 0.0, "displayPrice": "Free" }
+          ]
+        },
+        {
+          "id": 102,
+          "nameEn": "Add-ons",
+          "nameMm": "ထပ်ဆင့်",
+          "groupType": "MULTI_SELECT",
+          "isRequired": false,
+          "minSelection": 0,
+          "maxSelection": 3,
+          "options": [
+            { "id": 1021, "nameEn": "Extra Rice",    "nameMm": "ထမင်းတိုး",    "price": 20.0, "displayPrice": "+฿20" },
+            { "id": 1022, "nameEn": "Soft Boiled Egg","nameMm": "ကြက်ဥ",       "price": 20.0, "displayPrice": "+฿20" },
+            { "id": 1023, "nameEn": "Extra Sauce",   "nameMm": "ဆော့တိုး",     "price": 15.0, "displayPrice": "+฿15" },
+            { "id": 1024, "nameEn": "Crispy Garlic", "nameMm": "ကြက်သွန်ကြော်","price": 10.0, "displayPrice": "+฿10" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": 2,
+      "categoryId": 4,
+      "nameEn": "Lahpet Thoke",
+      "nameMm": "လက်ဖက်သုပ်",
+      "nameTh": "ลาเพ็ดโตะ",
+      "slug": "lahpet-thoke",
+      "description": "Fermented tea leaf salad with crunchy beans, peanuts, sesame, garlic and fresh tomato.",
+      "price": 150.0,
+      "originalPrice": null,
+      "displayPrice": "฿150",
+      "displayOriginalPrice": null,
+      "currency": "฿",
+      "discountPercentage": null,
+      "discountLabel": null,
+      "imageUrl": "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiJP_TSChaB8kcMV1epjHfE3suOqLEoNOdDl6GrK2hBrt8oTOvO7hDoSix-pFo5EZYSkL8ZDziC6ObRjChyphenhyphenZiX0Vyy02cLg1S_efG2aClJ2BDssSwRH0FYwpD-7IkMADU8ozPh08hlAPbwJ/s1600/IMG_4012.JPG",
+      "photoUrls": [
+        "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiJP_TSChaB8kcMV1epjHfE3suOqLEoNOdDl6GrK2hBrt8oTOvO7hDoSix-pFo5EZYSkL8ZDziC6ObRjChyphenhyphenZiX0Vyy02cLg1S_efG2aClJ2BDssSwRH0FYwpD-7IkMADU8ozPh08hlAPbwJ/s1600/IMG_4012.JPG"
+      ],
+      "isAvailable": true,
+      "isPopular": true,
+      "isVegetarian": false,
+      "isSpicy": false,
+      "isRecommended": true,
+      "isHotDeal": false,
+      "isCombo": false,
+      "rating": 4.7,
+      "reviewCount": 185,
+      "variants": [
+        { "id": 21, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 150.0, "displayPrice": "฿150", "isAvailable": true },
+        { "id": 22, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 180.0, "displayPrice": "฿180", "isAvailable": true }
+      ],
+      "optionGroups": []
+    },
+
+    {
+      "id": 3,
+      "categoryId": 4,
+      "nameEn": "Crispy Tofu Salad",
+      "nameMm": "ကြော်တိုဟူးသုပ်",
+      "nameTh": "สลัดเต้าหู้กรอบ",
+      "slug": "crispy-tofu-salad",
+      "description": "Golden pan-fried Shan tofu tossed with garlic oil, lime and coriander.",
+      "price": 130.0,
+      "originalPrice": null,
+      "displayPrice": "฿130",
+      "displayOriginalPrice": null,
+      "currency": "฿",
+      "discountPercentage": null,
+      "discountLabel": null,
+      "imageUrl": "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgoODsqT6WAwaa96Ey23EQ4GHhVWMkQ2LRyolEqWOIMgM57QErT3yjDLxXkMh9R3ck2MfpTw83HOTyZRM7NR0m5qsbNd8xFSX-UjgoqG8aXsi31qF-qsrczFhZ_MHWtUkVvbGTer2UgQg4/s1600/IMG_0004.JPG",
+      "photoUrls": [
+        "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgoODsqT6WAwaa96Ey23EQ4GHhVWMkQ2LRyolEqWOIMgM57QErT3yjDLxXkMh9R3ck2MfpTw83HOTyZRM7NR0m5qsbNd8xFSX-UjgoqG8aXsi31qF-qsrczFhZ_MHWtUkVvbGTer2UgQg4/s1600/IMG_0004.JPG"
+      ],
+      "isAvailable": true,
+      "isPopular": true,
+      "isVegetarian": true,
+      "isSpicy": false,
+      "isRecommended": false,
+      "isHotDeal": false,
+      "isCombo": false,
+      "rating": 4.6,
+      "reviewCount": 142,
+      "variants": [
+        { "id": 31, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 130.0, "displayPrice": "฿130", "isAvailable": true },
+        { "id": 32, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 160.0, "displayPrice": "฿160", "isAvailable": true }
+      ],
+      "optionGroups": []
+    },
+
+    {
+      "id": 4,
+      "categoryId": 4,
+      "nameEn": "Grilled Eggplant Salad",
+      "nameMm": "ပဲပင်ကြော်သုပ်",
+      "nameTh": "สลัดมะเขือย่าง",
+      "slug": "grilled-eggplant-salad",
+      "description": "Charred eggplant mashed with shallots, fish sauce and roasted sesame oil.",
+      "price": 140.0,
+      "originalPrice": null,
+      "displayPrice": "฿140",
+      "displayOriginalPrice": null,
+      "currency": "฿",
+      "discountPercentage": null,
+      "discountLabel": null,
+      "imageUrl": "https://myfoodmyanmar.com/wp-content/uploads/2020/09/maxresdefault-13.jpg",
+      "photoUrls": [
+        "https://myfoodmyanmar.com/wp-content/uploads/2020/09/maxresdefault-13.jpg"
+      ],
+      "isAvailable": true,
+      "isPopular": false,
+      "isVegetarian": false,
+      "isSpicy": false,
+      "isRecommended": true,
+      "isHotDeal": false,
+      "isCombo": false,
+      "rating": 4.5,
+      "reviewCount": 98,
+      "variants": [
+        { "id": 41, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 140.0, "displayPrice": "฿140", "isAvailable": true },
+        { "id": 42, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 170.0, "displayPrice": "฿170", "isAvailable": true }
+      ],
+      "optionGroups": []
+    },
+
+    {
+      "id": 5,
+      "categoryId": 9,
+      "nameEn": "Steamed Seabass Kachin Style",
+      "nameMm": "ကချင်ငါးဆိမ့်",
+      "nameTh": "ปลากะพงนึ่งสไตล์กะฉิ่น",
+      "slug": "steamed-seabass-kachin-style",
+      "description": "Whole seabass steamed with Kachin herbs, wild ginger and sour plum.",
+      "price": 350.0,
+      "originalPrice": 580.0,
+      "displayPrice": "฿350",
+      "displayOriginalPrice": "฿580",
+      "currency": "฿",
+      "discountPercentage": 40,
+      "discountLabel": "40% Off",
+      "imageUrl": "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEinZeWDNYz-nFwsyKNB3IOIFy5hyUJwLbpidQXyIa3YNQoV8BWwcjOUn5nile45NcQcDA6stoxUXo7PDvHWYfUyOj1lHcnJSbEtNKgr4IsKHdbG4dqZZxZeFthnU2c-S8HOM41hGWuOMAupb1NXhKsjsQ7AgWYIjWl9cOM3JoNBpr3ZVtV4HL0qSLad/s798/1.jpg",
+      "photoUrls": [
+        "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEinZeWDNYz-nFwsyKNB3IOIFy5hyUJwLbpidQXyIa3YNQoV8BWwcjOUn5nile45NcQcDA6stoxUXo7PDvHWYfUyOj1lHcnJSbEtNKgr4IsKHdbG4dqZZxZeFthnU2c-S8HOM41hGWuOMAupb1NXhKsjsQ7AgWYIjWl9cOM3JoNBpr3ZVtV4HL0qSLad/s798/1.jpg"
+      ],
+      "isAvailable": true,
+      "isPopular": false,
+      "isVegetarian": false,
+      "isSpicy": false,
+      "isRecommended": true,
+      "isHotDeal": true,
+      "isCombo": false,
+      "rating": 4.9,
+      "reviewCount": 76,
+      "variants": [
+        { "id": 51, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 350.0, "displayPrice": "฿350", "isAvailable": true },
+        { "id": 52, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 380.0, "displayPrice": "฿380", "isAvailable": true }
+      ],
+      "optionGroups": [
+        {
+          "id": 501,
+          "nameEn": "Spice Level",
+          "nameMm": "အစပ်ဆင့်",
+          "groupType": "SINGLE_SELECT",
+          "isRequired": false,
+          "minSelection": 0,
+          "maxSelection": 1,
+          "options": [
+            { "id": 5011, "nameEn": "No Spice", "nameMm": "အစပ်မပါ", "price": 0.0, "displayPrice": "Free" },
+            { "id": 5012, "nameEn": "Mild",     "nameMm": "နည်းငယ်",  "price": 0.0, "displayPrice": "Free" },
+            { "id": 5013, "nameEn": "Medium",   "nameMm": "အလတ်",    "price": 0.0, "displayPrice": "Free" },
+            { "id": 5014, "nameEn": "Hot",      "nameMm": "စပ်",      "price": 0.0, "displayPrice": "Free" },
+            { "id": 5015, "nameEn": "Extra Hot","nameMm": "အစပ်ဆုံး","price": 0.0, "displayPrice": "Free" }
+          ]
+        },
+        {
+          "id": 502,
+          "nameEn": "Add-ons",
+          "nameMm": "ထပ်ဆင့်",
+          "groupType": "MULTI_SELECT",
+          "isRequired": false,
+          "minSelection": 0,
+          "maxSelection": 3,
+          "options": [
+            { "id": 5021, "nameEn": "Extra Rice",    "nameMm": "ထမင်းတိုး",    "price": 20.0, "displayPrice": "+฿20" },
+            { "id": 5022, "nameEn": "Soft Boiled Egg","nameMm": "ကြက်ဥ",       "price": 20.0, "displayPrice": "+฿20" },
+            { "id": 5023, "nameEn": "Extra Sauce",   "nameMm": "ဆော့တိုး",     "price": 15.0, "displayPrice": "+฿15" },
+            { "id": 5024, "nameEn": "Crispy Garlic", "nameMm": "ကြက်သွန်ကြော်","price": 10.0, "displayPrice": "+฿10" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": 6,
+      "categoryId": 7,
+      "nameEn": "Myanmar Milk Tea",
+      "nameMm": "နို့လက်ဖက်ရည်",
+      "nameTh": "ชานมพม่า",
+      "slug": "myanmar-milk-tea",
+      "description": "Brewed with condensed and evaporated milk over strong Ceylon black tea — no instant mix.",
+      "price": 80.0,
+      "originalPrice": null,
+      "displayPrice": "฿80",
+      "displayOriginalPrice": null,
+      "currency": "฿",
+      "discountPercentage": null,
+      "discountLabel": null,
+      "imageUrl": "https://myfoodmyanmar.com/wp-content/uploads/2023/03/Royal-Milk-Tea-3.jpg",
+      "photoUrls": [
+        "https://myfoodmyanmar.com/wp-content/uploads/2023/03/Royal-Milk-Tea-3.jpg"
+      ],
+      "isAvailable": true,
+      "isPopular": true,
+      "isVegetarian": true,
+      "isSpicy": false,
+      "isRecommended": true,
+      "isHotDeal": false,
+      "isCombo": false,
+      "rating": 4.6,
+      "reviewCount": 205,
+      "variants": [
+        { "id": 61, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 80.0, "displayPrice": "฿80", "isAvailable": true }
+      ],
+      "optionGroups": []
+    },
+
+    {
+      "id": 7,
+      "categoryId": 3,
+      "nameEn": "Slow-Braised Pork Belly Curry",
+      "nameMm": "ဝက်ဝမ်းဟင်းချို",
+      "nameTh": "แกงหมูสามชั้นตุ๋น",
+      "slug": "slow-braised-pork-belly-curry",
+      "description": "Pork belly braised in turmeric, lemongrass and bay leaf until fork-tender.",
+      "price": 220.0,
+      "originalPrice": 260.0,
+      "displayPrice": "฿220",
+      "displayOriginalPrice": "฿260",
+      "currency": "฿",
+      "discountPercentage": 15,
+      "discountLabel": "15% Off",
+      "imageUrl": "https://loveincorporated.blob.core.windows.net/contentimages/main/535d1636-c7d8-439e-9929-060d3fe7b3b4-pork-belly-curry.jpg",
+      "photoUrls": [
+        "https://loveincorporated.blob.core.windows.net/contentimages/main/535d1636-c7d8-439e-9929-060d3fe7b3b4-pork-belly-curry.jpg"
+      ],
+      "isAvailable": true,
+      "isPopular": false,
+      "isVegetarian": false,
+      "isSpicy": false,
+      "isRecommended": false,
+      "isHotDeal": true,
+      "isCombo": false,
+      "rating": 4.5,
+      "reviewCount": 134,
+      "variants": [
+        { "id": 71, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 220.0, "displayPrice": "฿220", "isAvailable": true },
+        { "id": 72, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 250.0, "displayPrice": "฿250", "isAvailable": true }
+      ],
+      "optionGroups": [
+        {
+          "id": 701,
+          "nameEn": "Spice Level",
+          "nameMm": "အစပ်ဆင့်",
+          "groupType": "SINGLE_SELECT",
+          "isRequired": false,
+          "minSelection": 0,
+          "maxSelection": 1,
+          "options": [
+            { "id": 7011, "nameEn": "No Spice", "nameMm": "အစပ်မပါ", "price": 0.0, "displayPrice": "Free" },
+            { "id": 7012, "nameEn": "Mild",     "nameMm": "နည်းငယ်",  "price": 0.0, "displayPrice": "Free" },
+            { "id": 7013, "nameEn": "Medium",   "nameMm": "အလတ်",    "price": 0.0, "displayPrice": "Free" },
+            { "id": 7014, "nameEn": "Hot",      "nameMm": "စပ်",      "price": 0.0, "displayPrice": "Free" },
+            { "id": 7015, "nameEn": "Extra Hot","nameMm": "အစပ်ဆုံး","price": 0.0, "displayPrice": "Free" }
+          ]
+        },
+        {
+          "id": 702,
+          "nameEn": "Add-ons",
+          "nameMm": "ထပ်ဆင့်",
+          "groupType": "MULTI_SELECT",
+          "isRequired": false,
+          "minSelection": 0,
+          "maxSelection": 3,
+          "options": [
+            { "id": 7021, "nameEn": "Extra Rice",    "nameMm": "ထမင်းတိုး",    "price": 20.0, "displayPrice": "+฿20" },
+            { "id": 7022, "nameEn": "Soft Boiled Egg","nameMm": "ကြက်ဥ",       "price": 20.0, "displayPrice": "+฿20" },
+            { "id": 7023, "nameEn": "Extra Sauce",   "nameMm": "ဆော့တိုး",     "price": 15.0, "displayPrice": "+฿15" },
+            { "id": 7024, "nameEn": "Crispy Garlic", "nameMm": "ကြက်သွန်ကြော်","price": 10.0, "displayPrice": "+฿10" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": 8,
+      "categoryId": 1,
+      "nameEn": "Shan Noodle Soup",
+      "nameMm": "ရှမ်းခေါက်ဆွဲဟင်း",
+      "nameTh": "ก๋วยเตี๋ยวฉาน",
+      "slug": "shan-noodle-soup",
+      "description": "Flat rice noodles in a light Shan pork broth with crispy fried garlic oil.",
+      "price": 160.0,
+      "originalPrice": null,
+      "displayPrice": "฿160",
+      "displayOriginalPrice": null,
+      "currency": "฿",
+      "discountPercentage": null,
+      "discountLabel": null,
+      "imageUrl": "https://clubrangoon.com.hk/wp-content/uploads/2025/04/shan-noodle-soup-recipe-shan-khauk-swe-1745520114.jpg",
+      "photoUrls": [
+        "https://clubrangoon.com.hk/wp-content/uploads/2025/04/shan-noodle-soup-recipe-shan-khauk-swe-1745520114.jpg"
+      ],
+      "isAvailable": true,
+      "isPopular": false,
+      "isVegetarian": false,
+      "isSpicy": false,
+      "isRecommended": false,
+      "isHotDeal": false,
+      "isCombo": false,
+      "rating": 4.5,
+      "reviewCount": 98,
+      "variants": [
+        { "id": 81, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 160.0, "displayPrice": "฿160", "isAvailable": true },
+        { "id": 82, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 190.0, "displayPrice": "฿190", "isAvailable": true }
+      ],
+      "optionGroups": [
+        {
+          "id": 801,
+          "nameEn": "Spice Level",
+          "nameMm": "အစပ်ဆင့်",
+          "groupType": "SINGLE_SELECT",
+          "isRequired": false,
+          "minSelection": 0,
+          "maxSelection": 1,
+          "options": [
+            { "id": 8011, "nameEn": "No Spice", "nameMm": "အစပ်မပါ", "price": 0.0, "displayPrice": "Free" },
+            { "id": 8012, "nameEn": "Mild",     "nameMm": "နည်းငယ်",  "price": 0.0, "displayPrice": "Free" },
+            { "id": 8013, "nameEn": "Medium",   "nameMm": "အလတ်",    "price": 0.0, "displayPrice": "Free" },
+            { "id": 8014, "nameEn": "Hot",      "nameMm": "စပ်",      "price": 0.0, "displayPrice": "Free" },
+            { "id": 8015, "nameEn": "Extra Hot","nameMm": "အစပ်ဆုံး","price": 0.0, "displayPrice": "Free" }
+          ]
+        },
+        {
+          "id": 802,
+          "nameEn": "Add-ons",
+          "nameMm": "ထပ်ဆင့်",
+          "groupType": "MULTI_SELECT",
+          "isRequired": false,
+          "minSelection": 0,
+          "maxSelection": 3,
+          "options": [
+            { "id": 8021, "nameEn": "Extra Rice",    "nameMm": "ထမင်းတိုး",    "price": 20.0, "displayPrice": "+฿20" },
+            { "id": 8022, "nameEn": "Soft Boiled Egg","nameMm": "ကြက်ဥ",       "price": 20.0, "displayPrice": "+฿20" },
+            { "id": 8023, "nameEn": "Extra Sauce",   "nameMm": "ဆော့တိုး",     "price": 15.0, "displayPrice": "+฿15" },
+            { "id": 8024, "nameEn": "Crispy Garlic", "nameMm": "ကြက်သွန်ကြော်","price": 10.0, "displayPrice": "+฿10" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": 9,
+      "categoryId": 3,
+      "nameEn": "Coconut Chicken Curry",
+      "nameMm": "ကြက်သားနှင်းဆီဟင်း",
+      "nameTh": "แกงไก่มะพร้าว",
+      "slug": "coconut-chicken-curry",
+      "description": "Chicken thighs simmered in creamy coconut milk with Burmese spice paste.",
+      "price": 200.0,
+      "originalPrice": 280.0,
+      "displayPrice": "฿200",
+      "displayOriginalPrice": "฿280",
+      "currency": "฿",
+      "discountPercentage": 29,
+      "discountLabel": "29% Off",
+      "imageUrl": "https://static01.nyt.com/images/2021/01/06/dining/04Cookbooksrex2-curry/merlin_181749069_bac75581-7b0e-4426-8d8b-1803663440fd-mediumSquareAt3X.jpg",
+      "photoUrls": [
+        "https://static01.nyt.com/images/2021/01/06/dining/04Cookbooksrex2-curry/merlin_181749069_bac75581-7b0e-4426-8d8b-1803663440fd-mediumSquareAt3X.jpg"
+      ],
+      "isAvailable": true,
+      "isPopular": true,
+      "isVegetarian": false,
+      "isSpicy": false,
+      "isRecommended": true,
+      "isHotDeal": true,
+      "isCombo": false,
+      "rating": 4.6,
+      "reviewCount": 156,
+      "variants": [
+        { "id": 91, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 200.0, "displayPrice": "฿200", "isAvailable": true },
+        { "id": 92, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 230.0, "displayPrice": "฿230", "isAvailable": true }
+      ],
+      "optionGroups": [
+        {
+          "id": 901,
+          "nameEn": "Spice Level",
+          "nameMm": "အစပ်ဆင့်",
+          "groupType": "SINGLE_SELECT",
+          "isRequired": false,
+          "minSelection": 0,
+          "maxSelection": 1,
+          "options": [
+            { "id": 9011, "nameEn": "No Spice", "nameMm": "အစပ်မပါ", "price": 0.0, "displayPrice": "Free" },
+            { "id": 9012, "nameEn": "Mild",     "nameMm": "နည်းငယ်",  "price": 0.0, "displayPrice": "Free" },
+            { "id": 9013, "nameEn": "Medium",   "nameMm": "အလတ်",    "price": 0.0, "displayPrice": "Free" },
+            { "id": 9014, "nameEn": "Hot",      "nameMm": "စပ်",      "price": 0.0, "displayPrice": "Free" },
+            { "id": 9015, "nameEn": "Extra Hot","nameMm": "အစပ်ဆုံး","price": 0.0, "displayPrice": "Free" }
+          ]
+        },
+        {
+          "id": 902,
+          "nameEn": "Add-ons",
+          "nameMm": "ထပ်ဆင့်",
+          "groupType": "MULTI_SELECT",
+          "isRequired": false,
+          "minSelection": 0,
+          "maxSelection": 3,
+          "options": [
+            { "id": 9021, "nameEn": "Extra Rice",    "nameMm": "ထမင်းတိုး",    "price": 20.0, "displayPrice": "+฿20" },
+            { "id": 9022, "nameEn": "Soft Boiled Egg","nameMm": "ကြက်ဥ",       "price": 20.0, "displayPrice": "+฿20" },
+            { "id": 9023, "nameEn": "Extra Sauce",   "nameMm": "ဆော့တိုး",     "price": 15.0, "displayPrice": "+฿15" },
+            { "id": 9024, "nameEn": "Crispy Garlic", "nameMm": "ကြက်သွန်ကြော်","price": 10.0, "displayPrice": "+฿10" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": 10,
+      "categoryId": 8,
+      "nameEn": "Shwe Gi Mont",
+      "nameMm": "ရွှေဂျီမုန့်",
+      "nameTh": "ชเวจีโมน",
+      "slug": "shwe-gi-mont",
+      "description": "Steamed golden semolina cake topped with shredded coconut and poppy seeds.",
+      "price": 90.0,
+      "originalPrice": null,
+      "displayPrice": "฿90",
+      "displayOriginalPrice": null,
+      "currency": "฿",
+      "discountPercentage": null,
+      "discountLabel": null,
+      "imageUrl": "https://lionmartjp.com/cdn/shop/files/FullSizeRender_504859d4-f6e5-474a-9793-a922868efd4d.jpg?v=1761029320&width=1946",
+      "photoUrls": [
+        "https://lionmartjp.com/cdn/shop/files/FullSizeRender_504859d4-f6e5-474a-9793-a922868efd4d.jpg?v=1761029320&width=1946"
+      ],
+      "isAvailable": true,
+      "isPopular": false,
+      "isVegetarian": true,
+      "isSpicy": false,
+      "isRecommended": false,
+      "isHotDeal": false,
+      "isCombo": false,
+      "rating": 4.4,
+      "reviewCount": 88,
+      "variants": [
+        { "id": 101, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 90.0, "displayPrice": "฿90", "isAvailable": true }
+      ],
+      "optionGroups": []
+    },
+
+    {
+      "id": 61,
+      "categoryId": 1,
+      "nameEn": "Nan Gyi Thoke (Mandalay)",
+      "nameMm": "မန္တလေးနမ်းကြီးသုပ်",
+      "nameTh": "นันจีโตะ (มัณฑะเลย์)",
+      "slug": "nan-gyi-thoke-mandalay",
+      "description": "Mandalay-style thick noodle salad with extra layers of dried shrimp and garlic oil.",
+      "price": 120.0,
+      "originalPrice": 200.0,
+      "displayPrice": "฿120",
+      "displayOriginalPrice": "฿200",
+      "currency": "฿",
+      "discountPercentage": 40,
+      "discountLabel": "40% Off",
+      "imageUrl": "https://images.deliveryhero.io/image/fd-mm/products/274986.jpg?width=%s",
+      "photoUrls": [
+        "https://images.deliveryhero.io/image/fd-mm/products/274986.jpg?width=%s"
+      ],
+      "isAvailable": true,
+      "isPopular": true,
+      "isVegetarian": false,
+      "isSpicy": false,
+      "isRecommended": true,
+      "isHotDeal": true,
+      "isCombo": false,
+      "rating": 4.8,
+      "reviewCount": 198,
+      "variants": [
+        { "id": 611, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 120.0, "displayPrice": "฿120", "isAvailable": true },
+        { "id": 612, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 150.0, "displayPrice": "฿150", "isAvailable": true }
+      ],
+      "optionGroups": [
+        {
+          "id": 6101,
+          "nameEn": "Spice Level",
+          "nameMm": "အစပ်ဆင့်",
+          "groupType": "SINGLE_SELECT",
+          "isRequired": false,
+          "minSelection": 0,
+          "maxSelection": 1,
+          "options": [
+            { "id": 61011, "nameEn": "No Spice", "nameMm": "အစပ်မပါ", "price": 0.0, "displayPrice": "Free" },
+            { "id": 61012, "nameEn": "Mild",     "nameMm": "နည်းငယ်",  "price": 0.0, "displayPrice": "Free" },
+            { "id": 61013, "nameEn": "Medium",   "nameMm": "အလတ်",    "price": 0.0, "displayPrice": "Free" },
+            { "id": 61014, "nameEn": "Hot",      "nameMm": "စပ်",      "price": 0.0, "displayPrice": "Free" },
+            { "id": 61015, "nameEn": "Extra Hot","nameMm": "အစပ်ဆုံး","price": 0.0, "displayPrice": "Free" }
+          ]
+        },
+        {
+          "id": 6102,
+          "nameEn": "Add-ons",
+          "nameMm": "ထပ်ဆင့်",
+          "groupType": "MULTI_SELECT",
+          "isRequired": false,
+          "minSelection": 0,
+          "maxSelection": 3,
+          "options": [
+            { "id": 61021, "nameEn": "Extra Rice",    "nameMm": "ထမင်းတိုး",    "price": 20.0, "displayPrice": "+฿20" },
+            { "id": 61022, "nameEn": "Soft Boiled Egg","nameMm": "ကြက်ဥ",       "price": 20.0, "displayPrice": "+฿20" },
+            { "id": 61023, "nameEn": "Extra Sauce",   "nameMm": "ဆော့တိုး",     "price": 15.0, "displayPrice": "+฿15" },
+            { "id": 61024, "nameEn": "Crispy Garlic", "nameMm": "ကြက်သွန်ကြော်","price": 10.0, "displayPrice": "+฿10" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": 62,
+      "categoryId": 1,
+      "nameEn": "Mandalay Coconut Noodles",
+      "nameMm": "မန္တလေးအုန်းနို့ခေါက်ဆွဲ",
+      "nameTh": "บะหมี่มะพร้าวมัณฑะเลย์",
+      "slug": "mandalay-coconut-noodles",
+      "description": "Silky egg noodles in deep coconut-chicken broth with crispy onion and hard-boiled egg.",
+      "price": 130.0,
+      "originalPrice": 200.0,
+      "displayPrice": "฿130",
+      "displayOriginalPrice": "฿200",
+      "currency": "฿",
+      "discountPercentage": 35,
+      "discountLabel": "35% Off",
+      "imageUrl": "https://images.deliveryhero.io/image/fd-mm/LH/l7wx-listing.jpg",
+      "photoUrls": [
+        "https://images.deliveryhero.io/image/fd-mm/LH/l7wx-listing.jpg"
+      ],
+      "isAvailable": true,
+      "isPopular": true,
+      "isVegetarian": false,
+      "isSpicy": false,
+      "isRecommended": true,
+      "isHotDeal": true,
+      "isCombo": false,
+      "rating": 4.7,
+      "reviewCount": 174,
+      "variants": [
+        { "id": 621, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 130.0, "displayPrice": "฿130", "isAvailable": true },
+        { "id": 622, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 160.0, "displayPrice": "฿160", "isAvailable": true }
+      ],
+      "optionGroups": [
+        {
+          "id": 6201,
+          "nameEn": "Spice Level",
+          "nameMm": "အစပ်ဆင့်",
+          "groupType": "SINGLE_SELECT",
+          "isRequired": false,
+          "minSelection": 0,
+          "maxSelection": 1,
+          "options": [
+            { "id": 62011, "nameEn": "No Spice", "nameMm": "အစပ်မပါ", "price": 0.0, "displayPrice": "Free" },
+            { "id": 62012, "nameEn": "Mild",     "nameMm": "နည်းငယ်",  "price": 0.0, "displayPrice": "Free" },
+            { "id": 62013, "nameEn": "Medium",   "nameMm": "အလတ်",    "price": 0.0, "displayPrice": "Free" },
+            { "id": 62014, "nameEn": "Hot",      "nameMm": "စပ်",      "price": 0.0, "displayPrice": "Free" },
+            { "id": 62015, "nameEn": "Extra Hot","nameMm": "အစပ်ဆုံး","price": 0.0, "displayPrice": "Free" }
+          ]
+        },
+        {
+          "id": 6202,
+          "nameEn": "Add-ons",
+          "nameMm": "ထပ်ဆင့်",
+          "groupType": "MULTI_SELECT",
+          "isRequired": false,
+          "minSelection": 0,
+          "maxSelection": 3,
+          "options": [
+            { "id": 62021, "nameEn": "Extra Rice",    "nameMm": "ထမင်းတိုး",    "price": 20.0, "displayPrice": "+฿20" },
+            { "id": 62022, "nameEn": "Soft Boiled Egg","nameMm": "ကြက်ဥ",       "price": 20.0, "displayPrice": "+฿20" },
+            { "id": 62023, "nameEn": "Extra Sauce",   "nameMm": "ဆော့တိုး",     "price": 15.0, "displayPrice": "+฿15" },
+            { "id": 62024, "nameEn": "Crispy Garlic", "nameMm": "ကြက်သွန်ကြော်","price": 10.0, "displayPrice": "+฿10" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": 63,
+      "categoryId": 2,
+      "nameEn": "Shan Fish Rice",
+      "nameMm": "ငါးထမင်းနယ်",
+      "nameTh": "ข้าวปลาฉาน",
+      "slug": "shan-fish-rice",
+      "description": "Yellow turmeric rice, pork, tomato salad and pickles — a full Shan flavour feast.",
+      "price": 140.0,
+      "originalPrice": 200.0,
+      "displayPrice": "฿140",
+      "displayOriginalPrice": "฿200",
+      "currency": "฿",
+      "discountPercentage": 30,
+      "discountLabel": "30% Off",
+      "imageUrl": "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_Ws3rWVIFR24OE586cg1DIkAB1aB3KwBAFiQ0HYfORpFdk0odM4QI1vbCxtCZqVSeQVtOjfeFYE0FtdCha5HTVtdL9oPM2gIlGqrcpci9vQIphSvnScbLkkzJjCyHHKEn8OL7jWcpeJaY/s1600/IMG-20141112-WA0002-1_0+%25281%2529.jpg",
+      "photoUrls": [
+        "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_Ws3rWVIFR24OE586cg1DIkAB1aB3KwBAFiQ0HYfORpFdk0odM4QI1vbCxtCZqVSeQVtOjfeFYE0FtdCha5HTVtdL9oPM2gIlGqrcpci9vQIphSvnScbLkkzJjCyHHKEn8OL7jWcpeJaY/s1600/IMG-20141112-WA0002-1_0+%25281%2529.jpg"
+      ],
+      "isAvailable": true,
+      "isPopular": true,
+      "isVegetarian": false,
+      "isSpicy": false,
+      "isRecommended": true,
+      "isHotDeal": true,
+      "isCombo": false,
+      "rating": 4.6,
+      "reviewCount": 147,
+      "variants": [
+        { "id": 631, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 140.0, "displayPrice": "฿140", "isAvailable": true },
+        { "id": 632, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 170.0, "displayPrice": "฿170", "isAvailable": true }
+      ],
+      "optionGroups": [
+        {
+          "id": 6301,
+          "nameEn": "Spice Level",
+          "nameMm": "အစပ်ဆင့်",
+          "groupType": "SINGLE_SELECT",
+          "isRequired": false,
+          "minSelection": 0,
+          "maxSelection": 1,
+          "options": [
+            { "id": 63011, "nameEn": "No Spice", "nameMm": "အစပ်မပါ", "price": 0.0, "displayPrice": "Free" },
+            { "id": 63012, "nameEn": "Mild",     "nameMm": "နည်းငယ်",  "price": 0.0, "displayPrice": "Free" },
+            { "id": 63013, "nameEn": "Medium",   "nameMm": "အလတ်",    "price": 0.0, "displayPrice": "Free" },
+            { "id": 63014, "nameEn": "Hot",      "nameMm": "စပ်",      "price": 0.0, "displayPrice": "Free" },
+            { "id": 63015, "nameEn": "Extra Hot","nameMm": "အစပ်ဆုံး","price": 0.0, "displayPrice": "Free" }
+          ]
+        },
+        {
+          "id": 6302,
+          "nameEn": "Add-ons",
+          "nameMm": "ထပ်ဆင့်",
+          "groupType": "MULTI_SELECT",
+          "isRequired": false,
+          "minSelection": 0,
+          "maxSelection": 3,
+          "options": [
+            { "id": 63021, "nameEn": "Extra Rice",    "nameMm": "ထမင်းတိုး",    "price": 20.0, "displayPrice": "+฿20" },
+            { "id": 63022, "nameEn": "Soft Boiled Egg","nameMm": "ကြက်ဥ",       "price": 20.0, "displayPrice": "+฿20" },
+            { "id": 63023, "nameEn": "Extra Sauce",   "nameMm": "ဆော့တိုး",     "price": 15.0, "displayPrice": "+฿15" },
+            { "id": 63024, "nameEn": "Crispy Garlic", "nameMm": "ကြက်သွန်ကြော်","price": 10.0, "displayPrice": "+฿10" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": 64,
+      "categoryId": 5,
+      "nameEn": "Tohu Nway",
+      "nameMm": "တိုဟူးနွေး",
+      "nameTh": "โตหูญเว",
+      "slug": "tohu-nway",
+      "description": "Mandalay speciality — warm chickpea tofu soup with shallot oil and coriander.",
+      "price": 90.0,
+      "originalPrice": null,
+      "displayPrice": "฿90",
+      "displayOriginalPrice": null,
+      "currency": "฿",
+      "discountPercentage": null,
+      "discountLabel": null,
+      "imageUrl": "https://i.ytimg.com/vi/veQ02NDHBrw/sddefault.jpg",
+      "photoUrls": [
+        "https://i.ytimg.com/vi/veQ02NDHBrw/sddefault.jpg"
+      ],
+      "isAvailable": true,
+      "isPopular": false,
+      "isVegetarian": true,
+      "isSpicy": false,
+      "isRecommended": true,
+      "isHotDeal": false,
+      "isCombo": false,
+      "rating": 4.5,
+      "reviewCount": 112,
+      "variants": [
+        { "id": 641, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 90.0,  "displayPrice": "฿90",  "isAvailable": true },
+        { "id": 642, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 120.0, "displayPrice": "฿120", "isAvailable": true }
+      ],
+      "optionGroups": [
+        {
+          "id": 6401,
+          "nameEn": "Spice Level",
+          "nameMm": "အစပ်ဆင့်",
+          "groupType": "SINGLE_SELECT",
+          "isRequired": false,
+          "minSelection": 0,
+          "maxSelection": 1,
+          "options": [
+            { "id": 64011, "nameEn": "No Spice", "nameMm": "အစပ်မပါ", "price": 0.0, "displayPrice": "Free" },
+            { "id": 64012, "nameEn": "Mild",     "nameMm": "နည်းငယ်",  "price": 0.0, "displayPrice": "Free" },
+            { "id": 64013, "nameEn": "Medium",   "nameMm": "အလတ်",    "price": 0.0, "displayPrice": "Free" },
+            { "id": 64014, "nameEn": "Hot",      "nameMm": "စပ်",      "price": 0.0, "displayPrice": "Free" },
+            { "id": 64015, "nameEn": "Extra Hot","nameMm": "အစပ်ဆုံး","price": 0.0, "displayPrice": "Free" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": 65,
+      "categoryId": 8,
+      "nameEn": "Black Sticky Rice Pudding",
+      "nameMm": "ကောက်ညှင်းမည်း",
+      "nameTh": "ข้าวเหนียวดำ",
+      "slug": "black-sticky-rice-pudding",
+      "description": "Steamed glutinous black rice with palm sugar syrup and fresh coconut cream.",
+      "price": 80.0,
+      "originalPrice": null,
+      "displayPrice": "฿80",
+      "displayOriginalPrice": null,
+      "currency": "฿",
+      "discountPercentage": null,
+      "discountLabel": null,
+      "imageUrl": "https://www.joyfuleatingnutrition.com/joycontent/uploads/2024/08/Black-sticky-rice-coconut-milk.jpg",
+      "photoUrls": [
+        "https://www.joyfuleatingnutrition.com/joycontent/uploads/2024/08/Black-sticky-rice-coconut-milk.jpg"
+      ],
+      "isAvailable": true,
+      "isPopular": false,
+      "isVegetarian": true,
+      "isSpicy": false,
+      "isRecommended": true,
+      "isHotDeal": false,
+      "isCombo": false,
+      "rating": 4.6,
+      "reviewCount": 125,
+      "variants": [
+        { "id": 651, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 80.0, "displayPrice": "฿80", "isAvailable": true }
+      ],
+      "optionGroups": []
+    },
+
+    {
+      "id": 66,
+      "categoryId": 4,
+      "nameEn": "Asone Thoke Mixed Salad",
+      "nameMm": "အစုံသုပ်",
+      "nameTh": "สลัดรวมอะโซนโตะ",
+      "slug": "asone-thoke-mixed-salad",
+      "description": "Mandalay-style salad bowl with noodles, tofu, tomato and tamarind dressing.",
+      "price": 110.0,
+      "originalPrice": null,
+      "displayPrice": "฿110",
+      "displayOriginalPrice": null,
+      "currency": "฿",
+      "discountPercentage": null,
+      "discountLabel": null,
+      "imageUrl": "https://www.myanmarfoodusa.com/cdn/shop/products/image_a37b6e05-8bf0-4be4-8e9b-9435629a7546.jpg?v=1677285301",
+      "photoUrls": [
+        "https://www.myanmarfoodusa.com/cdn/shop/products/image_a37b6e05-8bf0-4be4-8e9b-9435629a7546.jpg?v=1677285301"
+      ],
+      "isAvailable": true,
+      "isPopular": false,
+      "isVegetarian": true,
+      "isSpicy": false,
+      "isRecommended": true,
+      "isHotDeal": false,
+      "isCombo": false,
+      "rating": 4.4,
+      "reviewCount": 88,
+      "variants": [
+        { "id": 661, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 110.0, "displayPrice": "฿110", "isAvailable": true },
+        { "id": 662, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 140.0, "displayPrice": "฿140", "isAvailable": true }
+      ],
+      "optionGroups": []
+    },
+
+    {
+      "id": 67,
+      "categoryId": 4,
+      "nameEn": "Pheetan Thote",
+      "nameMm": "ဆေးဘဲဥသုပ်",
+      "nameTh": "พีตานโตะ",
+      "slug": "pheetan-thote",
+      "description": "Glass noodles tossed with sesame oil, lime, dried chilli and toasted peanuts.",
+      "price": 110.0,
+      "originalPrice": null,
+      "displayPrice": "฿110",
+      "displayOriginalPrice": null,
+      "currency": "฿",
+      "discountPercentage": null,
+      "discountLabel": null,
+      "imageUrl": "https://mm.ezyqrmenu.com/thantawsint/wp-content/uploads/sites/176/2025/12/%E1%80%86%E1%80%B1%E1%80%B8%E1%80%98%E1%80%B2%E1%80%A5%E1%80%9E%E1%80%AF%E1%80%95%E1%80%BA-%E1%80%9E%E1%80%B6%E1%80%90%E1%80%B1%E1%80%AC%E1%80%BA%E1%80%86%E1%80%84%E1%80%B7%E1%80%BA-scaled.jpg",
+      "photoUrls": [
+        "https://mm.ezyqrmenu.com/thantawsint/wp-content/uploads/sites/176/2025/12/%E1%80%86%E1%80%B1%E1%80%B8%E1%80%98%E1%80%B2%E1%80%A5%E1%80%9E%E1%80%AF%E1%80%95%E1%80%BA-%E1%80%9E%E1%80%B6%E1%80%90%E1%80%B1%E1%80%AC%E1%80%BA%E1%80%86%E1%80%84%E1%80%B7%E1%80%BA-scaled.jpg"
+      ],
+      "isAvailable": true,
+      "isPopular": false,
+      "isVegetarian": false,
+      "isSpicy": true,
+      "isRecommended": false,
+      "isHotDeal": false,
+      "isCombo": false,
+      "rating": 4.4,
+      "reviewCount": 76,
+      "variants": [
+        { "id": 671, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 110.0, "displayPrice": "฿110", "isAvailable": true },
+        { "id": 672, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 140.0, "displayPrice": "฿140", "isAvailable": true }
+      ],
+      "optionGroups": []
+    },
+
+    {
+      "id": 68,
+      "categoryId": 6,
+      "nameEn": "Burmese Tempura Set",
+      "nameMm": "မြန်မာ တင်ပူရာ",
+      "nameTh": "เทมปุระพม่า",
+      "slug": "burmese-tempura-set",
+      "description": "Assorted vegetable and tofu fritters in crispy rice batter with dipping sauce.",
+      "price": 100.0,
+      "originalPrice": 160.0,
+      "displayPrice": "฿100",
+      "displayOriginalPrice": "฿160",
+      "currency": "฿",
+      "discountPercentage": 38,
+      "discountLabel": "38% Off",
+      "imageUrl": "https://rimage.gnst.jp/livejapan.com/public/article/detail/a/00/00/a0000341/img/en/a0000341_parts_5850d4671097b.jpg?20200706163250&q=80&rw=686&rh=490",
+      "photoUrls": [
+        "https://rimage.gnst.jp/livejapan.com/public/article/detail/a/00/00/a0000341/img/en/a0000341_parts_5850d4671097b.jpg?20200706163250&q=80&rw=686&rh=490"
+      ],
+      "isAvailable": true,
+      "isPopular": false,
+      "isVegetarian": true,
+      "isSpicy": false,
+      "isRecommended": false,
+      "isHotDeal": true,
+      "isCombo": true,
+      "rating": 4.3,
+      "reviewCount": 64,
+      "variants": [
+        { "id": 681, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 100.0, "displayPrice": "฿100", "isAvailable": true }
+      ],
+      "optionGroups": []
+    },
+
+    {
+      "id": 69,
+      "categoryId": 7,
+      "nameEn": "Silon Tea",
+      "nameMm": "စီလုံတီးလက်ဖက်ရည်",
+      "nameTh": "ชาซีลอน",
+      "slug": "silon-tea",
+      "description": "Cold Shan-style fermented green tea with milk and ice.",
+      "price": 70.0,
+      "originalPrice": null,
+      "displayPrice": "฿70",
+      "displayOriginalPrice": null,
+      "currency": "฿",
+      "discountPercentage": null,
+      "discountLabel": null,
+      "imageUrl": "https://images.deliveryhero.io/image/fd-mm/LH/u4kp-listing.jpg",
+      "photoUrls": [
+        "https://images.deliveryhero.io/image/fd-mm/LH/u4kp-listing.jpg"
+      ],
+      "isAvailable": true,
+      "isPopular": true,
+      "isVegetarian": true,
+      "isSpicy": false,
+      "isRecommended": true,
+      "isHotDeal": false,
+      "isCombo": false,
+      "rating": 4.7,
+      "reviewCount": 141,
+      "variants": [
+        { "id": 691, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 70.0, "displayPrice": "฿70", "isAvailable": true }
+      ],
+      "optionGroups": []
+    },
+
+    {
+      "id": 70,
+      "categoryId": 8,
+      "nameEn": "Mont Pyar Thalet",
+      "nameMm": "မုန့်ပြားသလပ်",
+      "nameTh": "มอนพยาทาเลต",
+      "slug": "mont-pyar-thalet",
+      "description": "Crispy wafer filled with palm sugar and fresh coconut shreds.",
+      "price": 70.0,
+      "originalPrice": null,
+      "displayPrice": "฿70",
+      "displayOriginalPrice": null,
+      "currency": "฿",
+      "discountPercentage": null,
+      "discountLabel": null,
+      "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/ba/Mont_Pyar_Thalet.jpg",
+      "photoUrls": [
+        "https://upload.wikimedia.org/wikipedia/commons/b/ba/Mont_Pyar_Thalet.jpg"
+      ],
+      "isAvailable": true,
+      "isPopular": false,
+      "isVegetarian": true,
+      "isSpicy": false,
+      "isRecommended": false,
+      "isHotDeal": false,
+      "isCombo": false,
+      "rating": 4.3,
+      "reviewCount": 58,
+      "variants": [
+        { "id": 701, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 70.0, "displayPrice": "฿70", "isAvailable": true }
+      ],
+      "optionGroups": []
+    }
+  ]
+}
