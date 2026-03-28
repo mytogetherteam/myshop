@@ -29,7 +29,7 @@ class QuickActionCards extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: _ActionCard(
-              title: 'Manage\nPromotion',
+              title: 'Manage\nShop Menu',
               imagePath: 'assets/images/Promotion.png',
               backgroundColor: const Color(0xFFFBD2D1), // Soft pink/red
             ),

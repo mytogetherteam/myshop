@@ -13,6 +13,7 @@ import 'package:my_shop/features/orders/presentation/screens/order_detail_screen
 import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:my_shop/features/notifications/presentation/widgets/notification_badge_icon.dart';
 import 'package:flutter/services.dart';
+import 'package:my_shop/core/presentation/widgets/app_bar_title_with_logo.dart';
 import 'dart:async';
 
 class MainNavigationScreen extends StatefulWidget {
@@ -173,13 +174,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        title: Text(
-          _titles[_currentIndex],
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
-          ),
+        title: AppBarTitleWithLogo(
+          title: _titles[_currentIndex],
         ),
         actions: [
           const NotificationBadgeIcon(),
