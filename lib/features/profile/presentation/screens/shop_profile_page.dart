@@ -7,43 +7,12 @@ import 'package:my_shop/features/profile/presentation/screens/edit_shop_profile_
 import 'package:my_shop/features/profile/presentation/screens/operating_hours_page.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
-
-// ---------------------------------------------------------------------------
-// Demo data models
-// ---------------------------------------------------------------------------
-class _MenuItem {
-  final String name;
-  final double price;
-  final String imageUrl;
-  final bool isHot;
-  final bool isPopular;
-  final bool isVeg;
-  final bool isSpicy;
-  const _MenuItem({
-    required this.name,
-    required this.price,
-    required this.imageUrl,
-    this.isHot = false,
-    this.isPopular = false,
-    this.isVeg = false,
-    this.isSpicy = false,
-  });
-}
-
-class _Review {
-  final String reviewer;
-  final double rating;
-  final String date;
-  final String comment;
-  final List<String> tags;
-  const _Review({
-    required this.reviewer,
-    required this.rating,
-    required this.date,
-    required this.comment,
-    this.tags = const [],
-  });
-}
+import 'package:my_shop/features/menu/data/models/menu_item_model.dart';
+import 'package:my_shop/features/menu/data/repositories/menu_repository.dart';
+import 'package:my_shop/features/profile/data/models/review_model.dart';
+import 'package:my_shop/features/profile/data/services/review_service.dart';
+import 'package:my_shop/features/menu/data/models/menu_category_model.dart';
+import 'package:intl/intl.dart';
 
 // ---------------------------------------------------------------------------
 // ShopProfilePage
@@ -62,68 +31,12 @@ class _ShopProfilePageState extends State<ShopProfilePage>
 
   final List<String> _categories = ['All'];
   final CategoryService _categoryService = CategoryService();
+  final MenuRepository _menuRepository = MenuRepository();
+  final ReviewService _reviewService = ReviewService();
 
-  final List<_MenuItem> _menuItems = const [
-    _MenuItem(
-      name: 'Shan Noodles',
-      price: 4500,
-      imageUrl:
-          'https://delishglobe.com/wp-content/uploads/2025/02/Shan-Noodles.png',
-      isPopular: true,
-    ),
-    _MenuItem(
-      name: 'Mohinga',
-      price: 3500,
-      imageUrl:
-          'https://asianinspirations.com.au/wp-content/uploads/2023/03/MHG-6.jpg',
-      isHot: true,
-      isSpicy: true,
-    ),
-    _MenuItem(
-      name: 'Tofu Kyaw',
-      price: 3000,
-      imageUrl:
-          'https://www.cookeatworld.com/wp-content/uploads/2019/11/Burmese-Chicken-10.jpg',
-      isVeg: true,
-    ),
-    _MenuItem(
-      name: 'Shan Rice',
-      price: 5000,
-      imageUrl:
-          'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Shan_rice.jpg/320px-Shan_rice.jpg',
-      isPopular: true,
-    ),
-    _MenuItem(
-      name: 'Laphet Yay',
-      price: 1500,
-      imageUrl:
-          'https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/A_small_cup_of_coffee.JPG/320px-A_small_cup_of_coffee.JPG',
-    ),
-  ];
-
-  final List<_Review> _reviews = const [
-    _Review(
-      reviewer: 'Aung Kyaw',
-      rating: 5,
-      date: 'Mar 10, 2026',
-      comment: 'The food is absolutely amazing! Shan noodles are my favourite.',
-      tags: ['Great food', 'Fast delivery'],
-    ),
-    _Review(
-      reviewer: 'Phyu Phyu',
-      rating: 4,
-      date: 'Mar 8, 2026',
-      comment: 'Very tasty and affordable. The mohinga is just like home.',
-      tags: ['Authentic', 'Affordable'],
-    ),
-    _Review(
-      reviewer: 'Kyaw Zin',
-      rating: 4,
-      date: 'Mar 5, 2026',
-      comment: 'Good portion sizes and freshly cooked.',
-      tags: ['Fresh', 'Good value'],
-    ),
-  ];
+  List<MenuItemModel> _menuItems = [];
+  List<ReviewModel> _reviews = [];
+  List<MenuCategoryModel> _categoryModels = [];
 
   final ProfileService _profileService = ProfileService();
   ShopProfileModel? _shopProfile;
@@ -143,26 +56,62 @@ class _ShopProfilePageState extends State<ShopProfilePage>
       _errorMessage = null;
     });
 
-    final profile = await _profileService.getShopProfile();
-    final categories = await _categoryService.getCategories();
+    try {
+      final profile = await _profileService.getShopProfile();
+      final categories = await _categoryService.getCategories();
+      final reviews = await _reviewService.getReviews(limit: 5);
 
-    if (mounted) {
-      if (profile != null) {
-        setState(() {
-          _shopProfile = profile;
-          if (categories != null && categories.isNotEmpty) {
-            _categories.clear();
-            _categories.add('All');
-            _categories.addAll(categories.map((c) => c.displayName));
+      if (mounted) {
+        if (profile != null) {
+          setState(() {
+            _shopProfile = profile;
+            _reviews = reviews;
+            
+            if (categories != null && categories.isNotEmpty) {
+              _categoryModels = categories;
+              _categories.clear();
+              _categories.add('All');
+              _categories.addAll(categories.map((c) => c.displayName));
+            }
+          });
+          
+          // Load menu items (pass 0 for 'All')
+          await _loadMenuItems(0);
+          
+          if (mounted) {
+            setState(() => _isLoading = false);
           }
-          _isLoading = false;
-        });
-      } else {
+        } else {
+          setState(() {
+            _errorMessage = 'Failed to load shop profile. Please try again.';
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('[ShopProfilePage] Error loading profile: $e');
+      if (mounted) {
         setState(() {
-          _errorMessage = 'Failed to load shop profile. Please try again.';
+          _errorMessage = 'An error occurred while loading profile.';
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _loadMenuItems(int index) async {
+    try {
+      final categoryId = index == 0 ? null : _categoryModels[index - 1].id;
+      final items = await _menuRepository.getMenuItems(
+        categoryId: categoryId,
+      );
+      if (mounted) {
+        setState(() {
+          _menuItems = items;
+        });
+      }
+    } catch (e) {
+      debugPrint('[ShopProfilePage] Error loading menu items: $e');
     }
   }
 
@@ -734,7 +683,10 @@ class _ShopProfilePageState extends State<ShopProfilePage>
             itemBuilder: (_, i) {
               final selected = _selectedCategory == i;
               return GestureDetector(
-                onTap: () => setState(() => _selectedCategory = i),
+                onTap: () {
+                  setState(() => _selectedCategory = i);
+                  _loadMenuItems(i);
+                },
                 child: Container(
                   margin: const EdgeInsets.only(right: 8),
                   padding: const EdgeInsets.symmetric(
@@ -781,7 +733,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
     );
   }
 
-  Widget _buildMenuItemCard(_MenuItem item) {
+  Widget _buildMenuItemCard(MenuItemModel item) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
       decoration: BoxDecoration(
@@ -795,22 +747,15 @@ class _ShopProfilePageState extends State<ShopProfilePage>
             borderRadius: const BorderRadius.horizontal(
               left: Radius.circular(12),
             ),
-            child: Image.network(
-              item.imageUrl,
-              width: 90,
-              height: 80,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => Container(
-                width: 90,
-                height: 80,
-                color: const Color(0xFFE2E8F0),
-                child: const PhosphorIcon(
-                  PhosphorIconsRegular.forkKnife,
-                  size: 28,
-                  color: Color(0xFF94A3B8),
-                ),
-              ),
-            ),
+            child: (item.imageUrl != null && item.imageUrl!.isNotEmpty)
+                ? Image.network(
+                    item.imageUrl!,
+                    width: 90,
+                    height: 80,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => _placeholderIcon(),
+                  )
+                : _placeholderIcon(),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -820,7 +765,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item.name,
+                    item.displayName,
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -830,8 +775,9 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                   const SizedBox(height: 4),
                   Wrap(
                     spacing: 4,
+                    runSpacing: 4,
                     children: [
-                      if (item.isHot)
+                      if (item.isHotDeal)
                         _badge(
                           '🔥 Hot Deal',
                           const Color(0xFFFFF3CD),
@@ -843,7 +789,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                           const Color(0xFFE0F2FE),
                           const Color(0xFF0369A1),
                         ),
-                      if (item.isVeg)
+                      if (item.isVegetarian)
                         _badge(
                           '🌿 Veg',
                           const Color(0xFFDCFCE7),
@@ -871,6 +817,19 @@ class _ShopProfilePageState extends State<ShopProfilePage>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _placeholderIcon() {
+    return Container(
+      width: 90,
+      height: 80,
+      color: const Color(0xFFE2E8F0),
+      child: const PhosphorIcon(
+        PhosphorIconsRegular.forkKnife,
+        size: 28,
+        color: Color(0xFF94A3B8),
       ),
     );
   }
@@ -992,7 +951,9 @@ class _ShopProfilePageState extends State<ShopProfilePage>
     );
   }
 
-  Widget _buildReviewCard(_Review r) {
+  Widget _buildReviewCard(ReviewModel r) {
+    final dateStr = DateFormat('MMM d, yyyy').format(r.createdAt);
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
@@ -1010,7 +971,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                 radius: 18,
                 backgroundColor: const Color(0xFFED3973).withValues(alpha: 0.1),
                 child: Text(
-                  r.reviewer[0],
+                  r.userName.isNotEmpty ? r.userName[0] : '?',
                   style: GoogleFonts.poppins(
                     color: const Color(0xFFED3973),
                     fontWeight: FontWeight.w700,
@@ -1024,7 +985,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      r.reviewer,
+                      r.userName,
                       style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -1032,7 +993,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                       ),
                     ),
                     Text(
-                      r.date,
+                      dateStr,
                       style: GoogleFonts.poppins(
                         fontSize: 11,
                         color: const Color(0xFF94A3B8),
@@ -1061,33 +1022,6 @@ class _ShopProfilePageState extends State<ShopProfilePage>
               color: const Color(0xFF475569),
             ),
           ),
-          if (r.tags.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 6,
-              children: r.tags
-                  .map(
-                    (t) => Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        t,
-                        style: GoogleFonts.poppins(
-                          fontSize: 10,
-                          color: const Color(0xFF64748B),
-                        ),
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ],
         ],
       ),
     );

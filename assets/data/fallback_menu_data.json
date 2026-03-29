@@ -1,13 +1,139 @@
 {
   "_meta": {
-    "version": "2.0.0",
-    "description": "Fallback menu data — MenuItemModel + MenuCategoryModel shapes. No shop/restaurant references.",
+    "version": "3.0.0",
+    "description": "Fallback menu data — MenuItemModel + MenuCategoryModel + ShopProfileModel shapes.",
     "lastUpdated": "2026-03-29",
+    "totalShops": 1,
     "totalCategories": 9,
     "totalItems": 20,
-    "currency": "THB (฿)"
+    "currency": "THB (฿)",
+    "note": "shopProfiles[n].operatingHours uses dayOfWeek int (0=Sun … 6=Sat) matching OperatingHoursModel."
   },
-
+  "shopProfiles": [
+    {
+      "id": 1,
+      "coverUrl": "https://lh3.googleusercontent.com/places/ANXAkqGIoJ643eeDg7vLw854ntE7Kv7FW4_uzRC-q1IU1Dn8PGgYj2j9-YrxRKc6d-m-qEu5nkReU7pYwHodQS92PQs8fVa8is72B3E=s1200-w800-h600",
+      "logoUrl": "https://lh3.googleusercontent.com/places/ANXAkqGIoJ643eeDg7vLw854ntE7Kv7FW4_uzRC-q1IU1Dn8PGgYj2j9-YrxRKc6d-m-qEu5nkReU7pYwHodQS92PQs8fVa8is72B3E=s1200-w800-h600",
+      "nameEn": "Rangoon Tea House Bangkok",
+      "nameMm": "ရန်ကုန် လက်ဖက်ရည်ဆိုင် ဘန်ကောက်",
+      "nameTh": "ร้านชา Rangoon Bangkok",
+      "descriptionEn": "A beautifully curated Burmese restaurant blending Yangon tea-house tradition with modern Bangkok flair. Known for its bold authentic flavours, creative cocktails and warm hospitality.",
+      "descriptionMm": "ရန်ကုန်ရဲ့ လက်ဖက်ရည်ဆိုင် ယဉ်ကျေးမှုကို ဘန်ကောက်မှာ ပြန်လည်တင်ဆက်သော နာမည်ကျော် မြန်မာ စားသောက်ဆိုင်တစ်ခုဖြစ်ပြီး မူလအရသာနဲ့ ခေတ်မီဒီဇိုင်းကို ပေါင်းစပ်ထားသည်။",
+      "descriptionTh": "ร้านอาหารพม่าที่ผสมผสานวัฒนธรรมร้านชาย่างกุ้งกับบรรยากาศสมัยใหม่ของกรุงเทพฯ มีชื่อเสียงด้านรสชาติออเธนติกและบรรยากาศอบอุ่น",
+      "categoryEn": "Fine Dining",
+      "ratingAvg": 4.5,
+      "ratingCount": 393,
+      "hasParking": false,
+      "hasWifi": true,
+      "hasDelivery": true,
+      "isHalal": false,
+      "isVegetarian": false,
+      "displayBaseDeliveryFee": "฿30",
+      "estimatedTime": "25-35 min",
+      "displayMinOrderAmount": "฿150",
+      "phone": "+66 64 060 3536",
+      "email": "info@rangoonteahouse.com",
+      "isOpen": true,
+      "addressEn": "6 Soi Sangchai, Phra Khanong, Khlong Toei, Bangkok 10110",
+      "addressMm": "၆ ဆိုးဆောင်ချိုင် ပြာခနောင်း ချောင်တိုေ ဘန်ကောက် ၁၀၁၁၀",
+      "addressTh": "6 ซอยแสงชัย แขวงพระโขนง เขตคลองเตย กรุงเทพ 10110",
+      "districtEn": "Phra Khanong",
+      "districtMm": "ပြာခနောင်း",
+      "districtTh": "พระโขนง",
+      "cityEn": "Bangkok",
+      "cityMm": "ဘန်ကောက်",
+      "cityTh": "กรุงเทพมหานคร",
+      "latitude": 13.7217,
+      "longitude": 100.5783,
+      "pricePreference": "$$",
+      "operatingHours": [
+        {
+          "dayOfWeek": 0,
+          "openingTime": {
+            "hour": 9,
+            "minute": 0
+          },
+          "closingTime": {
+            "hour": 22,
+            "minute": 30
+          },
+          "isClosed": false
+        },
+        {
+          "dayOfWeek": 1,
+          "openingTime": {
+            "hour": 9,
+            "minute": 0
+          },
+          "closingTime": {
+            "hour": 22,
+            "minute": 30
+          },
+          "isClosed": false
+        },
+        {
+          "dayOfWeek": 2,
+          "openingTime": {
+            "hour": 9,
+            "minute": 0
+          },
+          "closingTime": {
+            "hour": 22,
+            "minute": 30
+          },
+          "isClosed": false
+        },
+        {
+          "dayOfWeek": 3,
+          "openingTime": {
+            "hour": 9,
+            "minute": 0
+          },
+          "closingTime": {
+            "hour": 22,
+            "minute": 30
+          },
+          "isClosed": false
+        },
+        {
+          "dayOfWeek": 4,
+          "openingTime": {
+            "hour": 9,
+            "minute": 0
+          },
+          "closingTime": {
+            "hour": 22,
+            "minute": 30
+          },
+          "isClosed": false
+        },
+        {
+          "dayOfWeek": 5,
+          "openingTime": {
+            "hour": 9,
+            "minute": 0
+          },
+          "closingTime": {
+            "hour": 23,
+            "minute": 0
+          },
+          "isClosed": false
+        },
+        {
+          "dayOfWeek": 6,
+          "openingTime": {
+            "hour": 9,
+            "minute": 0
+          },
+          "closingTime": {
+            "hour": 23,
+            "minute": 0
+          },
+          "isClosed": false
+        }
+      ]
+    }
+  ],
   "categories": [
     {
       "id": 1,
@@ -43,7 +169,7 @@
       "displayOrder": 3,
       "isActive": true,
       "imageUrl": null,
-      "itemCount": 3
+      "itemCount": 2
     },
     {
       "id": 4,
@@ -55,7 +181,7 @@
       "displayOrder": 4,
       "isActive": true,
       "imageUrl": null,
-      "itemCount": 6
+      "itemCount": 5
     },
     {
       "id": 5,
@@ -118,7 +244,6 @@
       "itemCount": 1
     }
   ],
-
   "items": [
     {
       "id": 1,
@@ -169,38 +294,91 @@
       "optionGroups": [
         {
           "id": 101,
-          "nameEn": "Spice Level",
+          "name": "Spice Level",
           "nameMm": "အစပ်ဆင့်",
           "groupType": "SINGLE_SELECT",
           "isRequired": false,
           "minSelection": 0,
           "maxSelection": 1,
           "options": [
-            { "id": 1011, "nameEn": "No Spice", "nameMm": "အစပ်မပါ", "price": 0.0, "displayPrice": "Free" },
-            { "id": 1012, "nameEn": "Mild",     "nameMm": "နည်းငယ်",  "price": 0.0, "displayPrice": "Free" },
-            { "id": 1013, "nameEn": "Medium",   "nameMm": "အလတ်",    "price": 0.0, "displayPrice": "Free" },
-            { "id": 1014, "nameEn": "Hot",      "nameMm": "စပ်",      "price": 0.0, "displayPrice": "Free" },
-            { "id": 1015, "nameEn": "Extra Hot","nameMm": "အစပ်ဆုံး","price": 0.0, "displayPrice": "Free" }
+            {
+              "id": 1011,
+              "name": "No Spice",
+              "nameMm": "အစပ်မပါ",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 1012,
+              "name": "Mild",
+              "nameMm": "နည်းငယ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 1013,
+              "name": "Medium",
+              "nameMm": "အလတ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 1014,
+              "name": "Hot",
+              "nameMm": "စပ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 1015,
+              "name": "Extra Hot",
+              "nameMm": "အစပ်ဆုံး",
+              "price": 0.0,
+              "displayPrice": "Free"
+            }
           ]
         },
         {
           "id": 102,
-          "nameEn": "Add-ons",
+          "name": "Add-ons",
           "nameMm": "ထပ်ဆင့်",
           "groupType": "MULTI_SELECT",
           "isRequired": false,
           "minSelection": 0,
           "maxSelection": 3,
           "options": [
-            { "id": 1021, "nameEn": "Extra Rice",    "nameMm": "ထမင်းတိုး",    "price": 20.0, "displayPrice": "+฿20" },
-            { "id": 1022, "nameEn": "Soft Boiled Egg","nameMm": "ကြက်ဥ",       "price": 20.0, "displayPrice": "+฿20" },
-            { "id": 1023, "nameEn": "Extra Sauce",   "nameMm": "ဆော့တိုး",     "price": 15.0, "displayPrice": "+฿15" },
-            { "id": 1024, "nameEn": "Crispy Garlic", "nameMm": "ကြက်သွန်ကြော်","price": 10.0, "displayPrice": "+฿10" }
+            {
+              "id": 1021,
+              "name": "Extra Rice",
+              "nameMm": "ထမင်းတိုး",
+              "price": 20.0,
+              "displayPrice": "+฿20"
+            },
+            {
+              "id": 1022,
+              "name": "Soft Boiled Egg",
+              "nameMm": "ကြက်ဥ",
+              "price": 20.0,
+              "displayPrice": "+฿20"
+            },
+            {
+              "id": 1023,
+              "name": "Extra Sauce",
+              "nameMm": "ဆော့တိုး",
+              "price": 15.0,
+              "displayPrice": "+฿15"
+            },
+            {
+              "id": 1024,
+              "name": "Crispy Garlic",
+              "nameMm": "ကြက်သွန်ကြော်",
+              "price": 10.0,
+              "displayPrice": "+฿10"
+            }
           ]
         }
       ]
     },
-
     {
       "id": 2,
       "categoryId": 4,
@@ -230,12 +408,25 @@
       "rating": 4.7,
       "reviewCount": 185,
       "variants": [
-        { "id": 21, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 150.0, "displayPrice": "฿150", "isAvailable": true },
-        { "id": 22, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 180.0, "displayPrice": "฿180", "isAvailable": true }
+        {
+          "id": 21,
+          "nameEn": "Regular",
+          "nameMm": "ပုံမှန်",
+          "price": 150.0,
+          "displayPrice": "฿150",
+          "isAvailable": true
+        },
+        {
+          "id": 22,
+          "nameEn": "Large",
+          "nameMm": "ကြီး",
+          "price": 180.0,
+          "displayPrice": "฿180",
+          "isAvailable": true
+        }
       ],
       "optionGroups": []
     },
-
     {
       "id": 3,
       "categoryId": 4,
@@ -265,12 +456,25 @@
       "rating": 4.6,
       "reviewCount": 142,
       "variants": [
-        { "id": 31, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 130.0, "displayPrice": "฿130", "isAvailable": true },
-        { "id": 32, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 160.0, "displayPrice": "฿160", "isAvailable": true }
+        {
+          "id": 31,
+          "nameEn": "Regular",
+          "nameMm": "ပုံမှန်",
+          "price": 130.0,
+          "displayPrice": "฿130",
+          "isAvailable": true
+        },
+        {
+          "id": 32,
+          "nameEn": "Large",
+          "nameMm": "ကြီး",
+          "price": 160.0,
+          "displayPrice": "฿160",
+          "isAvailable": true
+        }
       ],
       "optionGroups": []
     },
-
     {
       "id": 4,
       "categoryId": 4,
@@ -300,19 +504,32 @@
       "rating": 4.5,
       "reviewCount": 98,
       "variants": [
-        { "id": 41, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 140.0, "displayPrice": "฿140", "isAvailable": true },
-        { "id": 42, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 170.0, "displayPrice": "฿170", "isAvailable": true }
+        {
+          "id": 41,
+          "nameEn": "Regular",
+          "nameMm": "ပုံမှန်",
+          "price": 140.0,
+          "displayPrice": "฿140",
+          "isAvailable": true
+        },
+        {
+          "id": 42,
+          "nameEn": "Large",
+          "nameMm": "ကြီး",
+          "price": 170.0,
+          "displayPrice": "฿170",
+          "isAvailable": true
+        }
       ],
       "optionGroups": []
     },
-
     {
       "id": 5,
       "categoryId": 9,
       "nameEn": "Steamed Seabass Kachin Style",
       "nameMm": "ကချင်ငါးဆိမ့်",
       "nameTh": "ปลากะพงนึ่งสไตล์กะฉิ่น",
-      "slug": "steamed-seabass-kachin-style",
+      "slug": "steamed-seabass-kachin",
       "description": "Whole seabass steamed with Kachin herbs, wild ginger and sour plum.",
       "price": 350.0,
       "originalPrice": 580.0,
@@ -335,44 +552,111 @@
       "rating": 4.9,
       "reviewCount": 76,
       "variants": [
-        { "id": 51, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 350.0, "displayPrice": "฿350", "isAvailable": true },
-        { "id": 52, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 380.0, "displayPrice": "฿380", "isAvailable": true }
+        {
+          "id": 51,
+          "nameEn": "Regular",
+          "nameMm": "ပုံမှန်",
+          "price": 350.0,
+          "displayPrice": "฿350",
+          "isAvailable": true
+        },
+        {
+          "id": 52,
+          "nameEn": "Large",
+          "nameMm": "ကြီး",
+          "price": 380.0,
+          "displayPrice": "฿380",
+          "isAvailable": true
+        }
       ],
       "optionGroups": [
         {
           "id": 501,
-          "nameEn": "Spice Level",
+          "name": "Spice Level",
           "nameMm": "အစပ်ဆင့်",
           "groupType": "SINGLE_SELECT",
           "isRequired": false,
           "minSelection": 0,
           "maxSelection": 1,
           "options": [
-            { "id": 5011, "nameEn": "No Spice", "nameMm": "အစပ်မပါ", "price": 0.0, "displayPrice": "Free" },
-            { "id": 5012, "nameEn": "Mild",     "nameMm": "နည်းငယ်",  "price": 0.0, "displayPrice": "Free" },
-            { "id": 5013, "nameEn": "Medium",   "nameMm": "အလတ်",    "price": 0.0, "displayPrice": "Free" },
-            { "id": 5014, "nameEn": "Hot",      "nameMm": "စပ်",      "price": 0.0, "displayPrice": "Free" },
-            { "id": 5015, "nameEn": "Extra Hot","nameMm": "အစပ်ဆုံး","price": 0.0, "displayPrice": "Free" }
+            {
+              "id": 5011,
+              "name": "No Spice",
+              "nameMm": "အစပ်မပါ",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 5012,
+              "name": "Mild",
+              "nameMm": "နည်းငယ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 5013,
+              "name": "Medium",
+              "nameMm": "အလတ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 5014,
+              "name": "Hot",
+              "nameMm": "စပ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 5015,
+              "name": "Extra Hot",
+              "nameMm": "အစပ်ဆုံး",
+              "price": 0.0,
+              "displayPrice": "Free"
+            }
           ]
         },
         {
           "id": 502,
-          "nameEn": "Add-ons",
+          "name": "Add-ons",
           "nameMm": "ထပ်ဆင့်",
           "groupType": "MULTI_SELECT",
           "isRequired": false,
           "minSelection": 0,
           "maxSelection": 3,
           "options": [
-            { "id": 5021, "nameEn": "Extra Rice",    "nameMm": "ထမင်းတိုး",    "price": 20.0, "displayPrice": "+฿20" },
-            { "id": 5022, "nameEn": "Soft Boiled Egg","nameMm": "ကြက်ဥ",       "price": 20.0, "displayPrice": "+฿20" },
-            { "id": 5023, "nameEn": "Extra Sauce",   "nameMm": "ဆော့တိုး",     "price": 15.0, "displayPrice": "+฿15" },
-            { "id": 5024, "nameEn": "Crispy Garlic", "nameMm": "ကြက်သွန်ကြော်","price": 10.0, "displayPrice": "+฿10" }
+            {
+              "id": 5021,
+              "name": "Extra Rice",
+              "nameMm": "ထမင်းတိုး",
+              "price": 20.0,
+              "displayPrice": "+฿20"
+            },
+            {
+              "id": 5022,
+              "name": "Soft Boiled Egg",
+              "nameMm": "ကြက်ဥ",
+              "price": 20.0,
+              "displayPrice": "+฿20"
+            },
+            {
+              "id": 5023,
+              "name": "Extra Sauce",
+              "nameMm": "ဆော့တိုး",
+              "price": 15.0,
+              "displayPrice": "+฿15"
+            },
+            {
+              "id": 5024,
+              "name": "Crispy Garlic",
+              "nameMm": "ကြက်သွန်ကြော်",
+              "price": 10.0,
+              "displayPrice": "+฿10"
+            }
           ]
         }
       ]
     },
-
     {
       "id": 6,
       "categoryId": 7,
@@ -402,18 +686,24 @@
       "rating": 4.6,
       "reviewCount": 205,
       "variants": [
-        { "id": 61, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 80.0, "displayPrice": "฿80", "isAvailable": true }
+        {
+          "id": 61,
+          "nameEn": "Regular",
+          "nameMm": "ပုံမှန်",
+          "price": 80.0,
+          "displayPrice": "฿80",
+          "isAvailable": true
+        }
       ],
       "optionGroups": []
     },
-
     {
       "id": 7,
       "categoryId": 3,
       "nameEn": "Slow-Braised Pork Belly Curry",
       "nameMm": "ဝက်ဝမ်းဟင်းချို",
       "nameTh": "แกงหมูสามชั้นตุ๋น",
-      "slug": "slow-braised-pork-belly-curry",
+      "slug": "pork-belly-curry",
       "description": "Pork belly braised in turmeric, lemongrass and bay leaf until fork-tender.",
       "price": 220.0,
       "originalPrice": 260.0,
@@ -436,44 +726,111 @@
       "rating": 4.5,
       "reviewCount": 134,
       "variants": [
-        { "id": 71, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 220.0, "displayPrice": "฿220", "isAvailable": true },
-        { "id": 72, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 250.0, "displayPrice": "฿250", "isAvailable": true }
+        {
+          "id": 71,
+          "nameEn": "Regular",
+          "nameMm": "ပုံမှန်",
+          "price": 220.0,
+          "displayPrice": "฿220",
+          "isAvailable": true
+        },
+        {
+          "id": 72,
+          "nameEn": "Large",
+          "nameMm": "ကြီး",
+          "price": 250.0,
+          "displayPrice": "฿250",
+          "isAvailable": true
+        }
       ],
       "optionGroups": [
         {
           "id": 701,
-          "nameEn": "Spice Level",
+          "name": "Spice Level",
           "nameMm": "အစပ်ဆင့်",
           "groupType": "SINGLE_SELECT",
           "isRequired": false,
           "minSelection": 0,
           "maxSelection": 1,
           "options": [
-            { "id": 7011, "nameEn": "No Spice", "nameMm": "အစပ်မပါ", "price": 0.0, "displayPrice": "Free" },
-            { "id": 7012, "nameEn": "Mild",     "nameMm": "နည်းငယ်",  "price": 0.0, "displayPrice": "Free" },
-            { "id": 7013, "nameEn": "Medium",   "nameMm": "အလတ်",    "price": 0.0, "displayPrice": "Free" },
-            { "id": 7014, "nameEn": "Hot",      "nameMm": "စပ်",      "price": 0.0, "displayPrice": "Free" },
-            { "id": 7015, "nameEn": "Extra Hot","nameMm": "အစပ်ဆုံး","price": 0.0, "displayPrice": "Free" }
+            {
+              "id": 7011,
+              "name": "No Spice",
+              "nameMm": "အစပ်မပါ",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 7012,
+              "name": "Mild",
+              "nameMm": "နည်းငယ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 7013,
+              "name": "Medium",
+              "nameMm": "အလတ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 7014,
+              "name": "Hot",
+              "nameMm": "စပ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 7015,
+              "name": "Extra Hot",
+              "nameMm": "အစပ်ဆုံး",
+              "price": 0.0,
+              "displayPrice": "Free"
+            }
           ]
         },
         {
           "id": 702,
-          "nameEn": "Add-ons",
+          "name": "Add-ons",
           "nameMm": "ထပ်ဆင့်",
           "groupType": "MULTI_SELECT",
           "isRequired": false,
           "minSelection": 0,
           "maxSelection": 3,
           "options": [
-            { "id": 7021, "nameEn": "Extra Rice",    "nameMm": "ထမင်းတိုး",    "price": 20.0, "displayPrice": "+฿20" },
-            { "id": 7022, "nameEn": "Soft Boiled Egg","nameMm": "ကြက်ဥ",       "price": 20.0, "displayPrice": "+฿20" },
-            { "id": 7023, "nameEn": "Extra Sauce",   "nameMm": "ဆော့တိုး",     "price": 15.0, "displayPrice": "+฿15" },
-            { "id": 7024, "nameEn": "Crispy Garlic", "nameMm": "ကြက်သွန်ကြော်","price": 10.0, "displayPrice": "+฿10" }
+            {
+              "id": 7021,
+              "name": "Extra Rice",
+              "nameMm": "ထမင်းတိုး",
+              "price": 20.0,
+              "displayPrice": "+฿20"
+            },
+            {
+              "id": 7022,
+              "name": "Soft Boiled Egg",
+              "nameMm": "ကြက်ဥ",
+              "price": 20.0,
+              "displayPrice": "+฿20"
+            },
+            {
+              "id": 7023,
+              "name": "Extra Sauce",
+              "nameMm": "ဆော့တိုး",
+              "price": 15.0,
+              "displayPrice": "+฿15"
+            },
+            {
+              "id": 7024,
+              "name": "Crispy Garlic",
+              "nameMm": "ကြက်သွန်ကြော်",
+              "price": 10.0,
+              "displayPrice": "+฿10"
+            }
           ]
         }
       ]
     },
-
     {
       "id": 8,
       "categoryId": 1,
@@ -503,44 +860,111 @@
       "rating": 4.5,
       "reviewCount": 98,
       "variants": [
-        { "id": 81, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 160.0, "displayPrice": "฿160", "isAvailable": true },
-        { "id": 82, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 190.0, "displayPrice": "฿190", "isAvailable": true }
+        {
+          "id": 81,
+          "nameEn": "Regular",
+          "nameMm": "ပုံမှန်",
+          "price": 160.0,
+          "displayPrice": "฿160",
+          "isAvailable": true
+        },
+        {
+          "id": 82,
+          "nameEn": "Large",
+          "nameMm": "ကြီး",
+          "price": 190.0,
+          "displayPrice": "฿190",
+          "isAvailable": true
+        }
       ],
       "optionGroups": [
         {
           "id": 801,
-          "nameEn": "Spice Level",
+          "name": "Spice Level",
           "nameMm": "အစပ်ဆင့်",
           "groupType": "SINGLE_SELECT",
           "isRequired": false,
           "minSelection": 0,
           "maxSelection": 1,
           "options": [
-            { "id": 8011, "nameEn": "No Spice", "nameMm": "အစပ်မပါ", "price": 0.0, "displayPrice": "Free" },
-            { "id": 8012, "nameEn": "Mild",     "nameMm": "နည်းငယ်",  "price": 0.0, "displayPrice": "Free" },
-            { "id": 8013, "nameEn": "Medium",   "nameMm": "အလတ်",    "price": 0.0, "displayPrice": "Free" },
-            { "id": 8014, "nameEn": "Hot",      "nameMm": "စပ်",      "price": 0.0, "displayPrice": "Free" },
-            { "id": 8015, "nameEn": "Extra Hot","nameMm": "အစပ်ဆုံး","price": 0.0, "displayPrice": "Free" }
+            {
+              "id": 8011,
+              "name": "No Spice",
+              "nameMm": "အစပ်မပါ",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 8012,
+              "name": "Mild",
+              "nameMm": "နည်းငယ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 8013,
+              "name": "Medium",
+              "nameMm": "အလတ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 8014,
+              "name": "Hot",
+              "nameMm": "စပ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 8015,
+              "name": "Extra Hot",
+              "nameMm": "အစပ်ဆုံး",
+              "price": 0.0,
+              "displayPrice": "Free"
+            }
           ]
         },
         {
           "id": 802,
-          "nameEn": "Add-ons",
+          "name": "Add-ons",
           "nameMm": "ထပ်ဆင့်",
           "groupType": "MULTI_SELECT",
           "isRequired": false,
           "minSelection": 0,
           "maxSelection": 3,
           "options": [
-            { "id": 8021, "nameEn": "Extra Rice",    "nameMm": "ထမင်းတိုး",    "price": 20.0, "displayPrice": "+฿20" },
-            { "id": 8022, "nameEn": "Soft Boiled Egg","nameMm": "ကြက်ဥ",       "price": 20.0, "displayPrice": "+฿20" },
-            { "id": 8023, "nameEn": "Extra Sauce",   "nameMm": "ဆော့တိုး",     "price": 15.0, "displayPrice": "+฿15" },
-            { "id": 8024, "nameEn": "Crispy Garlic", "nameMm": "ကြက်သွန်ကြော်","price": 10.0, "displayPrice": "+฿10" }
+            {
+              "id": 8021,
+              "name": "Extra Rice",
+              "nameMm": "ထမင်းတိုး",
+              "price": 20.0,
+              "displayPrice": "+฿20"
+            },
+            {
+              "id": 8022,
+              "name": "Soft Boiled Egg",
+              "nameMm": "ကြက်ဥ",
+              "price": 20.0,
+              "displayPrice": "+฿20"
+            },
+            {
+              "id": 8023,
+              "name": "Extra Sauce",
+              "nameMm": "ဆော့တိုး",
+              "price": 15.0,
+              "displayPrice": "+฿15"
+            },
+            {
+              "id": 8024,
+              "name": "Crispy Garlic",
+              "nameMm": "ကြက်သွန်ကြော်",
+              "price": 10.0,
+              "displayPrice": "+฿10"
+            }
           ]
         }
       ]
     },
-
     {
       "id": 9,
       "categoryId": 3,
@@ -570,44 +994,111 @@
       "rating": 4.6,
       "reviewCount": 156,
       "variants": [
-        { "id": 91, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 200.0, "displayPrice": "฿200", "isAvailable": true },
-        { "id": 92, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 230.0, "displayPrice": "฿230", "isAvailable": true }
+        {
+          "id": 91,
+          "nameEn": "Regular",
+          "nameMm": "ပုံမှန်",
+          "price": 200.0,
+          "displayPrice": "฿200",
+          "isAvailable": true
+        },
+        {
+          "id": 92,
+          "nameEn": "Large",
+          "nameMm": "ကြီး",
+          "price": 230.0,
+          "displayPrice": "฿230",
+          "isAvailable": true
+        }
       ],
       "optionGroups": [
         {
           "id": 901,
-          "nameEn": "Spice Level",
+          "name": "Spice Level",
           "nameMm": "အစပ်ဆင့်",
           "groupType": "SINGLE_SELECT",
           "isRequired": false,
           "minSelection": 0,
           "maxSelection": 1,
           "options": [
-            { "id": 9011, "nameEn": "No Spice", "nameMm": "အစပ်မပါ", "price": 0.0, "displayPrice": "Free" },
-            { "id": 9012, "nameEn": "Mild",     "nameMm": "နည်းငယ်",  "price": 0.0, "displayPrice": "Free" },
-            { "id": 9013, "nameEn": "Medium",   "nameMm": "အလတ်",    "price": 0.0, "displayPrice": "Free" },
-            { "id": 9014, "nameEn": "Hot",      "nameMm": "စပ်",      "price": 0.0, "displayPrice": "Free" },
-            { "id": 9015, "nameEn": "Extra Hot","nameMm": "အစပ်ဆုံး","price": 0.0, "displayPrice": "Free" }
+            {
+              "id": 9011,
+              "name": "No Spice",
+              "nameMm": "အစပ်မပါ",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 9012,
+              "name": "Mild",
+              "nameMm": "နည်းငယ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 9013,
+              "name": "Medium",
+              "nameMm": "အလတ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 9014,
+              "name": "Hot",
+              "nameMm": "စပ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 9015,
+              "name": "Extra Hot",
+              "nameMm": "အစပ်ဆုံး",
+              "price": 0.0,
+              "displayPrice": "Free"
+            }
           ]
         },
         {
           "id": 902,
-          "nameEn": "Add-ons",
+          "name": "Add-ons",
           "nameMm": "ထပ်ဆင့်",
           "groupType": "MULTI_SELECT",
           "isRequired": false,
           "minSelection": 0,
           "maxSelection": 3,
           "options": [
-            { "id": 9021, "nameEn": "Extra Rice",    "nameMm": "ထမင်းတိုး",    "price": 20.0, "displayPrice": "+฿20" },
-            { "id": 9022, "nameEn": "Soft Boiled Egg","nameMm": "ကြက်ဥ",       "price": 20.0, "displayPrice": "+฿20" },
-            { "id": 9023, "nameEn": "Extra Sauce",   "nameMm": "ဆော့တိုး",     "price": 15.0, "displayPrice": "+฿15" },
-            { "id": 9024, "nameEn": "Crispy Garlic", "nameMm": "ကြက်သွန်ကြော်","price": 10.0, "displayPrice": "+฿10" }
+            {
+              "id": 9021,
+              "name": "Extra Rice",
+              "nameMm": "ထမင်းတိုး",
+              "price": 20.0,
+              "displayPrice": "+฿20"
+            },
+            {
+              "id": 9022,
+              "name": "Soft Boiled Egg",
+              "nameMm": "ကြက်ဥ",
+              "price": 20.0,
+              "displayPrice": "+฿20"
+            },
+            {
+              "id": 9023,
+              "name": "Extra Sauce",
+              "nameMm": "ဆော့တိုး",
+              "price": 15.0,
+              "displayPrice": "+฿15"
+            },
+            {
+              "id": 9024,
+              "name": "Crispy Garlic",
+              "nameMm": "ကြက်သွန်ကြော်",
+              "price": 10.0,
+              "displayPrice": "+฿10"
+            }
           ]
         }
       ]
     },
-
     {
       "id": 10,
       "categoryId": 8,
@@ -637,13 +1128,19 @@
       "rating": 4.4,
       "reviewCount": 88,
       "variants": [
-        { "id": 101, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 90.0, "displayPrice": "฿90", "isAvailable": true }
+        {
+          "id": 101,
+          "nameEn": "Regular",
+          "nameMm": "ပုံမှန်",
+          "price": 90.0,
+          "displayPrice": "฿90",
+          "isAvailable": true
+        }
       ],
       "optionGroups": []
     },
-
     {
-      "id": 61,
+      "id": 11,
       "categoryId": 1,
       "nameEn": "Nan Gyi Thoke (Mandalay)",
       "nameMm": "မန္တလေးနမ်းကြီးသုပ်",
@@ -671,46 +1168,113 @@
       "rating": 4.8,
       "reviewCount": 198,
       "variants": [
-        { "id": 611, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 120.0, "displayPrice": "฿120", "isAvailable": true },
-        { "id": 612, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 150.0, "displayPrice": "฿150", "isAvailable": true }
+        {
+          "id": 111,
+          "nameEn": "Regular",
+          "nameMm": "ပုံမှန်",
+          "price": 120.0,
+          "displayPrice": "฿120",
+          "isAvailable": true
+        },
+        {
+          "id": 112,
+          "nameEn": "Large",
+          "nameMm": "ကြီး",
+          "price": 150.0,
+          "displayPrice": "฿150",
+          "isAvailable": true
+        }
       ],
       "optionGroups": [
         {
-          "id": 6101,
-          "nameEn": "Spice Level",
+          "id": 1101,
+          "name": "Spice Level",
           "nameMm": "အစပ်ဆင့်",
           "groupType": "SINGLE_SELECT",
           "isRequired": false,
           "minSelection": 0,
           "maxSelection": 1,
           "options": [
-            { "id": 61011, "nameEn": "No Spice", "nameMm": "အစပ်မပါ", "price": 0.0, "displayPrice": "Free" },
-            { "id": 61012, "nameEn": "Mild",     "nameMm": "နည်းငယ်",  "price": 0.0, "displayPrice": "Free" },
-            { "id": 61013, "nameEn": "Medium",   "nameMm": "အလတ်",    "price": 0.0, "displayPrice": "Free" },
-            { "id": 61014, "nameEn": "Hot",      "nameMm": "စပ်",      "price": 0.0, "displayPrice": "Free" },
-            { "id": 61015, "nameEn": "Extra Hot","nameMm": "အစပ်ဆုံး","price": 0.0, "displayPrice": "Free" }
+            {
+              "id": 11001,
+              "name": "No Spice",
+              "nameMm": "အစပ်မပါ",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 11002,
+              "name": "Mild",
+              "nameMm": "နည်းငယ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 11003,
+              "name": "Medium",
+              "nameMm": "အလတ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 11004,
+              "name": "Hot",
+              "nameMm": "စပ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 11005,
+              "name": "Extra Hot",
+              "nameMm": "အစပ်ဆုံး",
+              "price": 0.0,
+              "displayPrice": "Free"
+            }
           ]
         },
         {
-          "id": 6102,
-          "nameEn": "Add-ons",
+          "id": 1102,
+          "name": "Add-ons",
           "nameMm": "ထပ်ဆင့်",
           "groupType": "MULTI_SELECT",
           "isRequired": false,
           "minSelection": 0,
           "maxSelection": 3,
           "options": [
-            { "id": 61021, "nameEn": "Extra Rice",    "nameMm": "ထမင်းတိုး",    "price": 20.0, "displayPrice": "+฿20" },
-            { "id": 61022, "nameEn": "Soft Boiled Egg","nameMm": "ကြက်ဥ",       "price": 20.0, "displayPrice": "+฿20" },
-            { "id": 61023, "nameEn": "Extra Sauce",   "nameMm": "ဆော့တိုး",     "price": 15.0, "displayPrice": "+฿15" },
-            { "id": 61024, "nameEn": "Crispy Garlic", "nameMm": "ကြက်သွန်ကြော်","price": 10.0, "displayPrice": "+฿10" }
+            {
+              "id": 11011,
+              "name": "Extra Rice",
+              "nameMm": "ထမင်းတိုး",
+              "price": 20.0,
+              "displayPrice": "+฿20"
+            },
+            {
+              "id": 11012,
+              "name": "Soft Boiled Egg",
+              "nameMm": "ကြက်ဥ",
+              "price": 20.0,
+              "displayPrice": "+฿20"
+            },
+            {
+              "id": 11013,
+              "name": "Extra Sauce",
+              "nameMm": "ဆော့တိုး",
+              "price": 15.0,
+              "displayPrice": "+฿15"
+            },
+            {
+              "id": 11014,
+              "name": "Crispy Garlic",
+              "nameMm": "ကြက်သွန်ကြော်",
+              "price": 10.0,
+              "displayPrice": "+฿10"
+            }
           ]
         }
       ]
     },
-
     {
-      "id": 62,
+      "id": 12,
       "categoryId": 1,
       "nameEn": "Mandalay Coconut Noodles",
       "nameMm": "မန္တလေးအုန်းနို့ခေါက်ဆွဲ",
@@ -738,46 +1302,113 @@
       "rating": 4.7,
       "reviewCount": 174,
       "variants": [
-        { "id": 621, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 130.0, "displayPrice": "฿130", "isAvailable": true },
-        { "id": 622, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 160.0, "displayPrice": "฿160", "isAvailable": true }
+        {
+          "id": 121,
+          "nameEn": "Regular",
+          "nameMm": "ပုံမှန်",
+          "price": 130.0,
+          "displayPrice": "฿130",
+          "isAvailable": true
+        },
+        {
+          "id": 122,
+          "nameEn": "Large",
+          "nameMm": "ကြီး",
+          "price": 160.0,
+          "displayPrice": "฿160",
+          "isAvailable": true
+        }
       ],
       "optionGroups": [
         {
-          "id": 6201,
-          "nameEn": "Spice Level",
+          "id": 1201,
+          "name": "Spice Level",
           "nameMm": "အစပ်ဆင့်",
           "groupType": "SINGLE_SELECT",
           "isRequired": false,
           "minSelection": 0,
           "maxSelection": 1,
           "options": [
-            { "id": 62011, "nameEn": "No Spice", "nameMm": "အစပ်မပါ", "price": 0.0, "displayPrice": "Free" },
-            { "id": 62012, "nameEn": "Mild",     "nameMm": "နည်းငယ်",  "price": 0.0, "displayPrice": "Free" },
-            { "id": 62013, "nameEn": "Medium",   "nameMm": "အလတ်",    "price": 0.0, "displayPrice": "Free" },
-            { "id": 62014, "nameEn": "Hot",      "nameMm": "စပ်",      "price": 0.0, "displayPrice": "Free" },
-            { "id": 62015, "nameEn": "Extra Hot","nameMm": "အစပ်ဆုံး","price": 0.0, "displayPrice": "Free" }
+            {
+              "id": 12001,
+              "name": "No Spice",
+              "nameMm": "အစပ်မပါ",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 12002,
+              "name": "Mild",
+              "nameMm": "နည်းငယ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 12003,
+              "name": "Medium",
+              "nameMm": "အလတ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 12004,
+              "name": "Hot",
+              "nameMm": "စပ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 12005,
+              "name": "Extra Hot",
+              "nameMm": "အစပ်ဆုံး",
+              "price": 0.0,
+              "displayPrice": "Free"
+            }
           ]
         },
         {
-          "id": 6202,
-          "nameEn": "Add-ons",
+          "id": 1202,
+          "name": "Add-ons",
           "nameMm": "ထပ်ဆင့်",
           "groupType": "MULTI_SELECT",
           "isRequired": false,
           "minSelection": 0,
           "maxSelection": 3,
           "options": [
-            { "id": 62021, "nameEn": "Extra Rice",    "nameMm": "ထမင်းတိုး",    "price": 20.0, "displayPrice": "+฿20" },
-            { "id": 62022, "nameEn": "Soft Boiled Egg","nameMm": "ကြက်ဥ",       "price": 20.0, "displayPrice": "+฿20" },
-            { "id": 62023, "nameEn": "Extra Sauce",   "nameMm": "ဆော့တိုး",     "price": 15.0, "displayPrice": "+฿15" },
-            { "id": 62024, "nameEn": "Crispy Garlic", "nameMm": "ကြက်သွန်ကြော်","price": 10.0, "displayPrice": "+฿10" }
+            {
+              "id": 12011,
+              "name": "Extra Rice",
+              "nameMm": "ထမင်းတိုး",
+              "price": 20.0,
+              "displayPrice": "+฿20"
+            },
+            {
+              "id": 12012,
+              "name": "Soft Boiled Egg",
+              "nameMm": "ကြက်ဥ",
+              "price": 20.0,
+              "displayPrice": "+฿20"
+            },
+            {
+              "id": 12013,
+              "name": "Extra Sauce",
+              "nameMm": "ဆော့တိုး",
+              "price": 15.0,
+              "displayPrice": "+฿15"
+            },
+            {
+              "id": 12014,
+              "name": "Crispy Garlic",
+              "nameMm": "ကြက်သွန်ကြော်",
+              "price": 10.0,
+              "displayPrice": "+฿10"
+            }
           ]
         }
       ]
     },
-
     {
-      "id": 63,
+      "id": 13,
       "categoryId": 2,
       "nameEn": "Shan Fish Rice",
       "nameMm": "ငါးထမင်းနယ်",
@@ -805,46 +1436,113 @@
       "rating": 4.6,
       "reviewCount": 147,
       "variants": [
-        { "id": 631, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 140.0, "displayPrice": "฿140", "isAvailable": true },
-        { "id": 632, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 170.0, "displayPrice": "฿170", "isAvailable": true }
+        {
+          "id": 131,
+          "nameEn": "Regular",
+          "nameMm": "ပုံမှန်",
+          "price": 140.0,
+          "displayPrice": "฿140",
+          "isAvailable": true
+        },
+        {
+          "id": 132,
+          "nameEn": "Large",
+          "nameMm": "ကြီး",
+          "price": 170.0,
+          "displayPrice": "฿170",
+          "isAvailable": true
+        }
       ],
       "optionGroups": [
         {
-          "id": 6301,
-          "nameEn": "Spice Level",
+          "id": 1301,
+          "name": "Spice Level",
           "nameMm": "အစပ်ဆင့်",
           "groupType": "SINGLE_SELECT",
           "isRequired": false,
           "minSelection": 0,
           "maxSelection": 1,
           "options": [
-            { "id": 63011, "nameEn": "No Spice", "nameMm": "အစပ်မပါ", "price": 0.0, "displayPrice": "Free" },
-            { "id": 63012, "nameEn": "Mild",     "nameMm": "နည်းငယ်",  "price": 0.0, "displayPrice": "Free" },
-            { "id": 63013, "nameEn": "Medium",   "nameMm": "အလတ်",    "price": 0.0, "displayPrice": "Free" },
-            { "id": 63014, "nameEn": "Hot",      "nameMm": "စပ်",      "price": 0.0, "displayPrice": "Free" },
-            { "id": 63015, "nameEn": "Extra Hot","nameMm": "အစပ်ဆုံး","price": 0.0, "displayPrice": "Free" }
+            {
+              "id": 13001,
+              "name": "No Spice",
+              "nameMm": "အစပ်မပါ",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 13002,
+              "name": "Mild",
+              "nameMm": "နည်းငယ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 13003,
+              "name": "Medium",
+              "nameMm": "အလတ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 13004,
+              "name": "Hot",
+              "nameMm": "စပ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 13005,
+              "name": "Extra Hot",
+              "nameMm": "အစပ်ဆုံး",
+              "price": 0.0,
+              "displayPrice": "Free"
+            }
           ]
         },
         {
-          "id": 6302,
-          "nameEn": "Add-ons",
+          "id": 1302,
+          "name": "Add-ons",
           "nameMm": "ထပ်ဆင့်",
           "groupType": "MULTI_SELECT",
           "isRequired": false,
           "minSelection": 0,
           "maxSelection": 3,
           "options": [
-            { "id": 63021, "nameEn": "Extra Rice",    "nameMm": "ထမင်းတိုး",    "price": 20.0, "displayPrice": "+฿20" },
-            { "id": 63022, "nameEn": "Soft Boiled Egg","nameMm": "ကြက်ဥ",       "price": 20.0, "displayPrice": "+฿20" },
-            { "id": 63023, "nameEn": "Extra Sauce",   "nameMm": "ဆော့တိုး",     "price": 15.0, "displayPrice": "+฿15" },
-            { "id": 63024, "nameEn": "Crispy Garlic", "nameMm": "ကြက်သွန်ကြော်","price": 10.0, "displayPrice": "+฿10" }
+            {
+              "id": 13011,
+              "name": "Extra Rice",
+              "nameMm": "ထမင်းတိုး",
+              "price": 20.0,
+              "displayPrice": "+฿20"
+            },
+            {
+              "id": 13012,
+              "name": "Soft Boiled Egg",
+              "nameMm": "ကြက်ဥ",
+              "price": 20.0,
+              "displayPrice": "+฿20"
+            },
+            {
+              "id": 13013,
+              "name": "Extra Sauce",
+              "nameMm": "ဆော့တိုး",
+              "price": 15.0,
+              "displayPrice": "+฿15"
+            },
+            {
+              "id": 13014,
+              "name": "Crispy Garlic",
+              "nameMm": "ကြက်သွန်ကြော်",
+              "price": 10.0,
+              "displayPrice": "+฿10"
+            }
           ]
         }
       ]
     },
-
     {
-      "id": 64,
+      "id": 14,
       "categoryId": 5,
       "nameEn": "Tohu Nway",
       "nameMm": "တိုဟူးနွေး",
@@ -872,31 +1570,74 @@
       "rating": 4.5,
       "reviewCount": 112,
       "variants": [
-        { "id": 641, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 90.0,  "displayPrice": "฿90",  "isAvailable": true },
-        { "id": 642, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 120.0, "displayPrice": "฿120", "isAvailable": true }
+        {
+          "id": 141,
+          "nameEn": "Regular",
+          "nameMm": "ပုံမှန်",
+          "price": 90.0,
+          "displayPrice": "฿90",
+          "isAvailable": true
+        },
+        {
+          "id": 142,
+          "nameEn": "Large",
+          "nameMm": "ကြီး",
+          "price": 120.0,
+          "displayPrice": "฿120",
+          "isAvailable": true
+        }
       ],
       "optionGroups": [
         {
-          "id": 6401,
-          "nameEn": "Spice Level",
+          "id": 1401,
+          "name": "Spice Level",
           "nameMm": "အစပ်ဆင့်",
           "groupType": "SINGLE_SELECT",
           "isRequired": false,
           "minSelection": 0,
           "maxSelection": 1,
           "options": [
-            { "id": 64011, "nameEn": "No Spice", "nameMm": "အစပ်မပါ", "price": 0.0, "displayPrice": "Free" },
-            { "id": 64012, "nameEn": "Mild",     "nameMm": "နည်းငယ်",  "price": 0.0, "displayPrice": "Free" },
-            { "id": 64013, "nameEn": "Medium",   "nameMm": "အလတ်",    "price": 0.0, "displayPrice": "Free" },
-            { "id": 64014, "nameEn": "Hot",      "nameMm": "စပ်",      "price": 0.0, "displayPrice": "Free" },
-            { "id": 64015, "nameEn": "Extra Hot","nameMm": "အစပ်ဆုံး","price": 0.0, "displayPrice": "Free" }
+            {
+              "id": 14001,
+              "name": "No Spice",
+              "nameMm": "အစပ်မပါ",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 14002,
+              "name": "Mild",
+              "nameMm": "နည်းငယ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 14003,
+              "name": "Medium",
+              "nameMm": "အလတ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 14004,
+              "name": "Hot",
+              "nameMm": "စပ်",
+              "price": 0.0,
+              "displayPrice": "Free"
+            },
+            {
+              "id": 14005,
+              "name": "Extra Hot",
+              "nameMm": "အစပ်ဆုံး",
+              "price": 0.0,
+              "displayPrice": "Free"
+            }
           ]
         }
       ]
     },
-
     {
-      "id": 65,
+      "id": 15,
       "categoryId": 8,
       "nameEn": "Black Sticky Rice Pudding",
       "nameMm": "ကောက်ညှင်းမည်း",
@@ -924,13 +1665,19 @@
       "rating": 4.6,
       "reviewCount": 125,
       "variants": [
-        { "id": 651, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 80.0, "displayPrice": "฿80", "isAvailable": true }
+        {
+          "id": 151,
+          "nameEn": "Regular",
+          "nameMm": "ပုံမှန်",
+          "price": 80.0,
+          "displayPrice": "฿80",
+          "isAvailable": true
+        }
       ],
       "optionGroups": []
     },
-
     {
-      "id": 66,
+      "id": 16,
       "categoryId": 4,
       "nameEn": "Asone Thoke Mixed Salad",
       "nameMm": "အစုံသုပ်",
@@ -958,14 +1705,27 @@
       "rating": 4.4,
       "reviewCount": 88,
       "variants": [
-        { "id": 661, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 110.0, "displayPrice": "฿110", "isAvailable": true },
-        { "id": 662, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 140.0, "displayPrice": "฿140", "isAvailable": true }
+        {
+          "id": 161,
+          "nameEn": "Regular",
+          "nameMm": "ပုံမှန်",
+          "price": 110.0,
+          "displayPrice": "฿110",
+          "isAvailable": true
+        },
+        {
+          "id": 162,
+          "nameEn": "Large",
+          "nameMm": "ကြီး",
+          "price": 140.0,
+          "displayPrice": "฿140",
+          "isAvailable": true
+        }
       ],
       "optionGroups": []
     },
-
     {
-      "id": 67,
+      "id": 17,
       "categoryId": 4,
       "nameEn": "Pheetan Thote",
       "nameMm": "ဆေးဘဲဥသုပ်",
@@ -993,14 +1753,27 @@
       "rating": 4.4,
       "reviewCount": 76,
       "variants": [
-        { "id": 671, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 110.0, "displayPrice": "฿110", "isAvailable": true },
-        { "id": 672, "nameEn": "Large",   "nameMm": "ကြီး",    "price": 140.0, "displayPrice": "฿140", "isAvailable": true }
+        {
+          "id": 171,
+          "nameEn": "Regular",
+          "nameMm": "ပုံမှန်",
+          "price": 110.0,
+          "displayPrice": "฿110",
+          "isAvailable": true
+        },
+        {
+          "id": 172,
+          "nameEn": "Large",
+          "nameMm": "ကြီး",
+          "price": 140.0,
+          "displayPrice": "฿140",
+          "isAvailable": true
+        }
       ],
       "optionGroups": []
     },
-
     {
-      "id": 68,
+      "id": 18,
       "categoryId": 6,
       "nameEn": "Burmese Tempura Set",
       "nameMm": "မြန်မာ တင်ပူရာ",
@@ -1028,13 +1801,19 @@
       "rating": 4.3,
       "reviewCount": 64,
       "variants": [
-        { "id": 681, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 100.0, "displayPrice": "฿100", "isAvailable": true }
+        {
+          "id": 181,
+          "nameEn": "Regular",
+          "nameMm": "ပုံမှန်",
+          "price": 100.0,
+          "displayPrice": "฿100",
+          "isAvailable": true
+        }
       ],
       "optionGroups": []
     },
-
     {
-      "id": 69,
+      "id": 19,
       "categoryId": 7,
       "nameEn": "Silon Tea",
       "nameMm": "စီလုံတီးလက်ဖက်ရည်",
@@ -1062,13 +1841,19 @@
       "rating": 4.7,
       "reviewCount": 141,
       "variants": [
-        { "id": 691, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 70.0, "displayPrice": "฿70", "isAvailable": true }
+        {
+          "id": 191,
+          "nameEn": "Regular",
+          "nameMm": "ပုံမှန်",
+          "price": 70.0,
+          "displayPrice": "฿70",
+          "isAvailable": true
+        }
       ],
       "optionGroups": []
     },
-
     {
-      "id": 70,
+      "id": 20,
       "categoryId": 8,
       "nameEn": "Mont Pyar Thalet",
       "nameMm": "မုန့်ပြားသလပ်",
@@ -1096,7 +1881,14 @@
       "rating": 4.3,
       "reviewCount": 58,
       "variants": [
-        { "id": 701, "nameEn": "Regular", "nameMm": "ပုံမှန်", "price": 70.0, "displayPrice": "฿70", "isAvailable": true }
+        {
+          "id": 201,
+          "nameEn": "Regular",
+          "nameMm": "ပုံမှန်",
+          "price": 70.0,
+          "displayPrice": "฿70",
+          "isAvailable": true
+        }
       ],
       "optionGroups": []
     }

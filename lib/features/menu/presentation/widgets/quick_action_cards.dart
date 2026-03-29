@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/features/categories/presentation/screens/category_list_screen.dart';
+import 'package:my_shop/features/menu/presentation/screens/manage_shop_menu_page.dart';
 
 class QuickActionCards extends StatelessWidget {
   const QuickActionCards({super.key});
@@ -28,10 +29,18 @@ class QuickActionCards extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: _ActionCard(
-              title: 'Manage\nShop Menu',
-              imagePath: 'assets/images/Promotion.png',
-              backgroundColor: const Color(0xFFFBD2D1), // Soft pink/red
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ManageShopMenuPage()),
+                );
+              },
+              child: _ActionCard(
+                title: 'Manage\nShop Menu',
+                imagePath: 'assets/images/Promotion.png',
+                backgroundColor: const Color(0xFFFBD2D1), // Soft pink/red
+              ),
             ),
           ),
         ],

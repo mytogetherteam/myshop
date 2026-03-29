@@ -14,6 +14,8 @@ import 'app_permissions_page.dart';
 import 'change_password_page.dart';
 import 'reviews_page.dart';
 import 'accepted_payment_page.dart';
+import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
+import 'package:my_shop/features/profile/data/services/profile_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -24,6 +26,8 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClientMixin {
   UserInfo? _userInfo;
+  ShopProfileModel? _shopProfile;
+  final ProfileService _profileService = ProfileService();
 
   @override
   bool get wantKeepAlive => true;
@@ -39,8 +43,14 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
   }
 
   Future<void> _loadUserInfo() async {
-    final info = await StorageService.instance.getUserInfo();
-    setState(() { _userInfo = info; });
+    final results = await Future.wait([
+      StorageService.instance.getUserInfo(),
+      _profileService.getShopProfile(),
+    ]);
+    setState(() {
+      _userInfo = results[0] as UserInfo?;
+      _shopProfile = results[1] as ShopProfileModel?;
+    });
   }
 
   Future<void> _handleLogout() async {
@@ -182,7 +192,7 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
           title: 'Edit shop profile',
           onTap: () => Navigator.push(
             context,
-            CupertinoPageRoute(builder: (_) => const EditShopProfilePage()),
+            CupertinoPageRoute(builder: (_) => EditShopProfilePage(shopProfile: _shopProfile)),
           ),
         ),
         _buildMenuOption(
@@ -190,7 +200,7 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
           title: 'Operating hours',
           onTap: () => Navigator.push(
             context,
-            CupertinoPageRoute(builder: (_) => const OperatingHoursPage()),
+            CupertinoPageRoute(builder: (_) => OperatingHoursPage(shopProfile: _shopProfile)),
           ),
         ),
         _buildMenuOption(

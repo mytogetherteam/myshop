@@ -1,11 +1,17 @@
+import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
-import 'package:my_shop/core/network/api_client.dart';
+// import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/features/menu/data/models/menu_category_model.dart';
 
 class CategoryService {
-  static const String _categoriesPath = '/api/shop/menu/categories';
+  // static const String _categoriesPath = '/api/shop/menu/categories';
 
+  static const String _fallbackPath = 'assets/data/fallback_menu_data.json';
+  
   Future<List<MenuCategoryModel>?> getCategories() async {
+    // Commenting out API call
+    /*
     try {
       debugPrint('GET REQUEST: $_categoriesPath');
       final response = await ApiClient().dio.get(_categoriesPath);
@@ -20,10 +26,26 @@ class CategoryService {
     } catch (e) {
       debugPrint('API Error in getCategories: $e');
     }
-    return null;
+    */
+    debugPrint('[CategoryService] API disabled — loading fallback data');
+    return await _loadFallbackCategories('API disabled');
+  }
+
+  Future<List<MenuCategoryModel>> _loadFallbackCategories(String reason) async {
+    try {
+      final String jsonString = await rootBundle.loadString(_fallbackPath);
+      final Map<String, dynamic> data = json.decode(jsonString);
+      final List list = data['categories'] ?? [];
+      return list.map((json) => MenuCategoryModel.fromJson(json)).toList();
+    } catch (e) {
+      debugPrint('[CategoryService] Error loading fallback categories: $e');
+      return [];
+    }
   }
 
   Future<bool> createCategory(Map<String, dynamic> payload) async {
+    // Commenting out API call
+    /*
     try {
       debugPrint('POST REQUEST: $_categoriesPath, Data: $payload');
       final response = await ApiClient().dio.post(
@@ -38,10 +60,14 @@ class CategoryService {
     } catch (e) {
       debugPrint('API Error in createCategory: $e');
     }
-    return false;
+    */
+    debugPrint('[CategoryService] API disabled — createCategory simulated success');
+    return true;
   }
 
   Future<bool> updateCategory(int categoryId, Map<String, dynamic> payload) async {
+    // Commenting out API call
+    /*
     try {
       final url = '$_categoriesPath/$categoryId';
       debugPrint('PUT REQUEST: $url, Data: $payload');
@@ -57,10 +83,14 @@ class CategoryService {
     } catch (e) {
       debugPrint('API Error in updateCategory: $e');
     }
-    return false;
+    */
+    debugPrint('[CategoryService] API disabled — updateCategory simulated success');
+    return true;
   }
 
   Future<bool> deleteCategory(int categoryId) async {
+    // Commenting out API call
+    /*
     try {
       final url = '$_categoriesPath/$categoryId';
       debugPrint('DELETE REQUEST: $url');
@@ -73,10 +103,14 @@ class CategoryService {
     } catch (e) {
       debugPrint('API Error in deleteCategory: $e');
     }
-    return false;
+    */
+    debugPrint('[CategoryService] API disabled — deleteCategory simulated success');
+    return true;
   }
 
   Future<bool> reorderCategories(List<int> orderedIds) async {
+    // Commenting out API call
+    /*
     try {
       const url = '$_categoriesPath/reorder';
       final payload = {'categoryIds': orderedIds};
@@ -93,6 +127,8 @@ class CategoryService {
     } catch (e) {
       debugPrint('API Error in reorderCategories: $e');
     }
-    return false;
+    */
+    debugPrint('[CategoryService] API disabled — reorderCategories simulated success');
+    return true;
   }
 }

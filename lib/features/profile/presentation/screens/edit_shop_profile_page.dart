@@ -99,6 +99,43 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     _priceRange = 1; // Default
     if (profile?.pricePreference == 'LOW') _priceRange = 0;
     if (profile?.pricePreference == 'HIGH') _priceRange = 2;
+
+    if (profile == null) {
+      _loadProfile();
+    }
+  }
+
+  Future<void> _loadProfile() async {
+    final profile = await ProfileService().getShopProfile();
+    if (profile != null && mounted) {
+      setState(() {
+        _nameEnCtrl.text = profile.nameEn ?? '';
+        _nameMmCtrl.text = profile.nameMm ?? '';
+        _nameThCtrl.text = profile.nameTh ?? '';
+        _descEnCtrl.text = profile.descriptionEn ?? '';
+        _descMmCtrl.text = profile.descriptionMm ?? '';
+        _descThCtrl.text = profile.descriptionTh ?? '';
+        _phoneCtrl.text = profile.phone ?? '';
+        _emailCtrl.text = profile.email ?? '';
+        _addressEnCtrl.text = profile.addressEn ?? '';
+        _addressMmCtrl.text = profile.addressMm ?? '';
+        _addressThCtrl.text = profile.addressTh ?? '';
+        _districtCtrl.text = profile.districtEn ?? '';
+        _cityCtrl.text = profile.cityEn ?? '';
+        
+        _latitude = profile.latitude;
+        _longitude = profile.longitude;
+        _hasParking = profile.hasParking;
+        _hasWifi = profile.hasWifi;
+        _hasDelivery = profile.hasDelivery;
+        _isHalal = profile.isHalal;
+        _isVegetarian = profile.isVegetarian;
+        
+        _priceRange = 1;
+        if (profile.pricePreference == 'LOW') _priceRange = 0;
+        if (profile.pricePreference == 'HIGH') _priceRange = 2;
+      });
+    }
   }
 
   @override

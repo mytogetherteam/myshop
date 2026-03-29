@@ -1,13 +1,15 @@
 import 'package:flutter/foundation.dart';
-import 'package:my_shop/core/network/api_client.dart';
+// import 'package:my_shop/core/network/api_client.dart';
 import '../models/menu_item_model.dart';
 import '../models/menu_category_model.dart';
 
 class MenuService {
-  static const String _categoriesPath = '/api/shop/menu/categories';
-  static const String _menuItemsPath = '/api/shop/menu/items';
+  // static const String _categoriesPath = '/api/shop/menu/categories';
+  // static const String _menuItemsPath = '/api/shop/menu/items';
 
   Future<List<MenuCategoryModel>?> getCategories() async {
+    // Commenting out API call as requested
+    /*
     try {
       debugPrint('GET REQUEST: $_categoriesPath');
       final response = await ApiClient().dio.get(_categoriesPath);
@@ -22,10 +24,13 @@ class MenuService {
     } catch (e) {
       debugPrint('API Error in getCategories: $e');
     }
-    return null;
+    */
+    return null; // MenuRepository handles fallback when null is returned
   }
 
   Future<List<MenuItemModel>?> getMenuItems({int? categoryId, int page = 1, int limit = 20}) async {
+    // Commenting out API call as requested
+    /*
     try {
       final queryParams = <String, dynamic>{
         'page': page,
@@ -50,10 +55,13 @@ class MenuService {
     } catch (e) {
       debugPrint('API Error in getMenuItems: $e');
     }
-    return null;
+    */
+    return null; // MenuRepository handles fallback when null is returned
   }
 
   Future<bool> createMenuItem(Map<String, dynamic> payload) async {
+    // Commenting out API call as requested
+    /*
     try {
       debugPrint('POST REQUEST: $_menuItemsPath, Data: $payload');
       final response = await ApiClient().dio.post(
@@ -68,10 +76,14 @@ class MenuService {
     } catch (e) {
       debugPrint('API Error in createMenuItem: $e');
     }
-    return false;
+    */
+    debugPrint('[Menu] API disabled — createMenuItem simulated success');
+    return true; // Simulate success
   }
 
   Future<bool> updateMenuItem(int itemId, Map<String, dynamic> payload) async {
+    // Commenting out API call as requested
+    /*
     try {
       final url = '$_menuItemsPath/$itemId';
       debugPrint('PUT REQUEST: $url, Data: $payload');
@@ -87,10 +99,14 @@ class MenuService {
     } catch (e) {
       debugPrint('API Error in updateMenuItem: $e');
     }
-    return false;
+    */
+    debugPrint('[Menu] API disabled — updateMenuItem simulated success');
+    return true; // Simulate success
   }
 
   Future<bool> deleteMenuItem(int itemId) async {
+    // Commenting out API call as requested
+    /*
     try {
       final url = '$_menuItemsPath/$itemId';
       debugPrint('DELETE REQUEST: $url');
@@ -103,10 +119,14 @@ class MenuService {
     } catch (e) {
       debugPrint('API Error in deleteMenuItem: $e');
     }
-    return false;
+    */
+    debugPrint('[Menu] API disabled — deleteMenuItem simulated success');
+    return true; // Simulate success
   }
 
   Future<bool> toggleAvailability(int itemId, bool available) async {
+    // Commenting out API call as requested
+    /*
     try {
       final url = '$_menuItemsPath/$itemId/availability';
       debugPrint('PUT REQUEST: $url, Query: {available: $available}');
@@ -122,6 +142,8 @@ class MenuService {
     } catch (e) {
       debugPrint('API Error in toggleAvailability: $e');
     }
-    return false;
+    */
+    debugPrint('[Menu] API disabled — toggleAvailability simulated success');
+    return true; // Simulate success
   }
 }

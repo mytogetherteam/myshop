@@ -41,6 +41,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
   bool _isTogglingStatus = false;
   bool _hasChanges = false;
   bool _isSaving = false;
+  bool _isLoading = false;
 
   final List<String> _days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   late List<_DayHours> _hours;
@@ -57,15 +58,35 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
     _hours = List.generate(7, (index) => _DayHours(isClosed: true, openTime: const TimeOfDay(hour: 9, minute: 0), closeTime: const TimeOfDay(hour: 22, minute: 0)));
 
     if (profile != null && profile.operatingHours.isNotEmpty) {
-      for (final h in profile.operatingHours) {
-        if (h.dayOfWeek >= 0 && h.dayOfWeek <= 6) {
-          _hours[h.dayOfWeek] = _DayHours(
-            isClosed: h.isClosed,
-            openTime: TimeOfDay(hour: h.openingTime.hour, minute: h.openingTime.minute),
-            closeTime: TimeOfDay(hour: h.closingTime.hour, minute: h.closingTime.minute),
-          );
-        }
+      _applyProfile(profile);
+    } else if (profile == null) {
+      _loadProfile();
+    }
+  }
+
+  void _applyProfile(ShopProfileModel profile) {
+    _isOpen = profile.isOpen;
+    for (final h in profile.operatingHours) {
+      if (h.dayOfWeek >= 0 && h.dayOfWeek <= 6) {
+        _hours[h.dayOfWeek] = _DayHours(
+          isClosed: h.isClosed,
+          openTime: TimeOfDay(hour: h.openingTime.hour, minute: h.openingTime.minute),
+          closeTime: TimeOfDay(hour: h.closingTime.hour, minute: h.closingTime.minute),
+        );
       }
+    }
+  }
+
+  Future<void> _loadProfile() async {
+    setState(() => _isLoading = true);
+    final profile = await _profileService.getShopProfile();
+    if (profile != null && mounted) {
+      setState(() {
+        _applyProfile(profile);
+        _isLoading = false;
+      });
+    } else {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -253,8 +274,10 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
             SizedBox(width: 8),
           ],
         ),
-        body: ListView(
-          padding: const EdgeInsets.only(bottom: 24),
+        body: _isLoading
+            ? const Center(child: CustomLoadingIndicator(size: 40))
+            : ListView(
+                padding: const EdgeInsets.only(bottom: 24),
           children: [
             const SizedBox(height: 16),
             // Open/Closed banner
