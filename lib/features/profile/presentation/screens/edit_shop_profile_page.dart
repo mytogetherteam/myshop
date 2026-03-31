@@ -615,197 +615,184 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   // ── FIXED: Cover + Logo upload ────────────────────────────────────────────
   Widget _buildCoverLogoUpload() {
     final coverUrl = widget.shopProfile?.coverUrl;
-    final logoUrl = widget.shopProfile?.logoUrl;
+    final logoUrl  = widget.shopProfile?.logoUrl;
     final shopName = _nameEnCtrl.text.isNotEmpty
         ? _nameEnCtrl.text
         : (widget.shopProfile?.nameEn ?? 'Shop Name');
 
-    return Column(
-      children: [
-        // ── Hero image (tap to change cover) ─────────────────────────────
-        GestureDetector(
-          onTap: _pickCover,
-          child: SizedBox(
-            height: 240,
-            width: double.infinity,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                // Image or gradient fallback
-                if (_pickedCover != null)
-                  kIsWeb
-                      ? Image.network(_pickedCover!.path, fit: BoxFit.cover)
-                      : Image.file(File(_pickedCover!.path), fit: BoxFit.cover)
-                else if (coverUrl != null && coverUrl.isNotEmpty)
-                  CachedNetworkImage(
-                    imageUrl: coverUrl,
-                    fit: BoxFit.cover,
-                    placeholder: (_, _) => _buildCoverGradient(),
-                    errorWidget: (_, _, _) => _buildCoverGradient(),
-                  )
-                else
-                  _buildCoverGradient(),
+    const heroHeight = 360.0;
 
-                // Dark overlay at top for status bar/back button contrast
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 90,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.black.withValues(alpha: 0.35),
-                          Colors.transparent,
-                        ],
+    return SizedBox(
+      height: heroHeight,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // ── Full hero image ───────────────────────────────────────────
+          Positioned(
+            top: 0, left: 0, right: 0,
+            height: heroHeight,
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(32),
+              ),
+              child: GestureDetector(
+                onTap: _pickCover,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                  // Image or gradient fallback
+                  if (_pickedCover != null)
+                    kIsWeb
+                        ? Image.network(_pickedCover!.path, fit: BoxFit.cover)
+                        : Image.file(File(_pickedCover!.path), fit: BoxFit.cover)
+                  else if (coverUrl != null && coverUrl.isNotEmpty)
+                    CachedNetworkImage(
+                      imageUrl: coverUrl,
+                      fit: BoxFit.cover,
+                      placeholder: (_, _) => _buildCoverGradient(),
+                      errorWidget: (_, _, _) => _buildCoverGradient(),
+                    )
+                  else
+                    _buildCoverGradient(),
+
+                  // Dark overlay at top for back button contrast
+                  Positioned(
+                    top: 0, left: 0, right: 0, height: 90,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.35),
+                            Colors.transparent,
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
 
-                // Camera hint overlay when no cover photo
-                if (_pickedCover == null &&
-                    (coverUrl == null || coverUrl.isEmpty))
-                  Container(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.25),
-                              shape: BoxShape.circle,
+                  // Camera hint when no cover photo
+                  if (_pickedCover == null && (coverUrl == null || coverUrl.isEmpty))
+                    Container(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.25),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const PhosphorIcon(
+                                PhosphorIconsRegular.camera,
+                                size: 28,
+                                color: Colors.white,
+                              ),
                             ),
-                            child: const PhosphorIcon(
-                              PhosphorIconsRegular.camera,
-                              size: 26,
-                              color: Colors.white,
+                            const SizedBox(height: 10),
+                            Text(
+                              'Tap to add cover photo',
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Tap to add cover photo',
-                            style: GoogleFonts.poppins(
-                              color: Colors.white,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
+            ),
             ),
           ),
-        ),
 
-        Transform.translate(
-          offset: const Offset(0, -20),
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              // Logo (tap to change)
-              GestureDetector(
-                onTap: _pickLogo,
-                child: Stack(
-                  children: [
-                    Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(14),
-                        child: _pickedLogo != null
-                            ? (kIsWeb
-                                  ? Image.network(
-                                      _pickedLogo!.path,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Image.file(
-                                      File(_pickedLogo!.path),
-                                      fit: BoxFit.cover,
-                                    ))
-                            : logoUrl != null && logoUrl.isNotEmpty
-                            ? CachedNetworkImage(
-                                imageUrl: logoUrl,
-                                fit: BoxFit.cover,
-                                placeholder: (_, _) => _buildLogoPlaceholder(),
-                                errorWidget: (_, _, _) =>
-                                    _buildLogoPlaceholder(),
-                              )
-                            : _buildLogoPlaceholder(),
-                      ),
-                    ),
-                    // Camera badge
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        width: 22,
-                        height: 22,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFED3973),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        child: const Icon(
-                          Icons.camera_alt,
-                          size: 11,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 14),
-              // Shop name
-              Expanded(
-                child: Text(
-                  shopName,
-                  style: GoogleFonts.poppins(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1E293B),
+          // ── Floating info card (inside hero image) ──────
+          Positioned(
+            bottom: 24,
+            left: 16,
+            right: 16,
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                ],
               ),
-            ],
+              child: Row(
+                children: [
+                  // Logo (tap to change)
+                  GestureDetector(
+                    onTap: _pickLogo,
+                    child: Stack(
+                      children: [
+                        Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(14),
+                            child: _pickedLogo != null
+                                ? (kIsWeb
+                                    ? Image.network(_pickedLogo!.path, fit: BoxFit.cover)
+                                    : Image.file(File(_pickedLogo!.path), fit: BoxFit.cover))
+                                : logoUrl != null && logoUrl.isNotEmpty
+                                    ? CachedNetworkImage(
+                                        imageUrl: logoUrl,
+                                        fit: BoxFit.cover,
+                                        placeholder: (_, _) => _buildLogoPlaceholder(),
+                                        errorWidget: (_, _, _) => _buildLogoPlaceholder(),
+                                      )
+                                    : _buildLogoPlaceholder(),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 0, right: 0,
+                          child: Container(
+                            width: 22, height: 22,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFED3973),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                            ),
+                            child: const Icon(Icons.camera_alt, size: 11, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      shopName,
+                      style: GoogleFonts.poppins(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1E293B),
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
