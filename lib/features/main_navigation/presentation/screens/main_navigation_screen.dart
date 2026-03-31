@@ -12,6 +12,7 @@ import 'package:my_shop/features/orders/presentation/widgets/order_warning_dialo
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:my_shop/features/notifications/presentation/widgets/notification_badge_icon.dart';
+import 'package:my_shop/features/reports/presentation/screens/analytics_page.dart';
 import 'package:flutter/services.dart';
 import 'package:my_shop/core/presentation/widgets/app_bar_title_with_logo.dart';
 import 'dart:async';
@@ -176,6 +177,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         centerTitle: false,
         title: AppBarTitleWithLogo(
           title: _titles[_currentIndex],
+          trailing: _currentIndex == 2 ? _buildAnalyticsButton() : null,
         ),
         actions: [
           const NotificationBadgeIcon(),
@@ -231,6 +233,54 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 icon: PhosphorIcon(PhosphorIconsRegular.storefront, size: 28),
                 activeIcon: PhosphorIcon(PhosphorIconsFill.storefront, size: 28),
                 label: 'Profile',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnalyticsButton() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AnalyticsPage()),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFED3A72), Color(0xFFFB923C)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        padding: const EdgeInsets.all(1.2),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(7),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const PhosphorIcon(
+                PhosphorIconsFill.chartPieSlice,
+                size: 14,
+                color: Color(0xFFED3A72),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                "Analytics",
+                style: GoogleFonts.poppins(
+                  color: const Color(0xFFED3A72),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 11,
+                ),
               ),
             ],
           ),

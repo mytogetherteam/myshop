@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class ProgressBarItem extends StatelessWidget {
+class ProgressBarItem extends StatefulWidget {
   final String label;
   final String value;
   final double percentage; // 0.0 to 1.0
@@ -13,10 +13,42 @@ class ProgressBarItem extends StatelessWidget {
     required this.label,
     required this.value,
     this.percentage = 0.0,
-    this.backgroundColor = const Color(0xFFF1F5F9), // Slate 100
+    this.backgroundColor = const Color(0xFFF1F5F9),
     this.barColor,
     this.barGradient,
   });
+
+  @override
+  State<ProgressBarItem> createState() => _ProgressBarItemState();
+}
+
+class _ProgressBarItemState extends State<ProgressBarItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+    );
+    // Small delay so the widget is laid out before animating
+    Future.delayed(const Duration(milliseconds: 120), () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +59,7 @@ class ProgressBarItem extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              label,
+              widget.label,
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -35,7 +67,7 @@ class ProgressBarItem extends StatelessWidget {
               ),
             ),
             Text(
-              value,
+              widget.value,
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -49,19 +81,25 @@ class ProgressBarItem extends StatelessWidget {
           height: 6,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: backgroundColor,
+            color: widget.backgroundColor,
             borderRadius: BorderRadius.circular(4),
           ),
-          child: FractionallySizedBox(
-            alignment: Alignment.centerLeft,
-            widthFactor: percentage.clamp(0.0, 1.0),
-            child: Container(
-              decoration: BoxDecoration(
-                color: barColor,
-                gradient: barGradient,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
+          child: AnimatedBuilder(
+            animation: _animation,
+            builder: (context, _) {
+              return FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor:
+                    (widget.percentage.clamp(0.0, 1.0) * _animation.value),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: widget.barColor,
+                    gradient: widget.barGradient,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ],

@@ -8,6 +8,8 @@ class AppBarTitleWithLogo extends StatelessWidget {
   final double fontSize;
   final Color? subtitleColor;
 
+  final Widget? trailing;
+
   const AppBarTitleWithLogo({
     super.key,
     required this.title,
@@ -15,6 +17,7 @@ class AppBarTitleWithLogo extends StatelessWidget {
     this.titleColor = const Color(0xFF1E293B),
     this.fontSize = 20,
     this.subtitleColor,
+    this.trailing,
   });
 
   @override
@@ -56,6 +59,10 @@ class AppBarTitleWithLogo extends StatelessWidget {
             ],
           ),
         ),
+        if (trailing != null) ...[
+          const SizedBox(width: 12),
+          trailing!,
+        ],
       ],
     );
   }

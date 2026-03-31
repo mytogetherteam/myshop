@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-class AnalyticsDonutChart extends StatelessWidget {
+class AnalyticsDonutChart extends StatefulWidget {
   final double section1Value;
   final double section2Value;
   final Color section1Color;
@@ -24,7 +24,26 @@ class AnalyticsDonutChart extends StatelessWidget {
   });
 
   @override
+  State<AnalyticsDonutChart> createState() => _AnalyticsDonutChartState();
+}
+
+class _AnalyticsDonutChartState extends State<AnalyticsDonutChart> {
+  // Start with all values at 0, then animate to real values after build
+  bool _animated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 200), () {
+      if (mounted) setState(() => _animated = true);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final s1 = _animated ? widget.section1Value : 0.001;
+    final s2 = _animated ? widget.section2Value : 0.001;
+
     return SizedBox(
       height: 160,
       child: Stack(
@@ -36,21 +55,22 @@ class AnalyticsDonutChart extends StatelessWidget {
               centerSpaceRadius: 50,
               sections: [
                 PieChartSectionData(
-                  color: section1Color,
-                  value: section1Value,
+                  color: widget.section1Color,
+                  value: s1,
                   title: '',
                   radius: 16,
                 ),
                 PieChartSectionData(
-                  color: section2Color,
-                  value: section2Value,
+                  color: widget.section2Color,
+                  value: s2,
                   title: '',
                   radius: 16,
                 ),
               ],
             ),
+            duration: const Duration(milliseconds: 900),
+            curve: Curves.easeOutCubic,
           ),
-          // We can leave the center empty for now and add a custom overlay, or rely on the UI layout below.
         ],
       ),
     );

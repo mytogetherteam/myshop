@@ -8,7 +8,6 @@ import 'package:my_shop/features/reports/presentation/widgets/best_seller_tile.d
 import 'package:my_shop/features/reports/presentation/widgets/order_history_item.dart';
 import 'package:my_shop/features/reports/presentation/screens/all_order_history_screen.dart';
 import 'package:my_shop/features/reports/presentation/screens/top_selling_items_screen.dart';
-import 'package:my_shop/features/reports/presentation/screens/analytics_page.dart';
 
 class ReportPage extends StatefulWidget {
   const ReportPage({super.key});
@@ -53,88 +52,31 @@ class _ReportPageState extends State<ReportPage> with TickerProviderStateMixin, 
         children: [
           Container(
             color: Colors.white,
-            padding: const EdgeInsets.only(top: 8, bottom: 8, right: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TabBar(
-                    controller: _tabController,
-                    isScrollable: true,
-                    tabAlignment: TabAlignment.start,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    indicatorColor: Colors.transparent,
-                    dividerColor: Colors.transparent,
-                    labelColor: Colors.white,
-                    unselectedLabelColor: const Color(0xFF94A3B8),
-                    labelPadding: const EdgeInsets.symmetric(horizontal: 4),
-                    labelStyle: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    unselectedLabelStyle: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    onTap: (index) => setState(() {}),
-                    tabs: [
-                      _buildFilterTab("Today", 0),
-                      _buildFilterTab("Yesterday", 1),
-                      _buildFilterTab("This Week", 2),
-                      _buildFilterTab("Custom", 3),
-                    ],
-                  ),
-                ),
-                Container(
-                  width: 1,
-                  height: 24,
-                  color: const Color(0xFFE2E8F0),
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const AnalyticsPage()),
-                    );
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFED3A72), Color(0xFFFB923C)],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.all(1.2),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(7),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const PhosphorIcon(
-                            PhosphorIconsFill.chartPieSlice,
-                            size: 16,
-                            color: Color(0xFFED3A72),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            "View analytics",
-                            style: GoogleFonts.poppins(
-                              color: const Color(0xFFED3A72),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+            padding: const EdgeInsets.only(top: 8, bottom: 8),
+            child: TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              indicatorColor: Colors.transparent,
+              dividerColor: Colors.transparent,
+              labelColor: Colors.white,
+              unselectedLabelColor: const Color(0xFF94A3B8),
+              labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+              labelStyle: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+              unselectedLabelStyle: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+              onTap: (index) => setState(() {}),
+              tabs: [
+                _buildFilterTab("Today", 0),
+                _buildFilterTab("Yesterday", 1),
+                _buildFilterTab("This Week", 2),
+                _buildFilterTab("Custom", 3),
               ],
             ),
           ),
