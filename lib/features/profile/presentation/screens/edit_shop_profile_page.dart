@@ -705,9 +705,10 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
           ),
         ),
 
-        // ── Floating info card ────────────────────────────────────────────
-        Container(
-          margin: const EdgeInsets.fromLTRB(16, -20, 16, 0),
+        Transform.translate(
+          offset: const Offset(0, -20),
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -801,6 +802,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 ),
               ),
             ],
+          ),
           ),
         ),
       ],
