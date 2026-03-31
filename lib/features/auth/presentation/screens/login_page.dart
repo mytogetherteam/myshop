@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/core/presentation/widgets/app_logo.dart';
 import 'package:my_shop/features/auth/data/services/auth_service.dart';
-import 'package:my_shop/features/auth/presentation/screens/register_page.dart';
 import '../../../../core/network/websocket_service.dart';
 
 class LoginPage extends StatefulWidget {
@@ -186,33 +185,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
 
                     const SizedBox(height: 24),
 
-                    // Register link
-                    Center(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Don't have a shop account? ",
-                            style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 14),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.of(context).push(
-                                CupertinoPageRoute(builder: (_) => const RegisterPage()),
-                              );
-                            },
-                            child: Text(
-                              'Register Shop',
-                              style: GoogleFonts.poppins(
-                                color: const Color(0xFFED3973),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+
                     const SizedBox(height: 40),
                   ],
                 ),

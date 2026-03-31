@@ -55,45 +55,6 @@ class AuthService {
     }
   }
 
-  Future<AuthResponse> register({
-    required String username,
-    required String email,
-    required String password,
-    required String fullName,
-  }) async {
-    try {
-      final response = await ApiClient().dio.post(
-        '$_authPath/register',
-        data: {
-          'username': username,
-          'email': email,
-          'password': password,
-          'fullName': fullName,
-        },
-      );
-
-      final authResponse = AuthResponse.fromJson(response.data);
-
-      if (authResponse.success && authResponse.token != null) {
-        await StorageService.instance.saveTokens(
-          token: authResponse.token!,
-          refreshToken: authResponse.refreshToken ?? '',
-        );
-        if (authResponse.userInfo != null) {
-          await StorageService.instance.saveUserInfo(authResponse.userInfo!);
-        }
-      }
-
-      return authResponse;
-    } catch (e) {
-      if (e is DioException && e.response?.data != null) {
-        try {
-          return AuthResponse.fromJson(e.response!.data);
-        } catch (_) {}
-      }
-      return AuthResponse(success: false, message: 'Connection error: $e');
-    }
-  }
 
   Future<void> logout() async {
     try {
