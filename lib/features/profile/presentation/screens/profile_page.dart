@@ -183,7 +183,7 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
           onTap: () => Navigator.push(
             context,
             CupertinoPageRoute(builder: (_) => const EditShopProfilePage()),
-          ),
+          ).then((_) => _loadUserInfo()),
         ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.clock,

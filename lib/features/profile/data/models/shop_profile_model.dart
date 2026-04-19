@@ -11,6 +11,13 @@ class ShopProfileModel {
   final String? descriptionMm;
   final String? descriptionTh;
   final String? categoryEn;
+  final String? categoryMm;
+  final String? categoryTh;
+  final int? categoryId;
+  final String? subCategoryEn;
+  final String? subCategoryMm;
+  final String? subCategoryTh;
+  final int? subCategoryId;
   final double ratingAvg;
   final int ratingCount;
   
@@ -48,6 +55,21 @@ class ShopProfileModel {
   // Operating Hours
   final List<OperatingHoursModel> operatingHours;
 
+  // ----------------------------------------------------
+  // New Fields from API
+  // ----------------------------------------------------
+  final int maxItemQuantityPerOrder;
+  final double minOrderAmount;
+  final double baseDeliveryFee;
+  final String? googleMapsLink;
+  final bool isActive;
+  final bool isVerified;
+  final bool adminDisabled;
+  final String? paymentQrUrl;
+  final int viewCount;
+  final bool deliveryEnabled;
+  final String? slug;
+
   ShopProfileModel({
     required this.id,
     this.coverUrl,
@@ -59,6 +81,13 @@ class ShopProfileModel {
     this.descriptionMm,
     this.descriptionTh,
     this.categoryEn,
+    this.categoryMm,
+    this.categoryTh,
+    this.categoryId,
+    this.subCategoryEn,
+    this.subCategoryMm,
+    this.subCategoryTh,
+    this.subCategoryId,
     required this.ratingAvg,
     required this.ratingCount,
     required this.hasParking,
@@ -84,6 +113,17 @@ class ShopProfileModel {
     this.latitude,
     this.longitude,
     this.pricePreference,
+    this.maxItemQuantityPerOrder = 10,
+    this.minOrderAmount = 0.0,
+    this.baseDeliveryFee = 0.0,
+    this.googleMapsLink,
+    this.isActive = false,
+    this.isVerified = false,
+    this.adminDisabled = false,
+    this.paymentQrUrl,
+    this.viewCount = 0,
+    this.deliveryEnabled = false,
+    this.slug,
     required this.operatingHours,
   });
 
@@ -99,8 +139,15 @@ class ShopProfileModel {
       descriptionMm: json['descriptionMm'],
       descriptionTh: json['descriptionTh'],
       categoryEn: json['categoryEn'],
-      ratingAvg: (json['ratingAvg'] ?? 0.0).toDouble(),
-      ratingCount: json['ratingCount'] ?? 0,
+      categoryMm: json['categoryMm'],
+      categoryTh: json['categoryTh'],
+      categoryId: json['categoryId'],
+      subCategoryEn: json['subCategoryEn'],
+      subCategoryMm: json['subCategoryMm'],
+      subCategoryTh: json['subCategoryTh'],
+      subCategoryId: json['subCategoryId'],
+      ratingAvg: (json['rating'] ?? json['ratingAvg'] ?? 0.0).toDouble(),
+      ratingCount: json['reviewCount'] ?? json['ratingCount'] ?? 0,
       
       hasParking: json['hasParking'] ?? false,
       hasWifi: json['hasWifi'] ?? false,
@@ -132,6 +179,17 @@ class ShopProfileModel {
       operatingHours: (json['operatingHours'] as List<dynamic>?)
           ?.map((e) => OperatingHoursModel.fromJson(e as Map<String, dynamic>))
           .toList() ?? [],
+      maxItemQuantityPerOrder: json['maxItemQuantityPerOrder'] ?? 10,
+      minOrderAmount: (json['minOrderAmount'] ?? 0.0).toDouble(),
+      baseDeliveryFee: (json['baseDeliveryFee'] ?? 0.0).toDouble(),
+      googleMapsLink: json['googleMapsLink'],
+      isActive: json['isActive'] ?? false,
+      isVerified: json['isVerified'] ?? false,
+      adminDisabled: json['adminDisabled'] ?? false,
+      paymentQrUrl: json['paymentQrUrl'],
+      viewCount: json['viewCount'] ?? 0,
+      deliveryEnabled: json['deliveryEnabled'] ?? false,
+      slug: json['slug'],
     );
   }
 }

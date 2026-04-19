@@ -4,8 +4,8 @@ import '../models/shop_profile_model.dart';
 
 class ProfileService {
   static const String _profilePath = '/api/shop/profile';
-  static const String _statusPath = '/api/shop/profile/status';
-  static const String _operatingHoursPath = '/api/shop/profile/operating-hours';
+  static const String _statusPath = '/api/shop/operating-hours/status';
+  static const String _operatingHoursPath = '/api/shop/operating-hours';
   static const String _changePasswordPath = '/api/shop/profile/change-password';
 
   Future<ShopProfileModel?> getShopProfile() async {
