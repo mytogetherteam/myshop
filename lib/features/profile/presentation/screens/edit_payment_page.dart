@@ -1,23 +1,114 @@
 import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:my_shop/core/data/services/image_upload_service.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../data/models/payment_method.dart';
+import '../../data/services/payment_service.dart';
 import '../widgets/password_confirmation_sheet.dart';
+import '../widgets/payment_success_sheet.dart';
 import '../../../../core/presentation/widgets/global_modal.dart';
+import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
+import '../../../../core/data/services/image_upload_service.dart';
 
 class EditPaymentPage extends StatefulWidget {
+  final int shopId;
   final PaymentMethod paymentMethod;
-  const EditPaymentPage({super.key, required this.paymentMethod});
+  const EditPaymentPage({super.key, required this.shopId, required this.paymentMethod});
 
   @override
   State<EditPaymentPage> createState() => _EditPaymentPageState();
 }
 
 class _EditPaymentPageState extends State<EditPaymentPage> {
+  final PaymentService _paymentService = PaymentService();
   final Map<String, XFile?> _pickedImages = {};
+  
+  late final TextEditingController _accountNameCtrl;
+  late final TextEditingController _accountNumberCtrl;
+  late final TextEditingController _displayOrderCtrl;
+  late bool _isActive;
+  bool _isSaving = false;
+  bool _isLoading = false;
+  PaymentMethod? _currentPayment;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentPayment = widget.paymentMethod;
+    _accountNameCtrl = TextEditingController(text: _currentPayment?.accountName ?? '');
+    _accountNumberCtrl = TextEditingController(text: _currentPayment?.accountNumber ?? '');
+    _displayOrderCtrl = TextEditingController(text: (_currentPayment?.displayOrder ?? 0).toString());
+    _isActive = _currentPayment?.isActive ?? true;
+    
+    _loadLatestDetails();
+  }
+
+  @override
+  void dispose() {
+    _accountNameCtrl.dispose();
+    _accountNumberCtrl.dispose();
+    _displayOrderCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadLatestDetails() async {
+    setState(() => _isLoading = true);
+    final detail = await _paymentService.getPaymentMethodDetail(widget.shopId, widget.paymentMethod.id);
+    if (detail != null && mounted) {
+      setState(() {
+        _currentPayment = detail;
+        _accountNameCtrl.text = detail.accountName;
+        _accountNumberCtrl.text = detail.accountNumber;
+        _displayOrderCtrl.text = detail.displayOrder.toString();
+        _isActive = detail.isActive;
+        _isLoading = false;
+      });
+    } else {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleUpdate() async {
+    setState(() => _isSaving = true);
+    
+    final requestData = {
+      "paymentMethodId": _currentPayment?.paymentMethodId,
+      "displayOrder": int.tryParse(_displayOrderCtrl.text) ?? 0,
+      "isActive": _isActive,
+      "shopId": widget.shopId,
+      "paymentMethodName": _currentPayment?.paymentMethodName,
+      "paymentMethodCode": _currentPayment?.paymentMethodCode,
+      "accountNumber": _accountNumberCtrl.text,
+      "accountName": _accountNameCtrl.text,
+      "id": _currentPayment?.id,
+    };
+
+    final success = await _paymentService.updatePaymentMethod(
+      shopId: widget.shopId,
+      paymentTypeId: widget.paymentMethod.id,
+      requestData: requestData,
+      qrFile: _pickedImages[_currentPayment?.id.toString()] != null 
+          ? File(_pickedImages[_currentPayment?.id.toString()]!.path) 
+          : null,
+    );
+
+    if (mounted) {
+      setState(() => _isSaving = false);
+      if (success) {
+        GlobalModal.show(
+          context: context,
+          child: const PaymentSuccessSheet(),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update payment method'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
 
   Future<void> _pickImage(String paymentId) async {
     await showModalBottomSheet<void>(
@@ -114,16 +205,18 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
         ),
         centerTitle: false,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: _buildPaymentItem(widget.paymentMethod),
+      body: _isLoading 
+          ? const Center(child: CustomLoadingIndicator())
+          : Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: _buildForm(),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -138,10 +231,15 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
               width: double.infinity,
               height: 64,
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: _isSaving ? null : () {
                   GlobalModal.show(
                     context: context,
-                    child: const PasswordConfirmationSheet(),
+                    child: PasswordConfirmationSheet(
+                      onConfirm: (password) {
+                        Navigator.pop(context); // Close sheet
+                        _handleUpdate();
+                      },
+                    ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -151,28 +249,30 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                   elevation: 0,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Update Payment Method',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
+                child: _isSaving 
+                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Update Payment Method',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Changes will take effect after verified',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Changes will take effect after verified',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ),
           ),
@@ -181,138 +281,252 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
     );
   }
 
-  Widget _buildPaymentItem(PaymentMethod pm) {
-    final pickedImage = _pickedImages[pm.id];
-    final hasImage = pickedImage != null || pm.qrUrl.isNotEmpty;
+  Widget _buildForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildPaymentIconAndName(),
+        const SizedBox(height: 24),
+        _buildImagePicker(),
+        const SizedBox(height: 32),
+        _buildSectionTitle('Account Details'),
+        const SizedBox(height: 16),
+        _buildInputField(
+          label: 'Account Name',
+          controller: _accountNameCtrl,
+          hint: 'e.g. John Doe',
+          icon: PhosphorIconsRegular.user,
+        ),
+        const SizedBox(height: 20),
+        _buildInputField(
+          label: 'Account Number',
+          controller: _accountNumberCtrl,
+          hint: 'e.g. 123456789',
+          icon: PhosphorIconsRegular.hash,
+        ),
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(
+              child: _buildInputField(
+                label: 'Display Order',
+                controller: _displayOrderCtrl,
+                hint: '0',
+                icon: PhosphorIconsRegular.sortAscending,
+                keyboardType: TextInputType.number,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildStatusToggle(),
+            ),
+          ],
+        ),
+        const SizedBox(height: 40),
+      ],
+    );
+  }
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 32),
+  Widget _buildPaymentIconAndName() {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFFF1F5F9)),
+          ),
+          child: Image.network(
+            _currentPayment?.logoUrl ?? '',
+            width: 24,
+            height: 24,
+            errorBuilder: (_, __, ___) => const Icon(PhosphorIconsRegular.creditCard, size: 24),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          _currentPayment?.paymentMethodName ?? '',
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF1E293B),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImagePicker() {
+    final pickedImage = _pickedImages[_currentPayment?.id.toString()];
+    final hasImage = pickedImage != null || (_currentPayment?.qrImageUrl.isNotEmpty ?? false);
+
+    return Stack(
+      children: [
+        GestureDetector(
+          onTap: () => _pickImage(_currentPayment!.id.toString()),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFF1F5F9)),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: pickedImage != null
+                  ? (kIsWeb
+                      ? Image.network(pickedImage.path, width: double.infinity, height: 250, fit: BoxFit.cover)
+                      : Image.file(File(pickedImage.path), width: double.infinity, height: 250, fit: BoxFit.cover))
+                  : (_currentPayment?.qrImageUrl.isNotEmpty ?? false
+                      ? Image.network(
+                          _currentPayment!.qrImageUrl,
+                          width: double.infinity,
+                          height: 250,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _buildPlaceholder(),
+                        )
+                      : _buildPlaceholder()),
+            ),
+          ),
+        ),
+        if (hasImage)
+          Positioned(
+            top: 12,
+            right: 12,
+            child: GestureDetector(
+              onTap: () => _pickImage(_currentPayment!.id.toString()),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                ),
+                child: const Icon(Icons.refresh_rounded, size: 20, color: Color(0xFFED3973)),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildPlaceholder() {
+    return Container(
+      width: double.infinity,
+      height: 250,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              Image.network(pm.logoUrl, width: 24, height: 24, errorBuilder: (_, _, _) => const Icon(Icons.payment, size: 24)),
-              const SizedBox(width: 12),
-              Text(
-                pm.name,
-                style: GoogleFonts.poppins(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF1E293B),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Stack(
-            children: [
-              GestureDetector(
-                onTap: () => _pickImage(pm.id),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFF1F5F9)),
-                  ),
-                  child: Center(
-                    child: !hasImage
-                        ? CustomPaint(
-                            painter: DashedBorderPainter(),
-                            child: Container(
-                              width: double.infinity,
-                              height: 250,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF8FAFC),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(color: const Color(0xFFED3973).withValues(alpha: 0.1)),
-                                      color: Colors.white,
-                                    ),
-                                    child: const Icon(Icons.add_a_photo_outlined, size: 32, color: Color(0xFFED3973)),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    'Tap to upload',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF1E293B),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'or take a photo of your receipt',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      color: const Color(0xFF94A3B8),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )
-                        : ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: pickedImage != null
-                                ? (kIsWeb
-                                    ? Image.network(pickedImage.path, width: double.infinity, height: 250, fit: BoxFit.cover)
-                                    : Image.file(File(pickedImage.path), width: double.infinity, height: 250, fit: BoxFit.cover))
-                                : Image.network(
-                                    pm.qrUrl,
-                                    width: double.infinity,
-                                    height: 250,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, _, _) => Container(
-                                      width: double.infinity,
-                                      height: 250,
-                                      color: Colors.grey[100],
-                                      child: const Icon(Icons.qr_code, size: 64, color: Colors.grey),
-                                    ),
-                                  ),
-                          ),
-                  ),
-                ),
-              ),
-              if (hasImage)
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: GestureDetector(
-                    onTap: () => _pickImage(pm.id),
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.refresh_rounded,
-                        size: 24,
-                        color: Color(0xFFED3973),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
+          const Icon(Icons.add_a_photo_outlined, size: 40, color: Color(0xFF94A3B8)),
+          const SizedBox(height: 8),
+          Text('Tap to upload QR Code', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF94A3B8))),
         ],
       ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title.toUpperCase(),
+      style: GoogleFonts.poppins(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: const Color(0xFF94A3B8),
+        letterSpacing: 0.5,
+      ),
+    );
+  }
+
+  Widget _buildInputField({
+    required String label,
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF475569),
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          style: GoogleFonts.poppins(fontSize: 15),
+          decoration: InputDecoration(
+            hintText: hint,
+            prefixIcon: Icon(icon, size: 20, color: const Color(0xFF94A3B8)),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFED3973), width: 1.5),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatusToggle() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Status',
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF475569),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          height: 50,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Row(
+            children: [
+              Text(
+                'Is Active',
+                style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B)),
+              ),
+              const Spacer(),
+              CupertinoSwitch(
+                value: _isActive,
+                activeColor: const Color(0xFFED3973),
+                onChanged: (v) => setState(() => _isActive = v),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
