@@ -163,23 +163,22 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
     final activeHours = [];
     for (int i = 0; i < _hours.length; i++) {
         final oh = _hours[i];
-        if (!oh.isClosed) {
-            activeHours.add({
-                'dayOfWeek': i,
-                'openTime': {
-                    'hour': oh.openTime.hour,
-                    'minute': oh.openTime.minute,
-                    'second': 0,
-                    'nano': 0
-                },
-                'closeTime': {
-                    'hour': oh.closeTime.hour,
-                    'minute': oh.closeTime.minute,
-                    'second': 0,
-                    'nano': 0
-                }
-            });
-        }
+        activeHours.add({
+            'dayOfWeek': i,
+            'openTime': {
+                'hour': oh.openTime.hour,
+                'minute': oh.openTime.minute,
+                'second': 0,
+                'nano': 0
+            },
+            'closeTime': {
+                'hour': oh.closeTime.hour,
+                'minute': oh.closeTime.minute,
+                'second': 0,
+                'nano': 0
+            },
+            'isClosed': oh.isClosed
+        });
     }
     
     final payload = {

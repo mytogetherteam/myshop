@@ -26,6 +26,8 @@ class EditShopProfilePage extends StatefulWidget {
 class _EditShopProfilePageState extends State<EditShopProfilePage> {
   bool _hasChanges = false;
   bool _isSaving = false;
+  bool _isLoading = false;
+  ShopProfileModel? _currentProfile;
 
   XFile? _pickedCover;
   XFile? _pickedLogo;
@@ -33,6 +35,8 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   String _nameLang = 'EN';
   String _descLang = 'EN';
   String _addressLang = 'EN';
+  String _catLang = 'EN';
+  String _subCatLang = 'EN';
 
   late final TextEditingController _nameEnCtrl;
   late final TextEditingController _nameMmCtrl;
@@ -47,6 +51,19 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   late final TextEditingController _addressThCtrl;
   late final TextEditingController _districtCtrl;
   late final TextEditingController _cityCtrl;
+  
+  late final TextEditingController _catEnCtrl;
+  late final TextEditingController _catMmCtrl;
+  late final TextEditingController _catThCtrl;
+  late final TextEditingController _subCatEnCtrl;
+  late final TextEditingController _subCatMmCtrl;
+  late final TextEditingController _subCatThCtrl;
+  
+  // New Controllers
+  late final TextEditingController _maxQtyCtrl;
+  late final TextEditingController _minAmountCtrl;
+  late final TextEditingController _baseFeeCtrl;
+  late final TextEditingController _mapsLinkCtrl;
 
   double? _latitude;
   double? _longitude;
@@ -56,13 +73,21 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   late bool _hasDelivery;
   late bool _isHalal;
   late bool _isVegetarian;
+  late bool _deliveryEnabled;
   late int _priceRange;
 
   @override
   void initState() {
     super.initState();
-    final p = widget.shopProfile;
+    _currentProfile = widget.shopProfile;
+    _initializeFields(_currentProfile);
 
+    if (_currentProfile == null) {
+      _loadProfile();
+    }
+  }
+
+  void _initializeFields(ShopProfileModel? p) {
     _nameEnCtrl = TextEditingController(text: p?.nameEn ?? '');
     _nameMmCtrl = TextEditingController(text: p?.nameMm ?? '');
     _nameThCtrl = TextEditingController(text: p?.nameTh ?? '');
@@ -76,6 +101,18 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     _addressThCtrl = TextEditingController(text: p?.addressTh ?? '');
     _districtCtrl = TextEditingController(text: p?.districtEn ?? '');
     _cityCtrl = TextEditingController(text: p?.cityEn ?? '');
+    
+    _catEnCtrl = TextEditingController(text: p?.categoryEn ?? '');
+    _catMmCtrl = TextEditingController(text: p?.categoryMm ?? '');
+    _catThCtrl = TextEditingController(text: p?.categoryTh ?? '');
+    _subCatEnCtrl = TextEditingController(text: p?.subCategoryEn ?? '');
+    _subCatMmCtrl = TextEditingController(text: p?.subCategoryMm ?? '');
+    _subCatThCtrl = TextEditingController(text: p?.subCategoryTh ?? '');
+    
+    _maxQtyCtrl = TextEditingController(text: (p?.maxItemQuantityPerOrder ?? 10).toString());
+    _minAmountCtrl = TextEditingController(text: (p?.minOrderAmount ?? 0.0).toString());
+    _baseFeeCtrl = TextEditingController(text: (p?.baseDeliveryFee ?? 0.0).toString());
+    _mapsLinkCtrl = TextEditingController(text: p?.googleMapsLink ?? '');
 
     _latitude = p?.latitude;
     _longitude = p?.longitude;
@@ -85,10 +122,66 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     _hasDelivery = p?.hasDelivery ?? false;
     _isHalal = p?.isHalal ?? false;
     _isVegetarian = p?.isVegetarian ?? false;
+    _deliveryEnabled = p?.deliveryEnabled ?? false;
 
     _priceRange = 1;
     if (p?.pricePreference == 'LOW') _priceRange = 0;
     if (p?.pricePreference == 'HIGH') _priceRange = 2;
+  }
+
+  Future<void> _loadProfile() async {
+    setState(() => _isLoading = true);
+    try {
+      final profile = await ProfileService().getShopProfile();
+      if (profile != null && mounted) {
+        setState(() {
+          _currentProfile = profile;
+          _updateControllerTexts(profile);
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _updateControllerTexts(ShopProfileModel p) {
+    _nameEnCtrl.text = p.nameEn ?? '';
+    _nameMmCtrl.text = p.nameMm ?? '';
+    _nameThCtrl.text = p.nameTh ?? '';
+    _descEnCtrl.text = p.descriptionEn ?? '';
+    _descMmCtrl.text = p.descriptionMm ?? '';
+    _descThCtrl.text = p.descriptionTh ?? '';
+    _phoneCtrl.text = p.phone ?? '';
+    _emailCtrl.text = p.email ?? '';
+    _addressEnCtrl.text = p.addressEn ?? '';
+    _addressMmCtrl.text = p.addressMm ?? '';
+    _addressThCtrl.text = p.addressTh ?? '';
+    _districtCtrl.text = p.districtEn ?? '';
+    _cityCtrl.text = p.cityEn ?? '';
+    _catEnCtrl.text = p.categoryEn ?? '';
+    _catMmCtrl.text = p.categoryMm ?? '';
+    _catThCtrl.text = p.categoryTh ?? '';
+    _subCatEnCtrl.text = p.subCategoryEn ?? '';
+    _subCatMmCtrl.text = p.subCategoryMm ?? '';
+    _subCatThCtrl.text = p.subCategoryTh ?? '';
+    _maxQtyCtrl.text = p.maxItemQuantityPerOrder.toString();
+    _minAmountCtrl.text = p.minOrderAmount.toString();
+    _baseFeeCtrl.text = p.baseDeliveryFee.toString();
+    _mapsLinkCtrl.text = p.googleMapsLink ?? '';
+    
+    _latitude = p.latitude;
+    _longitude = p.longitude;
+    _hasParking = p.hasParking;
+    _hasWifi = p.hasWifi;
+    _hasDelivery = p.hasDelivery;
+    _isHalal = p.isHalal;
+    _isVegetarian = p.isVegetarian;
+    _deliveryEnabled = p.deliveryEnabled;
+    
+    if (p.pricePreference == 'LOW') _priceRange = 0;
+    else if (p.pricePreference == 'HIGH') _priceRange = 2;
+    else _priceRange = 1;
   }
 
   @override
@@ -107,6 +200,10 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       _addressThCtrl,
       _districtCtrl,
       _cityCtrl,
+      _maxQtyCtrl,
+      _minAmountCtrl,
+      _baseFeeCtrl,
+      _mapsLinkCtrl,
     ]) {
       c.dispose();
     }
@@ -231,7 +328,12 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       'hasDelivery': _hasDelivery,
       'isHalal': _isHalal,
       'isVegetarian': _isVegetarian,
-      'pricePreference': pricePref,
+      'pricePreference': _priceRange == 0 ? 'LOW' : (_priceRange == 1 ? 'MEDIUM' : 'HIGH'),
+      'maxItemQuantityPerOrder': int.tryParse(_maxQtyCtrl.text) ?? 10,
+      'minOrderAmount': double.tryParse(_minAmountCtrl.text) ?? 0.0,
+      'baseDeliveryFee': double.tryParse(_baseFeeCtrl.text) ?? 0.0,
+      'deliveryEnabled': _deliveryEnabled,
+      'googleMapsLink': _mapsLinkCtrl.text,
     };
 
     final success = await ProfileService().updateShopProfile(payload);
@@ -267,6 +369,19 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        appBar: AppBar(
+          title: Text('Edit Profile', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+          backgroundColor: Colors.white,
+          foregroundColor: const Color(0xFF1E293B),
+          elevation: 0,
+        ),
+        body: const Center(child: CustomLoadingIndicator()),
+      );
+    }
+
     return PopScope(
       canPop: !_hasChanges,
       onPopInvokedWithResult: (didPop, result) async {
@@ -323,7 +438,48 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 hint: 'Enter shop name',
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 32),
+            _buildSection(
+              label: 'Shop Slug (Read-only)',
+              child: _buildTextField(
+                TextEditingController(text: _currentProfile?.slug ?? '-'),
+                'slug',
+                icon: PhosphorIconsRegular.link,
+                enabled: false,
+              ),
+            ),
+            const SizedBox(height: 32),
+            _buildSection(
+              label: 'Category',
+              child: _buildLangField(
+                selectedLang: _catLang,
+                onLangChanged: (l) => setState(() => _catLang = l),
+                controller: _catLang == 'EN'
+                    ? _catEnCtrl
+                    : _catLang == 'MM'
+                    ? _catMmCtrl
+                    : _catThCtrl,
+                hint: 'Enter category',
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            _buildSection(
+              label: 'Sub-category',
+              child: _buildLangField(
+                selectedLang: _subCatLang,
+                onLangChanged: (l) => setState(() => _subCatLang = l),
+                controller: _subCatLang == 'EN'
+                    ? _subCatEnCtrl
+                    : _subCatLang == 'MM'
+                    ? _subCatMmCtrl
+                    : _subCatThCtrl,
+                hint: 'Enter sub-category',
+              ),
+            ),
+            const SizedBox(height: 32),
+
+
 
             _buildSection(
               label: 'Description',
@@ -339,7 +495,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 maxLines: 3,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 32),
 
             _buildSection(
               label: 'Phone Number',
@@ -349,7 +505,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 icon: PhosphorIconsRegular.phone,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 32),
 
             _buildSection(
               label: 'Email',
@@ -359,7 +515,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 icon: PhosphorIconsRegular.envelope,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 32),
 
             _buildSection(
               label: 'Street Address',
@@ -374,7 +530,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 hint: 'Enter street address',
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 32),
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -396,7 +552,69 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 32),
+
+            _buildSection(
+              label: 'Google Maps Link',
+              child: _buildTextField(_mapsLinkCtrl, 'Paste Google Maps URL', icon: PhosphorIconsRegular.mapPin),
+            ),
+            const SizedBox(height: 32),
+
+            _buildToggleSection(
+              title: 'Standard Delivery Settings',
+              items: [
+                _ToggleItem(
+                  icon: PhosphorIconsRegular.truck,
+                  label: 'Enable Standard Delivery',
+                  value: _deliveryEnabled,
+                  onChanged: (v) => setState(() {
+                    _deliveryEnabled = v;
+                    _markChanged();
+                  }),
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                   Expanded(
+                    child: _buildSmallField(
+                      label: 'Base Delivery Fee',
+                      controller: _baseFeeCtrl,
+                      hint: '0.00',
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(child: SizedBox()), // Placeholder
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            _buildSection(
+              label: 'Order Settings',
+              child: Column(
+                children: [
+                  _buildSmallField(
+                    label: 'Min Order Amount',
+                    controller: _minAmountCtrl,
+                    hint: '0.00',
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildSmallField(
+                    label: 'Max Items per Order',
+                    controller: _maxQtyCtrl,
+                    hint: '10',
+                    keyboardType: TextInputType.number,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
 
             _buildSection(
               label: 'Map Location',
@@ -614,11 +832,11 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
 
   // ── FIXED: Cover + Logo upload ────────────────────────────────────────────
   Widget _buildCoverLogoUpload() {
-    final coverUrl = widget.shopProfile?.coverUrl;
-    final logoUrl  = widget.shopProfile?.logoUrl;
+    final coverUrl = _currentProfile?.coverUrl;
+    final logoUrl = _currentProfile?.logoUrl;
     final shopName = _nameEnCtrl.text.isNotEmpty
         ? _nameEnCtrl.text
-        : (widget.shopProfile?.nameEn ?? 'Shop Name');
+        : (_currentProfile?.nameEn ?? 'Shop Name');
 
     const heroHeight = 360.0;
 
@@ -863,7 +1081,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   }
 
   Future<void> _pickCover() async {
-    final coverUrl = widget.shopProfile?.coverUrl;
+    final coverUrl = _currentProfile?.coverUrl;
     final hasImage =
         _pickedCover != null || (coverUrl != null && coverUrl.isNotEmpty);
 
@@ -894,7 +1112,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   }
 
   Future<void> _pickLogo() async {
-    final logoUrl = widget.shopProfile?.logoUrl;
+    final logoUrl = _currentProfile?.logoUrl;
     final hasImage =
         _pickedLogo != null || (logoUrl != null && logoUrl.isNotEmpty);
 
@@ -998,7 +1216,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
               color: const Color(0xFF475569),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           child,
         ],
       ),
@@ -1015,7 +1233,6 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 8),
         Row(
           children: ['EN', 'MM', 'TH'].map((lang) {
             final selected = selectedLang == lang;
@@ -1054,7 +1271,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             );
           }).toList(),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 16),
         TextField(
           controller: controller,
           maxLines: maxLines,
@@ -1100,9 +1317,11 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     TextEditingController ctrl,
     String hint, {
     IconData? icon,
+    bool enabled = true,
   }) {
     return TextField(
       controller: ctrl,
+      enabled: enabled,
       onChanged: (_) => _markChanged(),
       decoration: InputDecoration(
         hintText: hint,
@@ -1216,6 +1435,66 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
           }).toList(),
         ),
       ),
+    );
+  }
+  Widget _buildSmallField({
+    required String label,
+    required TextEditingController controller,
+    required String hint,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF64748B),
+          ),
+        ),
+        const SizedBox(height: 6),
+        _buildTextFieldWithKeyboard(controller, hint, keyboardType),
+      ],
+    );
+  }
+
+  Widget _buildTextFieldWithKeyboard(
+    TextEditingController ctrl,
+    String hint,
+    TextInputType keyboardType,
+  ) {
+    return TextField(
+      controller: ctrl,
+      keyboardType: keyboardType,
+      onChanged: (_) => _markChanged(),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: GoogleFonts.poppins(
+          color: const Color(0xFFCBD5E1),
+          fontSize: 14,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFFED3973), width: 1.5),
+        ),
+      ),
+      style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B)),
     );
   }
 }

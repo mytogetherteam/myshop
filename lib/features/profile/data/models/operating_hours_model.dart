@@ -47,12 +47,16 @@ class OperatingHoursModel {
   factory OperatingHoursModel.fromJson(Map<String, dynamic> json) {
     return OperatingHoursModel(
       dayOfWeek: json['dayOfWeek'] ?? 0,
-      openingTime: json['openingTime'] != null
-          ? TimeModel.fromJson(json['openingTime'])
-          : TimeModel(hour: 0, minute: 0),
-      closingTime: json['closingTime'] != null
-          ? TimeModel.fromJson(json['closingTime'])
-          : TimeModel(hour: 0, minute: 0),
+      openingTime: json['openTime'] != null
+          ? TimeModel.fromJson(json['openTime'])
+          : json['openingTime'] != null 
+              ? TimeModel.fromJson(json['openingTime'])
+              : TimeModel(hour: 0, minute: 0),
+      closingTime: json['closeTime'] != null
+          ? TimeModel.fromJson(json['closeTime'])
+          : json['closingTime'] != null
+              ? TimeModel.fromJson(json['closingTime'])
+              : TimeModel(hour: 0, minute: 0),
       isClosed: json['isClosed'] ?? false,
     );
   }
@@ -62,7 +66,7 @@ class OperatingHoursModel {
       'dayOfWeek': dayOfWeek,
       'openTime': openingTime.toJson(),
       'closeTime': closingTime.toJson(),
-      // isClosed is usually omitted or processed separately as per requirements for saving
+      'isClosed': isClosed,
     };
   }
 

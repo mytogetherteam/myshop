@@ -369,19 +369,33 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
-                                _shopProfile?.nameEn ?? '',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      _shopProfile?.nameEn ?? '',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  if (_shopProfile?.isVerified == true) ...[
+                                    const SizedBox(width: 4),
+                                    const PhosphorIcon(
+                                      PhosphorIconsFill.sealCheck,
+                                      size: 16,
+                                      color: Color(0xFF38BDF8),
+                                    ),
+                                  ],
+                                ],
                               ),
                               if ((_shopProfile?.categoryEn ?? '').isNotEmpty)
                                 Text(
-                                  _shopProfile?.categoryEn ?? '',
+                                  '${_shopProfile?.categoryEn}${(_shopProfile?.subCategoryEn ?? '').isNotEmpty ? ' • ${_shopProfile?.subCategoryEn}' : ''}',
                                   style: GoogleFonts.poppins(
                                     fontSize: 13,
                                     color: Colors.grey[600],
@@ -558,6 +572,18 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                   color: const Color(0xFF94A3B8),
                 ),
               ),
+              if ((_shopProfile?.viewCount ?? 0) > 0) ...[
+                const SizedBox(width: 8),
+                const PhosphorIcon(PhosphorIconsRegular.eye, size: 14, color: Color(0xFF94A3B8)),
+                const SizedBox(width: 4),
+                Text(
+                  '${_shopProfile?.viewCount}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: const Color(0xFF94A3B8),
+                  ),
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 12),
@@ -593,19 +619,19 @@ class _ShopProfilePageState extends State<ShopProfilePage>
               children: [
                 _infoStat(
                   PhosphorIconsRegular.tag,
-                  _shopProfile?.displayBaseDeliveryFee ?? 'N/A',
+                  _shopProfile?.displayBaseDeliveryFee ?? '฿${_shopProfile?.baseDeliveryFee ?? 0}',
                   'Delivery fee',
                 ),
                 _infoStatDivider(),
                 _infoStat(
                   PhosphorIconsRegular.clock,
-                  _shopProfile?.estimatedTime ?? 'N/A',
+                  _shopProfile?.estimatedTime ?? '25-35 min',
                   'Est. time',
                 ),
                 _infoStatDivider(),
                 _infoStat(
                   PhosphorIconsRegular.shoppingCart,
-                  _shopProfile?.displayMinOrderAmount ?? 'N/A',
+                  _shopProfile?.displayMinOrderAmount ?? '฿${_shopProfile?.minOrderAmount ?? 0}',
                   'Min. order',
                 ),
               ],
@@ -692,7 +718,6 @@ class _ShopProfilePageState extends State<ShopProfilePage>
           ),
           const SizedBox(height: 14),
 
-          // Read-only phone info block
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -1244,6 +1269,11 @@ class _ShopProfilePageState extends State<ShopProfilePage>
           _infoRow(PhosphorIconsRegular.mapPin, 'Address', address),
           _infoRow(PhosphorIconsRegular.phone, 'Phone', phone),
           _infoRow(PhosphorIconsRegular.envelope, 'Email', email),
+          _infoRow(PhosphorIconsRegular.tag, 'Category', _shopProfile?.categoryEn ?? '-'),
+          _infoRow(PhosphorIconsRegular.listBullets, 'Sub-category', _shopProfile?.subCategoryEn ?? '-'),
+          _infoRow(PhosphorIconsRegular.link, 'Slug', _shopProfile?.slug ?? '-'),
+          if (_shopProfile?.googleMapsLink?.isNotEmpty == true)
+            _infoRow(PhosphorIconsRegular.mapTrifold, 'Map Link', 'Open in Google Maps', highlight: true),
         ]),
         const SizedBox(height: 12),
         if (_shopProfile?.latitude != null && _shopProfile?.longitude != null)
@@ -1293,12 +1323,17 @@ class _ShopProfilePageState extends State<ShopProfilePage>
             ),
         ]),
         const SizedBox(height: 12),
+        _sectionLabel('Order Settings'),
+        _infoCard([
+          _infoRow(PhosphorIconsRegular.shoppingBag, 'Max Items', '${_shopProfile?.maxItemQuantityPerOrder ?? 10} per order'),
+        ]),
+        const SizedBox(height: 12),
         _sectionLabel('Delivery Options'),
         _infoCard([
           _infoRow(
             PhosphorIconsRegular.motorcycle,
             'Standard',
-            'Free  •  25–35 min',
+            _shopProfile?.deliveryEnabled == true ? 'Available' : 'Unavailable',
           ),
           _infoRow(
             PhosphorIconsRegular.lightning,
