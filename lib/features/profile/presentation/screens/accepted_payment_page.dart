@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import '../../data/models/payment_method.dart';
+import '../../data/models/shop_model.dart';
+import '../../data/services/payment_service.dart';
 import '../../../../core/presentation/widgets/skeleton.dart';
 import 'edit_payment_page.dart';
 
 class AcceptedPaymentPage extends StatefulWidget {
-  const AcceptedPaymentPage({super.key});
+  final Shop shop;
+  const AcceptedPaymentPage({super.key, required this.shop});
 
   @override
   State<AcceptedPaymentPage> createState() => _AcceptedPaymentPageState();
 }
 
 class _AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
+  final PaymentService _paymentService = PaymentService();
   List<PaymentMethod> _paymentMethods = [];
   bool _isLoading = true;
 
@@ -27,14 +32,11 @@ class _AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
   Future<void> _loadPaymentMethods() async {
     setState(() => _isLoading = true);
     try {
-      // Simulate network delay
-      await Future.delayed(const Duration(milliseconds: 1500));
-      final String response = await rootBundle.loadString('assets/data/payment_methods.json');
-      final List<dynamic> data = json.decode(response);
+      final list = await _paymentService.getShopPaymentMethods(widget.shop.id);
       
       if (mounted) {
         setState(() {
-          _paymentMethods = data.map((e) => PaymentMethod.fromJson(e)).toList();
+          _paymentMethods = list;
           _isLoading = false;
         });
       }
@@ -114,7 +116,7 @@ class _AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
             Image.network(pm.logoUrl, width: 24, height: 24, errorBuilder: (_, _, _) => const Icon(Icons.payment, size: 24)),
             const SizedBox(width: 12),
             Text(
-              pm.name,
+              pm.paymentMethodName,
               style: GoogleFonts.poppins(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
@@ -123,13 +125,17 @@ class _AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
             ),
             const Spacer(),
             GestureDetector(
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                final result = await Navigator.push(
                   context,
                   CupertinoPageRoute(
-                    builder: (_) => EditPaymentPage(paymentMethod: pm),
+                    builder: (_) => EditPaymentPage(
+                      shopId: widget.shop.id,
+                      paymentMethod: pm,
+                    ),
                   ),
                 );
+                if (result == true) _loadPaymentMethods();
               },
               child: Text(
                 'Edit',
@@ -152,11 +158,12 @@ class _AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
             border: Border.all(color: const Color(0xFFF1F5F9)),
           ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Image.network(
-                  pm.qrUrl,
+                  pm.qrImageUrl,
                   width: double.infinity,
                   height: 250,
                   fit: BoxFit.cover,
@@ -167,6 +174,63 @@ class _AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
                     child: const Icon(Icons.qr_code, size: 48, color: Colors.grey),
                   ),
                 ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  const Icon(PhosphorIconsRegular.user, size: 16, color: Color(0xFF64748B)),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Name: ',
+                    style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF64748B)),
+                  ),
+                  Text(
+                    pm.accountName,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF1E293B),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(PhosphorIconsRegular.hash, size: 16, color: Color(0xFF64748B)),
+                  const SizedBox(width: 8),
+                  Text(
+                    'No: ',
+                    style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF64748B)),
+                  ),
+                  Text(
+                    pm.accountNumber,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF1E293B),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(
+                    pm.isActive ? PhosphorIconsRegular.checkCircle : PhosphorIconsRegular.xCircle,
+                    size: 16,
+                    color: pm.isActive ? const Color(0xFF22C55E) : const Color(0xFFEF4444),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    pm.isActive ? 'Active' : 'Inactive',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: pm.isActive ? const Color(0xFF22C55E) : const Color(0xFFEF4444),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

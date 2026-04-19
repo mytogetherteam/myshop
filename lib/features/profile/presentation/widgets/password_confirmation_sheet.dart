@@ -5,7 +5,8 @@ import '../../../../core/presentation/widgets/global_modal.dart';
 import 'otp_verification_sheet.dart';
 
 class PasswordConfirmationSheet extends StatefulWidget {
-  const PasswordConfirmationSheet({super.key});
+  final Function(String password)? onConfirm;
+  const PasswordConfirmationSheet({super.key, this.onConfirm});
 
   @override
   State<PasswordConfirmationSheet> createState() => _PasswordConfirmationSheetState();
@@ -46,14 +47,16 @@ class _PasswordConfirmationSheetState extends State<PasswordConfirmationSheet> {
 
     setState(() => _isLoading = false);
     
-    // Close password sheet
-    Navigator.pop(context);
-
-    // Show OTP verification sheet
-    GlobalModal.show(
-      context: context,
-      child: const OtpVerificationSheet(),
-    );
+    if (widget.onConfirm != null) {
+      widget.onConfirm!(_passwordController.text);
+    } else {
+      // Default behavior if no callback provided
+      Navigator.pop(context);
+      GlobalModal.show(
+        context: context,
+        child: const OtpVerificationSheet(),
+      );
+    }
   }
 
   @override

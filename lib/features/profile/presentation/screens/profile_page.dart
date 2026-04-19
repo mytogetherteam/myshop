@@ -14,6 +14,7 @@ import 'app_permissions_page.dart';
 import 'change_password_page.dart';
 import 'reviews_page.dart';
 import 'accepted_payment_page.dart';
+import 'shop_selection_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -198,7 +199,7 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
           title: 'Accepted payment',
           onTap: () => Navigator.push(
             context,
-            CupertinoPageRoute(builder: (_) => const AcceptedPaymentPage()),
+            CupertinoPageRoute(builder: (_) => const ShopSelectionPage()),
           ),
         ),
         _buildMenuOption(
