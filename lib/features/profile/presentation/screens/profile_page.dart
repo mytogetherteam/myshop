@@ -235,11 +235,11 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
             ),
           ),
         ),
-        _buildMenuOption(
-          icon: PhosphorIconsRegular.user,
-          title: 'Account Settings',
-          onTap: () {},
-        ),
+        // _buildMenuOption(
+        //   icon: PhosphorIconsRegular.user,
+        //   title: 'Account Settings',
+        //   onTap: () {},
+        // ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.shieldCheck,
           title: 'App Permissions',

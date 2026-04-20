@@ -13,48 +13,33 @@ class MenuService {
   static const bool _useLocalStorage = true; // Toggle for testing
 
   Future<List<MenuCategoryModel>?> getCategories() async {
-    if (_useLocalStorage) {
-      final prefs = await SharedPreferences.getInstance();
-      final String? data = prefs.getString(_localCategoriesKey);
-      if (data != null) {
-        final List decoded = json.decode(data);
-        return decoded.map((e) => MenuCategoryModel.fromJson(e)).toList();
-      }
-      
-      // Initialize with expanded list for search demonstration
-      final List<MenuCategoryModel> dummy = [
-        MenuCategoryModel(id: 1, nameEn: 'Appetizer & Toast', nameMm: 'အမြည်းနှင့် တိုစ်', nameTh: 'อาหารว่างและขนมปังปิ้ง', itemCount: 0),
-        MenuCategoryModel(id: 2, nameEn: 'Salad', nameMm: 'သုပ်/အသုပ်', nameTh: 'สลัด', itemCount: 0),
-        MenuCategoryModel(id: 3, nameEn: 'BBQ', nameMm: 'ကင်/အကင်', nameTh: 'บาร์บีคิว', itemCount: 0),
-        MenuCategoryModel(id: 4, nameEn: 'Fried', nameMm: 'ကြော်/အကြော်', nameTh: 'ของทอด', itemCount: 0),
-        MenuCategoryModel(id: 5, nameEn: 'Roti & Nann', nameMm: 'ရိုတီနှင့် နံပြား', nameTh: 'โรตีและนาน', itemCount: 0),
-        MenuCategoryModel(id: 6, nameEn: 'Noodle', nameMm: 'ခေါက်ဆွဲ', nameTh: 'ก๋วยเตี๋ยว', itemCount: 0),
-        MenuCategoryModel(id: 7, nameEn: 'Salad Menu', nameMm: 'အသုပ်မျိုးစုံ', nameTh: 'เมนูสลัด', itemCount: 0),
-        MenuCategoryModel(id: 8, nameEn: 'Signature Foods', nameMm: 'အထူးဟင်းလျာများ', nameTh: 'อาหารซิกเนเจอร์', itemCount: 0),
-        MenuCategoryModel(id: 9, nameEn: 'Desserts', nameMm: 'အချိုပွဲ', nameTh: 'ของหวาน', itemCount: 0),
-        MenuCategoryModel(id: 10, nameEn: 'Drinks', nameMm: 'ဖျော်ရည်', nameTh: 'เครื่องดื่ม', itemCount: 0),
-        MenuCategoryModel(id: 11, nameEn: 'Rice Menu', nameMm: 'ထမင်းဟင်းများ', nameTh: 'เมนูข้าว', itemCount: 0),
-        MenuCategoryModel(id: 12, nameEn: 'Snacks', nameMm: 'မုန့်မျိုးစုံ', nameTh: 'อาหารว่าง', itemCount: 0),
-      ];
-      await SharedPreferences.getInstance().then((p) => p.setString(_localCategoriesKey, json.encode(dummy.map((e) => e.toJson()).toList())));
-      return dummy;
-    }
+    // Always return fresh mock data — clear any stale SharedPreferences cache
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_localCategoriesKey);
 
-    try {
-      debugPrint('GET REQUEST: $_categoriesPath');
-      final response = await ApiClient().dio.get(_categoriesPath);
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = response.data;
-        if (data['success'] == true && data['data'] != null) {
-          final List list = data['data'] ?? [];
-          return list.map((json) => MenuCategoryModel.fromJson(json)).toList();
-        }
-      }
-    } catch (e) {
-      debugPrint('API Error in getCategories: $e');
-    }
-    return null;
+    final List<MenuCategoryModel> mockCategories = [
+      MenuCategoryModel(id: 828,  nameEn: 'Signature Menu',      nameMm: 'Signature Menu',      nameTh: null, itemCount: 0),
+      MenuCategoryModel(id: 829,  nameEn: 'Drinks Menu',         nameMm: 'Drinks Menu',         nameTh: null, itemCount: 0),
+      MenuCategoryModel(id: 830,  nameEn: 'Desserts Menu',       nameMm: 'Desserts Menu',       nameTh: null, itemCount: 0),
+      MenuCategoryModel(id: 831,  nameEn: 'Traditional Menu',    nameMm: 'Traditional Menu',    nameTh: null, itemCount: 0),
+      MenuCategoryModel(id: 1055, nameEn: 'Snack & Apptizer',   nameMm: 'Snack & Apptizer',   nameTh: null, itemCount: 0),
+      MenuCategoryModel(id: 862,  nameEn: 'Dish Menu',           nameMm: 'Dish Menu',           nameTh: null, itemCount: 0),
+      MenuCategoryModel(id: 863,  nameEn: 'Fried Menu',          nameMm: 'Fried Menu',          nameTh: null, itemCount: 0),
+      MenuCategoryModel(id: 864,  nameEn: 'Grilled Fish',        nameMm: 'Grilled Fish',        nameTh: null, itemCount: 0),
+      MenuCategoryModel(id: 865,  nameEn: 'BBQ Menu',            nameMm: 'BBQ Menu',            nameTh: null, itemCount: 0),
+      MenuCategoryModel(id: 1056, nameEn: 'Rice & Combo Meals', nameMm: 'Rice & Combo Meals', nameTh: null, itemCount: 0),
+      MenuCategoryModel(id: 1057, nameEn: 'New Menu',            nameMm: 'New Menu',            nameTh: null, itemCount: 0),
+      MenuCategoryModel(id: 866,  nameEn: 'Pork Stick',          nameMm: 'Pork Stick',          nameTh: null, itemCount: 0),
+      MenuCategoryModel(id: 867,  nameEn: 'Beverage',            nameMm: 'Beverage',            nameTh: null, itemCount: 0),
+      MenuCategoryModel(id: 868,  nameEn: 'Breakfast Menu',      nameMm: 'Breakfast Menu',      nameTh: null, itemCount: 0),
+      MenuCategoryModel(id: 869,  nameEn: 'Rice Menu',           nameMm: 'Rice Menu',           nameTh: null, itemCount: 0),
+      MenuCategoryModel(id: 841,  nameEn: 'Rice',                nameMm: 'Rice',                nameTh: null, itemCount: 0),
+      MenuCategoryModel(id: 949,  nameEn: 'Salad',               nameMm: 'Salad',               nameTh: null, itemCount: 0),
+      MenuCategoryModel(id: 950,  nameEn: 'Dishes',              nameMm: 'Dishes',              nameTh: null, itemCount: 0),
+      MenuCategoryModel(id: 842,  nameEn: 'Dishes',              nameMm: 'Dishes',              nameTh: null, itemCount: 0),
+      MenuCategoryModel(id: 845,  nameEn: 'Steamed RIce',        nameMm: 'Steamed RIce',        nameTh: null, itemCount: 0),
+    ];
+    return mockCategories;
   }
 
   Future<List<Map<String, dynamic>>?> getTags() async {

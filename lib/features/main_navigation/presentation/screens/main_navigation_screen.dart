@@ -177,7 +177,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         centerTitle: false,
         title: AppBarTitleWithLogo(
           title: _titles[_currentIndex],
-          trailing: _currentIndex == 2 ? _buildAnalyticsButton() : null,
+          trailing: null, // _currentIndex == 2 ? _buildAnalyticsButton() : null,
         ),
         actions: [
           const NotificationBadgeIcon(),

@@ -11,6 +11,7 @@ import 'package:my_shop/core/data/services/image_upload_service.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import '../../../../core/presentation/widgets/fullscreen_image_viewer.dart';
+import '../../../../core/data/thailand_address_data.dart';
 
 class EditShopProfilePage extends StatefulWidget {
   final ShopProfileModel? shopProfile;
@@ -48,14 +49,43 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   final _subCatEnCtrl = TextEditingController();
   final _subCatMmCtrl = TextEditingController();
   final _subCatThCtrl = TextEditingController();
+
+  // --- Category & Sub-category dropdown data ---
+  static const List<Map<String, dynamic>> _shopCategories = [
+    {'id': 14, 'nameEn': 'Cafe', 'nameMm': 'Cafe', 'nameTh': ''},
+    {'id': 17, 'nameEn': 'test ak', 'nameMm': 'tst', 'nameTh': 'adfasdf'},
+    {'id': 19, 'nameEn': 'test', 'nameMm': 'test', 'nameTh': 'test'},
+    {'id': 15, 'nameEn': 'Restaurant', 'nameMm': 'Restaurant', 'nameTh': ''},
+    {'id': 20, 'nameEn': 'testing_Pyae_shop_category_update', 'nameMm': 'testing_Pyae_shop_category', 'nameTh': 'testing_Pyae_shop_category'},
+    {'id': 21, 'nameEn': '-', 'nameMm': '-', 'nameTh': ''},
+    {'id': 22, 'nameEn': 'Street Food', 'nameMm': 'Street Food', 'nameTh': ''},
+    {'id': 23, 'nameEn': 'Bar', 'nameMm': 'Bar', 'nameTh': ''},
+  ];
+
+  static const List<Map<String, dynamic>> _shopSubCategories = [
+    {'id': 7,  'categoryId': 15, 'nameEn': 'ကြက်ဆီထမင်း',             'nameMm': 'ကြက်ဆီထမင်း',             'nameTh': ''},
+    {'id': 6,  'categoryId': 14, 'nameEn': 'Cake & Coffee',              'nameMm': 'Cake & Coffee',              'nameTh': ''},
+    {'id': 9,  'categoryId': 20, 'nameEn': 'testing_Pyae_shop_sub_category', 'nameMm': 'testing_Pyae_shop_sub_category', 'nameTh': 'testing_Pyae_shop_sub_category'},
+    {'id': 14, 'categoryId': 14, 'nameEn': 'Cake & Coffee',              'nameMm': 'Cake & Coffee',              'nameTh': ''},
+    {'id': 15, 'categoryId': 21, 'nameEn': '-',                          'nameMm': '-',                          'nameTh': '-'},
+    {'id': 16, 'categoryId': 15, 'nameEn': 'Myanmar Restaurants',        'nameMm': 'Myanmar Restaurants',        'nameTh': ''},
+    {'id': 17, 'categoryId': 15, 'nameEn': 'Bumese Restaurant',          'nameMm': 'Bumese Restaurant',          'nameTh': ''},
+    {'id': 18, 'categoryId': 15, 'nameEn': 'Shan Food',                  'nameMm': 'Shan Food',                  'nameTh': ''},
+    {'id': 19, 'categoryId': 15, 'nameEn': 'Shan Specialist',            'nameMm': 'Shan Specialist',            'nameTh': ''},
+    {'id': 20, 'categoryId': 15, 'nameEn': 'Noodle Special',             'nameMm': 'Noodle Special',             'nameTh': ''},
+    {'id': 21, 'categoryId': 15, 'nameEn': 'Burmese Restaurant',         'nameMm': 'Burmese Restaurant',         'nameTh': ''},
+    {'id': 22, 'categoryId': 15, 'nameEn': 'Traditional Burmese Food',   'nameMm': 'Traditional Burmese Food',   'nameTh': ''},
+    {'id': 23, 'categoryId': 15, 'nameEn': 'Chinese & Burmese Restaurant','nameMm': 'Chinese & Burmese Restaurant','nameTh': ''},
+  ];
+
+  int? _selectedCategoryId;
+  int? _selectedSubCategoryId;
   final _baseFeeCtrl = TextEditingController();
   final _minAmountCtrl = TextEditingController();
   final _maxQtyCtrl = TextEditingController();
 
   String _nameLang = 'EN';
   String _descLang = 'EN';
-  String _catLang = 'EN';
-  String _subCatLang = 'EN';
   String _addressLang = 'EN';
 
   XFile? _pickedCover;
@@ -71,16 +101,6 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   double? _latitude;
   double? _longitude;
 
-  final List<String> _districts = [
-    'Ahlone', 'Bahan', 'Dagon', 'Hlaing', 'Kamayut', 'Kyauktada', 'Kyimyindaing', 
-    'Lanmadaw', 'Latha', 'Mayangone', 'Pabedan', 'Sanchaung', 'South Okkalapa', 
-    'North Okkalapa', 'Yankin', 'Tamwe', 'Mingala Taungnyunt'
-  ];
-  
-  final List<String> _cities = [
-    'Yangon', 'Mandalay', 'Naypyidaw', 'Taunggyi', 'Bago', 'Mawlamyine', 'Pathein',
-    'Pyay', 'Monywa', 'Meiktila'
-  ];
 
   @override
   void initState() {
@@ -128,6 +148,24 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     _subCatEnCtrl.text = profile.subCategoryEn ?? '';
     _subCatMmCtrl.text = profile.subCategoryMm ?? '';
     _subCatThCtrl.text = profile.subCategoryTh ?? '';
+    // Pre-select category/sub-category from saved EN name
+    final savedCatEn = profile.categoryEn ?? '';
+    final savedSubEn = profile.subCategoryEn ?? '';
+    if (savedCatEn.isNotEmpty) {
+      final match = _shopCategories.firstWhere(
+        (c) => (c['nameEn'] as String).toLowerCase() == savedCatEn.toLowerCase(),
+        orElse: () => const {},
+      );
+      if (match.isNotEmpty) _selectedCategoryId = match['id'] as int?;
+    }
+    if (savedSubEn.isNotEmpty && _selectedCategoryId != null) {
+      final match = _shopSubCategories.firstWhere(
+        (s) => s['categoryId'] == _selectedCategoryId &&
+               (s['nameEn'] as String).toLowerCase() == savedSubEn.toLowerCase(),
+        orElse: () => const {},
+      );
+      if (match.isNotEmpty) _selectedSubCategoryId = match['id'] as int?;
+    }
     _baseFeeCtrl.text = profile.baseDeliveryFee.toString();
     _minAmountCtrl.text = profile.minOrderAmount.toString();
     _maxQtyCtrl.text = profile.maxItemQuantityPerOrder.toString();
@@ -307,16 +345,16 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
               ),
             ),
             const SizedBox(height: 24),
-            _buildSection(
-              label: 'Shop Slug (Read-only)',
-              child: _buildTextField(
-                TextEditingController(text: _currentProfile?.slug ?? '-'),
-                'slug',
-                icon: PhosphorIconsRegular.link,
-                enabled: false,
-              ),
-            ),
-            const SizedBox(height: 24),
+            // _buildSection(
+            //   label: 'Shop Slug (Read-only)',
+            //   child: _buildTextField(
+            //     TextEditingController(text: _currentProfile?.slug ?? '-'),
+            //     'slug',
+            //     icon: PhosphorIconsRegular.link,
+            //     enabled: false,
+            //   ),
+            // ),
+            // const SizedBox(height: 24),
             _buildSection(
               label: 'Description',
               child: _buildLangField(
@@ -334,31 +372,76 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             const SizedBox(height: 32),
             _buildSectionTitle('Category'),
             const SizedBox(height: 16),
-            _buildSection(
-              label: 'Shop Category',
-              child: _buildLangField(
-                selectedLang: _catLang,
-                onLangChanged: (l) => setState(() => _catLang = l),
-                controller: _catLang == 'EN'
-                    ? _catEnCtrl
-                    : _catLang == 'MM'
-                    ? _catMmCtrl
-                    : _catThCtrl,
-                hint: 'Enter category',
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildSearchableField(
+                label: 'Shop Category',
+                value: _catEnCtrl.text.isNotEmpty ? _catEnCtrl.text : null,
+                placeholder: 'Select Category',
+                onTap: () => _showSearchableSelect<Map<String, dynamic>>(
+                  title: 'Select Category',
+                  items: _shopCategories,
+                  labelMapper: (c) => c['nameEn'] as String,
+                  onSelected: (c) => setState(() {
+                    _selectedCategoryId = c['id'] as int;
+                    _selectedSubCategoryId = null;
+                    _catEnCtrl.text = c['nameEn'] as String;
+                    _catMmCtrl.text = c['nameMm'] as String;
+                    _catThCtrl.text = c['nameTh'] as String;
+                    _subCatEnCtrl.clear();
+                    _subCatMmCtrl.clear();
+                    _subCatThCtrl.clear();
+                    _markChanged();
+                  }),
+                ),
+                onClear: () => setState(() {
+                  _selectedCategoryId = null;
+                  _selectedSubCategoryId = null;
+                  _catEnCtrl.clear();
+                  _catMmCtrl.clear();
+                  _catThCtrl.clear();
+                  _subCatEnCtrl.clear();
+                  _subCatMmCtrl.clear();
+                  _subCatThCtrl.clear();
+                }),
               ),
             ),
             const SizedBox(height: 24),
-            _buildSection(
-              label: 'Sub-category',
-              child: _buildLangField(
-                selectedLang: _subCatLang,
-                onLangChanged: (l) => setState(() => _subCatLang = l),
-                controller: _subCatLang == 'EN'
-                    ? _subCatEnCtrl
-                    : _subCatLang == 'MM'
-                    ? _subCatMmCtrl
-                    : _subCatThCtrl,
-                hint: 'Enter sub-category',
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildSearchableField(
+                label: 'Sub-category',
+                value: _subCatEnCtrl.text.isNotEmpty ? _subCatEnCtrl.text : null,
+                placeholder: _selectedCategoryId == null
+                    ? 'Select a category first'
+                    : 'Select Sub-category',
+                onTap: _selectedCategoryId == null
+                    ? () {}
+                    : () {
+                        final subs = _shopSubCategories
+                            .where((s) => s['categoryId'] == _selectedCategoryId)
+                            .toList();
+                        _showSearchableSelect<Map<String, dynamic>>(
+                          title: 'Select Sub-category',
+                          items: subs,
+                          labelMapper: (s) => s['nameEn'] as String,
+                          onSelected: (s) => setState(() {
+                            _selectedSubCategoryId = s['id'] as int;
+                            _subCatEnCtrl.text = s['nameEn'] as String;
+                            _subCatMmCtrl.text = s['nameMm'] as String;
+                            _subCatThCtrl.text = s['nameTh'] as String;
+                            _markChanged();
+                          }),
+                        );
+                      },
+                onClear: _selectedCategoryId == null
+                    ? null
+                    : () => setState(() {
+                          _selectedSubCategoryId = null;
+                          _subCatEnCtrl.clear();
+                          _subCatMmCtrl.clear();
+                          _subCatThCtrl.clear();
+                        }),
               ),
             ),
             const SizedBox(height: 32),
@@ -405,37 +488,44 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 children: [
                   Expanded(
                     child: _buildSearchableField(
-                      label: 'District',
-                      value: _districtCtrl.text.isNotEmpty ? _districtCtrl.text : null,
-                      placeholder: 'Select District',
-                      onTap: () => _showSearchableSelect<String>(
-                        title: 'Select District',
-                        items: _districts,
-                        labelMapper: (d) => d,
-                        onSelected: (d) => setState(() {
-                          _districtCtrl.text = d;
-                          _markChanged();
-                        }),
-                      ),
-                      onClear: () => setState(() => _districtCtrl.clear()),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildSearchableField(
                       label: 'City',
                       value: _cityCtrl.text.isNotEmpty ? _cityCtrl.text : null,
                       placeholder: 'Select City',
                       onTap: () => _showSearchableSelect<String>(
                         title: 'Select City',
-                        items: _cities,
+                        items: ThailandAddressData.provinces,
                         labelMapper: (c) => c,
                         onSelected: (c) => setState(() {
                           _cityCtrl.text = c;
+                          _districtCtrl.clear(); // Clear district on city change
                           _markChanged();
                         }),
                       ),
-                      onClear: () => setState(() => _cityCtrl.clear()),
+                      onClear: () => setState(() {
+                        _cityCtrl.clear();
+                        _districtCtrl.clear();
+                      }),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildSearchableField(
+                      label: 'District',
+                      value: _districtCtrl.text.isNotEmpty ? _districtCtrl.text : null,
+                      placeholder: 'Select District',
+                      onTap: () {
+                        final availableDistricts = ThailandAddressData.districtsByProvince[_cityCtrl.text] ?? [];
+                        _showSearchableSelect<String>(
+                          title: 'Select District',
+                          items: availableDistricts,
+                          labelMapper: (d) => d,
+                          onSelected: (d) => setState(() {
+                            _districtCtrl.text = d;
+                            _markChanged();
+                          }),
+                        );
+                      },
+                      onClear: () => setState(() => _districtCtrl.clear()),
                     ),
                   ),
                 ],

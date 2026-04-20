@@ -52,7 +52,55 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
 
   // Master Selections
   int? _selectedMasterCategoryId;
+  String? _selectedMasterCategoryName;
   int? _selectedMasterItemId;
+  String? _selectedMasterItemName;
+
+  // --- Master Category mock data ---
+  static const List<Map<String, dynamic>> _masterCategories = [
+    {'id': 1192, 'nameEn': 'BBQ'},
+    {'id': 31,   'nameEn': 'Noodle'},
+    {'id': 32,   'nameEn': 'Meal'},
+    {'id': 33,   'nameEn': 'Soup'},
+    {'id': 34,   'nameEn': 'Salad'},
+    {'id': 35,   'nameEn': 'Drink'},
+    {'id': 36,   'nameEn': 'Rice'},
+    {'id': 37,   'nameEn': 'Curry'},
+    {'id': 38,   'nameEn': 'Snack'},
+    {'id': 39,   'nameEn': 'Steamed'},
+    {'id': 40,   'nameEn': 'Grill'},
+    {'id': 629,  'nameEn': 'Biryani'},
+    {'id': 30,   'nameEn': 'Fried'},
+    {'id': 42,   'nameEn': 'testeasfsaf'},
+    {'id': 43,   'nameEn': 'test'},
+    {'id': 45,   'nameEn': 'testing_Pyae_master_menu_category_update'},
+    {'id': 41,   'nameEn': 'testaksdjflasj'},
+    {'id': 29,   'nameEn': 'Dessert'},
+  ];
+
+  // --- Master Item mock data ---
+  static const List<Map<String, dynamic>> _masterItems = [
+    {'id': 75,  'nameEn': 'Deep Fries White Onion Ring'},
+    {'id': 76,  'nameEn': 'Homemade Caesar Salad With Bread Croutons'},
+    {'id': 77,  'nameEn': 'Mixed Green Vegetable Salad With Cove C Homemade Lemon Dressing'},
+    {'id': 78,  'nameEn': 'Greek Style Fruit Salad'},
+    {'id': 79,  'nameEn': 'Panna Cotta'},
+    {'id': 80,  'nameEn': 'Caramisu'},
+    {'id': 81,  'nameEn': 'Coconut Caramel'},
+    {'id': 82,  'nameEn': 'Candy Soda'},
+    {'id': 83,  'nameEn': 'Cove C Berry Cloud Smoothie'},
+    {'id': 84,  'nameEn': 'Hojicha Latte'},
+    {'id': 85,  'nameEn': 'Chocolate'},
+    {'id': 86,  'nameEn': 'Thai Tea'},
+    {'id': 87,  'nameEn': 'Matcha Latte'},
+    {'id': 88,  'nameEn': 'Clear Matcha'},
+    {'id': 89,  'nameEn': 'Coconut Matcha'},
+    {'id': 90,  'nameEn': 'Expresso'},
+    {'id': 91,  'nameEn': 'Piccolo'},
+    {'id': 92,  'nameEn': 'Flat White'},
+    {'id': 93,  'nameEn': 'Americano'},
+    {'id': 94,  'nameEn': 'Latte'},
+  ];
   
   MenuCategoryModel? _selectedCategory;
   bool _isSaving = false;
@@ -104,6 +152,15 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       _displayOrderController.text = item.displayOrder?.toString() ?? '1';
       _selectedMasterItemId = item.masterItemId;
       _selectedMasterCategoryId = item.masterCategoryId;
+      // Resolve display names from mock data
+      if (_selectedMasterCategoryId != null) {
+        _selectedMasterCategoryName = _masterCategories
+            .firstWhere((c) => c['id'] == _selectedMasterCategoryId, orElse: () => {'nameEn': 'Category #$_selectedMasterCategoryId'})['nameEn'] as String?;
+      }
+      if (_selectedMasterItemId != null) {
+        _selectedMasterItemName = _masterItems
+            .firstWhere((m) => m['id'] == _selectedMasterItemId, orElse: () => {'nameEn': 'Item #$_selectedMasterItemId'})['nameEn'] as String?;
+      }
       _selectedTagIds.addAll(item.tagIds);
       
       _selectedCurrency = item.currency ?? 'THB';
@@ -366,25 +423,31 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   const SizedBox(height: 16),
                   _buildSearchableField(
                     label: 'Master Category',
-                    value: _selectedMasterCategoryId != null ? 'Category #$_selectedMasterCategoryId' : null,
+                    value: _selectedMasterCategoryName,
                     placeholder: 'Search master categories...',
-                    onTap: () => _showSearchableSelect<int>(
+                    onTap: () => _showSearchableSelect<Map<String, dynamic>>(
                       title: 'Master Category',
-                      items: List.generate(20, (i) => i + 1), // Dummy data
-                      labelMapper: (id) => 'Global Category #$id',
-                      onSelected: (id) => setState(() => _selectedMasterCategoryId = id),
+                      items: _masterCategories,
+                      labelMapper: (c) => c['nameEn'] as String,
+                      onSelected: (c) => setState(() {
+                        _selectedMasterCategoryId = c['id'] as int;
+                        _selectedMasterCategoryName = c['nameEn'] as String;
+                      }),
                     ),
                   ),
                   const SizedBox(height: 16),
                   _buildSearchableField(
                     label: 'Master Item',
-                    value: _selectedMasterItemId != null ? 'Item #$_selectedMasterItemId' : null,
+                    value: _selectedMasterItemName,
                     placeholder: 'Search master items...',
-                    onTap: () => _showSearchableSelect<int>(
+                    onTap: () => _showSearchableSelect<Map<String, dynamic>>(
                       title: 'Master Item',
-                      items: List.generate(50, (i) => i + 1), // Dummy data
-                      labelMapper: (id) => 'Global Item #$id',
-                      onSelected: (id) => setState(() => _selectedMasterItemId = id),
+                      items: _masterItems,
+                      labelMapper: (m) => m['nameEn'] as String,
+                      onSelected: (m) => setState(() {
+                        _selectedMasterItemId = m['id'] as int;
+                        _selectedMasterItemName = m['nameEn'] as String;
+                      }),
                     ),
                   ),
 
