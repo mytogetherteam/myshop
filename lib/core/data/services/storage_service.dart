@@ -47,10 +47,8 @@ class StorageService {
   }
 
   Future<bool> hasToken() async {
-    // Bypass: Always assume token exists for demo/testing
-    return true; 
-    // final token = await getToken();
-    // return token != null && token.isNotEmpty;
+    final token = await getToken();
+    return token != null && token.isNotEmpty;
   }
 
   Future<void> setNotificationHandled(bool value) async {

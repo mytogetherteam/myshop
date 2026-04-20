@@ -37,8 +37,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
         }
 
         final results = snapshot.data ?? [false, false];
-        // final bool hasToken = results[0];
-        const bool hasToken = true; // Bypass: Always allow access
+        final bool hasToken = results[0];
+        // const bool hasToken = true; // Bypass: Always allow access
         final bool notiHandled = results[1];
 
         if (hasToken) {

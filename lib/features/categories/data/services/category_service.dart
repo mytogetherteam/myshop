@@ -179,7 +179,7 @@ class CategoryService {
       itemCount: 0,
     );
 
-    categories.add(newCategory);
+    categories.insert(0, newCategory);
     return await _saveAllLocal(categories);
   }
 
@@ -199,7 +199,8 @@ class CategoryService {
       itemCount: existing.itemCount,
     );
 
-    categories[index] = updated;
+    categories.removeAt(index);
+    categories.insert(0, updated);
     return await _saveAllLocal(categories);
   }
 

@@ -43,8 +43,8 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
       );
       if (mounted) {
         setState(() {
-          _items = items ?? [];
-          _filteredItems = items ?? [];
+          _items = (items ?? [])..sort((a, b) => b.id.compareTo(a.id));
+          _filteredItems = List.from(_items);
           _isLoading = false;
         });
       }

@@ -38,6 +38,7 @@ class MenuService {
       MenuCategoryModel(id: 950,  nameEn: 'Dishes',              nameMm: 'Dishes',              nameTh: null, itemCount: 0),
       MenuCategoryModel(id: 842,  nameEn: 'Dishes',              nameMm: 'Dishes',              nameTh: null, itemCount: 0),
       MenuCategoryModel(id: 845,  nameEn: 'Steamed RIce',        nameMm: 'Steamed RIce',        nameTh: null, itemCount: 0),
+      MenuCategoryModel(id: 9999, nameEn: 'Other',               nameMm: 'Other',               nameTh: null, itemCount: 0),
     ];
     return mockCategories;
   }
@@ -227,7 +228,7 @@ class MenuService {
       'id': newId,
     });
 
-    items.add(newItem);
+    items.insert(0, newItem);
     return await _saveAllLocal(items);
   }
 
@@ -238,7 +239,9 @@ class MenuService {
 
     final existing = items[index].toJson();
     final updatedMap = {...existing, ...payload};
-    items[index] = MenuItemModel.fromJson(updatedMap);
+    final updatedItem = MenuItemModel.fromJson(updatedMap);
+    items.removeAt(index);
+    items.insert(0, updatedItem);
     
     return await _saveAllLocal(items);
   }
