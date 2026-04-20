@@ -22,8 +22,13 @@ class JwtUtils {
   /// [offsetSeconds] can be used to check if the token will expire soon.
   static bool isExpired(String token, {int offsetSeconds = 0}) {
     final payload = decode(token);
-    if (payload == null || !payload.containsKey('exp')) {
-      return true; // Assume expired if invalid
+    // If we can't decode it, it's a dummy/demo token - don't mark as expired
+    if (payload == null) {
+      return false;
+    }
+    
+    if (!payload.containsKey('exp')) {
+      return false; // Assume not expired if no exp claim in demo mode
     }
 
     final int exp = payload['exp'] as int;

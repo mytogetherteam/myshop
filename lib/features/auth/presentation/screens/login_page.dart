@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/core/presentation/widgets/app_logo.dart';
 import 'package:my_shop/features/auth/data/services/auth_service.dart';
+import 'package:my_shop/core/data/services/storage_service.dart';
+import 'package:my_shop/features/auth/data/models/auth_models.dart';
 import '../../../../core/network/websocket_service.dart';
 
 class LoginPage extends StatefulWidget {
@@ -71,6 +73,16 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
 
     // Bypass: allow any credentials to proceed
     if (!mounted) return;
+    
+    // Save dummy token so AuthWrapper recognizes the valid session
+    await StorageService.instance.saveTokens(
+      token: 'demo_token_123',
+      refreshToken: 'demo_refresh_123',
+    );
+    await StorageService.instance.saveUserInfo(
+      UserInfo(id: 1, username: 'admin', email: 'admin@shop.com', fullName: 'Shop Admin', role: 'admin'),
+    );
+
     setState(() { _isLoading = false; });
     Navigator.of(context).pushReplacementNamed('/home');
   }

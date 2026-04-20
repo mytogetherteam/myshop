@@ -11,7 +11,8 @@ class AuthService {
   AuthService._();
 
   Future<String?> getAccessToken() async {
-    return await StorageService.instance.getToken();
+    return 'demo_token_123'; // Bypass: Always return dummy token
+    // return await StorageService.instance.getToken();
   }
 
   Future<bool> get isLoggedIn async {
@@ -74,8 +75,8 @@ class AuthService {
 
   Future<void> logoutWithRedirect() async {
     await logout();
-    // Use the global navigator key to redirect to login
-    App.navigatorKey.currentState?.pushNamedAndRemoveUntil('/login', (route) => false);
+    // Bypass: Disable programmatic redirect to login
+    // App.navigatorKey.currentState?.pushNamedAndRemoveUntil('/login', (route) => false);
   }
 
   Future<String?> performRefresh(Dio dio) async {

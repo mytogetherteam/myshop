@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+
 import 'package:my_shop/features/auth/data/services/auth_service.dart';
 import 'package:my_shop/core/auth/jwt_utils.dart';
 
@@ -17,7 +19,9 @@ class AuthInterceptor extends Interceptor {
     
     // Auto-logout if token is expired (and not an auth request)
     if (token != null && !isAuthPath && JwtUtils.isExpired(token, offsetSeconds: 5)) {
-      await authService.logoutWithRedirect();
+      // await authService.logoutWithRedirect();
+      debugPrint('BYPASS: Token expired but redirect disabled');
+      /*
       handler.reject(
         DioException(
             requestOptions: options,
@@ -25,6 +29,7 @@ class AuthInterceptor extends Interceptor {
             type: DioExceptionType.cancel),
       );
       return;
+      */
     }
 
     // PROACTIVE REFRESH
@@ -65,7 +70,8 @@ class AuthInterceptor extends Interceptor {
           handler.resolve(retryResponse);
           return;
         } else {
-          await AuthService.instance.logoutWithRedirect();
+          // await AuthService.instance.logoutWithRedirect();
+          debugPrint('BYPASS: Refresh failed but redirect disabled');
           handler.next(err);
           return;
         }
@@ -73,7 +79,8 @@ class AuthInterceptor extends Interceptor {
         if (e is DioException) {
           final refreshStatus = e.response?.statusCode;
           if (refreshStatus == 401 || refreshStatus == 403) {
-            await AuthService.instance.logoutWithRedirect();
+            // await AuthService.instance.logoutWithRedirect();
+            debugPrint('BYPASS: Refresh error 401/403 but redirect disabled');
           }
         }
         handler.next(err);
@@ -85,7 +92,8 @@ class AuthInterceptor extends Interceptor {
 
     // Auto-logout on 401/403 for non-auth endpoints if refresh failed or was already in progress
     if ((statusCode == 401 || statusCode == 403) && !isAuthPath) {
-      await AuthService.instance.logoutWithRedirect();
+      // await AuthService.instance.logoutWithRedirect();
+      debugPrint('BYPASS: Error 401/403 but redirect disabled');
       handler.next(err);
       return;
     }
