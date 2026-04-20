@@ -390,13 +390,21 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                       ? Image.network(pickedImage.path, width: double.infinity, height: 250, fit: BoxFit.cover)
                       : Image.file(File(pickedImage.path), width: double.infinity, height: 250, fit: BoxFit.cover))
                   : (_currentPayment?.qrImageUrl.isNotEmpty ?? false
-                      ? Image.network(
-                          _currentPayment!.qrImageUrl,
-                          width: double.infinity,
-                          height: 250,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _buildPlaceholder(),
-                        )
+                      ? (_currentPayment!.qrImageUrl.startsWith('http')
+                          ? Image.network(
+                              _currentPayment!.qrImageUrl,
+                              width: double.infinity,
+                              height: 250,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => _buildPlaceholder(),
+                            )
+                          : Image.file(
+                              File(_currentPayment!.qrImageUrl),
+                              width: double.infinity,
+                              height: 250,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => _buildPlaceholder(),
+                            ))
                       : _buildPlaceholder()),
             ),
           ),

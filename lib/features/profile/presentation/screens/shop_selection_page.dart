@@ -39,7 +39,7 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
 
       if (shops.length == 1) {
         // Auto-skip logic
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           CupertinoPageRoute(
             builder: (_) => AcceptedPaymentPage(shop: shops[0]),

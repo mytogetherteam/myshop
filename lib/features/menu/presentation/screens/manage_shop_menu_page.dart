@@ -196,7 +196,23 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
           ),
         ],
       ),
-
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AddNewItemScreen(),
+            ),
+          );
+          if (result == true) _fetchItems();
+        },
+        backgroundColor: const Color(0xFFED3A72),
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Icon(Icons.add, color: Colors.white, size: 28),
+      ),
     );
   }
 

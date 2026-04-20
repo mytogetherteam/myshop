@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -169,18 +170,21 @@ class _AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  pm.qrImageUrl,
-                  width: double.infinity,
-                  height: 250,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => Container(
-                    width: double.infinity,
-                    height: 250,
-                    color: Colors.grey[50],
-                    child: const Icon(Icons.qr_code, size: 48, color: Colors.grey),
-                  ),
-                ),
+                child: pm.qrImageUrl.startsWith('http')
+                    ? Image.network(
+                        pm.qrImageUrl,
+                        width: double.infinity,
+                        height: 250,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => _buildQrPlaceholder(),
+                      )
+                    : Image.file(
+                        File(pm.qrImageUrl),
+                        width: double.infinity,
+                        height: 250,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => _buildQrPlaceholder(),
+                      ),
               ),
               const SizedBox(height: 16),
               Row(
@@ -299,10 +303,17 @@ class _AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
             ],
           ),
           const SizedBox(height: 16),
-          const Skeleton(width: double.infinity, height: 250, borderRadius: 12),
-          if (i == 0) const SizedBox(height: 32),
         ],
       ],
+    );
+  }
+
+  Widget _buildQrPlaceholder() {
+    return Container(
+      width: double.infinity,
+      height: 250,
+      color: Colors.grey[50],
+      child: const Icon(Icons.qr_code, size: 48, color: Colors.grey),
     );
   }
 }

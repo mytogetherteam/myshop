@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../data/models/menu_item_model.dart';
@@ -55,7 +57,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(16),
                     child: widget.item.imageUrl != null
-                        ? Image.network(
+                        ? _buildImage(
                             widget.item.imageUrl!,
                             width: 72,
                             height: 72,
@@ -128,6 +130,29 @@ class _MenuItemCardState extends State<MenuItemCard> {
         ],
       ),
     );
+  }
+
+  Widget _buildImage(
+    String url, {
+    required double width,
+    required double height,
+    required BoxFit fit,
+    required Widget Function(BuildContext, Object, StackTrace?) errorBuilder,
+  }) {
+    if (url.startsWith('http')) {
+      return Image.network(
+        url,
+        width: width,
+        height: height,
+        fit: fit,
+        errorBuilder: errorBuilder,
+      );
+    } else {
+      // Local file path
+      return kIsWeb
+          ? Image.network(url, width: width, height: height, fit: fit, errorBuilder: errorBuilder)
+          : Image.file(File(url), width: width, height: height, fit: fit, errorBuilder: errorBuilder);
+    }
   }
 
   Widget _buildPlaceholderImage() {

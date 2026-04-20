@@ -113,6 +113,9 @@ class PaymentService {
       final methods = await getShopPaymentMethods(shopId);
       final index = methods.indexWhere((p) => p.id == paymentTypeId);
       if (index != -1) {
+        if (qrFile != null) {
+          requestData['qrImageUrl'] = qrFile.path;
+        }
         final updatedMethod = PaymentMethod.fromJson({
           ...methods[index].toJson(),
           ...requestData,

@@ -50,13 +50,33 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
   @override
   void initState() {
     super.initState();
-    final profile = widget.shopProfile;
-    _isOpen = profile?.isOpen ?? true; // Default to true in demo if not set
+    if (widget.shopProfile != null) {
+      _initFromProfile(widget.shopProfile!);
+    } else {
+      _loadProfile();
+    }
+  }
+
+  Future<void> _loadProfile() async {
+    setState(() => _isSaving = true);
+    final profile = await _profileService.getShopProfile();
+    if (profile != null && mounted) {
+      setState(() {
+        _initFromProfile(profile);
+        _isSaving = false;
+      });
+    } else {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  void _initFromProfile(ShopProfileModel profile) {
+    _isOpen = profile.isOpen;
     
     // Initialize with default 9am-10pm closed all over
     _hours = List.generate(7, (index) => _DayHours(isClosed: true, openTime: const TimeOfDay(hour: 9, minute: 0), closeTime: const TimeOfDay(hour: 22, minute: 0)));
 
-    if (profile != null && profile.operatingHours.isNotEmpty) {
+    if (profile.operatingHours.isNotEmpty) {
       for (final h in profile.operatingHours) {
         if (h.dayOfWeek >= 0 && h.dayOfWeek <= 6) {
           _hours[h.dayOfWeek] = _DayHours(

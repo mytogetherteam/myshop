@@ -184,7 +184,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     setState(() => _isSaving = true);
     String? imageUrl = widget.item?.imageUrl;
     if (_pickedImage != null) {
-      imageUrl = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=300&auto=format&fit=crop';
+      imageUrl = _pickedImage!.path;
     }
 
     final payload = {
@@ -905,14 +905,35 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   }
 
   Widget _buildImageUploadSection() {
+    ImageProvider? imageProvider;
+    if (_pickedImage != null) {
+      imageProvider = FileImage(File(_pickedImage!.path));
+    } else if (widget.item?.imageUrl != null && widget.item!.imageUrl!.isNotEmpty) {
+      final url = widget.item!.imageUrl!;
+      if (url.startsWith('http')) {
+        imageProvider = CachedNetworkImageProvider(url);
+      } else {
+        imageProvider = FileImage(File(url));
+      }
+    }
+
     return GestureDetector(
       onTap: () async {
         final image = await ImagePicker().pickImage(source: ImageSource.gallery);
         if (image != null) setState(() => _pickedImage = image);
       },
       child: Container(
-        width: double.infinity, height: 200, decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(24), border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5), image: _pickedImage != null ? DecorationImage(image: FileImage(File(_pickedImage!.path)), fit: BoxFit.cover) : (widget.item?.imageUrl != null ? DecorationImage(image: CachedNetworkImageProvider(widget.item!.imageUrl!), fit: BoxFit.cover) : null)),
-        child: _pickedImage == null && widget.item?.imageUrl == null ? const Center(child: Icon(Icons.camera_alt_outlined, color: Color(0xFFED3A72), size: 32)) : null,
+        width: double.infinity,
+        height: 200,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+          image: imageProvider != null ? DecorationImage(image: imageProvider, fit: BoxFit.cover) : null,
+        ),
+        child: imageProvider == null
+            ? const Center(child: Icon(Icons.camera_alt_outlined, color: Color(0xFFED3A72), size: 32))
+            : null,
       ),
     );
   }

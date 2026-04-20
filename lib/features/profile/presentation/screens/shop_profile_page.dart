@@ -347,16 +347,11 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(14),
                             child: (_shopProfile?.logoUrl ?? '').isNotEmpty
-                                ? CachedNetworkImage(
-                                    imageUrl: _shopProfile?.logoUrl ?? '',
+                                ? _buildImage(_shopProfile!.logoUrl!,
                                     fit: BoxFit.cover,
-                                    placeholder: (context, url) =>
-                                        const ImageSkeletonLoader(),
-                                    errorWidget: (context, url, error) =>
-                                        _buildLogoFallback(
-                                          _shopProfile?.nameEn ?? '',
-                                        ),
-                                  )
+                                    fallback: _buildLogoFallback(
+                                      _shopProfile?.nameEn ?? '',
+                                    ))
                                 : _buildLogoFallback(
                                     _shopProfile?.nameEn ?? '',
                                   ),
@@ -497,7 +492,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
           if (_shopProfile?.coverUrl != null &&
               _shopProfile!.coverUrl!.isNotEmpty)
             Positioned.fill(
-              child: Image.network(_shopProfile!.coverUrl!, fit: BoxFit.cover),
+              child: _buildImage(_shopProfile!.coverUrl!, fit: BoxFit.cover, fallback: const SizedBox.shrink()),
             ),
           // Dark gradient overlay for contrast
           Positioned.fill(
@@ -1535,6 +1530,25 @@ class _ShopProfilePageState extends State<ShopProfilePage>
         ),
       ),
     );
+  }
+}
+
+  Widget _buildImage(String url, {required BoxFit fit, required Widget fallback}) {
+    if (url.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: url,
+        fit: fit,
+        placeholder: (_, _) => fallback,
+        errorWidget: (_, _, _) => fallback,
+      );
+    } else {
+      // Local file path
+      return Image.file(
+        File(url),
+        fit: fit,
+        errorBuilder: (_, __, ___) => fallback,
+      );
+    }
   }
 }
 

@@ -199,6 +199,8 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       'isVegetarian': _isVegetarian,
       'deliveryEnabled': _deliveryEnabled,
       'pricePreference': _priceRange == 0 ? 'LOW' : (_priceRange == 1 ? 'MEDIUM' : 'HIGH'),
+      if (_pickedCover != null) 'coverUrl': _pickedCover!.path,
+      if (_pickedLogo != null) 'logoUrl': _pickedLogo!.path,
     };
 
     final success = await _profileService.updateShopProfile(payload);
@@ -833,12 +835,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                         ? Image.network(_pickedCover!.path, fit: BoxFit.cover)
                         : Image.file(File(_pickedCover!.path), fit: BoxFit.cover)
                   else if (coverUrl != null && coverUrl.isNotEmpty)
-                    CachedNetworkImage(
-                      imageUrl: coverUrl,
-                      fit: BoxFit.cover,
-                      placeholder: (_, _) => _buildCoverGradient(),
-                      errorWidget: (_, _, _) => _buildCoverGradient(),
-                    )
+                    _buildImage(coverUrl, fit: BoxFit.cover, fallback: _buildCoverGradient())
                   else
                     _buildCoverGradient(),
 
@@ -923,14 +920,9 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                                 ? (kIsWeb
                                     ? Image.network(_pickedLogo!.path, fit: BoxFit.cover)
                                     : Image.file(File(_pickedLogo!.path), fit: BoxFit.cover))
-                                : logoUrl != null && logoUrl.isNotEmpty
-                                    ? CachedNetworkImage(
-                                        imageUrl: logoUrl,
-                                        fit: BoxFit.cover,
-                                        placeholder: (_, _) => _buildLogoPlaceholder(),
-                                        errorWidget: (_, _, _) => _buildLogoPlaceholder(),
-                                      )
-                                    : _buildLogoPlaceholder(),
+                                : (logoUrl != null && logoUrl.isNotEmpty
+                                    ? _buildImage(logoUrl, fit: BoxFit.cover, fallback: _buildLogoPlaceholder())
+                                    : _buildLogoPlaceholder()),
                           ),
                         ),
                         Positioned(
@@ -968,6 +960,22 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         ],
       ),
     );
+  }
+
+  Widget _buildImage(String url, {required BoxFit fit, required Widget fallback}) {
+    if (url.startsWith('http')) {
+      return CachedNetworkImage(
+        imageUrl: url,
+        fit: fit,
+        placeholder: (_, _) => fallback,
+        errorWidget: (_, _, _) => fallback,
+      );
+    } else {
+      // Local file path
+      return kIsWeb
+          ? Image.network(url, fit: fit, errorBuilder: (_, __, ___) => fallback)
+          : Image.file(File(url), fit: fit, errorBuilder: (_, __, ___) => fallback);
+    }
   }
 
   Widget _buildCoverGradient() {
