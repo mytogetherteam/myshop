@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/models/menu_item_model.dart';
 
 class MenuItemCard extends StatefulWidget {
@@ -140,12 +141,13 @@ class _MenuItemCardState extends State<MenuItemCard> {
     required Widget Function(BuildContext, Object, StackTrace?) errorBuilder,
   }) {
     if (url.startsWith('http')) {
-      return Image.network(
-        url,
+      return CachedNetworkImage(
+        imageUrl: url,
         width: width,
         height: height,
         fit: fit,
-        errorBuilder: errorBuilder,
+        placeholder: (context, url) => _buildPlaceholderImage(),
+        errorWidget: (context, url, error) => _buildPlaceholderImage(),
       );
     } else {
       // Local file path

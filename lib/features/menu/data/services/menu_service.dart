@@ -205,7 +205,7 @@ class MenuService {
           nameMm: 'ဇင်ဂါ ဘာဂါ',
           nameTh: 'ซิงเกอร์เบอร์เกอร์',
           price: 120.0,
-          imageUrl: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=300&auto=format&fit=crop',
+          imageUrl: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=300&auto=format&fit=crop',
           isRecommended: true,
           isPopular: true,
           descriptionEn: 'Crispy spicy chicken burger with fresh lettuce.',
