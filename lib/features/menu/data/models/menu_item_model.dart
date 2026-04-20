@@ -1,6 +1,8 @@
 class MenuItemModel {
   final int id;
   final int? categoryId;
+  final int? masterItemId;
+  final int? masterCategoryId;
   final String? nameEn;
   final String? nameMm;
   final String? nameTh;
@@ -26,6 +28,10 @@ class MenuItemModel {
   final String? descriptionMm;
   final String? descriptionTh;
   final String? descriptionEn;
+  final List<String> mealTypes;
+  final List<String> tags;
+  final double? discountAmount;
+  final double? discountPercentage;
   final List<MenuItemOptionGroupModel> optionGroups;
   final List<MenuItemVariantModel> variants;
   final bool hasVariants;
@@ -33,6 +39,8 @@ class MenuItemModel {
   MenuItemModel({
     required this.id,
     this.categoryId,
+    this.masterItemId,
+    this.masterCategoryId,
     this.nameEn,
     this.nameMm,
     this.nameTh,
@@ -58,6 +66,10 @@ class MenuItemModel {
     this.descriptionMm,
     this.descriptionTh,
     this.descriptionEn,
+    this.mealTypes = const [],
+    this.tags = const [],
+    this.discountAmount,
+    this.discountPercentage,
     this.optionGroups = const [],
     this.variants = const [],
     this.hasVariants = false,
@@ -67,6 +79,8 @@ class MenuItemModel {
     return MenuItemModel(
       id: json['id'] ?? 0,
       categoryId: json['categoryId'],
+      masterItemId: json['masterItemId'],
+      masterCategoryId: json['masterCategoryId'],
       nameEn: json['nameEn'],
       nameMm: json['nameMm'],
       nameTh: json['nameTh'],
@@ -92,6 +106,10 @@ class MenuItemModel {
       descriptionMm: json['descriptionMm'],
       descriptionTh: json['descriptionTh'],
       descriptionEn: json['descriptionEn'],
+      mealTypes: (json['mealTypes'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      tags: (json['tagIds'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      discountAmount: (json['discountAmount'] as num?)?.toDouble(),
+      discountPercentage: (json['discountPercentage'] as num?)?.toDouble(),
       optionGroups: (json['optionGroups'] as List?)
               ?.map((o) => MenuItemOptionGroupModel.fromJson(o))
               .toList() ??
@@ -104,8 +122,52 @@ class MenuItemModel {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'categoryId': categoryId,
+      'masterItemId': masterItemId,
+      'masterCategoryId': masterCategoryId,
+      'nameEn': nameEn,
+      'nameMm': nameMm,
+      'nameTh': nameTh,
+      'categoryNameEn': categoryNameEn,
+      'categoryNameMm': categoryNameMm,
+      'categoryNameTh': categoryNameTh,
+      'slug': slug,
+      'price': price,
+      'originalPrice': originalPrice,
+      'currency': currency,
+      'displayPrice': displayPrice,
+      'imageUrl': imageUrl,
+      'isAvailable': isAvailable,
+      'isPopular': isPopular,
+      'isVegetarian': isVegetarian,
+      'isSpicy': isSpicy,
+      'isRecommended': isRecommended,
+      'isHotDeal': isHotDeal,
+      'isCombo': isCombo,
+      'displayOrder': displayOrder,
+      'stockQuantity': stockQuantity,
+      'description': description,
+      'descriptionMm': descriptionMm,
+      'descriptionTh': descriptionTh,
+      'descriptionEn': descriptionEn,
+      'mealTypes': mealTypes,
+      'tagIds': tags,
+      'discountAmount': discountAmount,
+      'discountPercentage': discountPercentage,
+      'optionGroups': optionGroups.map((e) => e.toJson()).toList(),
+      'variants': variants.map((e) => e.toJson()).toList(),
+      'hasVariants': hasVariants,
+    };
+  }
+
+  List<int> get tagIds => tags.map((e) => int.tryParse(e) ?? 0).where((e) => e != 0).toList();
+
   String get displayName => nameEn ?? nameMm ?? nameTh ?? '';
-  String get displayDescription => descriptionEn ?? descriptionMm ?? descriptionTh ?? description ?? '';
+  String get displayDescription =>
+      descriptionEn ?? descriptionMm ?? descriptionTh ?? description ?? '';
 }
 
 class MenuItemVariantModel {
@@ -116,6 +178,7 @@ class MenuItemVariantModel {
   final double price;
   final String? displayPrice;
   final bool isAvailable;
+  final int? displayOrder;
 
   MenuItemVariantModel({
     required this.id,
@@ -125,6 +188,7 @@ class MenuItemVariantModel {
     required this.price,
     this.displayPrice,
     this.isAvailable = true,
+    this.displayOrder,
   });
 
   factory MenuItemVariantModel.fromJson(Map<String, dynamic> json) {
@@ -136,7 +200,21 @@ class MenuItemVariantModel {
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
       displayPrice: json['displayPrice'],
       isAvailable: json['isAvailable'] ?? true,
+      displayOrder: json['displayOrder'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'nameEn': nameEn,
+      'nameMm': nameMm,
+      'nameTh': nameTh,
+      'price': price,
+      'displayPrice': displayPrice,
+      'isAvailable': isAvailable,
+      'displayOrder': displayOrder,
+    };
   }
 
   String get displayName => nameEn ?? nameMm ?? nameTh ?? '';
@@ -150,6 +228,7 @@ class MenuItemOptionGroupModel {
   final bool isRequired;
   final int? minSelection;
   final int? maxSelection;
+  final int? displayOrder;
   final List<MenuItemOptionModel> options;
 
   MenuItemOptionGroupModel({
@@ -160,6 +239,7 @@ class MenuItemOptionGroupModel {
     this.isRequired = false,
     this.minSelection,
     this.maxSelection,
+    this.displayOrder,
     this.options = const [],
   });
 
@@ -172,11 +252,26 @@ class MenuItemOptionGroupModel {
       isRequired: json['isRequired'] ?? false,
       minSelection: json['minSelection'],
       maxSelection: json['maxSelection'],
+      displayOrder: json['displayOrder'],
       options: (json['options'] as List?)
               ?.map((o) => MenuItemOptionModel.fromJson(o))
               .toList() ??
           [],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'nameEn': nameEn,
+      'nameMm': nameMm,
+      'nameTh': nameTh,
+      'isRequired': isRequired,
+      'minSelection': minSelection,
+      'maxSelection': maxSelection,
+      'displayOrder': displayOrder,
+      'options': options.map((e) => e.toJson()).toList(),
+    };
   }
 
   String get displayName => nameEn ?? nameMm ?? nameTh ?? '';
@@ -189,6 +284,8 @@ class MenuItemOptionModel {
   final String? nameTh;
   final double price;
   final String? displayPrice;
+  final int? displayOrder;
+  final int? linkedMenuItemId;
 
   MenuItemOptionModel({
     required this.id,
@@ -197,6 +294,8 @@ class MenuItemOptionModel {
     this.nameTh,
     required this.price,
     this.displayPrice,
+    this.displayOrder,
+    this.linkedMenuItemId,
   });
 
   factory MenuItemOptionModel.fromJson(Map<String, dynamic> json) {
@@ -207,7 +306,22 @@ class MenuItemOptionModel {
       nameTh: json['nameTh'],
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
       displayPrice: json['displayPrice'],
+      displayOrder: json['displayOrder'],
+      linkedMenuItemId: json['linkedMenuItemId'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'nameEn': nameEn,
+      'nameMm': nameMm,
+      'nameTh': nameTh,
+      'price': price,
+      'displayPrice': displayPrice,
+      'displayOrder': displayOrder,
+      'linkedMenuItemId': linkedMenuItemId,
+    };
   }
 
   String get displayName => nameEn ?? nameMm ?? nameTh ?? '';

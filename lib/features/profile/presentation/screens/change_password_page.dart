@@ -68,25 +68,43 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       if (result['success'] == true) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message'] ?? 'Password changed successfully'),
-            backgroundColor: Colors.green,
+            content: Text(
+              result['message'] ?? 'Password changed successfully',
+              style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500),
+            ),
+            backgroundColor: const Color(0xFFED3973),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(20),
           ),
         );
         Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message'] ?? 'Failed to change password'),
-            backgroundColor: Colors.red,
+            content: Text(
+              result['message'] ?? 'Failed to change password',
+              style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500),
+            ),
+            backgroundColor: const Color(0xFFEF4444),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(20),
           ),
         );
       }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('An error occurred. Please try again.'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: Text(
+            'An error occurred. Please try again.',
+            style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500),
+          ),
+          backgroundColor: const Color(0xFFEF4444),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(20),
         ),
       );
     } finally {

@@ -98,13 +98,23 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
     if (mounted) {
       setState(() => _isSaving = false);
       if (success) {
-        GlobalModal.show(
+        await GlobalModal.show(
           context: context,
           child: const PaymentSuccessSheet(),
         );
+        if (mounted) Navigator.pop(context, true); // signal list to refresh
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to update payment method'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(
+              'Failed to update payment method',
+              style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500),
+            ),
+            backgroundColor: const Color(0xFFEF4444),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(20),
+          ),
         );
       }
     }

@@ -4,9 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
-import '../../data/models/payment_method.dart';
-import '../../data/models/shop_model.dart';
-import '../../data/services/payment_service.dart';
+import 'package:my_shop/features/profile/data/models/payment_method.dart';
+import 'package:my_shop/features/profile/data/models/shop_model.dart';
+import 'package:my_shop/features/profile/data/services/payment_service.dart';
 import '../../../../core/presentation/widgets/skeleton.dart';
 import 'edit_payment_page.dart';
 
@@ -118,8 +118,8 @@ class _AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
             Text(
               pm.paymentMethodName,
               style: GoogleFonts.poppins(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
                 color: const Color(0xFF1E293B),
               ),
             ),
@@ -154,8 +154,15 @@ class _AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(color: const Color(0xFFF1F5F9)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha:0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

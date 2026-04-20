@@ -1,19 +1,16 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
 import 'dart:io';
-
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import 'package:my_shop/core/data/services/image_upload_service.dart';
-import 'package:my_shop/core/network/api_client.dart';
-import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
-import 'package:my_shop/core/presentation/widgets/fullscreen_image_viewer.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
+import 'package:my_shop/core/data/services/image_upload_service.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
+import '../../../../core/presentation/widgets/fullscreen_image_viewer.dart';
 
 class EditShopProfilePage extends StatefulWidget {
   final ShopProfileModel? shopProfile;
@@ -24,190 +21,128 @@ class EditShopProfilePage extends StatefulWidget {
 }
 
 class _EditShopProfilePageState extends State<EditShopProfilePage> {
-  bool _hasChanges = false;
+  final ProfileService _profileService = ProfileService();
+  bool _isLoading = true;
   bool _isSaving = false;
-  bool _isLoading = false;
+  bool _hasChanges = false;
+
   ShopProfileModel? _currentProfile;
+  final _phoneCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _addressEnCtrl = TextEditingController();
+  final _addressMmCtrl = TextEditingController();
+  final _addressThCtrl = TextEditingController();
+  final _districtCtrl = TextEditingController();
+  final _cityCtrl = TextEditingController();
+  final _mapsLinkCtrl = TextEditingController();
+  
+  final _nameEnCtrl = TextEditingController();
+  final _nameMmCtrl = TextEditingController();
+  final _nameThCtrl = TextEditingController();
+  final _descEnCtrl = TextEditingController();
+  final _descMmCtrl = TextEditingController();
+  final _descThCtrl = TextEditingController();
+  final _catEnCtrl = TextEditingController();
+  final _catMmCtrl = TextEditingController();
+  final _catThCtrl = TextEditingController();
+  final _subCatEnCtrl = TextEditingController();
+  final _subCatMmCtrl = TextEditingController();
+  final _subCatThCtrl = TextEditingController();
+  final _baseFeeCtrl = TextEditingController();
+  final _minAmountCtrl = TextEditingController();
+  final _maxQtyCtrl = TextEditingController();
+
+  String _nameLang = 'EN';
+  String _descLang = 'EN';
+  String _catLang = 'EN';
+  String _subCatLang = 'EN';
+  String _addressLang = 'EN';
 
   XFile? _pickedCover;
   XFile? _pickedLogo;
 
-  String _nameLang = 'EN';
-  String _descLang = 'EN';
-  String _addressLang = 'EN';
-  String _catLang = 'EN';
-  String _subCatLang = 'EN';
-
-  late final TextEditingController _nameEnCtrl;
-  late final TextEditingController _nameMmCtrl;
-  late final TextEditingController _nameThCtrl;
-  late final TextEditingController _descEnCtrl;
-  late final TextEditingController _descMmCtrl;
-  late final TextEditingController _descThCtrl;
-  late final TextEditingController _phoneCtrl;
-  late final TextEditingController _emailCtrl;
-  late final TextEditingController _addressEnCtrl;
-  late final TextEditingController _addressMmCtrl;
-  late final TextEditingController _addressThCtrl;
-  late final TextEditingController _districtCtrl;
-  late final TextEditingController _cityCtrl;
-  
-  late final TextEditingController _catEnCtrl;
-  late final TextEditingController _catMmCtrl;
-  late final TextEditingController _catThCtrl;
-  late final TextEditingController _subCatEnCtrl;
-  late final TextEditingController _subCatMmCtrl;
-  late final TextEditingController _subCatThCtrl;
-  
-  // New Controllers
-  late final TextEditingController _maxQtyCtrl;
-  late final TextEditingController _minAmountCtrl;
-  late final TextEditingController _baseFeeCtrl;
-  late final TextEditingController _mapsLinkCtrl;
-
+  bool _hasParking = false;
+  bool _hasWifi = false;
+  bool _hasDelivery = false;
+  bool _isHalal = false;
+  bool _isVegetarian = false;
+  bool _deliveryEnabled = false;
+  int _priceRange = 1;
   double? _latitude;
   double? _longitude;
 
-  late bool _hasParking;
-  late bool _hasWifi;
-  late bool _hasDelivery;
-  late bool _isHalal;
-  late bool _isVegetarian;
-  late bool _deliveryEnabled;
-  late int _priceRange;
+  final List<String> _districts = [
+    'Ahlone', 'Bahan', 'Dagon', 'Hlaing', 'Kamayut', 'Kyauktada', 'Kyimyindaing', 
+    'Lanmadaw', 'Latha', 'Mayangone', 'Pabedan', 'Sanchaung', 'South Okkalapa', 
+    'North Okkalapa', 'Yankin', 'Tamwe', 'Mingala Taungnyunt'
+  ];
+  
+  final List<String> _cities = [
+    'Yangon', 'Mandalay', 'Naypyidaw', 'Taunggyi', 'Bago', 'Mawlamyine', 'Pathein',
+    'Pyay', 'Monywa', 'Meiktila'
+  ];
 
   @override
   void initState() {
     super.initState();
-    _currentProfile = widget.shopProfile;
-    _initializeFields(_currentProfile);
-
-    if (_currentProfile == null) {
-      _loadProfile();
-    }
-  }
-
-  void _initializeFields(ShopProfileModel? p) {
-    _nameEnCtrl = TextEditingController(text: p?.nameEn ?? '');
-    _nameMmCtrl = TextEditingController(text: p?.nameMm ?? '');
-    _nameThCtrl = TextEditingController(text: p?.nameTh ?? '');
-    _descEnCtrl = TextEditingController(text: p?.descriptionEn ?? '');
-    _descMmCtrl = TextEditingController(text: p?.descriptionMm ?? '');
-    _descThCtrl = TextEditingController(text: p?.descriptionTh ?? '');
-    _phoneCtrl = TextEditingController(text: p?.phone ?? '');
-    _emailCtrl = TextEditingController(text: p?.email ?? '');
-    _addressEnCtrl = TextEditingController(text: p?.addressEn ?? '');
-    _addressMmCtrl = TextEditingController(text: p?.addressMm ?? '');
-    _addressThCtrl = TextEditingController(text: p?.addressTh ?? '');
-    _districtCtrl = TextEditingController(text: p?.districtEn ?? '');
-    _cityCtrl = TextEditingController(text: p?.cityEn ?? '');
-    
-    _catEnCtrl = TextEditingController(text: p?.categoryEn ?? '');
-    _catMmCtrl = TextEditingController(text: p?.categoryMm ?? '');
-    _catThCtrl = TextEditingController(text: p?.categoryTh ?? '');
-    _subCatEnCtrl = TextEditingController(text: p?.subCategoryEn ?? '');
-    _subCatMmCtrl = TextEditingController(text: p?.subCategoryMm ?? '');
-    _subCatThCtrl = TextEditingController(text: p?.subCategoryTh ?? '');
-    
-    _maxQtyCtrl = TextEditingController(text: (p?.maxItemQuantityPerOrder ?? 10).toString());
-    _minAmountCtrl = TextEditingController(text: (p?.minOrderAmount ?? 0.0).toString());
-    _baseFeeCtrl = TextEditingController(text: (p?.baseDeliveryFee ?? 0.0).toString());
-    _mapsLinkCtrl = TextEditingController(text: p?.googleMapsLink ?? '');
-
-    _latitude = p?.latitude;
-    _longitude = p?.longitude;
-
-    _hasParking = p?.hasParking ?? false;
-    _hasWifi = p?.hasWifi ?? false;
-    _hasDelivery = p?.hasDelivery ?? false;
-    _isHalal = p?.isHalal ?? false;
-    _isVegetarian = p?.isVegetarian ?? false;
-    _deliveryEnabled = p?.deliveryEnabled ?? false;
-
-    _priceRange = 1;
-    if (p?.pricePreference == 'LOW') _priceRange = 0;
-    if (p?.pricePreference == 'HIGH') _priceRange = 2;
+    _loadProfile();
   }
 
   Future<void> _loadProfile() async {
-    setState(() => _isLoading = true);
+    // Pre-populate with passed-in profile immediately (no flicker)
+    if (widget.shopProfile != null && _isLoading) {
+      _populateForm(widget.shopProfile!);
+    }
+    // Then fetch fresh copy from SharedPreferences (picks up latest saves)
     try {
-      final profile = await ProfileService().getShopProfile();
+      final profile = await _profileService.getShopProfile();
       if (profile != null && mounted) {
-        setState(() {
-          _currentProfile = profile;
-          _updateControllerTexts(profile);
-          _isLoading = false;
-        });
+        setState(() => _populateForm(profile));
+      } else if (mounted) {
+        setState(() => _isLoading = false);
       }
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _updateControllerTexts(ShopProfileModel p) {
-    _nameEnCtrl.text = p.nameEn ?? '';
-    _nameMmCtrl.text = p.nameMm ?? '';
-    _nameThCtrl.text = p.nameTh ?? '';
-    _descEnCtrl.text = p.descriptionEn ?? '';
-    _descMmCtrl.text = p.descriptionMm ?? '';
-    _descThCtrl.text = p.descriptionTh ?? '';
-    _phoneCtrl.text = p.phone ?? '';
-    _emailCtrl.text = p.email ?? '';
-    _addressEnCtrl.text = p.addressEn ?? '';
-    _addressMmCtrl.text = p.addressMm ?? '';
-    _addressThCtrl.text = p.addressTh ?? '';
-    _districtCtrl.text = p.districtEn ?? '';
-    _cityCtrl.text = p.cityEn ?? '';
-    _catEnCtrl.text = p.categoryEn ?? '';
-    _catMmCtrl.text = p.categoryMm ?? '';
-    _catThCtrl.text = p.categoryTh ?? '';
-    _subCatEnCtrl.text = p.subCategoryEn ?? '';
-    _subCatMmCtrl.text = p.subCategoryMm ?? '';
-    _subCatThCtrl.text = p.subCategoryTh ?? '';
-    _maxQtyCtrl.text = p.maxItemQuantityPerOrder.toString();
-    _minAmountCtrl.text = p.minOrderAmount.toString();
-    _baseFeeCtrl.text = p.baseDeliveryFee.toString();
-    _mapsLinkCtrl.text = p.googleMapsLink ?? '';
-    
-    _latitude = p.latitude;
-    _longitude = p.longitude;
-    _hasParking = p.hasParking;
-    _hasWifi = p.hasWifi;
-    _hasDelivery = p.hasDelivery;
-    _isHalal = p.isHalal;
-    _isVegetarian = p.isVegetarian;
-    _deliveryEnabled = p.deliveryEnabled;
-    
-    if (p.pricePreference == 'LOW') _priceRange = 0;
-    else if (p.pricePreference == 'HIGH') _priceRange = 2;
-    else _priceRange = 1;
-  }
-
-  @override
-  void dispose() {
-    for (final c in [
-      _nameEnCtrl,
-      _nameMmCtrl,
-      _nameThCtrl,
-      _descEnCtrl,
-      _descMmCtrl,
-      _descThCtrl,
-      _phoneCtrl,
-      _emailCtrl,
-      _addressEnCtrl,
-      _addressMmCtrl,
-      _addressThCtrl,
-      _districtCtrl,
-      _cityCtrl,
-      _maxQtyCtrl,
-      _minAmountCtrl,
-      _baseFeeCtrl,
-      _mapsLinkCtrl,
-    ]) {
-      c.dispose();
-    }
-    super.dispose();
+  void _populateForm(ShopProfileModel profile) {
+    _currentProfile = profile;
+    _phoneCtrl.text = profile.phone ?? '';
+    _emailCtrl.text = profile.email ?? '';
+    _addressEnCtrl.text = profile.addressEn ?? '';
+    _addressMmCtrl.text = profile.addressMm ?? '';
+    _addressThCtrl.text = profile.addressTh ?? '';
+    _districtCtrl.text = profile.districtEn ?? '';
+    _cityCtrl.text = profile.cityEn ?? '';
+    _mapsLinkCtrl.text = profile.googleMapsLink ?? '';
+    _nameEnCtrl.text = profile.nameEn ?? '';
+    _nameMmCtrl.text = profile.nameMm ?? '';
+    _nameThCtrl.text = profile.nameTh ?? '';
+    _descEnCtrl.text = profile.descriptionEn ?? '';
+    _descMmCtrl.text = profile.descriptionMm ?? '';
+    _descThCtrl.text = profile.descriptionTh ?? '';
+    _catEnCtrl.text = profile.categoryEn ?? '';
+    _catMmCtrl.text = profile.categoryMm ?? '';
+    _catThCtrl.text = profile.categoryTh ?? '';
+    _subCatEnCtrl.text = profile.subCategoryEn ?? '';
+    _subCatMmCtrl.text = profile.subCategoryMm ?? '';
+    _subCatThCtrl.text = profile.subCategoryTh ?? '';
+    _baseFeeCtrl.text = profile.baseDeliveryFee.toString();
+    _minAmountCtrl.text = profile.minOrderAmount.toString();
+    _maxQtyCtrl.text = profile.maxItemQuantityPerOrder.toString();
+    _hasParking = profile.hasParking;
+    _hasWifi = profile.hasWifi;
+    _hasDelivery = profile.hasDelivery;
+    _isHalal = profile.isHalal;
+    _isVegetarian = profile.isVegetarian;
+    _deliveryEnabled = profile.deliveryEnabled;
+    _latitude = profile.latitude;
+    _longitude = profile.longitude;
+    if (profile.pricePreference == 'LOW') _priceRange = 0;
+    else if (profile.pricePreference == 'MEDIUM') _priceRange = 1;
+    else if (profile.pricePreference == 'HIGH') _priceRange = 2;
+    _isLoading = false;
   }
 
   void _markChanged() {
@@ -216,93 +151,23 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
 
   Future<bool> _onWillPop() async {
     if (!_hasChanges) return true;
-    final result = await showDialog<bool>(
+    final should = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Discard changes?',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 16),
-        ),
-        content: Text(
-          'You have unsaved changes. Do you want to discard them?',
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            color: const Color(0xFF475569),
-          ),
-        ),
+        title: Text('Discard Changes?', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: Text('You have unsaved changes. Do you want to discard them?', style: GoogleFonts.poppins()),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(
-              'Continue Editing',
-              style: GoogleFonts.poppins(
-                color: const Color(0xFF475569),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(
-              'Discard',
-              style: GoogleFonts.poppins(
-                color: const Color(0xFFED3973),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Discard', style: TextStyle(color: Colors.red))),
         ],
       ),
     );
-    return result ?? false;
+    return should ?? false;
   }
 
   Future<void> _save() async {
     setState(() => _isSaving = true);
-
-    String pricePref = 'MEDIUM';
-    if (_priceRange == 0) pricePref = 'LOW';
-    if (_priceRange == 2) pricePref = 'HIGH';
-
-    if (_pickedCover != null) {
-      try {
-        final formData = FormData.fromMap({
-          'cover': kIsWeb
-              ? MultipartFile.fromBytes(
-                  await _pickedCover!.readAsBytes(),
-                  filename: _pickedCover!.name,
-                )
-              : await MultipartFile.fromFile(
-                  _pickedCover!.path,
-                  filename: _pickedCover!.name,
-                ),
-        });
-        await ApiClient().dio.post('/api/shop/profile/cover', data: formData);
-      } catch (e) {
-        debugPrint('Cover upload error: $e');
-      }
-    }
-
-    if (_pickedLogo != null) {
-      try {
-        final formData = FormData.fromMap({
-          'logo': kIsWeb
-              ? MultipartFile.fromBytes(
-                  await _pickedLogo!.readAsBytes(),
-                  filename: _pickedLogo!.name,
-                )
-              : await MultipartFile.fromFile(
-                  _pickedLogo!.path,
-                  filename: _pickedLogo!.name,
-                ),
-        });
-        await ApiClient().dio.post('/api/shop/profile/logo', data: formData);
-      } catch (e) {
-        debugPrint('Logo upload error: $e');
-      }
-    }
-
+    
     final payload = {
       'nameEn': _nameEnCtrl.text,
       'nameMm': _nameMmCtrl.text,
@@ -310,62 +175,70 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       'descriptionEn': _descEnCtrl.text,
       'descriptionMm': _descMmCtrl.text,
       'descriptionTh': _descThCtrl.text,
+      'categoryEn': _catEnCtrl.text,
+      'categoryMm': _catMmCtrl.text,
+      'categoryTh': _catThCtrl.text,
+      'subCategoryEn': _subCatEnCtrl.text,
+      'subCategoryMm': _subCatMmCtrl.text,
+      'subCategoryTh': _subCatThCtrl.text,
       'phone': _phoneCtrl.text,
       'email': _emailCtrl.text,
       'addressEn': _addressEnCtrl.text,
       'addressMm': _addressMmCtrl.text,
       'addressTh': _addressThCtrl.text,
       'districtEn': _districtCtrl.text,
-      'districtMm': _districtCtrl.text,
-      'districtTh': _districtCtrl.text,
       'cityEn': _cityCtrl.text,
-      'cityMm': _cityCtrl.text,
-      'cityTh': _cityCtrl.text,
-      'latitude': _latitude ?? 16.8409,
-      'longitude': _longitude ?? 96.1735,
+      'googleMapsLink': _mapsLinkCtrl.text,
+      'baseDeliveryFee': double.tryParse(_baseFeeCtrl.text) ?? 0.0,
+      'minOrderAmount': double.tryParse(_minAmountCtrl.text) ?? 0.0,
+      'maxItemQuantityPerOrder': int.tryParse(_maxQtyCtrl.text) ?? 10,
       'hasParking': _hasParking,
       'hasWifi': _hasWifi,
       'hasDelivery': _hasDelivery,
       'isHalal': _isHalal,
       'isVegetarian': _isVegetarian,
-      'pricePreference': _priceRange == 0 ? 'LOW' : (_priceRange == 1 ? 'MEDIUM' : 'HIGH'),
-      'maxItemQuantityPerOrder': int.tryParse(_maxQtyCtrl.text) ?? 10,
-      'minOrderAmount': double.tryParse(_minAmountCtrl.text) ?? 0.0,
-      'baseDeliveryFee': double.tryParse(_baseFeeCtrl.text) ?? 0.0,
       'deliveryEnabled': _deliveryEnabled,
-      'googleMapsLink': _mapsLinkCtrl.text,
+      'pricePreference': _priceRange == 0 ? 'LOW' : (_priceRange == 1 ? 'MEDIUM' : 'HIGH'),
     };
 
-    final success = await ProfileService().updateShopProfile(payload);
-
-    if (!context.mounted) return;
-
-    if (success) {
+    final success = await _profileService.updateShopProfile(payload);
+    
+    if (success && mounted) {
       setState(() {
-        _hasChanges = false;
         _isSaving = false;
+        _hasChanges = false;
         _pickedCover = null;
         _pickedLogo = null;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile saved successfully!'),
-          backgroundColor: Color(0xFFED3A72),
+        SnackBar(
+          content: Text(
+            'Profile saved successfully',
+            style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500),
+          ),
+          backgroundColor: const Color(0xFFED3973),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(20),
         ),
       );
       Navigator.pop(context, true);
-    } else {
+    } else if (mounted) {
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to save profile. Please try again.'),
-          backgroundColor: Color(0xFFEF4444),
+        SnackBar(
+          content: Text(
+            'Failed to save profile. Please try again.',
+            style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500),
+          ),
+          backgroundColor: const Color(0xFFEF4444),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(20),
         ),
       );
     }
   }
-
-  // ── Build ────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -391,40 +264,33 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       },
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
-        extendBodyBehindAppBar: true,
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: Colors.white,
           elevation: 0,
-          scrolledUnderElevation: 0,
-          leading: Padding(
-            padding: const EdgeInsets.all(8),
-            child: GestureDetector(
-              onTap: () async {
-                final should = await _onWillPop();
-                if (should && context.mounted) Navigator.pop(context);
-              },
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.arrow_back,
-                  color: Colors.black,
-                  size: 20,
-                ),
-              ),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () async {
+              final should = await _onWillPop();
+              if (should && mounted) Navigator.pop(context);
+            },
+          ),
+          title: Text(
+            'Edit Profile',
+            style: GoogleFonts.poppins(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF1E293B),
             ),
           ),
         ),
         body: ListView(
           padding: const EdgeInsets.only(bottom: 24),
           children: [
-            // ── FIXED: Hero cover + floating info card ──────────────────
             _buildCoverLogoUpload(),
-
             const SizedBox(height: 20),
 
+            _buildSectionTitle('Basic Information'),
+            const SizedBox(height: 16),
             _buildSection(
               label: 'Shop Name',
               child: _buildLangField(
@@ -438,7 +304,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 hint: 'Enter shop name',
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             _buildSection(
               label: 'Shop Slug (Read-only)',
               child: _buildTextField(
@@ -448,39 +314,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 enabled: false,
               ),
             ),
-            const SizedBox(height: 32),
-            _buildSection(
-              label: 'Category',
-              child: _buildLangField(
-                selectedLang: _catLang,
-                onLangChanged: (l) => setState(() => _catLang = l),
-                controller: _catLang == 'EN'
-                    ? _catEnCtrl
-                    : _catLang == 'MM'
-                    ? _catMmCtrl
-                    : _catThCtrl,
-                hint: 'Enter category',
-              ),
-            ),
-            const SizedBox(height: 32),
-
-            _buildSection(
-              label: 'Sub-category',
-              child: _buildLangField(
-                selectedLang: _subCatLang,
-                onLangChanged: (l) => setState(() => _subCatLang = l),
-                controller: _subCatLang == 'EN'
-                    ? _subCatEnCtrl
-                    : _subCatLang == 'MM'
-                    ? _subCatMmCtrl
-                    : _subCatThCtrl,
-                hint: 'Enter sub-category',
-              ),
-            ),
-            const SizedBox(height: 32),
-
-
-
+            const SizedBox(height: 24),
             _buildSection(
               label: 'Description',
               child: _buildLangField(
@@ -496,7 +330,38 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
               ),
             ),
             const SizedBox(height: 32),
-
+            _buildSectionTitle('Category'),
+            const SizedBox(height: 16),
+            _buildSection(
+              label: 'Shop Category',
+              child: _buildLangField(
+                selectedLang: _catLang,
+                onLangChanged: (l) => setState(() => _catLang = l),
+                controller: _catLang == 'EN'
+                    ? _catEnCtrl
+                    : _catLang == 'MM'
+                    ? _catMmCtrl
+                    : _catThCtrl,
+                hint: 'Enter category',
+              ),
+            ),
+            const SizedBox(height: 24),
+            _buildSection(
+              label: 'Sub-category',
+              child: _buildLangField(
+                selectedLang: _subCatLang,
+                onLangChanged: (l) => setState(() => _subCatLang = l),
+                controller: _subCatLang == 'EN'
+                    ? _subCatEnCtrl
+                    : _subCatLang == 'MM'
+                    ? _subCatMmCtrl
+                    : _subCatThCtrl,
+                hint: 'Enter sub-category',
+              ),
+            ),
+            const SizedBox(height: 32),
+            _buildSectionTitle('Contact Details'),
+            const SizedBox(height: 16),
             _buildSection(
               label: 'Phone Number',
               child: _buildTextField(
@@ -505,10 +370,9 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 icon: PhosphorIconsRegular.phone,
               ),
             ),
-            const SizedBox(height: 32),
-
+            const SizedBox(height: 24),
             _buildSection(
-              label: 'Email',
+              label: 'Email Address',
               child: _buildTextField(
                 _emailCtrl,
                 'shop@example.com',
@@ -516,7 +380,8 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
               ),
             ),
             const SizedBox(height: 32),
-
+            _buildSectionTitle('Location'),
+            const SizedBox(height: 16),
             _buildSection(
               label: 'Street Address',
               child: _buildLangField(
@@ -530,23 +395,45 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 hint: 'Enter street address',
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
                   Expanded(
-                    child: _buildSection(
+                    child: _buildSearchableField(
                       label: 'District',
-                      child: _buildTextField(_districtCtrl, 'District'),
+                      value: _districtCtrl.text.isNotEmpty ? _districtCtrl.text : null,
+                      placeholder: 'Select District',
+                      onTap: () => _showSearchableSelect<String>(
+                        title: 'Select District',
+                        items: _districts,
+                        labelMapper: (d) => d,
+                        onSelected: (d) => setState(() {
+                          _districtCtrl.text = d;
+                          _markChanged();
+                        }),
+                      ),
+                      onClear: () => setState(() => _districtCtrl.clear()),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(
-                    child: _buildSection(
+                    child: _buildSearchableField(
                       label: 'City',
-                      child: _buildTextField(_cityCtrl, 'City'),
+                      value: _cityCtrl.text.isNotEmpty ? _cityCtrl.text : null,
+                      placeholder: 'Select City',
+                      onTap: () => _showSearchableSelect<String>(
+                        title: 'Select City',
+                        items: _cities,
+                        labelMapper: (c) => c,
+                        onSelected: (c) => setState(() {
+                          _cityCtrl.text = c;
+                          _markChanged();
+                        }),
+                      ),
+                      onClear: () => setState(() => _cityCtrl.clear()),
                     ),
                   ),
                 ],
@@ -588,7 +475,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(child: SizedBox()), // Placeholder
+                  const Expanded(child: SizedBox()),
                 ],
               ),
             ),
@@ -790,7 +677,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
           decoration: BoxDecoration(
             color: Colors.white,
             border: Border(
-              top: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
+              top: BorderSide(color: Colors.black.withOpacity(0.05)),
             ),
           ),
           child: SafeArea(
@@ -810,10 +697,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                     elevation: 0,
                   ),
                   child: _isSaving
-                      ? const CustomLoadingIndicator(
-                          size: 24,
-                          color: Colors.white,
-                        )
+                      ? const CustomLoadingIndicator(size: 24, color: Colors.white)
                       : Text(
                           'Save',
                           style: GoogleFonts.poppins(
@@ -830,7 +714,96 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     );
   }
 
-  // ── FIXED: Cover + Logo upload ────────────────────────────────────────────
+  void _showSearchableSelect<T>({
+    required String title,
+    required List<T> items,
+    required String Function(T) labelMapper,
+    required Function(T) onSelected,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _SearchSelectorSheet<T>(
+        title: title,
+        items: items,
+        labelMapper: labelMapper,
+        onSelected: onSelected,
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Text(
+        title.toUpperCase(),
+        style: GoogleFonts.poppins(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF94A3B8),
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchableField({
+    required String label,
+    String? value,
+    required String placeholder,
+    required VoidCallback onTap,
+    VoidCallback? onClear,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF1E293B),
+          ),
+        ),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    value ?? placeholder,
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: value != null ? FontWeight.w500 : FontWeight.w400,
+                      color: value != null ? const Color(0xFF1E293B) : const Color(0xFF94A3B8),
+                    ),
+                  ),
+                ),
+                if (value != null && onClear != null)
+                  GestureDetector(
+                    onTap: onClear,
+                    child: const Icon(Icons.close, size: 16, color: Color(0xFF94A3B8)),
+                  )
+                else
+                  const Icon(Icons.keyboard_arrow_down, size: 20, color: Color(0xFF94A3B8)),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildCoverLogoUpload() {
     final coverUrl = _currentProfile?.coverUrl;
     final logoUrl = _currentProfile?.logoUrl;
@@ -845,20 +818,16 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // ── Full hero image ───────────────────────────────────────────
           Positioned(
             top: 0, left: 0, right: 0,
             height: heroHeight,
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(32),
-              ),
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
               child: GestureDetector(
                 onTap: _pickCover,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                  // Image or gradient fallback
                   if (_pickedCover != null)
                     kIsWeb
                         ? Image.network(_pickedCover!.path, fit: BoxFit.cover)
@@ -873,7 +842,6 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                   else
                     _buildCoverGradient(),
 
-                  // Dark overlay at top for back button contrast
                   Positioned(
                     top: 0, left: 0, right: 0, height: 90,
                     child: Container(
@@ -882,7 +850,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.black.withValues(alpha: 0.35),
+                            Colors.black.withOpacity(0.35),
                             Colors.transparent,
                           ],
                         ),
@@ -890,10 +858,9 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                     ),
                   ),
 
-                  // Camera hint when no cover photo
                   if (_pickedCover == null && (coverUrl == null || coverUrl.isEmpty))
                     Container(
-                      color: Colors.black.withValues(alpha: 0.15),
+                      color: Colors.black.withOpacity(0.15),
                       child: Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -901,35 +868,25 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.25),
+                                color: Colors.white.withOpacity(0.25),
                                 shape: BoxShape.circle,
                               ),
-                              child: const PhosphorIcon(
-                                PhosphorIconsRegular.camera,
-                                size: 28,
-                                color: Colors.white,
-                              ),
+                              child: const PhosphorIcon(PhosphorIconsRegular.camera, size: 28, color: Colors.white),
                             ),
                             const SizedBox(height: 10),
                             Text(
                               'Tap to add cover photo',
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
+                              style: GoogleFonts.poppins(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
                       ),
                     ),
-                ],
+                  ],
+                ),
               ),
             ),
-            ),
           ),
-
-          // ── Floating info card (inside hero image) ──────
           Positioned(
             bottom: 24,
             left: 16,
@@ -941,7 +898,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.15),
+                    color: Colors.black.withOpacity(0.15),
                     blurRadius: 24,
                     offset: const Offset(0, 8),
                   ),
@@ -949,7 +906,6 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
               ),
               child: Row(
                 children: [
-                  // Logo (tap to change)
                   GestureDetector(
                     onTap: _pickLogo,
                     child: Stack(
@@ -1036,23 +992,16 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         ),
       ),
       child: const Center(
-        child: PhosphorIcon(
-          PhosphorIconsRegular.storefront,
-          size: 26,
-          color: Colors.white,
-        ),
+        child: PhosphorIcon(PhosphorIconsRegular.storefront, size: 26, color: Colors.white),
       ),
     );
   }
-
-  // ── Image helpers ─────────────────────────────────────────────────────────
 
   void _viewImage(String title, {String? url, String? path}) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            FullscreenImageViewer(title: title, imageUrl: url, imagePath: path),
+        builder: (_) => FullscreenImageViewer(title: title, imageUrl: url, imagePath: path),
       ),
     );
   }
@@ -1082,9 +1031,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
 
   Future<void> _pickCover() async {
     final coverUrl = _currentProfile?.coverUrl;
-    final hasImage =
-        _pickedCover != null || (coverUrl != null && coverUrl.isNotEmpty);
-
+    final hasImage = _pickedCover != null || (coverUrl != null && coverUrl.isNotEmpty);
     if (hasImage) {
       _showImageActionSheet(
         title: 'Cover Photo',
@@ -1113,9 +1060,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
 
   Future<void> _pickLogo() async {
     final logoUrl = _currentProfile?.logoUrl;
-    final hasImage =
-        _pickedLogo != null || (logoUrl != null && logoUrl.isNotEmpty);
-
+    final hasImage = _pickedLogo != null || (logoUrl != null && logoUrl.isNotEmpty);
     if (hasImage) {
       _showImageActionSheet(
         title: 'Profile Picture',
@@ -1162,60 +1107,23 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Permission Required',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 16),
-        ),
-        content: Text(
-          'Photo library access is required. Please enable it in Settings.',
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            color: const Color(0xFF475569),
-          ),
-        ),
+        title: Text('Permission Required', style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 16)),
+        content: Text('Photo library access is required. Please enable it in Settings.', style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF475569))),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.poppins(color: const Color(0xFF475569)),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(
-              'Open Settings',
-              style: GoogleFonts.poppins(
-                color: const Color(0xFFED3973),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text('Cancel', style: GoogleFonts.poppins(color: const Color(0xFF475569)))),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text('Open Settings', style: GoogleFonts.poppins(color: const Color(0xFFED3973), fontWeight: FontWeight.w600))),
         ],
       ),
     );
   }
 
-  // ── Form helpers ──────────────────────────────────────────────────────────
-
-  Widget _buildSection({
-    required String label,
-    required Widget child,
-    EdgeInsets? padding,
-  }) {
+  Widget _buildSection({required String label, required Widget child, EdgeInsets? padding}) {
     return Padding(
       padding: padding ?? const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: GoogleFonts.poppins(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF475569),
-            ),
-          ),
+          Text(label, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF475569))),
           const SizedBox(height: 16),
           child,
         ],
@@ -1241,31 +1149,14 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
               child: GestureDetector(
                 onTap: () => onLangChanged(lang),
                 child: Container(
-                  constraints: const BoxConstraints(
-                    minWidth: 48,
-                    minHeight: 48,
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
-                  ),
+                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
                     color: selected ? const Color(0xFFED3973) : Colors.white,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: selected
-                          ? const Color(0xFFED3973)
-                          : const Color(0xFFE2E8F0),
-                    ),
+                    border: Border.all(color: selected ? const Color(0xFFED3973) : const Color(0xFFE2E8F0)),
                   ),
-                  child: Text(
-                    lang,
-                    style: GoogleFonts.poppins(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: selected ? Colors.white : const Color(0xFF64748B),
-                    ),
-                  ),
+                  child: Text(lang, style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600, color: selected ? Colors.white : const Color(0xFF64748B))),
                 ),
               ),
             );
@@ -1278,87 +1169,41 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
           onChanged: (_) => _markChanged(),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.poppins(
-              color: const Color(0xFFCBD5E1),
-              fontSize: 14,
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 12,
-            ),
+            hintStyle: GoogleFonts.poppins(color: const Color(0xFFCBD5E1), fontSize: 14),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             filled: true,
             fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(
-                color: Color(0xFFED3973),
-                width: 1.5,
-              ),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFED3973), width: 1.5)),
           ),
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            color: const Color(0xFF1E293B),
-          ),
+          style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B)),
         ),
       ],
     );
   }
 
-  Widget _buildTextField(
-    TextEditingController ctrl,
-    String hint, {
-    IconData? icon,
-    bool enabled = true,
-  }) {
+  Widget _buildTextField(TextEditingController ctrl, String hint, {IconData? icon, bool enabled = true}) {
     return TextField(
       controller: ctrl,
       enabled: enabled,
       onChanged: (_) => _markChanged(),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: GoogleFonts.poppins(
-          color: const Color(0xFFCBD5E1),
-          fontSize: 14,
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 12,
-        ),
-        prefixIcon: icon != null
-            ? PhosphorIcon(icon, size: 18, color: const Color(0xFF94A3B8))
-            : null,
+        hintStyle: GoogleFonts.poppins(color: const Color(0xFFCBD5E1), fontSize: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        prefixIcon: icon != null ? PhosphorIcon(icon, size: 18, color: const Color(0xFF94A3B8)) : null,
         filled: true,
         fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFFED3973), width: 1.5),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFED3973), width: 1.5)),
       ),
       style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B)),
     );
   }
 
-  Widget _buildToggleSection({
-    required String title,
-    required List<_ToggleItem> items,
-  }) {
+  Widget _buildToggleSection({required String title, required List<_ToggleItem> items}) {
     return _buildSection(
       label: title,
       child: Container(
@@ -1374,26 +1219,15 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             return Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 4,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
                   child: Row(
                     children: [
-                      PhosphorIcon(
-                        item.icon,
-                        size: 20,
-                        color: const Color(0xFF475569),
-                      ),
+                      PhosphorIcon(item.icon, size: 20, color: const Color(0xFF475569)),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           item.label,
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF1E293B),
-                          ),
+                          style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: const Color(0xFF1E293B)),
                         ),
                       ),
                       SizedBox(
@@ -1403,18 +1237,11 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                           child: Switch(
                             value: item.value,
                             onChanged: item.onChanged,
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             thumbColor: WidgetStateProperty.all(Colors.white),
-                            trackOutlineColor: WidgetStateProperty.all(
-                              Colors.transparent,
-                            ),
-                            trackColor: WidgetStateProperty.resolveWith((
-                              states,
-                            ) {
-                              if (states.contains(WidgetState.selected)) {
-                                return const Color(0xFFED3973);
-                              }
+                            trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+                            trackColor: WidgetStateProperty.resolveWith((states) {
+                              if (states.contains(WidgetState.selected)) return const Color(0xFFED3973);
                               return const Color(0xFFE2E8F0);
                             }),
                           ),
@@ -1424,12 +1251,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                   ),
                 ),
                 if (i < items.length - 1)
-                  const Divider(
-                    height: 1,
-                    color: Color(0xFFE2E8F0),
-                    indent: 14,
-                    endIndent: 14,
-                  ),
+                  const Divider(height: 1, color: Color(0xFFE2E8F0), indent: 14, endIndent: 14),
               ],
             );
           }).toList(),
@@ -1437,6 +1259,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       ),
     );
   }
+
   Widget _buildSmallField({
     required String label,
     required TextEditingController controller,
@@ -1448,70 +1271,36 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       children: [
         Text(
           label,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: const Color(0xFF64748B),
-          ),
+          style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
         ),
         const SizedBox(height: 6),
-        _buildTextFieldWithKeyboard(controller, hint, keyboardType),
+        TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          onChanged: (_) => _markChanged(),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: GoogleFonts.poppins(color: const Color(0xFFCBD5E1), fontSize: 14),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFED3973), width: 1.5)),
+          ),
+          style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B)),
+        ),
       ],
     );
   }
-
-  Widget _buildTextFieldWithKeyboard(
-    TextEditingController ctrl,
-    String hint,
-    TextInputType keyboardType,
-  ) {
-    return TextField(
-      controller: ctrl,
-      keyboardType: keyboardType,
-      onChanged: (_) => _markChanged(),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: GoogleFonts.poppins(
-          color: const Color(0xFFCBD5E1),
-          fontSize: 14,
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 12,
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFFED3973), width: 1.5),
-        ),
-      ),
-      style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B)),
-    );
-  }
 }
-
-// ── Supporting classes ────────────────────────────────────────────────────────
 
 class _ToggleItem {
   final IconData icon;
   final String label;
   final bool value;
   final ValueChanged<bool> onChanged;
-  const _ToggleItem({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
+  const _ToggleItem({required this.icon, required this.label, required this.value, required this.onChanged});
 }
 
 class _PriceOption extends StatelessWidget {
@@ -1519,12 +1308,7 @@ class _PriceOption extends StatelessWidget {
   final int index;
   final bool selected;
   final VoidCallback onTap;
-  const _PriceOption({
-    required this.label,
-    required this.index,
-    required this.selected,
-    required this.onTap,
-  });
+  const _PriceOption({required this.label, required this.index, required this.selected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -1543,11 +1327,7 @@ class _PriceOption extends StatelessWidget {
           child: Text(
             label,
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: selected ? Colors.white : const Color(0xFF64748B),
-            ),
+            style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: selected ? Colors.white : const Color(0xFF64748B)),
           ),
         ),
       ),
@@ -1559,88 +1339,45 @@ class _ImageActionSheet extends StatelessWidget {
   final String title;
   final VoidCallback onView;
   final VoidCallback onChange;
-
-  const _ImageActionSheet({
-    required this.title,
-    required this.onView,
-    required this.onChange,
-  });
+  const _ImageActionSheet({required this.title, required this.onView, required this.onChange});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
             margin: const EdgeInsets.symmetric(vertical: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
-              borderRadius: BorderRadius.circular(2),
-            ),
+            width: 40, height: 4,
+            decoration: BoxDecoration(color: const Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(2)),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-            child: Text(
-              title,
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-                fontSize: 17,
-                color: const Color(0xFF1E293B),
-              ),
-            ),
+            child: Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 17, color: const Color(0xFF1E293B))),
           ),
           const Divider(height: 1),
           ListTile(
-            leading: const Icon(
-              Icons.visibility_outlined,
-              color: Color(0xFFED3973),
-            ),
-            title: Text(
-              'View Image',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-            ),
+            leading: const Icon(Icons.visibility_outlined, color: Color(0xFFED3973)),
+            title: Text('View Image', style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
             onTap: onView,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 4,
-            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
           ),
           const Divider(height: 1, indent: 64),
           ListTile(
-            leading: const Icon(
-              Icons.camera_alt_outlined,
-              color: Color(0xFFED3973),
-            ),
-            title: Text(
-              'Change Image',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-            ),
+            leading: const Icon(Icons.camera_alt_outlined, color: Color(0xFFED3973)),
+            title: Text('Change Image', style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
             onTap: onChange,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 4,
-            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
           ),
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: SizedBox(
               width: double.infinity,
-              child: TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(
-                  'Cancel',
-                  style: GoogleFonts.poppins(color: const Color(0xFF64748B)),
-                ),
-              ),
+              child: TextButton(onPressed: () => Navigator.of(context).pop(), child: Text('Cancel', style: GoogleFonts.poppins(color: const Color(0xFF64748B)))),
             ),
           ),
         ],
@@ -1652,86 +1389,140 @@ class _ImageActionSheet extends StatelessWidget {
 class _LogoPickerSheet extends StatelessWidget {
   final VoidCallback onGallery;
   final VoidCallback onCamera;
-
   const _LogoPickerSheet({required this.onGallery, required this.onCamera});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
             margin: const EdgeInsets.symmetric(vertical: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
-              borderRadius: BorderRadius.circular(2),
-            ),
+            width: 40, height: 4,
+            decoration: BoxDecoration(color: const Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(2)),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-            child: Text(
-              'Update Shop Logo',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-                fontSize: 17,
-                color: const Color(0xFF1E293B),
-              ),
-            ),
+            child: Text('Update Shop Logo', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 17, color: const Color(0xFF1E293B))),
           ),
           const Divider(height: 1),
           ListTile(
-            leading: const Icon(
-              Icons.photo_library_outlined,
-              color: Color(0xFFED3973),
-            ),
-            title: Text(
-              'Choose from Gallery',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-            ),
+            leading: const Icon(Icons.photo_library_outlined, color: Color(0xFFED3973)),
+            title: Text('Choose from Gallery', style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
             onTap: onGallery,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 4,
-            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
           ),
           const Divider(height: 1, indent: 64),
           ListTile(
-            leading: const Icon(
-              Icons.camera_alt_outlined,
-              color: Color(0xFFED3973),
-            ),
-            title: Text(
-              'Take a Photo',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-            ),
+            leading: const Icon(Icons.camera_alt_outlined, color: Color(0xFFED3973)),
+            title: Text('Take a Photo', style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
             onTap: onCamera,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 24,
-              vertical: 4,
-            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
           ),
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: SizedBox(
               width: double.infinity,
-              child: TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(
-                  'Cancel',
-                  style: GoogleFonts.poppins(color: const Color(0xFF64748B)),
-                ),
+              child: TextButton(onPressed: () => Navigator.of(context).pop(), child: Text('Cancel', style: GoogleFonts.poppins(color: const Color(0xFF64748B)))),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SearchSelectorSheet<T> extends StatefulWidget {
+  final String title;
+  final List<T> items;
+  final String Function(T) labelMapper;
+  final Function(T) onSelected;
+  const _SearchSelectorSheet({required this.title, required this.items, required this.labelMapper, required this.onSelected});
+
+  @override
+  State<_SearchSelectorSheet<T>> createState() => _SearchSelectorSheetState<T>();
+}
+
+class _SearchSelectorSheetState<T> extends State<_SearchSelectorSheet<T>> {
+  late List<T> _filteredItems;
+  final _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredItems = widget.items;
+  }
+
+  void _filterItems(String query) {
+    setState(() {
+      _filteredItems = widget.items.where((item) => widget.labelMapper(item).toLowerCase().contains(query.toLowerCase())).toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    return Container(
+      padding: EdgeInsets.only(bottom: bottomInset),
+      decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24))),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 12),
+            width: 40, height: 4,
+            decoration: BoxDecoration(color: const Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(2)),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            child: Row(
+              children: [
+                Text(widget.title, style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B))),
+                const Spacer(),
+                IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: TextField(
+              controller: _searchController,
+              onChanged: _filterItems,
+              decoration: InputDecoration(
+                hintText: 'Search...',
+                hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
+                prefixIcon: const Icon(Icons.search, color: Color(0xFF94A3B8)),
+                filled: true,
+                fillColor: const Color(0xFFF8FAFC),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),
           ),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.4),
+            child: ListView.separated(
+              shrinkWrap: true,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              itemCount: _filteredItems.length,
+              separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF1F5F9)),
+              itemBuilder: (context, index) {
+                final item = _filteredItems[index];
+                return ListTile(
+                  title: Text(widget.labelMapper(item), style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: const Color(0xFF1E293B))),
+                  onTap: () {
+                    widget.onSelected(item);
+                    Navigator.pop(context);
+                  },
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 24),
         ],
       ),
     );

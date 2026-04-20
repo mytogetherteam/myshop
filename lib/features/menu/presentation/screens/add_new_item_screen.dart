@@ -3,15 +3,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:dio/dio.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
-import 'package:my_shop/core/data/services/image_upload_service.dart';
-import 'package:my_shop/core/network/api_client.dart';
 import '../../data/models/menu_item_model.dart';
 import '../../data/models/menu_category_model.dart';
 import '../../data/services/menu_service.dart';
-import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 
 class AddNewItemScreen extends StatefulWidget {
   final MenuItemModel? item;
@@ -26,33 +22,103 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   final MenuService _menuService = MenuService();
   final _formKey = GlobalKey<FormState>();
   
-  // Controllers
-  late final TextEditingController _nameController;
-  late final TextEditingController _descriptionController;
-  late final TextEditingController _priceController;
+  String _selectedLang = 'EN';
+
+  // Multi-language Controllers
+  final TextEditingController _nameEnController = TextEditingController();
+  final TextEditingController _nameMmController = TextEditingController();
+  final TextEditingController _nameThController = TextEditingController();
   
-  List<MenuCategoryModel> _categories = [];
-  MenuCategoryModel? _selectedCategory;
+  final TextEditingController _descEnController = TextEditingController();
+  final TextEditingController _descMmController = TextEditingController();
+  final TextEditingController _descThController = TextEditingController();
+  
+  // Numeric/Technical Controllers
+  final TextEditingController _priceController = TextEditingController();
+  final TextEditingController _originalPriceController = TextEditingController();
+  final TextEditingController _discountAmountController = TextEditingController();
+  final TextEditingController _discountPercentController = TextEditingController();
+  final TextEditingController _stockController = TextEditingController();
+  final TextEditingController _displayOrderController = TextEditingController(text: '1');
+  
+  final List<MenuCategoryModel> _categories = [];
+  final List<Map<String, dynamic>> _availableTags = [];
+  final List<int> _selectedTagIds = [];
   bool _isLoadingCategories = true;
+  bool _isLoadingTags = true;
+  
+  String _selectedCurrency = 'THB';
+  final List<String> _currencies = ['THB', 'USD', 'MMK'];
+
+  // Master Selections
+  int? _selectedMasterCategoryId;
+  int? _selectedMasterItemId;
+  
+  MenuCategoryModel? _selectedCategory;
   bool _isSaving = false;
 
   // Image state
   XFile? _pickedImage;
 
-  // New state for dynamic variants
-  final List<Map<String, String>> _variants = [
-    {'name': 'Chicken Zinger Burger', 'price': '75'},
-    {'name': 'Beef Patty Burger', 'price': '115'},
-  ];
+  // Boolean Flags
+  bool _isAvailable = true;
+  bool _isPopular = false;
+  bool _isRecommended = false;
+  bool _isVegetarian = false;
+  bool _isSpicy = false;
+  bool _isHotDeal = false;
+  bool _isCombo = false;
+
+  // Meal Types
+  final List<String> _selectedMealTypes = [];
+  final List<String> _allMealTypes = ['BREAKFAST', 'LUNCH', 'DINNER'];
+
+  // Complex Dynamic Lists
+  final List<MenuItemVariantModel> _variants = [];
+  final List<MenuItemOptionGroupModel> _optionGroups = [];
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.item?.nameEn ?? widget.item?.nameMm ?? widget.item?.nameTh ?? '');
-    _descriptionController = TextEditingController(text: widget.item?.descriptionEn ?? widget.item?.description ?? '');
-    _priceController = TextEditingController(text: widget.item?.price.toString() ?? '');
-    
+    _initializeData();
     _fetchCategories();
+    _fetchTags();
+  }
+
+  void _initializeData() {
+    if (widget.item != null) {
+      final item = widget.item!;
+      _nameEnController.text = item.nameEn ?? '';
+      _nameMmController.text = item.nameMm ?? '';
+      _nameThController.text = item.nameTh ?? '';
+      
+      _descEnController.text = item.descriptionEn ?? '';
+      _descMmController.text = item.descriptionMm ?? '';
+      _descThController.text = item.descriptionTh ?? '';
+      
+      _priceController.text = item.price.toString();
+      _originalPriceController.text = item.originalPrice?.toString() ?? '';
+      _discountAmountController.text = item.discountAmount?.toString() ?? '';
+      _discountPercentController.text = item.discountPercentage?.toString() ?? '';
+      _stockController.text = item.stockQuantity?.toString() ?? '100';
+      _displayOrderController.text = item.displayOrder?.toString() ?? '1';
+      _selectedMasterItemId = item.masterItemId;
+      _selectedMasterCategoryId = item.masterCategoryId;
+      _selectedTagIds.addAll(item.tagIds);
+      
+      _selectedCurrency = item.currency ?? 'THB';
+      _isAvailable = item.isAvailable;
+      _isPopular = item.isPopular;
+      _isRecommended = item.isRecommended;
+      _isVegetarian = item.isVegetarian;
+      _isSpicy = item.isSpicy;
+      _isHotDeal = item.isHotDeal;
+      _isCombo = item.isCombo;
+      
+      _selectedMealTypes.addAll(item.mealTypes);
+      _variants.addAll(item.variants);
+      _optionGroups.addAll(item.optionGroups);
+    }
   }
 
   Future<void> _fetchCategories() async {
@@ -60,13 +126,11 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     final categories = await _menuService.getCategories();
     if (mounted) {
       setState(() {
-        _categories = categories ?? [];
+        _categories.addAll(categories ?? []);
         _isLoadingCategories = false;
         if (widget.item != null && _categories.isNotEmpty) {
           try {
-            _selectedCategory = _categories.firstWhere(
-              (c) => c.id == widget.item?.categoryId,
-            );
+            _selectedCategory = _categories.firstWhere((c) => c.id == widget.item?.categoryId);
           } catch (_) {
             _selectedCategory = _categories.isNotEmpty ? _categories.first : null;
           }
@@ -77,51 +141,81 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     }
   }
 
+  Future<void> _fetchTags() async {
+    setState(() => _isLoadingTags = true);
+    // Mock fetch
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (mounted) {
+      setState(() {
+        _availableTags.addAll([
+          {'id': 1, 'name': 'New Arrival'},
+          {'id': 2, 'name': 'Best Seller'},
+          {'id': 3, 'name': 'Gluten Free'},
+        ]);
+        _isLoadingTags = false;
+      });
+    }
+  }
+
   @override
   void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
+    _nameEnController.dispose();
+    _nameMmController.dispose();
+    _nameThController.dispose();
+    _descEnController.dispose();
+    _descMmController.dispose();
+    _descThController.dispose();
     _priceController.dispose();
+    _originalPriceController.dispose();
+    _discountAmountController.dispose();
+    _discountPercentController.dispose();
+    _stockController.dispose();
+    _displayOrderController.dispose();
     super.dispose();
   }
 
   Future<void> _handleSave() async {
     if (!_formKey.currentState!.validate()) return;
-    
-    setState(() => _isSaving = true);
-    
-    String? uploadedImageUrl;
+    if (_nameEnController.text.isEmpty && _nameMmController.text.isEmpty && _nameThController.text.isEmpty) {
+      _showToast('Please enter at least one name', isError: true);
+      return;
+    }
 
-    // Upload image if a new one was picked
+    setState(() => _isSaving = true);
+    String? imageUrl = widget.item?.imageUrl;
     if (_pickedImage != null) {
-      try {
-        final formData = FormData.fromMap({
-          'image': kIsWeb
-            ? MultipartFile.fromBytes(await _pickedImage!.readAsBytes(), filename: _pickedImage!.name)
-            : await MultipartFile.fromFile(
-                _pickedImage!.path,
-                filename: _pickedImage!.name,
-              ),
-        });
-        
-        // This endpoint should return the new image URL
-        final response = await ApiClient().dio.post('/api/menu/items/upload', data: formData);
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          uploadedImageUrl = response.data['url'];
-        }
-      } catch (e) {
-        debugPrint('Item image upload error: $e');
-        // We might want to handle this error specifically, but for now we continue
-      }
+      imageUrl = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=300&auto=format&fit=crop';
     }
 
     final payload = {
-      'nameEn': _nameController.text,
-      'descriptionEn': _descriptionController.text,
+      'nameEn': _nameEnController.text,
+      'nameMm': _nameMmController.text,
+      'nameTh': _nameThController.text,
+      'descriptionEn': _descEnController.text,
+      'descriptionMm': _descMmController.text,
+      'descriptionTh': _descThController.text,
       'price': double.tryParse(_priceController.text) ?? 0.0,
+      'originalPrice': double.tryParse(_originalPriceController.text) ?? 0.0,
+      'discountAmount': double.tryParse(_discountAmountController.text) ?? 0.0,
+      'discountPercentage': double.tryParse(_discountPercentController.text) ?? 0.0,
       'categoryId': _selectedCategory?.id,
-      'isAvailable': widget.item?.isAvailable ?? true,
-      'imageUrl': ?uploadedImageUrl,
+      'stockQuantity': int.tryParse(_stockController.text) ?? 0,
+      'displayOrder': int.tryParse(_displayOrderController.text) ?? 1,
+      'tagIds': _selectedTagIds,
+      'masterItemId': _selectedMasterItemId,
+      'masterCategoryId': _selectedMasterCategoryId,
+      'currency': _selectedCurrency,
+      'isAvailable': _isAvailable,
+      'isPopular': _isPopular,
+      'isRecommended': _isRecommended,
+      'isVegetarian': _isVegetarian,
+      'isSpicy': _isSpicy,
+      'isHotDeal': _isHotDeal,
+      'isCombo': _isCombo,
+      'imageUrl': imageUrl,
+      'mealTypes': _selectedMealTypes,
+      'variants': _variants.map((v) => v.toJson()).toList(),
+      'optionGroups': _optionGroups.map((o) => o.toJson()).toList(),
     };
 
     bool success;
@@ -134,107 +228,207 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     if (mounted) {
       setState(() => _isSaving = false);
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Item updated successfully'),
-            backgroundColor: Color(0xFFED3A72),
-          ),
-        );
-        Navigator.pop(context, true); // Return true to indicate change
+        _showToast(widget.item != null ? 'Item updated successfully' : 'Item created successfully');
+        Navigator.pop(context, true);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to save item'),
-            backgroundColor: Color(0xFFEF4444),
-          ),
-        );
+        _showToast('Failed to save item', isError: true);
       }
     }
   }
 
+  Future<void> _deleteItem() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Delete Item', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+        content: Text('Are you sure you want to delete this item? This action cannot be undone.', style: GoogleFonts.poppins()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel', style: GoogleFonts.poppins(color: const Color(0xFF64748B))),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('Delete', style: GoogleFonts.poppins(color: const Color(0xFFEF4444), fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() => _isSaving = true);
+      final success = await _menuService.deleteMenuItem(widget.item!.id);
+      if (mounted) {
+        setState(() => _isSaving = false);
+        if (success) {
+          _showToast('Item deleted successfully');
+          Navigator.pop(context, true);
+        } else {
+          _showToast('Failed to delete item', isError: true);
+        }
+      }
+    }
+  }
+
+  void _showToast(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white)),
+        backgroundColor: isError ? const Color(0xFFEF4444) : const Color(0xFFED3A72),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(20),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: true,
-      onPopInvokedWithResult: (didPop, result) {
-        // Additional handling could go here if we needed to force a specific route,
-        // but Navigator.pop should already be taking us to the MenuPage.
-      },
-      child: Scaffold(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
         backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () => Navigator.pop(context),
-          ),
-          title: Text(
-            widget.item != null ? widget.item!.displayName : 'Add new items',
-            style: GoogleFonts.poppins(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF1E293B),
-            ),
-          ),
-          centerTitle: false,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
         ),
-        body: _isLoadingCategories 
-          ? _buildSkeletonForm()
-          : SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                  const SizedBox(height: 10),
+        title: Text(
+          widget.item != null ? 'Edit Item' : 'Add New Item',
+          style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),
+        ),
+        centerTitle: false,
+      ),
+      body: _isLoadingCategories 
+        ? const Center(child: CustomLoadingIndicator())
+        : SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   _buildImageUploadSection(),
                   const SizedBox(height: 32),
                   
-                  // Basic Information Section
-                  _buildSectionTitle('BASIC INFORMATION'),
+                  _buildSectionTitle('ITEM INFORMATION'),
                   const SizedBox(height: 16),
-                  _buildTextField('Item Name', _nameController, hint: 'Enter item name'),
+                  _buildLangSwitcher(),
                   const SizedBox(height: 16),
-                  _buildTextField('Description', _descriptionController, hint: 'What is your menu description?', isMultiline: true),
+                  _buildMainNameField(),
                   const SizedBox(height: 16),
-                  _buildCategoryDropdown(),
+                  _buildMainDescriptionField(),
                   const SizedBox(height: 16),
-                  _buildTextField('Main Price', _priceController, hint: 'Enter price (e.g. 100)', keyboardType: TextInputType.number),
-                  
-                  const SizedBox(height: 32),
-                  
-                  // Variants Section
-                  _buildSectionTitle('VARIANT'),
-                  const SizedBox(height: 16),
-                  ..._variants.asMap().entries.map((entry) => _buildDismissibleVariant(entry.value, entry.key)),
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _variants.add({'name': 'Variant name', 'price': '0000'});
-                      });
-                    },
-                    style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                    child: Text(
-                      '+ Add Variant',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFFED3973),
-                      ),
+                  _buildSearchableField(
+                    label: 'Category',
+                    value: _selectedCategory?.displayName,
+                    placeholder: 'Select category',
+                    onTap: () => _showSearchableSelect<MenuCategoryModel>(
+                      title: 'Select Category',
+                      items: _categories,
+                      labelMapper: (c) => c.displayName,
+                      onSelected: (c) => setState(() => _selectedCategory = c),
                     ),
                   ),
                   
                   const SizedBox(height: 32),
-                  
-                  // Add On Section
-                  _buildSectionTitle('ADD ON'),
+                  _buildSectionTitle('PRICING & STOCK'),
                   const SizedBox(height: 16),
-                  _buildAddOnSection(),
+                  Row(
+                    children: [
+                      Expanded(child: _buildTextField('Price', _priceController, hint: '0.00', keyboardType: TextInputType.number)),
+                      const SizedBox(width: 16),
+                      Expanded(child: _buildCurrencyDropdown()),
+                    ],
+                  ),
+                   const SizedBox(height: 16),
+                   Row(
+                     children: [
+                       Expanded(child: _buildTextField('Original Price', _originalPriceController, hint: '0.00', keyboardType: TextInputType.number)),
+                       const SizedBox(width: 16),
+                       Expanded(child: _buildTextField('Stock Quantity', _stockController, hint: '100', keyboardType: TextInputType.number)),
+                     ],
+                   ),
+                   const SizedBox(height: 16),
+                   Row(
+                     children: [
+                       Expanded(child: _buildTextField('Discount Amount', _discountAmountController, hint: '0.00', keyboardType: TextInputType.number)),
+                       const SizedBox(width: 16),
+                       Expanded(child: _buildTextField('Discount %', _discountPercentController, hint: '0', keyboardType: TextInputType.number)),
+                     ],
+                   ),
+
+                  const SizedBox(height: 32),
+                  _buildTagSelection(),
+                  const SizedBox(height: 16),
+                  _buildSearchableField(
+                    label: 'Master Category',
+                    value: _selectedMasterCategoryId != null ? 'Category #$_selectedMasterCategoryId' : null,
+                    placeholder: 'Search master categories...',
+                    onTap: () => _showSearchableSelect<int>(
+                      title: 'Master Category',
+                      items: List.generate(20, (i) => i + 1), // Dummy data
+                      labelMapper: (id) => 'Global Category #$id',
+                      onSelected: (id) => setState(() => _selectedMasterCategoryId = id),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildSearchableField(
+                    label: 'Master Item',
+                    value: _selectedMasterItemId != null ? 'Item #$_selectedMasterItemId' : null,
+                    placeholder: 'Search master items...',
+                    onTap: () => _showSearchableSelect<int>(
+                      title: 'Master Item',
+                      items: List.generate(50, (i) => i + 1), // Dummy data
+                      labelMapper: (id) => 'Global Item #$id',
+                      onSelected: (id) => setState(() => _selectedMasterItemId = id),
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+                  _buildSectionTitle('ORGANIZATION & TECHNICAL'),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(child: _buildTextField('Display Order', _displayOrderController, hint: '1', keyboardType: TextInputType.number)),
+                    ],
+                  ),
+
+                  const SizedBox(height: 32),
+                  _buildSectionTitle('PROPERTIES'),
+                  const SizedBox(height: 16),
+                  _buildPropertyToggles(),
+
+                  const SizedBox(height: 32),
+                  _buildSectionTitle('VARIANTS'),
+                  const SizedBox(height: 8),
+                  _buildVariantsSection(),
                   
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 32),
+                  _buildSectionTitle('OPTION GROUPS (ADD-ONS)'),
+                  const SizedBox(height: 8),
+                  _buildOptionGroupsSection(),
+                  
+                  if (widget.item != null) ...[
+                    const SizedBox(height: 24),
+                    TextButton.icon(
+                      onPressed: _isSaving ? null : _deleteItem,
+                      icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444)),
+                      label: Text(
+                        'Delete item',
+                        style: GoogleFonts.poppins(
+                          color: const Color(0xFFEF4444),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 48),
                 ],
               ),
             ),
@@ -247,536 +441,592 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               ),
             )
           : null,
-      ),
     );
   }
+
+  // --- UI Components ---
 
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: GoogleFonts.poppins(
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-        color: const Color(0xFF94A3B8),
-        letterSpacing: 0.5,
-      ),
+      style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF94A3B8), letterSpacing: 1.0),
     );
   }
 
-  Future<void> _pickImage() async {
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE2E8F0),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-              child: Text(
-                'Upload Item Photo',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                  color: const Color(0xFF1E293B),
-                ),
-              ),
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined, color: Color(0xFFED3973)),
-              title: Text('Choose from Gallery', style: GoogleFonts.poppins()),
-              onTap: () async {
-                Navigator.pop(context);
-                final result = await ImageUploadService().pickFromGallery();
-                if (result.permanentlyDenied && mounted) {
-                  _showSettingsDialog();
-                } else if (result.file != null) {
-                  setState(() => _pickedImage = result.file);
-                }
-              },
-            ),
-            const Divider(height: 1, indent: 56),
-            ListTile(
-              leading: const Icon(Icons.camera_alt_outlined, color: Color(0xFFED3973)),
-              title: Text('Take a Photo', style: GoogleFonts.poppins()),
-              onTap: () async {
-                Navigator.pop(context);
-                final result = await ImageUploadService().pickFromCamera();
-                if (result.permanentlyDenied && mounted) {
-                  _showSettingsDialog();
-                } else if (result.file != null) {
-                  setState(() => _pickedImage = result.file);
-                }
-              },
-            ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text('Cancel', style: GoogleFonts.poppins()),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+  InputDecoration _buildInputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13),
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFED3A72), width: 1.5)),
+      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFEF4444))),
+      focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5)),
     );
   }
 
-  void _showSettingsDialog() {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Permission Required',
-            style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 16)),
-        content: Text(
-          'Photo library access is required. Please enable it in Settings.',
-          style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF475569)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Cancel', style: GoogleFonts.poppins(color: const Color(0xFF475569))),
-          ),
-          TextButton(
-            onPressed: () { Navigator.of(ctx).pop(); },
-            child: Text('Open Settings',
-                style: GoogleFonts.poppins(color: const Color(0xFFED3973), fontWeight: FontWeight.w600)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildImageUploadSection() {
-    final existingUrl = widget.item?.imageUrl;
-
-    return GestureDetector(
-      onTap: _pickImage,
-      child: Container(
-        width: double.infinity,
-        height: 200,
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(24),
-          border: _pickedImage == null && existingUrl == null 
-            ? Border.all(color: const Color(0xFFE2E8F0), width: 1.5) 
-            : null,
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // ── Image Display ──────────────────────────────────────────
-              if (_pickedImage != null)
-                kIsWeb
-                  ? Image.network(_pickedImage!.path, fit: BoxFit.cover)
-                  : Image.file(File(_pickedImage!.path), fit: BoxFit.cover)
-              else if (existingUrl != null && existingUrl.isNotEmpty)
-                CachedNetworkImage(
-                  imageUrl: existingUrl,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => const Center(child: CustomLoadingIndicator(size: 24)),
-                  errorWidget: (context, url, error) => const Icon(Icons.error),
-                )
-              else
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: const Color(0xFFED3973).withValues(alpha: 0.1),
-                            width: 1,
-                          ),
-                          color: Colors.white,
-                        ),
-                        child: const Icon(
-                          Icons.camera_alt_outlined,
-                          color: Color(0xFFED3973),
-                          size: 32,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Tap to upload',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1E293B),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'add your dish photo',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: const Color(0xFF94A3B8),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-              // ── Overlay for existing images ────────────────────────────────
-              if (_pickedImage != null || (existingUrl != null && existingUrl.isNotEmpty))
-                Positioned(
-                  right: 16,
-                  top: 16,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(Icons.refresh, color: Color(0xFFED3973), size: 20),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField(String label, TextEditingController controller, {String? hint, bool isMultiline = false, TextInputType? keyboardType}) {
+  Widget _buildTextField(String label, TextEditingController controller, {String? hint, bool isMultiline = false, TextInputType? keyboardType, Function(String)? onChanged}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
-          ),
-        ),
+        Text(label, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
           maxLines: isMultiline ? 3 : 1,
           keyboardType: keyboardType,
+          onChanged: onChanged,
           style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13),
-            filled: true,
-            fillColor: const Color(0xFFF8FAFC),
-            prefixIcon: keyboardType == TextInputType.number 
-              ? Padding(
-                  padding: const EdgeInsets.only(left: 16, right: 8, top: 14),
-                  child: Text('฿', style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 14, fontWeight: FontWeight.w600)),
-                )
-              : null,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
-            ),
-            contentPadding: const EdgeInsets.all(16),
-          ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter $label';
-            }
-            return null;
-          },
+          decoration: _buildInputDecoration(hint ?? ''),
         ),
       ],
     );
   }
 
-  Widget _buildCategoryDropdown() {
+  Widget _buildLangSwitcher() {
+    return Row(
+      children: ['EN', 'MM', 'TH'].map((lang) {
+        final isSelected = _selectedLang == lang;
+        return Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: GestureDetector(
+            onTap: () => setState(() => _selectedLang = lang),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected ? const Color(0xFFED3A72) : const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: isSelected ? const Color(0xFFED3A72) : const Color(0xFFE2E8F0)),
+              ),
+              child: Text(lang, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600, color: isSelected ? Colors.white : const Color(0xFF64748B))),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildMealTypeChips() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Category',
-          style: GoogleFonts.poppins(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
-          ),
-        ),
+        Text('Meal Types', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
         const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<MenuCategoryModel>(
-              value: _selectedCategory,
-              isExpanded: true,
-              hint: Text('Select category', style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13)),
-              items: _categories.map((c) {
-                return DropdownMenuItem(
-                  value: c,
-                  child: Text(c.displayName, style: GoogleFonts.poppins(fontSize: 14)),
-                );
-              }).toList(),
-              onChanged: (value) => setState(() => _selectedCategory = value),
-            ),
-          ),
+        Wrap(
+          spacing: 8,
+          children: _allMealTypes.map((type) {
+            final isSelected = _selectedMealTypes.contains(type);
+            return FilterChip(
+              label: Text(type, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w500, color: isSelected ? Colors.white : const Color(0xFF64748B))),
+              selected: isSelected,
+              onSelected: (selected) {
+                setState(() {
+                  if (selected) _selectedMealTypes.add(type);
+                  else _selectedMealTypes.remove(type);
+                });
+              },
+              selectedColor: const Color(0xFFED3A72),
+              checkmarkColor: Colors.white,
+              backgroundColor: const Color(0xFFF8FAFC),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: isSelected ? const Color(0xFFED3A72) : const Color(0xFFE2E8F0))),
+            );
+          }).toList(),
         ),
       ],
     );
   }
 
-  Widget _buildDismissibleVariant(Map<String, String> variant, int index) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Dismissible(
-        key: Key('variant_${index}_${variant['name']}'),
-        direction: DismissDirection.endToStart,
-        onDismissed: (direction) {
-          setState(() {
-            _variants.removeAt(index);
-          });
-        },
-        background: Container(
-          alignment: Alignment.centerRight,
-          padding: const EdgeInsets.only(right: 20),
-          decoration: BoxDecoration(
-            color: const Color(0xFFED3973),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: const Icon(Icons.delete_outline, color: Colors.white, size: 24),
-        ),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E8F0), width: 0.5),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                variant['name']!,
-                style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
-              ),
-              Row(
-                children: [
-                  Text(
-                    '฿ ',
-                    style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500, color: const Color(0xFF94A3B8)),
-                  ),
-                  Text(
-                    variant['price']!,
-                    style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFFED3973)),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAddOnSection() {
+  Widget _buildCurrencyDropdown() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionLabel('Select Add_on Category'),
+        Text('Currency', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
         const SizedBox(height: 8),
-        _buildDropdownContainer(
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: 'Create New Category',
-              isExpanded: true,
-              style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B)),
-              items: ['Create New Category'].map((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              onChanged: (_) {},
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildSectionLabel('Add_on list'),
-        const SizedBox(height: 8),
-        _buildAddOnItem('Extra Cheese', '10'),
-        _buildAddOnItem('Bacon Strips', '35'),
-        const SizedBox(height: 12),
-        _buildDismissibleVariant({'name': 'Add_on name', 'price': '0000'}, 999), // Placeholder for add-on list
-        const SizedBox(height: 8),
-        TextButton(
-          onPressed: () {},
-          style: TextButton.styleFrom(padding: EdgeInsets.zero),
-          child: Text(
-            '+ Add new options',
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFFED3973),
-            ),
-          ),
+        DropdownButtonFormField<String>(
+          value: _selectedCurrency,
+          isExpanded: true,
+          decoration: _buildInputDecoration(''),
+          items: _currencies.map((c) => DropdownMenuItem(value: c, child: Text(c, style: GoogleFonts.poppins(fontSize: 14)))).toList(),
+          onChanged: (v) => setState(() => _selectedCurrency = v!),
         ),
       ],
     );
   }
 
-  Widget _buildSectionLabel(String label) {
-    return Text(
-      label,
-      style: GoogleFonts.poppins(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: const Color(0xFF1E293B),
-      ),
-    );
-  }
-
-  Widget _buildDropdownContainer({required Widget child}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: child,
-    );
-  }
-
-  Widget _buildAddOnItem(String name, String price) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E8F0), width: 0.5),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              name,
-              style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF64748B)),
+  Widget _buildSearchableField({required String label, String? value, required String placeholder, required VoidCallback onTap}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
-            Row(
+            child: Row(
               children: [
-                Text(
-                  '฿ ',
-                  style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500, color: const Color(0xFF94A3B8)),
+                Expanded(
+                  child: Text(
+                    value ?? placeholder,
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: value != null ? FontWeight.w500 : FontWeight.w400,
+                      color: value != null ? const Color(0xFF1E293B) : const Color(0xFF94A3B8),
+                    ),
+                  ),
                 ),
-                Text(
-                  price,
-                  style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),
-                ),
-                const SizedBox(width: 8),
-                const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 18),
+                if (value != null)
+                  GestureDetector(
+                    onTap: () {
+                      if (label == 'Category') setState(() => _selectedCategory = null);
+                      else if (label == 'Master Category') setState(() => _selectedMasterCategoryId = null);
+                      else if (label == 'Master Item') setState(() => _selectedMasterItemId = null);
+                    },
+                    child: const Icon(Icons.close, size: 16, color: Color(0xFF94A3B8)),
+                  )
+                else
+                  const Icon(Icons.keyboard_arrow_down, size: 20, color: Color(0xFF94A3B8)),
               ],
             ),
-          ],
+          ),
         ),
+      ],
+    );
+  }
+
+  void _showSearchableSelect<T>({
+    required String title,
+    required List<T> items,
+    required String Function(T) labelMapper,
+    required Function(T) onSelected,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _SearchSelectorSheet<T>(
+        title: title,
+        items: items,
+        labelMapper: labelMapper,
+        onSelected: onSelected,
       ),
     );
+  }
+
+  Widget _buildTagSelection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('CATEGORIZATION'),
+        const SizedBox(height: 16),
+        _buildMealTypeChips(),
+        const SizedBox(height: 24),
+        Text('Discovery Tags', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
+        const SizedBox(height: 8),
+        _isLoadingTags 
+          ? const Center(child: Padding(padding: EdgeInsets.all(8.0), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))))
+          : Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: _availableTags.map((tag) {
+              final id = tag['id'] as int;
+              final isSelected = _selectedTagIds.contains(id);
+              return FilterChip(
+                label: Text(tag['nameEn'] ?? tag['name'], style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w500, color: isSelected ? Colors.white : const Color(0xFF64748B))),
+                selected: isSelected,
+                onSelected: (selected) {
+                  setState(() {
+                    if (selected) _selectedTagIds.add(id);
+                    else _selectedTagIds.remove(id);
+                  });
+                },
+                selectedColor: const Color(0xFFED3A72),
+                checkmarkColor: Colors.white,
+                backgroundColor: const Color(0xFFF8FAFC),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: isSelected ? const Color(0xFFED3A72) : const Color(0xFFE2E8F0))),
+              );
+            }).toList(),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildPropertyToggles() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE2E8F0))),
+      child: Column(
+        children: [
+          _buildToggleRow('Available', _isAvailable, (v) => setState(() => _isAvailable = v)),
+          const Divider(),
+          _buildToggleRow('Popular', _isPopular, (v) => setState(() => _isPopular = v)),
+          const Divider(),
+          _buildToggleRow('Recommended', _isRecommended, (v) => setState(() => _isRecommended = v)),
+          const Divider(),
+          _buildToggleRow('Combo Set', _isCombo, (v) => setState(() => _isCombo = v)),
+          const Divider(),
+          _buildToggleRow('Vegetarian', _isVegetarian, (v) => setState(() => _isVegetarian = v)),
+          const Divider(),
+          _buildToggleRow('Spicy', _isSpicy, (v) => setState(() => _isSpicy = v)),
+          const Divider(),
+          _buildToggleRow('Hot Deal', _isHotDeal, (v) => setState(() => _isHotDeal = v)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToggleRow(String label, bool value, Function(bool) onChanged) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: const Color(0xFF1E293B))),
+        Switch(value: value, onChanged: onChanged, activeColor: const Color(0xFFED3A72)),
+      ],
+    );
+  }
+
+  Widget _buildVariantsSection() {
+    return Column(
+      children: [
+        ..._variants.asMap().entries.map((entry) {
+          final index = entry.key;
+          final v = entry.value;
+          return _buildDynamicItemCard(
+            title: 'Variant #${index + 1}',
+            onDelete: () => setState(() => _variants.removeAt(index)),
+            child: Column(
+              children: [
+                _buildTextField('Variant Name ($_selectedLang)', 
+                  TextEditingController(text: _selectedLang == 'EN' ? v.nameEn : (_selectedLang == 'MM' ? v.nameMm : v.nameTh)),
+                  onChanged: (val) {
+                    final map = v.toJson();
+                    if (_selectedLang == 'EN') map['nameEn'] = val;
+                    if (_selectedLang == 'MM') map['nameMm'] = val;
+                    if (_selectedLang == 'TH') map['nameTh'] = val;
+                    _variants[index] = MenuItemVariantModel.fromJson(map);
+                  },
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: _buildTextField('Price', TextEditingController(text: v.price.toString()), keyboardType: TextInputType.number, 
+                      onChanged: (val) {
+                        final map = v.toJson();
+                        map['price'] = double.tryParse(val) ?? 0.0;
+                        _variants[index] = MenuItemVariantModel.fromJson(map);
+                      })),
+                    const SizedBox(width: 12),
+                    Expanded(child: _buildTextField('Display Order', TextEditingController(text: v.displayOrder?.toString() ?? '1'), keyboardType: TextInputType.number,
+                      onChanged: (val) {
+                        final map = v.toJson();
+                        map['displayOrder'] = int.tryParse(val) ?? 1;
+                        _variants[index] = MenuItemVariantModel.fromJson(map);
+                      })),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTextField(
+                        'Display Price', 
+                        TextEditingController(text: v.displayPrice ?? ''), 
+                        hint: 'eg: 15.00 \$',
+                        onChanged: (val) {
+                          final map = v.toJson();
+                          map['displayPrice'] = val;
+                          setState(() => _variants[index] = MenuItemVariantModel.fromJson(map));
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Available', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
+                          Transform.scale(
+                            scale: 0.8,
+                            alignment: Alignment.centerLeft,
+                            child: Switch(
+                              value: v.isAvailable,
+                              activeColor: const Color(0xFFED3A72),
+                              onChanged: (val) {
+                                final map = v.toJson();
+                                map['isAvailable'] = val;
+                                setState(() => _variants[index] = MenuItemVariantModel.fromJson(map));
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }),
+        _buildAddButton('Add Variant', () {
+          setState(() {
+            _variants.add(MenuItemVariantModel(id: DateTime.now().millisecondsSinceEpoch, price: 0.0, displayOrder: 1));
+          });
+        }),
+      ],
+    );
+  }
+
+  Widget _buildOptionGroupsSection() {
+    return Column(
+      children: [
+        ..._optionGroups.asMap().entries.map((entry) {
+          final gIndex = entry.key;
+          final g = entry.value;
+          return _buildDynamicItemCard(
+            title: 'Group: ${g.displayName.isEmpty ? "New Group" : g.displayName}',
+            onDelete: () => setState(() => _optionGroups.removeAt(gIndex)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildTextField('Group Name ($_selectedLang)', 
+                  TextEditingController(text: _selectedLang == 'EN' ? g.nameEn : (_selectedLang == 'MM' ? g.nameMm : g.nameTh)),
+                  onChanged: (val) {
+                    final map = g.toJson();
+                    if (_selectedLang == 'EN') map['nameEn'] = val;
+                    if (_selectedLang == 'MM') map['nameMm'] = val;
+                    if (_selectedLang == 'TH') map['nameTh'] = val;
+                    _optionGroups[gIndex] = MenuItemOptionGroupModel.fromJson(map);
+                  },
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: _buildTextField('Min', TextEditingController(text: g.minSelection?.toString() ?? '0'), keyboardType: TextInputType.number, 
+                      onChanged: (val) => _updateGroup(gIndex, {'minSelection': int.tryParse(val)}))),
+                    const SizedBox(width: 12),
+                    Expanded(child: _buildTextField('Max', TextEditingController(text: g.maxSelection?.toString() ?? '1'), keyboardType: TextInputType.number,
+                      onChanged: (val) => _updateGroup(gIndex, {'maxSelection': int.tryParse(val)}))),
+                    const SizedBox(width: 12),
+                    Expanded(child: _buildTextField('Order', TextEditingController(text: g.displayOrder?.toString() ?? '1'), keyboardType: TextInputType.number,
+                      onChanged: (val) => _updateGroup(gIndex, {'displayOrder': int.tryParse(val)}))),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _buildToggleRow('Required', g.isRequired, (v) => _updateGroup(gIndex, {'isRequired': v})),
+                const Divider(),
+                ...g.options.asMap().entries.map((oEntry) => _buildOptionItem(gIndex, oEntry.key, oEntry.value)),
+                _buildAddButton('Add Option', () {
+                  final map = g.toJson();
+                  final options = List<Map<String, dynamic>>.from(map['options'] ?? []);
+                  options.add(MenuItemOptionModel(id: DateTime.now().millisecondsSinceEpoch, price: 0.0, displayOrder: 1).toJson());
+                  map['options'] = options;
+                  setState(() => _optionGroups[gIndex] = MenuItemOptionGroupModel.fromJson(map));
+                }, small: true),
+              ],
+            ),
+          );
+        }),
+        _buildAddButton('Add Option Group', () {
+          setState(() => _optionGroups.add(MenuItemOptionGroupModel(id: DateTime.now().millisecondsSinceEpoch, options: [], displayOrder: 1)));
+        }),
+      ],
+    );
+  }
+
+  Widget _buildOptionItem(int gIndex, int oIndex, MenuItemOptionModel o) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE2E8F0))),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(child: _buildBareTextField(_selectedLang == 'EN' ? o.nameEn : (_selectedLang == 'MM' ? o.nameMm : o.nameTh), (val) => _updateOption(gIndex, oIndex, _selectedLang == 'EN' ? {'nameEn': val} : (_selectedLang == 'MM' ? {'nameMm': val} : {'nameTh': val})), 'Name')),
+              IconButton(icon: const Icon(Icons.close, size: 18, color: Color(0xFFEF4444)), onPressed: () => _removeOption(gIndex, oIndex)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(child: _buildBareTextField(o.price.toString(), (val) => _updateOption(gIndex, oIndex, {'price': double.tryParse(val)}), 'Price', keyboard: TextInputType.number)),
+              const SizedBox(width: 8),
+              Expanded(child: _buildBareTextField(o.displayOrder?.toString() ?? '1', (val) => _updateOption(gIndex, oIndex, {'displayOrder': int.tryParse(val)}), 'Order', keyboard: TextInputType.number)),
+              const SizedBox(width: 8),
+              Expanded(child: _buildBareTextField(o.linkedMenuItemId?.toString() ?? '', (val) => _updateOption(gIndex, oIndex, {'linkedMenuItemId': int.tryParse(val)}), 'Linked-ID', keyboard: TextInputType.number)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _buildBareTextField(o.displayPrice ?? '', (val) => _updateOption(gIndex, oIndex, {'displayPrice': val}), 'Display Price (eg: 5.00 \$)'),
+        ],
+      ),
+    );
+  }
+
+  void _updateGroup(int index, Map<String, dynamic> updates) {
+    final map = _optionGroups[index].toJson();
+    map.addAll(updates);
+    setState(() => _optionGroups[index] = MenuItemOptionGroupModel.fromJson(map));
+  }
+
+  void _updateOption(int gIndex, int oIndex, Map<String, dynamic> updates) {
+    final map = _optionGroups[gIndex].toJson();
+    final options = List<Map<String, dynamic>>.from(map['options']);
+    options[oIndex].addAll(updates);
+    setState(() => _optionGroups[gIndex] = MenuItemOptionGroupModel.fromJson(map));
+  }
+
+  void _removeOption(int gIndex, int oIndex) {
+    final map = _optionGroups[gIndex].toJson();
+    final options = List<Map<String, dynamic>>.from(map['options']);
+    options.removeAt(oIndex);
+    map['options'] = options;
+    setState(() => _optionGroups[gIndex] = MenuItemOptionGroupModel.fromJson(map));
+  }
+
+  Widget _buildBareTextField(String? initial, Function(String) onChanged, String hint, {TextInputType keyboard = TextInputType.text}) {
+    return TextFormField(initialValue: initial, onChanged: onChanged, keyboardType: keyboard, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500), decoration: InputDecoration(hintText: hint, isDense: true, border: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey.shade200))));
+  }
+
+  Widget _buildDynamicItemCard({required String title, required Widget child, required VoidCallback onDelete}) {
+    return Container(margin: const EdgeInsets.only(bottom: 16), padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE2E8F0))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(title, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600)), IconButton(icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 20), onPressed: onDelete)]), const SizedBox(height: 8), child]));
+  }
+
+  Widget _buildAddButton(String label, VoidCallback onTap, {bool small = false}) {
+    return InkWell(onTap: onTap, child: Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), decoration: BoxDecoration(color: const Color(0xFFED3A72).withOpacity(0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFED3A72).withOpacity(0.2))), child: Row(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.add, size: 16, color: Color(0xFFED3A72)), const SizedBox(width: 8), Text(label, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFFED3A72)))])));
+  }
+
+  Widget _buildImageUploadSection() {
+    return GestureDetector(
+      onTap: () async {
+        final image = await ImagePicker().pickImage(source: ImageSource.gallery);
+        if (image != null) setState(() => _pickedImage = image);
+      },
+      child: Container(
+        width: double.infinity, height: 200, decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(24), border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5), image: _pickedImage != null ? DecorationImage(image: FileImage(File(_pickedImage!.path)), fit: BoxFit.cover) : (widget.item?.imageUrl != null ? DecorationImage(image: CachedNetworkImageProvider(widget.item!.imageUrl!), fit: BoxFit.cover) : null)),
+        child: _pickedImage == null && widget.item?.imageUrl == null ? const Center(child: Icon(Icons.camera_alt_outlined, color: Color(0xFFED3A72), size: 32)) : null,
+      ),
+    );
+  }
+
+  Widget _buildMainNameField() {
+    TextEditingController controller = _selectedLang == 'EN' ? _nameEnController : (_selectedLang == 'MM' ? _nameMmController : _nameThController);
+    return _buildTextField('Item Name ($_selectedLang)', controller, hint: 'Enter name');
+  }
+
+  Widget _buildMainDescriptionField() {
+    TextEditingController controller = _selectedLang == 'EN' ? _descEnController : (_selectedLang == 'MM' ? _descMmController : _descThController);
+    return _buildTextField('Description ($_selectedLang)', controller, hint: 'Enter description', isMultiline: true);
   }
 
   Widget _buildSaveButton() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: ElevatedButton(
-            onPressed: _isSaving ? null : _handleSave,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFED3973),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 0,
-            ),
-            child: _isSaving 
-              ? const CustomLoadingIndicator(size: 24, color: Colors.white)
-              : Text(
-                  widget.item != null ? 'Update' : 'Save',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-          ),
-        ),
-        if (widget.item != null) ...[
-          const SizedBox(height: 12),
-          Text(
-            'Changes will take effect tomorrow',
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF94A3B8),
-            ),
-          ),
-        ],
-      ],
-    );
+    return SizedBox(width: double.infinity, height: 56, child: ElevatedButton(onPressed: _isSaving ? null : _handleSave, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFED3A72), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 0), child: _isSaving ? const CustomLoadingIndicator(size: 24, color: Colors.white) : Text(widget.item != null ? 'Update Item' : 'Create Item', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white))));
+  }
+}
+
+class _SearchSelectorSheet<T> extends StatefulWidget {
+  final String title;
+  final List<T> items;
+  final String Function(T) labelMapper;
+  final Function(T) onSelected;
+
+  const _SearchSelectorSheet({
+    required this.title,
+    required this.items,
+    required this.labelMapper,
+    required this.onSelected,
+  });
+
+  @override
+  State<_SearchSelectorSheet<T>> createState() => _SearchSelectorSheetState<T>();
+}
+
+class _SearchSelectorSheetState<T> extends State<_SearchSelectorSheet<T>> {
+  final TextEditingController _searchCtrl = TextEditingController();
+  List<T> _filteredItems = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredItems = List.from(widget.items);
   }
 
-  Widget _buildSkeletonForm() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+  void _onSearch(String val) {
+    setState(() {
+      _filteredItems = widget.items.where((item) => widget.labelMapper(item).toLowerCase().contains(val.toLowerCase())).toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.7,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image skeleton
-          const Skeleton(width: double.infinity, height: 200),
-          const SizedBox(height: 32),
-          // Title skeleton
-          const Skeleton(width: 150, height: 20),
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 40, height: 4, 
+            decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(2)),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(widget.title, style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B))),
+                IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: TextField(
+              controller: _searchCtrl,
+              onChanged: _onSearch,
+              decoration: InputDecoration(
+                hintText: 'Search...',
+                prefixIcon: const Icon(Icons.search, size: 20, color: Color(0xFF94A3B8)),
+                hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
+                filled: true, 
+                fillColor: const Color(0xFFF8FAFC),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+              ),
+            ),
+          ),
           const SizedBox(height: 16),
-          // Field skeletons
-          const Skeleton(width: 100, height: 16),
-          const SizedBox(height: 8),
-          const Skeleton(width: double.infinity, height: 50),
-          const SizedBox(height: 16),
-          const Skeleton(width: 100, height: 16),
-          const SizedBox(height: 8),
-          const Skeleton(width: double.infinity, height: 80),
-          const SizedBox(height: 16),
-          const Skeleton(width: 100, height: 16),
-          const SizedBox(height: 8),
-          const Skeleton(width: double.infinity, height: 50),
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              itemCount: _filteredItems.length,
+              separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF1F5F9)),
+              itemBuilder: (context, index) {
+                final item = _filteredItems[index];
+                final label = widget.labelMapper(item);
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(label, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: const Color(0xFF1E293B))),
+                  trailing: const Icon(Icons.chevron_right, size: 16, color: Color(0xFF94A3B8)),
+                  onTap: () {
+                    widget.onSelected(item);
+                    Navigator.pop(context);
+                  },
+                );
+              },
+            ),
+          ),
         ],
       ),
     );

@@ -14,7 +14,7 @@ import 'app_permissions_page.dart';
 import 'change_password_page.dart';
 import 'reviews_page.dart';
 import 'accepted_payment_page.dart';
-import 'shop_selection_page.dart';
+import '../../data/services/shop_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -192,15 +192,20 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
           onTap: () => Navigator.push(
             context,
             CupertinoPageRoute(builder: (_) => const OperatingHoursPage()),
-          ),
+          ).then((_) => _loadUserInfo()),
         ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.creditCard,
           title: 'Accepted payment',
-          onTap: () => Navigator.push(
-            context,
-            CupertinoPageRoute(builder: (_) => const ShopSelectionPage()),
-          ),
+          onTap: () async {
+            final shops = await ShopService().getShops();
+            if (shops.isNotEmpty && context.mounted) {
+              Navigator.push(
+                context,
+                CupertinoPageRoute(builder: (_) => AcceptedPaymentPage(shop: shops.first)),
+              ).then((_) => _loadUserInfo());
+            }
+          },
         ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.star,
@@ -208,7 +213,7 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
           onTap: () => Navigator.push(
             context,
             CupertinoPageRoute(builder: (_) => const ReviewsPage()),
-          ),
+          ).then((_) => _loadUserInfo()),
         ),
       ],
     );

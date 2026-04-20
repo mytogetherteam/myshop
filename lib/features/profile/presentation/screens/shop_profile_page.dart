@@ -764,7 +764,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
   }
 
   Widget _buildOpenStatusBadge() {
-    final isOpen = _shopProfile?.isOpen ?? false;
+    final isOpen = _shopProfile?.isOpen ?? true;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(

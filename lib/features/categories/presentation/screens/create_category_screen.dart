@@ -12,14 +12,19 @@ class CreateCategoryScreen extends StatefulWidget {
 
 class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
   final CategoryService _categoryService = CategoryService();
-  final TextEditingController _nameController = TextEditingController();
+  
+  // Multi-language controllers
+  final TextEditingController _nameEnController = TextEditingController();
+  final TextEditingController _nameMmController = TextEditingController();
+  final TextEditingController _nameThController = TextEditingController();
+  
+  String _selectedLang = 'EN';
+  
   final List<Map<String, dynamic>> _icons = [
-    {'path': 'assets/images/Category.png', 'color': Color(0xFFFFF7ED)},
-    {'path': 'assets/images/Salad.png', 'color': Color(0xFFF0FDF4)}, // Guessed name, might need adjustment
-    {'path': 'assets/images/Soup.png', 'color': Color(0xFFF0FDFA)},
-    {'path': 'assets/images/Dessert.png', 'color': Color(0xFFFFF1F2)},
-    {'path': 'assets/images/Noodle.png', 'color': Color(0xFFF0F9FF)},
-    {'path': 'assets/images/Drink.png', 'color': Color(0xFFFFFAF1)},
+    {'path': 'assets/images/food_3d.png', 'color': const Color(0xFFFFF7ED)},
+    {'path': 'assets/images/drinks_3d.png', 'color': const Color(0xFFF0F9FF)},
+    {'path': 'assets/images/snacks_3d.png', 'color': const Color(0xFFFFF1F2)},
+    {'path': 'assets/images/Category.png', 'color': const Color(0xFFFFFAF1)},
   ];
   
   int _selectedIconIndex = 0;
@@ -27,33 +32,51 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _nameEnController.dispose();
+    _nameMmController.dispose();
+    _nameThController.dispose();
     super.dispose();
   }
 
   Future<void> _saveCategory() async {
-    if (_nameController.text.isEmpty) return;
+    if (_nameEnController.text.isEmpty && _nameMmController.text.isEmpty && _nameThController.text.isEmpty) {
+      _showToast('Please enter at least one name', isError: true);
+      return;
+    }
 
     setState(() => _isSaving = true);
     final success = await _categoryService.createCategory({
-      'nameEn': _nameController.text,
+      'nameEn': _nameEnController.text,
+      'nameMm': _nameMmController.text,
+      'nameTh': _nameThController.text,
       'imageUrl': _icons[_selectedIconIndex]['path'],
-      // Other fields as needed
     });
 
     if (mounted) {
       if (success) {
+        _showToast('Category created successfully');
         Navigator.pop(context, true);
       } else {
         setState(() => _isSaving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to create category'),
-            backgroundColor: Color(0xFFEF4444),
-          ),
-        );
+        _showToast('Failed to create category', isError: true);
       }
     }
+  }
+
+  void _showToast(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white),
+        ),
+        backgroundColor: isError ? const Color(0xFFEF4444) : const Color(0xFFED3A72),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(20),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -78,128 +101,188 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
         ),
         centerTitle: false,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 20,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'CREATE NEW CATEGORY',
-                    style: GoogleFonts.poppins(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFFCBD5E1),
-                      letterSpacing: 0.8,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 20,
+                      offset: const Offset(0, 4),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Choose icon',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF1E293B),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'CREATE NEW CATEGORY',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFFCBD5E1),
+                        letterSpacing: 0.8,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 60,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _icons.length,
-                      separatorBuilder: (context, index) => const SizedBox(width: 12),
-                      itemBuilder: (context, index) {
-                        final isSelected = _selectedIconIndex == index;
-                        return GestureDetector(
-                          onTap: () => setState(() => _selectedIconIndex = index),
-                          child: Container(
-                            width: 60,
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: _icons[index]['color'],
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: isSelected ? const Color(0xFFED3A72) : Colors.transparent,
-                                width: 2,
+                    const SizedBox(height: 20),
+                    Text(
+                      'Choose icon',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 60,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _icons.length,
+                        separatorBuilder: (context, index) => const SizedBox(width: 12),
+                        itemBuilder: (context, index) {
+                          final isSelected = _selectedIconIndex == index;
+                          return GestureDetector(
+                            onTap: () => setState(() => _selectedIconIndex = index),
+                            child: Container(
+                              width: 60,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: _icons[index]['color'],
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isSelected ? const Color(0xFFED3A72) : Colors.transparent,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Image.asset(
+                                _icons[index]['path'],
+                                errorBuilder: (context, error, stackTrace) => const Icon(Icons.restaurant, size: 24, color: Color(0xFF94A3B8)),
                               ),
                             ),
-                            child: Image.asset(
-                              _icons[index]['path'],
-                              errorBuilder: (context, error, stackTrace) => const Icon(Icons.restaurant, size: 24, color: Color(0xFF94A3B8)),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Category name',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF1E293B),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _nameController,
-                    decoration: InputDecoration(
-                      hintText: 'eg: Today\'s Recommendation',
-                      hintStyle: GoogleFonts.poppins(color: const Color(0xFFCBD5E1)),
-                      filled: true,
-                      fillColor: const Color(0xFFF8FAFC),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
+                          );
+                        },
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: _isSaving ? null : _saveCategory,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFED3A72),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 0,
+                    const SizedBox(height: 24),
+                    Text(
+                      'Category name',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildLangSwitcher(),
+                    const SizedBox(height: 16),
+                    _buildNameField(),
+                  ],
                 ),
-                child: _isSaving
-                    ? const CustomLoadingIndicator(size: 24, color: Colors.white)
-                    : Text(
-                        'Create category',
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
+              ),
+              const SizedBox(height: 80), // Space for button
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: _isSaving ? null : _saveCategory,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFED3A72),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+              ),
+              child: _isSaving
+                  ? const CustomLoadingIndicator(size: 24, color: Colors.white)
+                  : Text(
+                      'Create category',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
+                    ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLangSwitcher() {
+    return Row(
+      children: ['EN', 'MM', 'TH'].map((lang) {
+        final isSelected = _selectedLang == lang;
+        return Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: GestureDetector(
+            onTap: () => setState(() => _selectedLang = lang),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected ? const Color(0xFFED3A72) : const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: isSelected ? const Color(0xFFED3A72) : const Color(0xFFE2E8F0)),
+              ),
+              child: Text(
+                lang,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isSelected ? Colors.white : const Color(0xFF64748B),
+                ),
               ),
             ),
-          ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildNameField() {
+    TextEditingController controller;
+    String hint;
+    
+    switch (_selectedLang) {
+      case 'MM':
+        controller = _nameMmController;
+        hint = 'eg: ယနေ့အထူးအစီအစဉ်';
+        break;
+      case 'TH':
+        controller = _nameThController;
+        hint = 'เช่น: เมนูแนะนำวันนี้';
+        break;
+      default:
+        controller = _nameEnController;
+        hint = 'eg: Today\'s Recommendation';
+    }
+
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: GoogleFonts.poppins(color: const Color(0xFFCBD5E1)),
+        filled: true,
+        fillColor: const Color(0xFFF8FAFC),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
         ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
     );
   }

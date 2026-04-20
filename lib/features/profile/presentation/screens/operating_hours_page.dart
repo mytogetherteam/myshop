@@ -51,7 +51,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
   void initState() {
     super.initState();
     final profile = widget.shopProfile;
-    _isOpen = profile?.isOpen ?? false;
+    _isOpen = profile?.isOpen ?? true; // Default to true in demo if not set
     
     // Initialize with default 9am-10pm closed all over
     _hours = List.generate(7, (index) => _DayHours(isClosed: true, openTime: const TimeOfDay(hour: 9, minute: 0), closeTime: const TimeOfDay(hour: 22, minute: 0)));
@@ -195,23 +195,31 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
           _hasChanges = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Operating hours saved successfully!'),
-          backgroundColor: Color(0xFFED3A72),
+        SnackBar(
+          content: Text(
+            'Operating hours saved successfully',
+            style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500),
+          ),
+          backgroundColor: const Color(0xFFED3973),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(20),
         ),
       );
-      // Navigate back to the Profile tab in MainNavigationScreen (initialIndex: 3)
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const MainNavigationScreen(initialIndex: 3)),
-        (route) => false,
-      );
+      // Simply pop back with true result to signal refresh
+      Navigator.pop(context, true);
     } else {
       setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to save operating hours. Please try again.'),
-          backgroundColor: Color(0xFFEF4444),
+        SnackBar(
+          content: Text(
+            'Failed to save operating hours. Please try again.',
+            style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500),
+          ),
+          backgroundColor: const Color(0xFFEF4444),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(20),
         ),
       );
     }
@@ -256,41 +264,57 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
           padding: const EdgeInsets.only(bottom: 24),
           children: [
             const SizedBox(height: 16),
+            _buildSectionTitle('Active Status'),
+            const SizedBox(height: 16),
             // Open/Closed banner
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: _isOpen ? const Color(0xFFECFDF5) : const Color(0xFFFFF1F2),
-                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: _isOpen ? const Color(0xFF10B981) : const Color(0xFFED3973),
-                    width: 1,
+                    width: 1.5,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (_isOpen ? const Color(0xFF10B981) : const Color(0xFFED3973)).withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
-                    PhosphorIcon(
-                      _isOpen ? PhosphorIconsRegular.storefront : PhosphorIconsRegular.door,
-                      size: 24,
-                      color: _isOpen ? const Color(0xFF10B981) : const Color(0xFFED3973),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: (_isOpen ? const Color(0xFF10B981) : const Color(0xFFED3973)).withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: PhosphorIcon(
+                        _isOpen ? PhosphorIconsRegular.storefront : PhosphorIconsRegular.door,
+                        size: 24,
+                        color: _isOpen ? const Color(0xFF10B981) : const Color(0xFFED3973),
+                      ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _isOpen ? 'Shop is Open' : 'Shop is Closed',
+                            _isOpen ? 'Currently Open' : 'Currently Closed',
                             style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                              color: _isOpen ? const Color(0xFF065F46) : const Color(0xFFBE123C),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                              color: const Color(0xFF1E293B),
                             ),
                           ),
                           Text(
-                            'Toggle to change status immediately',
+                            'Toggle to update real-time status',
                             style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B)),
                           ),
                         ],
@@ -298,48 +322,42 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                     ),
                     _isTogglingStatus
                         ? const CustomLoadingIndicator(size: 24, color: Color(0xFFED3973))
-                        : SizedBox(
-                            height: 24,
-                            child: Transform.scale(
-                              scale: 0.65,
-                              child: Switch(
-                                value: _isOpen,
-                                onChanged: (v) async {
-                                  setState(() => _isTogglingStatus = true);
-                                  final success = await _profileService.toggleShopStatus(v);
-                                  if (context.mounted) {
-                                    if (success) {
-                                      setState(() {
-                                        _isOpen = v;
-                                        _isTogglingStatus = false;
-                                      });
-                                    } else {
-                                      setState(() => _isTogglingStatus = false);
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Failed to change shop status.'),
-                                          backgroundColor: Color(0xFFEF4444),
-                                        ),
-                                      );
-                                    }
-                                  }
-                                },
-                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                thumbColor: WidgetStateProperty.all(Colors.white),
-                                trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
-                                trackColor: WidgetStateProperty.resolveWith((states) {
-                                  if (states.contains(WidgetState.selected)) {
-                                    return const Color(0xFFED3973); // Active pink
-                                  }
-                                  return const Color(0xFFE2E8F0); // Inactive gray
-                                }),
-                              ),
-                            ),
+                        : Switch(
+                            value: _isOpen,
+                            activeColor: const Color(0xFFED3973),
+                            onChanged: (v) async {
+                              setState(() => _isTogglingStatus = true);
+                              final success = await _profileService.toggleShopStatus(v);
+                              if (context.mounted) {
+                                if (success) {
+                                  setState(() {
+                                    _isOpen = v;
+                                    _isTogglingStatus = false;
+                                  });
+                                } else {
+                                  setState(() => _isTogglingStatus = false);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Failed to change shop status.',
+                                        style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500),
+                                      ),
+                                      backgroundColor: const Color(0xFFEF4444),
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      margin: const EdgeInsets.all(20),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
                           ),
                   ],
                 ),
               ),
             ),
+            const SizedBox(height: 32),
+            _buildSectionTitle('Weekly Schedule'),
             const SizedBox(height: 16),
             // Day rows
             Container(
@@ -507,6 +525,21 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Text(
+        title.toUpperCase(),
+        style: GoogleFonts.poppins(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF94A3B8),
+          letterSpacing: 1.0,
         ),
       ),
     );

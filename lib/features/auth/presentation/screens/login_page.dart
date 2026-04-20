@@ -47,26 +47,32 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() { _isLoading = true; });
 
-    try {
-      final response = await AuthService.instance.login(
-        usernameOrEmail: _identifierController.text.trim(),
-        password: _passwordController.text,
-      );
-      
-      if (!mounted) return;
+    // TODO: Re-enable API login when auth is ready
+    // try {
+    //   final response = await AuthService.instance.login(
+    //     usernameOrEmail: _identifierController.text.trim(),
+    //     password: _passwordController.text,
+    //   );
+    //
+    //   if (!mounted) return;
+    //
+    //   if (response.success) {
+    //     WebSocketService().connect();
+    //     Navigator.of(context).pushReplacementNamed('/home');
+    //   } else {
+    //     _showError(response.details ?? response.message ?? 'Login failed');
+    //   }
+    // } catch (e) {
+    //   if (!mounted) return;
+    //   _showError('An unexpected error occurred: $e');
+    // } finally {
+    //   if (mounted) setState(() { _isLoading = false; });
+    // }
 
-      if (response.success) {
-        WebSocketService().connect();
-        Navigator.of(context).pushReplacementNamed('/home');
-      } else {
-        _showError(response.details ?? response.message ?? 'Login failed');
-      }
-    } catch (e) {
-      if (!mounted) return;
-      _showError('An unexpected error occurred: $e');
-    } finally {
-      if (mounted) setState(() { _isLoading = false; });
-    }
+    // Bypass: allow any credentials to proceed
+    if (!mounted) return;
+    setState(() { _isLoading = false; });
+    Navigator.of(context).pushReplacementNamed('/home');
   }
 
   void _showError(String message) {

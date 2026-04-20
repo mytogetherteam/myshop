@@ -2,13 +2,29 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import '../models/payment_method.dart';
 
 class PaymentService {
   static const String _paymentsPath = '/api/shop/payments';
+  
+  static const bool _useLocalStorage = true;
+  static const String _storageKey = 'mock_shop_payments';
 
   Future<List<PaymentMethod>> getShopPaymentMethods(int shopId) async {
+    if (_useLocalStorage) {
+      final prefs = await SharedPreferences.getInstance();
+      final data = prefs.getString(_storageKey);
+      if (data != null) {
+        final List<dynamic> list = jsonDecode(data);
+        return list.map((e) => PaymentMethod.fromJson(e)).toList();
+      }
+      final mock = _getMockPayments(shopId);
+      await prefs.setString(_storageKey, jsonEncode(mock.map((e) => e.toJson()).toList()));
+      return mock;
+    }
+
     try {
       debugPrint('GET REQUEST: $_paymentsPath, Header: X-Shop-Id: $shopId');
       final response = await ApiClient().dio.get(
@@ -61,6 +77,11 @@ class PaymentService {
   }
 
   Future<PaymentMethod?> getPaymentMethodDetail(int shopId, int paymentTypeId) async {
+    if (_useLocalStorage) {
+      final methods = await getShopPaymentMethods(shopId);
+      return methods.firstWhere((p) => p.id == paymentTypeId, orElse: () => methods.first);
+    }
+
     try {
       final String path = '$_paymentsPath/$paymentTypeId';
       debugPrint('GET REQUEST: $path, Header: X-Shop-Id: $shopId');
@@ -87,6 +108,22 @@ class PaymentService {
     required Map<String, dynamic> requestData,
     File? qrFile,
   }) async {
+    if (_useLocalStorage) {
+      final prefs = await SharedPreferences.getInstance();
+      final methods = await getShopPaymentMethods(shopId);
+      final index = methods.indexWhere((p) => p.id == paymentTypeId);
+      if (index != -1) {
+        final updatedMethod = PaymentMethod.fromJson({
+          ...methods[index].toJson(),
+          ...requestData,
+        });
+        methods[index] = updatedMethod;
+        await prefs.setString(_storageKey, jsonEncode(methods.map((e) => e.toJson()).toList()));
+        return true;
+      }
+      return false;
+    }
+
     try {
       final String path = '$_paymentsPath/$paymentTypeId';
       debugPrint('PUT REQUEST: $path, Data: $requestData, Has File: ${qrFile != null}');

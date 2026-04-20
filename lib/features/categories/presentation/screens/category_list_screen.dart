@@ -69,34 +69,24 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
           ),
         ),
         centerTitle: false,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: TextButton.icon(
-              onPressed: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const CreateCategoryScreen()),
-                );
-                if (result == true) _fetchCategories();
-              },
-              icon: const Icon(Icons.add, size: 18, color: Color(0xFF94A3B8)),
-              label: Text(
-                'Add',
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF94A3B8),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
       body: RefreshIndicator(
         onRefresh: _fetchCategories,
         color: const Color(0xFFED3A72),
         child: _isLoading ? _buildSkeletonList() : _buildCategoryList(),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CreateCategoryScreen()),
+          );
+          if (result == true) _fetchCategories();
+        },
+        backgroundColor: const Color(0xFFED3A72),
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: const Icon(Icons.add, color: Colors.white, size: 28),
       ),
     );
   }

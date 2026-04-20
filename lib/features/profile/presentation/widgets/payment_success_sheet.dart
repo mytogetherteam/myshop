@@ -67,7 +67,7 @@ class PaymentSuccessSheet extends StatelessWidget {
           child: ElevatedButton(
             onPressed: () {
               Navigator.pop(context); // Close sheet
-              Navigator.pop(context); // Go back to AcceptedPaymentPage
+              Navigator.pop(context, true); // Go back to AcceptedPaymentPage with refresh signal
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFED3973),

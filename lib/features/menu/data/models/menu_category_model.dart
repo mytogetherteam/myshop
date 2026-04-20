@@ -32,5 +32,18 @@ class MenuCategoryModel {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'nameEn': nameEn,
+      'nameMm': nameMm,
+      'nameTh': nameTh,
+      'displayOrder': displayOrder,
+      'isActive': isActive,
+      'imageUrl': imageUrl,
+      'itemCount': itemCount,
+    };
+  }
+
   String get displayName => nameEn ?? nameMm ?? nameTh ?? '';
 }

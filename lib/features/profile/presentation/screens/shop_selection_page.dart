@@ -112,7 +112,7 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
           CupertinoPageRoute(
             builder: (_) => AcceptedPaymentPage(shop: shop),
           ),
-        );
+        ).then((_) => _loadShops());
       },
       child: Container(
         padding: const EdgeInsets.all(16),
