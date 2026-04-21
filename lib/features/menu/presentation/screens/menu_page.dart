@@ -128,7 +128,14 @@ class _MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin 
 
   Future<void> _toggleItemAvailability(MenuItemModel item, bool available) async {
     final success = await _menuService.toggleAvailability(item.id, available);
-    if (!success && mounted) {
+    if (success && mounted) {
+      setState(() {
+        final index = _items.indexOf(item);
+        if (index != -1) {
+          _items[index] = item.copyWith(isAvailable: available);
+        }
+      });
+    } else if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to update availability'),
