@@ -4,6 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:my_shop/features/profile/data/models/payment_method.dart';
 import 'package:my_shop/features/profile/data/models/shop_model.dart';
@@ -178,13 +179,21 @@ class _AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
                         fit: BoxFit.cover,
                         errorBuilder: (_, _, _) => _buildQrPlaceholder(),
                       )
-                    : Image.file(
-                        File(pm.qrImageUrl),
-                        width: double.infinity,
-                        height: 250,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => _buildQrPlaceholder(),
-                      ),
+                    : kIsWeb
+                        ? Image.network(
+                            pm.qrImageUrl,
+                            width: double.infinity,
+                            height: 250,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => _buildQrPlaceholder(),
+                          )
+                        : Image.file(
+                            File(pm.qrImageUrl),
+                            width: double.infinity,
+                            height: 250,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => _buildQrPlaceholder(),
+                          ),
               ),
               const SizedBox(height: 16),
               Row(

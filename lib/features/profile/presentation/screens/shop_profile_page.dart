@@ -7,6 +7,7 @@ import 'package:my_shop/features/profile/presentation/screens/edit_shop_profile_
 import 'package:my_shop/features/profile/presentation/screens/operating_hours_page.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 // ---------------------------------------------------------------------------
@@ -1543,11 +1544,13 @@ class _ShopProfilePageState extends State<ShopProfilePage>
       );
     } else {
       // Local file path
-      return Image.file(
-        File(url),
-        fit: fit,
-        errorBuilder: (_, __, ___) => fallback,
-      );
+      return kIsWeb
+          ? Image.network(url, fit: fit, errorBuilder: (_, __, ___) => fallback)
+          : Image.file(
+              File(url),
+              fit: fit,
+              errorBuilder: (_, __, ___) => fallback,
+            );
     }
   }
 }

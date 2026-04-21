@@ -377,13 +377,21 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                               fit: BoxFit.cover,
                               errorBuilder: (_, __, ___) => _buildPlaceholder(),
                             )
-                          : Image.file(
-                              File(_currentPayment!.qrImageUrl),
-                              width: double.infinity,
-                              height: 250,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => _buildPlaceholder(),
-                            ))
+                          : (kIsWeb
+                              ? Image.network(
+                                  _currentPayment!.qrImageUrl,
+                                  width: double.infinity,
+                                  height: 250,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => _buildPlaceholder(),
+                                )
+                              : Image.file(
+                                  File(_currentPayment!.qrImageUrl),
+                                  width: double.infinity,
+                                  height: 250,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => _buildPlaceholder(),
+                                )))
                       : _buildPlaceholder()),
             ),
           ),
