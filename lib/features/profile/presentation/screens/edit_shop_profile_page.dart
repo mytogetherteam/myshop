@@ -14,6 +14,8 @@ import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart'
 import 'package:my_shop/core/presentation/widgets/fullscreen_image_viewer.dart';
 import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
+import 'package:my_shop/core/data/models/master_data_model.dart';
+import 'package:my_shop/core/data/services/master_data_service.dart';
 
 class EditShopProfilePage extends StatefulWidget {
   final ShopProfileModel? shopProfile;
@@ -28,6 +30,24 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   bool _isSaving = false;
   bool _isLoading = false;
   ShopProfileModel? _currentProfile;
+
+  List<MasterDataModel> _categories = [];
+  List<MasterDataModel> _subcategories = [];
+  List<MasterDataModel> _cities = [];
+
+  MasterDataModel? _selectedCategory;
+  MasterDataModel? _selectedSubcategory;
+  MasterDataModel? _selectedCity;
+  
+  List<MasterDataModel> _cuisineTypes = [];
+  List<MasterDataModel> _menuTags = [];
+  MasterDataModel? _selectedCuisineType;
+  MasterDataModel? _selectedMenuTag;
+
+  List<MasterDataModel> _districts = [];
+  MasterDataModel? _selectedDistrict;
+  
+  final MasterDataService _masterDataService = MasterDataService();
 
   XFile? _pickedCover;
   XFile? _pickedLogo;
@@ -76,11 +96,77 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   late bool _deliveryEnabled;
   late int _priceRange;
 
+  Future<void> _fetchMasterData() async {
+    final futures = await Future.wait([
+      _masterDataService.getShopCategories(),
+      _masterDataService.getShopSubcategories(),
+      _masterDataService.getCities(),
+      _masterDataService.getCuisineTypes(),
+      _masterDataService.getMenuTags(),
+    ]);
+
+    if (mounted) {
+      setState(() {
+        _categories = futures[0] ?? [];
+        _subcategories = futures[1] ?? [];
+        _cities = futures[2] ?? [];
+        _cuisineTypes = futures[3] ?? [];
+        _menuTags = futures[4] ?? [];
+        _setSelectedMasterData();
+      });
+    }
+  }
+
+  void _setSelectedMasterData() {
+    if (_currentProfile == null) return;
+    
+    try {
+      if (_currentProfile!.categoryId != null) {
+        _selectedCategory = _categories.firstWhere((c) => c.id == _currentProfile!.categoryId);
+      } else if (_currentProfile!.categoryEn != null) {
+        _selectedCategory = _categories.firstWhere((c) => c.nameEn == _currentProfile!.categoryEn);
+      }
+    } catch (_) {}
+
+    try {
+      if (_currentProfile!.subCategoryId != null) {
+        _selectedSubcategory = _subcategories.firstWhere((c) => c.id == _currentProfile!.subCategoryId);
+      } else if (_currentProfile!.subCategoryEn != null) {
+        _selectedSubcategory = _subcategories.firstWhere((c) => c.nameEn == _currentProfile!.subCategoryEn);
+      }
+    } catch (_) {}
+
+    try {
+      if (_currentProfile!.cityEn != null && _currentProfile!.cityEn!.isNotEmpty) {
+        _selectedCity = _cities.firstWhere((c) => c.nameEn == _currentProfile!.cityEn);
+        if (_selectedCity != null) {
+          _fetchDistricts(_selectedCity!.id);
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _fetchDistricts(int cityId) async {
+    final fetched = await _masterDataService.getDistricts(cityId);
+    if (mounted) {
+      setState(() {
+        _districts = fetched ?? [];
+        if (_currentProfile?.districtEn != null && _currentProfile!.districtEn!.isNotEmpty) {
+          try {
+            _selectedDistrict = _districts.firstWhere((d) => d.nameEn == _currentProfile!.districtEn);
+          } catch (_) {}
+        }
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _currentProfile = widget.shopProfile;
     _initializeFields(_currentProfile);
+
+    _fetchMasterData();
 
     if (_currentProfile == null) {
       _loadProfile();
@@ -137,6 +223,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         setState(() {
           _currentProfile = profile;
           _updateControllerTexts(profile);
+          _setSelectedMasterData();
           _isLoading = false;
         });
       }
@@ -315,12 +402,23 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       'addressEn': _addressEnCtrl.text,
       'addressMm': _addressMmCtrl.text,
       'addressTh': _addressThCtrl.text,
-      'districtEn': _districtCtrl.text,
-      'districtMm': _districtCtrl.text,
-      'districtTh': _districtCtrl.text,
-      'cityEn': _cityCtrl.text,
-      'cityMm': _cityCtrl.text,
-      'cityTh': _cityCtrl.text,
+      'districtId': _selectedDistrict?.id,
+      'districtEn': _selectedDistrict?.nameEn ?? _districtCtrl.text,
+      'districtMm': _selectedDistrict?.nameMm ?? _districtCtrl.text,
+      'districtTh': _selectedDistrict?.nameTh ?? _districtCtrl.text,
+      'categoryId': _selectedCategory?.id,
+      'categoryEn': _selectedCategory?.nameEn ?? _catEnCtrl.text,
+      'categoryMm': _selectedCategory?.nameMm ?? _catMmCtrl.text,
+      'categoryTh': _selectedCategory?.nameTh ?? _catThCtrl.text,
+      'subCategoryId': _selectedSubcategory?.id,
+      'subCategoryEn': _selectedSubcategory?.nameEn ?? _subCatEnCtrl.text,
+      'subCategoryMm': _selectedSubcategory?.nameMm ?? _subCatMmCtrl.text,
+      'subCategoryTh': _selectedSubcategory?.nameTh ?? _subCatThCtrl.text,
+      'cuisineTypeId': _selectedCuisineType?.id,
+      'menuTagId': _selectedMenuTag?.id,
+      'cityEn': _selectedCity?.nameEn ?? _cityCtrl.text,
+      'cityMm': _selectedCity?.nameMm ?? _cityCtrl.text,
+      'cityTh': _selectedCity?.nameTh ?? _cityCtrl.text,
       'latitude': _latitude ?? 16.8409,
       'longitude': _longitude ?? 96.1735,
       'hasParking': _hasParking,
@@ -363,6 +461,36 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         ),
       );
     }
+  }
+
+  Widget _buildDropdown(
+    String label,
+    MasterDataModel? value,
+    List<MasterDataModel> items,
+    String hint,
+    ValueChanged<MasterDataModel?> onChanged,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<MasterDataModel>(
+          value: value,
+          isExpanded: true,
+          hint: Text(hint, style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13)),
+          items: items.map((c) {
+            return DropdownMenuItem(
+              value: c,
+              child: Text(c.displayName, style: GoogleFonts.poppins(fontSize: 14)),
+            );
+          }).toList(),
+          onChanged: onChanged,
+        ),
+      ),
+    );
   }
 
   // ── Build ────────────────────────────────────────────────────────────────
@@ -440,46 +568,61 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             ),
             const SizedBox(height: 32),
             _buildSection(
-              label: 'Shop Slug (Read-only)',
-              child: _buildTextField(
-                TextEditingController(text: _currentProfile?.slug ?? '-'),
-                'slug',
-                icon: PhosphorIconsRegular.link,
-                enabled: false,
-              ),
-            ),
-            const SizedBox(height: 32),
-            _buildSection(
               label: 'Category',
-              child: _buildLangField(
-                selectedLang: _catLang,
-                onLangChanged: (l) => setState(() => _catLang = l),
-                controller: _catLang == 'EN'
-                    ? _catEnCtrl
-                    : _catLang == 'MM'
-                    ? _catMmCtrl
-                    : _catThCtrl,
-                hint: 'Enter category',
+              child: _buildDropdown(
+                'Select Category',
+                _selectedCategory,
+                _categories,
+                'Choose category',
+                (v) => setState(() {
+                  _selectedCategory = v;
+                  _markChanged();
+                }),
               ),
             ),
             const SizedBox(height: 32),
-
             _buildSection(
               label: 'Sub-category',
-              child: _buildLangField(
-                selectedLang: _subCatLang,
-                onLangChanged: (l) => setState(() => _subCatLang = l),
-                controller: _subCatLang == 'EN'
-                    ? _subCatEnCtrl
-                    : _subCatLang == 'MM'
-                    ? _subCatMmCtrl
-                    : _subCatThCtrl,
-                hint: 'Enter sub-category',
+              child: _buildDropdown(
+                'Select Sub-category',
+                _selectedSubcategory,
+                _subcategories,
+                'Choose sub-category',
+                (v) => setState(() {
+                  _selectedSubcategory = v;
+                  _markChanged();
+                }),
               ),
             ),
             const SizedBox(height: 32),
-
-
+            _buildSection(
+              label: 'Cuisine Type',
+              child: _buildDropdown(
+                'Select Cuisine Type',
+                _selectedCuisineType,
+                _cuisineTypes,
+                'Choose cuisine type',
+                (v) => setState(() {
+                  _selectedCuisineType = v;
+                  _markChanged();
+                }),
+              ),
+            ),
+            const SizedBox(height: 32),
+            _buildSection(
+              label: 'Menu Tag',
+              child: _buildDropdown(
+                'Select Menu Tag',
+                _selectedMenuTag,
+                _menuTags,
+                'Choose menu tag',
+                (v) => setState(() {
+                  _selectedMenuTag = v;
+                  _markChanged();
+                }),
+              ),
+            ),
+            const SizedBox(height: 32),
 
             _buildSection(
               label: 'Description',
@@ -539,14 +682,40 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                   Expanded(
                     child: _buildSection(
                       label: 'District',
-                      child: _buildTextField(_districtCtrl, 'District'),
+                      child: _buildDropdown(
+                        'Select District',
+                        _selectedDistrict,
+                        _districts,
+                        'Choose district',
+                        (v) => setState(() {
+                          _selectedDistrict = v;
+                          if (v != null) {
+                            _districtCtrl.text = v.nameEn ?? '';
+                          }
+                          _markChanged();
+                        }),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildSection(
                       label: 'City',
-                      child: _buildTextField(_cityCtrl, 'City'),
+                      child: _buildDropdown(
+                        'Select City',
+                        _selectedCity,
+                        _cities,
+                        'Choose city',
+                        (v) => setState(() {
+                          _selectedCity = v;
+                          if (v != null) {
+                            _cityCtrl.text = v.nameEn ?? '';
+                            _selectedDistrict = null;
+                            _fetchDistricts(v.id);
+                          }
+                          _markChanged();
+                        }),
+                      ),
                     ),
                   ),
                 ],
