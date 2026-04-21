@@ -7,6 +7,7 @@ class MenuCategoryModel {
   final bool isActive;
   final String? imageUrl;
   final int itemCount;
+  final DateTime? updatedAt;
 
   MenuCategoryModel({
     required this.id,
@@ -17,6 +18,7 @@ class MenuCategoryModel {
     this.isActive = true,
     this.imageUrl,
     this.itemCount = 0,
+    this.updatedAt,
   });
 
   factory MenuCategoryModel.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class MenuCategoryModel {
       isActive: json['isActive'] ?? true,
       imageUrl: json['imageUrl'],
       itemCount: json['itemCount'] ?? 0,
+      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
     );
   }
 
@@ -42,6 +45,7 @@ class MenuCategoryModel {
       'isActive': isActive,
       'imageUrl': imageUrl,
       'itemCount': itemCount,
+      'updatedAt': updatedAt?.toIso8601String(),
     };
   }
 

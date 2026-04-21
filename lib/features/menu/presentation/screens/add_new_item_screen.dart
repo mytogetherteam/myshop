@@ -71,11 +71,8 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     {'id': 40,   'nameEn': 'Grill'},
     {'id': 629,  'nameEn': 'Biryani'},
     {'id': 30,   'nameEn': 'Fried'},
-    {'id': 42,   'nameEn': 'testeasfsaf'},
-    {'id': 43,   'nameEn': 'test'},
-    {'id': 45,   'nameEn': 'testing_Pyae_master_menu_category_update'},
-    {'id': 41,   'nameEn': 'testaksdjflasj'},
     {'id': 29,   'nameEn': 'Dessert'},
+    {'id': 0,    'nameEn': 'Other'},
   ];
 
   // --- Master Item mock data ---
@@ -119,7 +116,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
 
   // Meal Types
   final List<String> _selectedMealTypes = [];
-  final List<String> _allMealTypes = ['BREAKFAST', 'LUNCH', 'DINNER'];
+  final List<String> _allMealTypes = ['BREAKFAST', 'LUNCH', 'DINNER', 'Other'];
 
   // Complex Dynamic Lists
   final List<MenuItemVariantModel> _variants = [];
@@ -185,6 +182,18 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       setState(() {
         _categories.addAll(categories ?? []);
         _isLoadingCategories = false;
+        
+        // Append "Other"
+        if (_categories.isNotEmpty) {
+          _categories.add(MenuCategoryModel(
+            id: 9999, 
+            nameEn: 'Other', 
+            nameMm: 'Other', 
+            nameTh: 'Other', 
+            updatedAt: DateTime.now()
+          ));
+        }
+
         if (widget.item != null && _categories.isNotEmpty) {
           try {
             _selectedCategory = _categories.firstWhere((c) => c.id == widget.item?.categoryId);
@@ -380,6 +389,21 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   _buildMainDescriptionField(),
                   const SizedBox(height: 16),
                   _buildSearchableField(
+                    label: 'Master Category',
+                    value: _selectedMasterCategoryName,
+                    placeholder: 'Search master categories...',
+                    onTap: () => _showSearchableSelect<Map<String, dynamic>>(
+                      title: 'Master Category',
+                      items: _masterCategories,
+                      labelMapper: (c) => c['nameEn'] as String,
+                      onSelected: (c) => setState(() {
+                        _selectedMasterCategoryId = c['id'] as int;
+                        _selectedMasterCategoryName = c['nameEn'] as String;
+                      }),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildSearchableField(
                     label: 'Category',
                     value: _selectedCategory?.displayName,
                     placeholder: 'Select category',
@@ -390,6 +414,8 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                       onSelected: (c) => setState(() => _selectedCategory = c),
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  _buildTagSelection(),
                   
                   const SizedBox(height: 32),
                   _buildSectionTitle('PRICING & STOCK'),
@@ -418,38 +444,8 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                      ],
                    ),
 
-                  const SizedBox(height: 32),
-                  _buildTagSelection(),
-                  const SizedBox(height: 16),
-                  _buildSearchableField(
-                    label: 'Master Category',
-                    value: _selectedMasterCategoryName,
-                    placeholder: 'Search master categories...',
-                    onTap: () => _showSearchableSelect<Map<String, dynamic>>(
-                      title: 'Master Category',
-                      items: _masterCategories,
-                      labelMapper: (c) => c['nameEn'] as String,
-                      onSelected: (c) => setState(() {
-                        _selectedMasterCategoryId = c['id'] as int;
-                        _selectedMasterCategoryName = c['nameEn'] as String;
-                      }),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSearchableField(
-                    label: 'Master Item',
-                    value: _selectedMasterItemName,
-                    placeholder: 'Search master items...',
-                    onTap: () => _showSearchableSelect<Map<String, dynamic>>(
-                      title: 'Master Item',
-                      items: _masterItems,
-                      labelMapper: (m) => m['nameEn'] as String,
-                      onSelected: (m) => setState(() {
-                        _selectedMasterItemId = m['id'] as int;
-                        _selectedMasterItemName = m['nameEn'] as String;
-                      }),
-                    ),
-                  ),
+
+
 
                   const SizedBox(height: 32),
                   _buildSectionTitle('ORGANIZATION & TECHNICAL'),

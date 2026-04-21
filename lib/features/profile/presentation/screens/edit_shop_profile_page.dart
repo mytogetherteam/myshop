@@ -53,11 +53,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   // --- Category & Sub-category dropdown data ---
   static const List<Map<String, dynamic>> _shopCategories = [
     {'id': 14, 'nameEn': 'Cafe', 'nameMm': 'Cafe', 'nameTh': ''},
-    {'id': 17, 'nameEn': 'test ak', 'nameMm': 'tst', 'nameTh': 'adfasdf'},
-    {'id': 19, 'nameEn': 'test', 'nameMm': 'test', 'nameTh': 'test'},
     {'id': 15, 'nameEn': 'Restaurant', 'nameMm': 'Restaurant', 'nameTh': ''},
-    {'id': 20, 'nameEn': 'testing_Pyae_shop_category_update', 'nameMm': 'testing_Pyae_shop_category', 'nameTh': 'testing_Pyae_shop_category'},
-    {'id': 21, 'nameEn': '-', 'nameMm': '-', 'nameTh': ''},
     {'id': 22, 'nameEn': 'Street Food', 'nameMm': 'Street Food', 'nameTh': ''},
     {'id': 23, 'nameEn': 'Bar', 'nameMm': 'Bar', 'nameTh': ''},
   ];
@@ -65,9 +61,6 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   static const List<Map<String, dynamic>> _shopSubCategories = [
     {'id': 7,  'categoryId': 15, 'nameEn': 'ကြက်ဆီထမင်း',             'nameMm': 'ကြက်ဆီထမင်း',             'nameTh': ''},
     {'id': 6,  'categoryId': 14, 'nameEn': 'Cake & Coffee',              'nameMm': 'Cake & Coffee',              'nameTh': ''},
-    {'id': 9,  'categoryId': 20, 'nameEn': 'testing_Pyae_shop_sub_category', 'nameMm': 'testing_Pyae_shop_sub_category', 'nameTh': 'testing_Pyae_shop_sub_category'},
-    {'id': 14, 'categoryId': 14, 'nameEn': 'Cake & Coffee',              'nameMm': 'Cake & Coffee',              'nameTh': ''},
-    {'id': 15, 'categoryId': 21, 'nameEn': '-',                          'nameMm': '-',                          'nameTh': '-'},
     {'id': 16, 'categoryId': 15, 'nameEn': 'Myanmar Restaurants',        'nameMm': 'Myanmar Restaurants',        'nameTh': ''},
     {'id': 17, 'categoryId': 15, 'nameEn': 'Bumese Restaurant',          'nameMm': 'Bumese Restaurant',          'nameTh': ''},
     {'id': 18, 'categoryId': 15, 'nameEn': 'Shan Food',                  'nameMm': 'Shan Food',                  'nameTh': ''},
@@ -380,7 +373,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 placeholder: 'Select Category',
                 onTap: () => _showSearchableSelect<Map<String, dynamic>>(
                   title: 'Select Category',
-                  items: _shopCategories,
+                  items: _shopCategories + [{'id': 9999, 'nameEn': 'Other', 'nameMm': 'Other', 'nameTh': 'Other'}],
                   labelMapper: (c) => c['nameEn'] as String,
                   onSelected: (c) => setState(() {
                     _selectedCategoryId = c['id'] as int;
@@ -423,7 +416,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                             .toList();
                         _showSearchableSelect<Map<String, dynamic>>(
                           title: 'Select Sub-category',
-                          items: subs,
+                          items: subs + [{'id': 9998, 'categoryId': _selectedCategoryId, 'nameEn': 'Other', 'nameMm': 'Other', 'nameTh': 'Other'}],
                           labelMapper: (s) => s['nameEn'] as String,
                           onSelected: (s) => setState(() {
                             _selectedSubCategoryId = s['id'] as int;
@@ -493,7 +486,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                       placeholder: 'Select City',
                       onTap: () => _showSearchableSelect<String>(
                         title: 'Select City',
-                        items: ThailandAddressData.provinces,
+                        items: ThailandAddressData.provinces + ['Other'],
                         labelMapper: (c) => c,
                         onSelected: (c) => setState(() {
                           _cityCtrl.text = c;
@@ -517,7 +510,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                         final availableDistricts = ThailandAddressData.districtsByProvince[_cityCtrl.text] ?? [];
                         _showSearchableSelect<String>(
                           title: 'Select District',
-                          items: availableDistricts,
+                          items: (ThailandAddressData.districtsByProvince[_cityCtrl.text] ?? []) + ['Other'],
                           labelMapper: (d) => d,
                           onSelected: (d) => setState(() {
                             _districtCtrl.text = d;
@@ -533,11 +526,11 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             ),
             const SizedBox(height: 32),
 
-            _buildSection(
-              label: 'Google Maps Link',
-              child: _buildTextField(_mapsLinkCtrl, 'Paste Google Maps URL', icon: PhosphorIconsRegular.mapPin),
-            ),
-            const SizedBox(height: 32),
+            // _buildSection(
+            //   label: 'Google Maps Link',
+            //   child: _buildTextField(_mapsLinkCtrl, 'Paste Google Maps URL', icon: PhosphorIconsRegular.mapPin),
+            // ),
+            // const SizedBox(height: 32),
 
             _buildToggleSection(
               title: 'Standard Delivery Settings',
@@ -595,72 +588,72 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             ),
             const SizedBox(height: 24),
 
-            _buildSection(
-              label: 'Map Location',
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Row(
-                  children: [
-                    const PhosphorIcon(
-                      PhosphorIconsRegular.mapPin,
-                      size: 20,
-                      color: Color(0xFFED3973),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${_latitude?.toStringAsFixed(4) ?? "16.8409"}° N, '
-                            '${_longitude?.toStringAsFixed(4) ?? "96.1735"}° E',
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF1E293B),
-                            ),
-                          ),
-                          Text(
-                            'Current pin location',
-                            style: GoogleFonts.poppins(
-                              fontSize: 11,
-                              color: const Color(0xFF94A3B8),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    TextButton.icon(
-                      onPressed: _markChanged,
-                      icon: const PhosphorIcon(
-                        PhosphorIconsRegular.pencilSimple,
-                        size: 14,
-                        color: Color(0xFF475569),
-                      ),
-                      label: Text(
-                        'Reposition',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: const Color(0xFF475569),
-                        ),
-                      ),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
+            // _buildSection(
+            //   label: 'Map Location',
+            //   child: Container(
+            //     padding: const EdgeInsets.all(12),
+            //     decoration: BoxDecoration(
+            //       color: Colors.white,
+            //       borderRadius: BorderRadius.circular(10),
+            //       border: Border.all(color: const Color(0xFFE2E8F0)),
+            //     ),
+            //     child: Row(
+            //       children: [
+            //         const PhosphorIcon(
+            //           PhosphorIconsRegular.mapPin,
+            //           size: 20,
+            //           color: Color(0xFFED3973),
+            //         ),
+            //         const SizedBox(width: 10),
+            //         Expanded(
+            //           child: Column(
+            //             crossAxisAlignment: CrossAxisAlignment.start,
+            //             children: [
+            //               Text(
+            //                 '${_latitude?.toStringAsFixed(4) ?? "16.8409"}° N, '
+            //                 '${_longitude?.toStringAsFixed(4) ?? "96.1735"}° E',
+            //                 style: GoogleFonts.poppins(
+            //                   fontSize: 13,
+            //                   fontWeight: FontWeight.w500,
+            //                   color: const Color(0xFF1E293B),
+            //                 ),
+            //               ),
+            //               Text(
+            //                 'Current pin location',
+            //                 style: GoogleFonts.poppins(
+            //                   fontSize: 11,
+            //                   color: const Color(0xFF94A3B8),
+            //                 ),
+            //               ),
+            //             ],
+            //           ),
+            //         ),
+            //         TextButton.icon(
+            //           onPressed: _markChanged,
+            //           icon: const PhosphorIcon(
+            //             PhosphorIconsRegular.pencilSimple,
+            //             size: 14,
+            //             color: Color(0xFF475569),
+            //           ),
+            //           label: Text(
+            //             'Reposition',
+            //             style: GoogleFonts.poppins(
+            //               fontSize: 12,
+            //               color: const Color(0xFF475569),
+            //             ),
+            //           ),
+            //           style: TextButton.styleFrom(
+            //             padding: const EdgeInsets.symmetric(
+            //               horizontal: 8,
+            //               vertical: 4,
+            //             ),
+            //           ),
+            //         ),
+            //       ],
+            //     ),
+            //   ),
+            // ),
+            // const SizedBox(height: 24),
 
             _buildToggleSection(
               title: 'Amenities',

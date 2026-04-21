@@ -29,7 +29,12 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
     final categories = await _categoryService.getCategories();
     if (mounted) {
       setState(() {
-        _categories = (categories ?? [])..sort((a, b) => b.id.compareTo(a.id));
+        _categories = (categories ?? [])..sort((a, b) {
+          if (a.updatedAt != null && b.updatedAt != null) {
+            return b.updatedAt!.compareTo(a.updatedAt!);
+          }
+          return b.id.compareTo(a.id);
+        });
         _isLoading = false;
       });
     }

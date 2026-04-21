@@ -177,6 +177,7 @@ class CategoryService {
       imageUrl: payload['imageUrl'],
       displayOrder: categories.length,
       itemCount: 0,
+      updatedAt: DateTime.now(),
     );
 
     categories.insert(0, newCategory);
@@ -197,6 +198,7 @@ class CategoryService {
       imageUrl: payload['imageUrl'] ?? existing.imageUrl,
       displayOrder: existing.displayOrder,
       itemCount: existing.itemCount,
+      updatedAt: DateTime.now(),
     );
 
     categories.removeAt(index);

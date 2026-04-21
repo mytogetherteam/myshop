@@ -59,8 +59,9 @@ class _MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin 
     if (mounted) {
       setState(() {
         _categories = [
-          MenuCategoryModel(id: 0, nameEn: 'All Categories', nameMm: 'All Categories', nameTh: 'All Categories'),
-          ...categories ?? []
+          MenuCategoryModel(id: 0, nameEn: 'All Categories', nameMm: 'All Categories', nameTh: 'All Categories', updatedAt: DateTime.now()),
+          ...categories ?? [],
+          MenuCategoryModel(id: 9999, nameEn: 'Other', nameMm: 'Other', nameTh: 'Other', updatedAt: DateTime.now()),
         ];
         _isLoadingCategories = false;
         if (_categories.isNotEmpty) {
