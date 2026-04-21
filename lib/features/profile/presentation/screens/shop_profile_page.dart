@@ -648,8 +648,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            OperatingHoursPage(shopProfile: _shopProfile),
+                        builder: (context) => const OperatingHoursPage(),
                       ),
                     ).then((_) => _loadProfile());
                   },

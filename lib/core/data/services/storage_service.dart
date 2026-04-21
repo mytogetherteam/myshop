@@ -7,6 +7,7 @@ class StorageService {
   static const String _keyRefreshToken = 'refresh_token';
   static const String _keyUserInfo = 'user_info';
   static const String _keyNotificationHandled = 'notification_permission_handled';
+  static const String _keySelectedShopId = 'selected_shop_id';
 
   static final StorageService instance = StorageService._();
   StorageService._();
@@ -44,6 +45,7 @@ class StorageService {
     await prefs.remove(_keyToken);
     await prefs.remove(_keyRefreshToken);
     await prefs.remove(_keyUserInfo);
+    await prefs.remove(_keySelectedShopId);
   }
 
   Future<bool> hasToken() async {
@@ -59,5 +61,20 @@ class StorageService {
   Future<bool> isNotificationHandled() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_keyNotificationHandled) ?? false;
+  }
+
+  Future<void> saveSelectedShopId(int shopId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_keySelectedShopId, shopId);
+  }
+
+  Future<int?> getSelectedShopId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_keySelectedShopId);
+  }
+
+  Future<void> removeSelectedShopId() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keySelectedShopId);
   }
 }

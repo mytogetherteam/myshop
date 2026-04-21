@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/auth/auth_interceptor.dart';
+import 'package:my_shop/core/network/shop_interceptor.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'dart:io';
 
@@ -27,6 +28,9 @@ class ApiClient {
 
     // Auth interceptor: attaches Bearer token and handles 401/403 auto-refresh
     _dio.interceptors.add(AuthInterceptor(_dio));
+
+    // Shop interceptor: attaches X-Shop-Id
+    _dio.interceptors.add(ShopInterceptor());
 
     // Cache interceptor
     _dio.interceptors.add(DioCacheInterceptor(

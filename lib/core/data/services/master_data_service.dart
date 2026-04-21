@@ -3,17 +3,28 @@ import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/data/models/master_data_model.dart';
 
 class MasterDataService {
+  List<MasterDataModel>? _parseResponse(dynamic data) {
+    if (data == null) return null;
+    
+    if (data is List) {
+      return data.map((json) => MasterDataModel.fromJson(json)).toList();
+    } else if (data is Map && data['success'] == true && data['data'] != null) {
+      final payload = data['data'];
+      if (payload is List) {
+        return payload.map((json) => MasterDataModel.fromJson(json)).toList();
+      } else if (payload is Map && payload.containsKey('content')) {
+        final List list = payload['content'];
+        return list.map((json) => MasterDataModel.fromJson(json)).toList();
+      }
+    }
+    return null;
+  }
+
   Future<List<MasterDataModel>?> getShopCategories() async {
     try {
       final response = await ApiClient().dio.get('/api/shop/master/shop-categories');
       if (response.statusCode == 200) {
-        final data = response.data;
-        if (data != null && data is List) {
-          return data.map((json) => MasterDataModel.fromJson(json)).toList();
-        } else if (data['success'] == true && data['data'] != null) {
-          final List list = data['data'];
-          return list.map((json) => MasterDataModel.fromJson(json)).toList();
-        }
+        return _parseResponse(response.data);
       }
     } catch (e) {
       debugPrint('API Error in getShopCategories: $e');
@@ -25,13 +36,7 @@ class MasterDataService {
     try {
       final response = await ApiClient().dio.get('/api/shop/master/shop-subcategories');
       if (response.statusCode == 200) {
-        final data = response.data;
-        if (data != null && data is List) {
-          return data.map((json) => MasterDataModel.fromJson(json)).toList();
-        } else if (data['success'] == true && data['data'] != null) {
-          final List list = data['data'];
-          return list.map((json) => MasterDataModel.fromJson(json)).toList();
-        }
+        return _parseResponse(response.data);
       }
     } catch (e) {
       debugPrint('API Error in getShopSubcategories: $e');
@@ -43,13 +48,7 @@ class MasterDataService {
     try {
       final response = await ApiClient().dio.get('/api/shop/master/cities');
       if (response.statusCode == 200) {
-        final data = response.data;
-        if (data != null && data is List) {
-          return data.map((json) => MasterDataModel.fromJson(json)).toList();
-        } else if (data['success'] == true && data['data'] != null) {
-          final List list = data['data'];
-          return list.map((json) => MasterDataModel.fromJson(json)).toList();
-        }
+        return _parseResponse(response.data);
       }
     } catch (e) {
       debugPrint('API Error in getCities: $e');
@@ -64,13 +63,7 @@ class MasterDataService {
         queryParameters: cityId != null ? {'cityId': cityId} : null,
       );
       if (response.statusCode == 200) {
-        final data = response.data;
-        if (data != null && data is List) {
-          return data.map((json) => MasterDataModel.fromJson(json)).toList();
-        } else if (data['success'] == true && data['data'] != null) {
-          final List list = data['data'];
-          return list.map((json) => MasterDataModel.fromJson(json)).toList();
-        }
+        return _parseResponse(response.data);
       }
     } catch (e) {
       debugPrint('API Error in getDistricts: $e');
@@ -82,13 +75,7 @@ class MasterDataService {
     try {
       final response = await ApiClient().dio.get('/api/shop/master/cuisine-types');
       if (response.statusCode == 200) {
-        final data = response.data;
-        if (data != null && data is List) {
-          return data.map((json) => MasterDataModel.fromJson(json)).toList();
-        } else if (data['success'] == true && data['data'] != null) {
-          final List list = data['data'];
-          return list.map((json) => MasterDataModel.fromJson(json)).toList();
-        }
+        return _parseResponse(response.data);
       }
     } catch (e) {
       debugPrint('API Error in getCuisineTypes: $e');
@@ -100,13 +87,7 @@ class MasterDataService {
     try {
       final response = await ApiClient().dio.get('/api/shop/master/menu-tags');
       if (response.statusCode == 200) {
-        final data = response.data;
-        if (data != null && data is List) {
-          return data.map((json) => MasterDataModel.fromJson(json)).toList();
-        } else if (data['success'] == true && data['data'] != null) {
-          final List list = data['data'];
-          return list.map((json) => MasterDataModel.fromJson(json)).toList();
-        }
+        return _parseResponse(response.data);
       }
     } catch (e) {
       debugPrint('API Error in getMenuTags: $e');

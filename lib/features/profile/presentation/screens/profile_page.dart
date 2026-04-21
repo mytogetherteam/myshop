@@ -15,6 +15,7 @@ import 'change_password_page.dart';
 import 'reviews_page.dart';
 import 'accepted_payment_page.dart';
 import 'shop_selection_page.dart';
+import 'global_shop_selection_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -176,6 +177,14 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
               color: const Color(0xFF94A3B8),
               letterSpacing: 0.8,
             ),
+          ),
+        ),
+        _buildMenuOption(
+          icon: PhosphorIconsRegular.arrowsLeftRight,
+          title: 'Switch Shop',
+          onTap: () => Navigator.push(
+            context,
+            CupertinoPageRoute(builder: (_) => const GlobalShopSelectionPage(isInitialFlow: false)),
           ),
         ),
         _buildMenuOption(

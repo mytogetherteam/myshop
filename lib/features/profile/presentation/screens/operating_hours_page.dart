@@ -2,14 +2,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/features/main_navigation/presentation/screens/main_navigation_screen.dart';
 
 class OperatingHoursPage extends StatefulWidget {
-  final ShopProfileModel? shopProfile;
-  const OperatingHoursPage({super.key, this.shopProfile});
+  const OperatingHoursPage({super.key});
 
   @override
   State<OperatingHoursPage> createState() => _OperatingHoursPageState();
@@ -25,7 +23,7 @@ class _DayHours {
     TimeOfDay? openTime,
     TimeOfDay? closeTime,
   })  : openTime = openTime ?? const TimeOfDay(hour: 9, minute: 0),
-        closeTime = closeTime ?? const TimeOfDay(hour: 22, minute: 0);
+        closeTime = closeTime ?? const TimeOfDay(hour: 21, minute: 0);
 
   _DayHours copyWith({bool? isClosed, TimeOfDay? openTime, TimeOfDay? closeTime}) {
     return _DayHours(
@@ -37,12 +35,18 @@ class _DayHours {
 }
 
 class _OperatingHoursPageState extends State<OperatingHoursPage> {
-  bool _isOpen = true;
+  bool _isOpen = false;
   bool _isTogglingStatus = false;
   bool _hasChanges = false;
   bool _isSaving = false;
+  bool _isLoadingHours = true;
+  String? _loadError;
 
-  final List<String> _days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  // API uses 1-based dayOfWeek: 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat, 7=Sun
+  // _hours index 0 = dayOfWeek 1 (Monday) ... index 6 = dayOfWeek 7 (Sunday)
+  final List<String> _days = [
+    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+  ];
   late List<_DayHours> _hours;
 
   final ProfileService _profileService = ProfileService();
@@ -50,21 +54,63 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
   @override
   void initState() {
     super.initState();
-    final profile = widget.shopProfile;
-    _isOpen = profile?.isOpen ?? false;
-    
-    // Initialize with default 9am-10pm closed all over
-    _hours = List.generate(7, (index) => _DayHours(isClosed: true, openTime: const TimeOfDay(hour: 9, minute: 0), closeTime: const TimeOfDay(hour: 22, minute: 0)));
+    // Default: all days open 09:00–21:00
+    _hours = List.generate(
+      7,
+      (_) => _DayHours(
+        isClosed: false,
+        openTime: const TimeOfDay(hour: 9, minute: 0),
+        closeTime: const TimeOfDay(hour: 21, minute: 0),
+      ),
+    );
+    _fetchOperatingHours();
+  }
 
-    if (profile != null && profile.operatingHours.isNotEmpty) {
-      for (final h in profile.operatingHours) {
-        if (h.dayOfWeek >= 0 && h.dayOfWeek <= 6) {
-          _hours[h.dayOfWeek] = _DayHours(
-            isClosed: h.isClosed,
-            openTime: TimeOfDay(hour: h.openingTime.hour, minute: h.openingTime.minute),
-            closeTime: TimeOfDay(hour: h.closingTime.hour, minute: h.closingTime.minute),
-          );
+  Future<void> _fetchOperatingHours() async {
+    setState(() {
+      _isLoadingHours = true;
+      _loadError = null;
+    });
+
+    try {
+      final hoursList = await _profileService.getOperatingHours();
+      if (!mounted) return;
+
+      if (hoursList.isNotEmpty) {
+        final newHours = List.generate(
+          7,
+          (_) => _DayHours(
+            isClosed: false,
+            openTime: const TimeOfDay(hour: 9, minute: 0),
+            closeTime: const TimeOfDay(hour: 21, minute: 0),
+          ),
+        );
+
+        for (final h in hoursList) {
+          // dayOfWeek 1=Mon...7=Sun → index = dayOfWeek - 1
+          final idx = h.dayOfWeek - 1;
+          if (idx >= 0 && idx < 7) {
+            newHours[idx] = _DayHours(
+              isClosed: h.isClosed,
+              openTime: TimeOfDay(hour: h.openingTime.hour, minute: h.openingTime.minute),
+              closeTime: TimeOfDay(hour: h.closingTime.hour, minute: h.closingTime.minute),
+            );
+          }
         }
+
+        setState(() {
+          _hours = newHours;
+          _isLoadingHours = false;
+        });
+      } else {
+        setState(() => _isLoadingHours = false);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingHours = false;
+          _loadError = 'Failed to load operating hours.';
+        });
       }
     }
   }
@@ -77,6 +123,12 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
     final hour = t.hour.toString().padLeft(2, '0');
     final minute = t.minute.toString().padLeft(2, '0');
     return '$hour:$minute';
+  }
+
+  String _toApiTimeString(TimeOfDay t) {
+    final h = t.hour.toString().padLeft(2, '0');
+    final m = t.minute.toString().padLeft(2, '0');
+    return '$h:$m:00';
   }
 
   Future<void> _pickTime(int dayIndex, bool isOpen) async {
@@ -159,40 +211,49 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
 
   Future<void> _save() async {
     setState(() => _isSaving = true);
-    
-    final activeHours = [];
-    for (int i = 0; i < _hours.length; i++) {
-        final oh = _hours[i];
-        activeHours.add({
-            'dayOfWeek': i,
-            'openTime': {
-                'hour': oh.openTime.hour,
-                'minute': oh.openTime.minute,
-                'second': 0,
-                'nano': 0
-            },
-            'closeTime': {
-                'hour': oh.closeTime.hour,
-                'minute': oh.closeTime.minute,
-                'second': 0,
-                'nano': 0
-            },
-            'isClosed': oh.isClosed
-        });
-    }
-    
-    final payload = {
-      'activeHours': activeHours
-    };
 
-    final success = await _profileService.updateOperatingHours(payload);
-    
+    // Build payload with 1-based dayOfWeek and multiple time formats for compatibility
+    final activeHours = <Map<String, dynamic>>[];
+    for (int i = 0; i < _hours.length; i++) {
+      final oh = _hours[i];
+      final timeStrOpen = _toApiTimeString(oh.openTime);
+      final timeStrClose = _toApiTimeString(oh.closeTime);
+      final timeObjOpen = {
+        'hour': oh.openTime.hour,
+        'minute': oh.openTime.minute,
+        'second': 0,
+        'nano': 0
+      };
+      final timeObjClose = {
+        'hour': oh.closeTime.hour,
+        'minute': oh.closeTime.minute,
+        'second': 0,
+        'nano': 0
+      };
+
+      activeHours.add({
+        'dayOfWeek': i + 1, // 1=Mon...7=Sun
+        'openTime': timeStrOpen,
+        'openingTime': timeStrOpen, // Send both keys just in case
+        'closeTime': timeStrClose,
+        'closingTime': timeStrClose, // Send both keys just in case
+        'openTimeObj': timeObjOpen, // Some backends want the object
+        'closeTimeObj': timeObjClose,
+        'isClosed': oh.isClosed,
+      });
+    }
+
+    final payload = {'activeHours': activeHours};
+
+    final response = await _profileService.updateOperatingHours(payload);
+    final bool isSuccess = response['success'] == true || response['status'] == 200;
+
     if (!context.mounted) return;
 
-    if (success) {
+    if (isSuccess) {
       setState(() {
-          _isSaving = false;
-          _hasChanges = false;
+        _isSaving = false;
+        _hasChanges = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -200,7 +261,6 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
           backgroundColor: Color(0xFFED3A72),
         ),
       );
-      // Navigate back to the Profile tab in MainNavigationScreen (initialIndex: 3)
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const MainNavigationScreen(initialIndex: 3)),
@@ -208,10 +268,11 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
       );
     } else {
       setState(() => _isSaving = false);
+      final errorMessage = response['message'] ?? 'Failed to save operating hours. Please try again.';
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to save operating hours. Please try again.'),
-          backgroundColor: Color(0xFFEF4444),
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: const Color(0xFFEF4444),
         ),
       );
     }
@@ -248,267 +309,303 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
             ),
           ),
           centerTitle: false,
-          actions: const [
-            SizedBox(width: 8),
-          ],
+          actions: const [SizedBox(width: 8)],
         ),
-        body: ListView(
-          padding: const EdgeInsets.only(bottom: 24),
-          children: [
-            const SizedBox(height: 16),
-            // Open/Closed banner
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: _isOpen ? const Color(0xFFECFDF5) : const Color(0xFFFFF1F2),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: _isOpen ? const Color(0xFF10B981) : const Color(0xFFED3973),
-                    width: 1,
+        body: _isLoadingHours
+            ? const Center(child: CustomLoadingIndicator())
+            : _loadError != null
+                ? _buildErrorState()
+                : _buildContent(),
+        bottomNavigationBar: _isLoadingHours
+            ? null
+            : SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _isSaving ? null : _save,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFED3973),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 0,
+                      ),
+                      child: _isSaving
+                          ? const CustomLoadingIndicator(size: 24, color: Colors.white)
+                          : Text(
+                              'Save',
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                    ),
                   ),
                 ),
-                child: Row(
-                  children: [
-                    PhosphorIcon(
-                      _isOpen ? PhosphorIconsRegular.storefront : PhosphorIconsRegular.door,
-                      size: 24,
-                      color: _isOpen ? const Color(0xFF10B981) : const Color(0xFFED3973),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _isOpen ? 'Shop is Open' : 'Shop is Closed',
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                              color: _isOpen ? const Color(0xFF065F46) : const Color(0xFFBE123C),
-                            ),
-                          ),
-                          Text(
-                            'Toggle to change status immediately',
-                            style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B)),
-                          ),
-                        ],
-                      ),
-                    ),
-                    _isTogglingStatus
-                        ? const CustomLoadingIndicator(size: 24, color: Color(0xFFED3973))
-                        : SizedBox(
-                            height: 24,
-                            child: Transform.scale(
-                              scale: 0.65,
-                              child: Switch(
-                                value: _isOpen,
-                                onChanged: (v) async {
-                                  setState(() => _isTogglingStatus = true);
-                                  final success = await _profileService.toggleShopStatus(v);
-                                  if (context.mounted) {
-                                    if (success) {
-                                      setState(() {
-                                        _isOpen = v;
-                                        _isTogglingStatus = false;
-                                      });
-                                    } else {
-                                      setState(() => _isTogglingStatus = false);
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Failed to change shop status.'),
-                                          backgroundColor: Color(0xFFEF4444),
-                                        ),
-                                      );
-                                    }
-                                  }
-                                },
-                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                thumbColor: WidgetStateProperty.all(Colors.white),
-                                trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
-                                trackColor: WidgetStateProperty.resolveWith((states) {
-                                  if (states.contains(WidgetState.selected)) {
-                                    return const Color(0xFFED3973); // Active pink
-                                  }
-                                  return const Color(0xFFE2E8F0); // Inactive gray
-                                }),
-                              ),
-                            ),
-                          ),
-                  ],
-                ),
               ),
-            ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Color(0xFFEF4444)),
             const SizedBox(height: 16),
-            // Day rows
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: Column(
-                children: List.generate(_days.length, (i) {
-                  final day = _days[i];
-                  final h = _hours[i];
-                  final isLast = i == _days.length - 1;
-                  return Column(
-                    children: [
-                      Theme(
-                        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                        child: ExpansionTile(
-                          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                          childrenPadding: EdgeInsets.zero,
-                          title: Row(
-                            children: [
-                              SizedBox(
-                                width: 100,
-                                child: Text(
-                                  day,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF1E293B),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  h.isClosed
-                                      ? 'Closed'
-                                      : '${_formatTime(h.openTime)} – ${_formatTime(h.closeTime)}',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    color: h.isClosed ? const Color(0xFFED3973) : const Color(0xFF64748B),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          trailing: PhosphorIcon(
-                            PhosphorIconsRegular.caretDown,
-                            size: 16,
-                            color: const Color(0xFF94A3B8),
-                          ),
-                          children: [
-                            Container(
-                              color: const Color(0xFFF8FAFC),
-                              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                              child: Column(
-                                children: [
-                                  if (!h.isClosed) ...[
-                                    // Open time row
-                                    _TimePickerRow(
-                                      label: 'Open',
-                                      time: h.openTime,
-                                      onTap: () => _pickTime(i, true),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    // Close time row
-                                    _TimePickerRow(
-                                      label: 'Close',
-                                      time: h.closeTime,
-                                      onTap: () => _pickTime(i, false),
-                                    ),
-                                    const SizedBox(height: 12),
-                                  ],
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        h.isClosed ? Icons.add_circle_outline : Icons.remove_circle_outline,
-                                        size: 18,
-                                        color: h.isClosed ? const Color(0xFF10B981) : const Color(0xFFED3973),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      GestureDetector(
-                                        onTap: () {
-                                          setState(() => _hours[i] = _hours[i].copyWith(isClosed: !h.isClosed));
-                                          _markChanged();
-                                        },
-                                        child: Text(
-                                          h.isClosed ? 'Set hours for this day' : 'Mark as closed',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w500,
-                                            color: h.isClosed ? const Color(0xFF10B981) : const Color(0xFFED3973),
-                                          ),
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      InkWell(
-                                        borderRadius: BorderRadius.circular(6),
-                                        onTap: () => _copyToAllDays(i),
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                          child: Row(
-                                            children: [
-                                              const PhosphorIcon(PhosphorIconsRegular.copy, size: 14, color: Color(0xFF64748B)),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                'Copy to all',
-                                                style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B)),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (!isLast)
-                        const Divider(height: 1, color: Color(0xFFE2E8F0), indent: 16, endIndent: 16),
-                    ],
-                  );
-                }),
-              ),
+            Text(
+              _loadError!,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(color: const Color(0xFF1E293B)),
             ),
             const SizedBox(height: 24),
-            // Save hint
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'Changes are saved when you tap the Save button.',
-                style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF94A3B8)),
-                textAlign: TextAlign.center,
+            ElevatedButton(
+              onPressed: _fetchOperatingHours,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFED3973),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
+              child: Text('Retry', style: GoogleFonts.poppins(color: Colors.white)),
             ),
           ],
         ),
-        bottomNavigationBar: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: _isSaving ? null : _save,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFED3973),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 0,
-                ),
-                child: _isSaving 
-                  ? const CustomLoadingIndicator(size: 24, color: Colors.white)
-                  : Text(
-                      'Save',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 24),
+      children: [
+        const SizedBox(height: 16),
+        // Open/Closed toggle banner
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: _isOpen ? const Color(0xFFECFDF5) : const Color(0xFFFFF1F2),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: _isOpen ? const Color(0xFF10B981) : const Color(0xFFED3973),
+                width: 1,
               ),
+            ),
+            child: Row(
+              children: [
+                PhosphorIcon(
+                  _isOpen ? PhosphorIconsRegular.storefront : PhosphorIconsRegular.door,
+                  size: 24,
+                  color: _isOpen ? const Color(0xFF10B981) : const Color(0xFFED3973),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _isOpen ? 'Shop is Open' : 'Shop is Closed',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: _isOpen ? const Color(0xFF065F46) : const Color(0xFFBE123C),
+                        ),
+                      ),
+                      Text(
+                        'Toggle to change status immediately',
+                        style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B)),
+                      ),
+                    ],
+                  ),
+                ),
+                _isTogglingStatus
+                    ? const CustomLoadingIndicator(size: 24, color: Color(0xFFED3973))
+                    : SizedBox(
+                        height: 24,
+                        child: Transform.scale(
+                          scale: 0.65,
+                          child: Switch(
+                            value: _isOpen,
+                            onChanged: (v) async {
+                              setState(() => _isTogglingStatus = true);
+                              // PUT /api/shop/operating-hours/status?open=true|false
+                              // X-Shop-Id injected by ShopInterceptor
+                              final success = await _profileService.toggleShopStatus(v);
+                              if (context.mounted) {
+                                if (success) {
+                                  setState(() {
+                                    _isOpen = v;
+                                    _isTogglingStatus = false;
+                                  });
+                                } else {
+                                  setState(() => _isTogglingStatus = false);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Failed to change shop status.'),
+                                      backgroundColor: Color(0xFFEF4444),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            thumbColor: WidgetStateProperty.all(Colors.white),
+                            trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+                            trackColor: WidgetStateProperty.resolveWith((states) {
+                              if (states.contains(WidgetState.selected)) {
+                                return const Color(0xFFED3973);
+                              }
+                              return const Color(0xFFE2E8F0);
+                            }),
+                          ),
+                        ),
+                      ),
+              ],
             ),
           ),
         ),
-      ),
+        const SizedBox(height: 16),
+        // Day rows
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Column(
+            children: List.generate(_days.length, (i) {
+              final day = _days[i];
+              final h = _hours[i];
+              final isLast = i == _days.length - 1;
+              return Column(
+                children: [
+                  Theme(
+                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                    child: ExpansionTile(
+                      tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      childrenPadding: EdgeInsets.zero,
+                      title: Row(
+                        children: [
+                          SizedBox(
+                            width: 100,
+                            child: Text(
+                              day,
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF1E293B),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              h.isClosed
+                                  ? 'Closed'
+                                  : '${_formatTime(h.openTime)} – ${_formatTime(h.closeTime)}',
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                color: h.isClosed ? const Color(0xFFED3973) : const Color(0xFF64748B),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      trailing: PhosphorIcon(
+                        PhosphorIconsRegular.caretDown,
+                        size: 16,
+                        color: const Color(0xFF94A3B8),
+                      ),
+                      children: [
+                        Container(
+                          color: const Color(0xFFF8FAFC),
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                          child: Column(
+                            children: [
+                              if (!h.isClosed) ...[
+                                _TimePickerRow(
+                                  label: 'Open',
+                                  time: h.openTime,
+                                  onTap: () => _pickTime(i, true),
+                                ),
+                                const SizedBox(height: 10),
+                                _TimePickerRow(
+                                  label: 'Close',
+                                  time: h.closeTime,
+                                  onTap: () => _pickTime(i, false),
+                                ),
+                                const SizedBox(height: 12),
+                              ],
+                              Row(
+                                children: [
+                                  Icon(
+                                    h.isClosed ? Icons.add_circle_outline : Icons.remove_circle_outline,
+                                    size: 18,
+                                    color: h.isClosed ? const Color(0xFF10B981) : const Color(0xFFED3973),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  GestureDetector(
+                                    onTap: () {
+                                      setState(() => _hours[i] = _hours[i].copyWith(isClosed: !h.isClosed));
+                                      _markChanged();
+                                    },
+                                    child: Text(
+                                      h.isClosed ? 'Set hours for this day' : 'Mark as closed',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: h.isClosed ? const Color(0xFF10B981) : const Color(0xFFED3973),
+                                      ),
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  InkWell(
+                                    borderRadius: BorderRadius.circular(6),
+                                    onTap: () => _copyToAllDays(i),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      child: Row(
+                                        children: [
+                                          const PhosphorIcon(PhosphorIconsRegular.copy, size: 14, color: Color(0xFF64748B)),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Copy to all',
+                                            style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B)),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (!isLast)
+                    const Divider(height: 1, color: Color(0xFFE2E8F0), indent: 16, endIndent: 16),
+                ],
+              );
+            }),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'Changes are saved when you tap the Save button.',
+            style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF94A3B8)),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ],
     );
   }
 }

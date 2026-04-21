@@ -470,24 +470,38 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     String hint,
     ValueChanged<MasterDataModel?> onChanged,
   ) {
+    final List<MasterDataModel> safeItems = List.from(items);
+    if (value != null && !safeItems.contains(value)) {
+      safeItems.add(value);
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<MasterDataModel>(
           value: value,
           isExpanded: true,
           hint: Text(hint, style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13)),
-          items: items.map((c) {
-            return DropdownMenuItem(
-              value: c,
-              child: Text(c.displayName, style: GoogleFonts.poppins(fontSize: 14)),
-            );
-          }).toList(),
-          onChanged: onChanged,
+          items: safeItems.isEmpty
+              ? [
+                  DropdownMenuItem<MasterDataModel>(
+                    value: null,
+                    enabled: false,
+                    child: Text('No data found', style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF94A3B8))),
+                  )
+                ]
+              : safeItems.map((c) {
+                  return DropdownMenuItem<MasterDataModel>(
+                    value: c,
+                    child: Text(c.displayName, style: GoogleFonts.poppins(fontSize: 14)),
+                  );
+                }).toList(),
+          onChanged: safeItems.isEmpty ? (_) {} : onChanged,
         ),
       ),
     );
@@ -681,25 +695,6 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 children: [
                   Expanded(
                     child: _buildSection(
-                      label: 'District',
-                      child: _buildDropdown(
-                        'Select District',
-                        _selectedDistrict,
-                        _districts,
-                        'Choose district',
-                        (v) => setState(() {
-                          _selectedDistrict = v;
-                          if (v != null) {
-                            _districtCtrl.text = v.nameEn ?? '';
-                          }
-                          _markChanged();
-                        }),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildSection(
                       label: 'City',
                       child: _buildDropdown(
                         'Select City',
@@ -712,6 +707,25 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                             _cityCtrl.text = v.nameEn ?? '';
                             _selectedDistrict = null;
                             _fetchDistricts(v.id);
+                          }
+                          _markChanged();
+                        }),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildSection(
+                      label: 'District',
+                      child: _buildDropdown(
+                        'Select District',
+                        _selectedDistrict,
+                        _districts,
+                        'Choose district',
+                        (v) => setState(() {
+                          _selectedDistrict = v;
+                          if (v != null) {
+                            _districtCtrl.text = v.nameEn ?? '';
                           }
                           _markChanged();
                         }),

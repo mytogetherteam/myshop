@@ -177,7 +177,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         centerTitle: false,
         title: AppBarTitleWithLogo(
           title: _titles[_currentIndex],
-          trailing: _currentIndex == 2 ? _buildAnalyticsButton() : null,
         ),
         actions: [
           const NotificationBadgeIcon(),
@@ -241,6 +240,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     );
   }
 
+  /*
   Widget _buildAnalyticsButton() {
     return GestureDetector(
       onTap: () {
@@ -288,4 +288,5 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ),
     );
   }
+  */
 }
