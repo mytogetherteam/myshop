@@ -471,12 +471,10 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                         style: GoogleFonts.poppins(
                           color: const Color(0xFFEF4444),
                           fontSize: 14,
-                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
                   ],
-
                   const SizedBox(height: 48),
                 ],
               ),
@@ -991,7 +989,31 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   }
 
   Widget _buildAddButton(String label, VoidCallback onTap, {bool small = false}) {
-    return InkWell(onTap: onTap, child: Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), decoration: BoxDecoration(color: const Color(0xFFED3A72).withOpacity(0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFED3A72).withOpacity(0.2))), child: Row(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.add, size: 16, color: Color(0xFFED3A72)), const SizedBox(width: 8), Text(label, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFFED3A72)))])));
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      splashColor: const Color(0xFFED3A72).withValues(alpha: 0.1),
+      highlightColor: const Color(0xFFED3A72).withValues(alpha: 0.05),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFED3A72).withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFED3A72).withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.add, size: 16, color: Color(0xFFED3A72)),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFFED3A72)),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildImageUploadSection() {
@@ -1039,7 +1061,33 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   }
 
   Widget _buildSaveButton() {
-    return SizedBox(width: double.infinity, height: 56, child: ElevatedButton(onPressed: _isSaving ? null : _handleSave, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFED3A72), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 0), child: _isSaving ? const CustomLoadingIndicator(size: 24, color: Colors.white) : Text(widget.item != null ? 'Update Item' : 'Create Item', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white))));
+    return SizedBox(
+      width: double.infinity,
+      height: 54,
+      child: ElevatedButton(
+        onPressed: _isSaving ? null : _handleSave,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFED3A72),
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: const Color(0xFFED3A72).withValues(alpha: 0.6),
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ).copyWith(
+          overlayColor: WidgetStateProperty.all(Colors.white.withValues(alpha: 0.1)),
+        ),
+        child: _isSaving 
+            ? const CustomLoadingIndicator(size: 22, color: Colors.white) 
+            : Text(
+                widget.item != null ? 'Update Item' : 'Create Item',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+      ),
+    );
   }
 }
 

@@ -758,7 +758,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             const SizedBox(height: 32),
           ],
         ),
-        bottomNavigationBar: Container(
+      bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: Colors.white,
             border: Border(
@@ -776,8 +776,9 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFED3973),
                     foregroundColor: Colors.white,
+                    overlayColor: Colors.white.withValues(alpha: 0.12),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     elevation: 0,
                   ),
