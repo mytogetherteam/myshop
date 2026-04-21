@@ -281,15 +281,6 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
                         ),
                 ),
               ),
-              const SizedBox(height: 12),
-              Text(
-                'Changes will take effect tomorrow',
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400,
-                  color: const Color(0xFF94A3B8),
-                ),
-              ),
             ],
           ),
         ),

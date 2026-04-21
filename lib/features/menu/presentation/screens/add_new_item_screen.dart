@@ -752,16 +752,23 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             onDelete: () => setState(() => _variants.removeAt(index)),
             child: Column(
               children: [
-                _buildTextField('Variant Name ($_selectedLang)', 
-                  TextEditingController(text: _selectedLang == 'EN' ? v.nameEn : (_selectedLang == 'MM' ? v.nameMm : v.nameTh)),
-                  onChanged: (val) {
-                    final map = v.toJson();
-                    if (_selectedLang == 'EN') map['nameEn'] = val;
-                    if (_selectedLang == 'MM') map['nameMm'] = val;
-                    if (_selectedLang == 'TH') map['nameTh'] = val;
-                    _variants[index] = MenuItemVariantModel.fromJson(map);
-                  },
-                ),
+                _buildTextField('Variant Name (EN)', TextEditingController(text: v.nameEn), onChanged: (val) {
+                  final map = v.toJson();
+                  map['nameEn'] = val;
+                  _variants[index] = MenuItemVariantModel.fromJson(map);
+                }),
+                const SizedBox(height: 8),
+                _buildTextField('Variant Name (MM)', TextEditingController(text: v.nameMm), onChanged: (val) {
+                  final map = v.toJson();
+                  map['nameMm'] = val;
+                  _variants[index] = MenuItemVariantModel.fromJson(map);
+                }),
+                const SizedBox(height: 8),
+                _buildTextField('Variant Name (TH)', TextEditingController(text: v.nameTh), onChanged: (val) {
+                  final map = v.toJson();
+                  map['nameTh'] = val;
+                  _variants[index] = MenuItemVariantModel.fromJson(map);
+                }),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -798,16 +805,23 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildTextField('Add-on Name ($_selectedLang)', 
-                  TextEditingController(text: _selectedLang == 'EN' ? g.nameEn : (_selectedLang == 'MM' ? g.nameMm : g.nameTh)),
-                  onChanged: (val) {
-                    final map = g.toJson();
-                    if (_selectedLang == 'EN') map['nameEn'] = val;
-                    if (_selectedLang == 'MM') map['nameMm'] = val;
-                    if (_selectedLang == 'TH') map['nameTh'] = val;
-                    _optionGroups[gIndex] = MenuItemOptionGroupModel.fromJson(map);
-                  },
-                ),
+                _buildTextField('Add-on Name (EN)', TextEditingController(text: g.nameEn), onChanged: (val) {
+                  final map = g.toJson();
+                  map['nameEn'] = val;
+                  _optionGroups[gIndex] = MenuItemOptionGroupModel.fromJson(map);
+                }),
+                const SizedBox(height: 8),
+                _buildTextField('Add-on Name (MM)', TextEditingController(text: g.nameMm), onChanged: (val) {
+                  final map = g.toJson();
+                  map['nameMm'] = val;
+                  _optionGroups[gIndex] = MenuItemOptionGroupModel.fromJson(map);
+                }),
+                const SizedBox(height: 8),
+                _buildTextField('Add-on Name (TH)', TextEditingController(text: g.nameTh), onChanged: (val) {
+                  final map = g.toJson();
+                  map['nameTh'] = val;
+                  _optionGroups[gIndex] = MenuItemOptionGroupModel.fromJson(map);
+                }),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -844,8 +858,17 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       child: Column(
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: _buildBareTextField(_selectedLang == 'EN' ? o.nameEn : (_selectedLang == 'MM' ? o.nameMm : o.nameTh), (val) => _updateOption(gIndex, oIndex, _selectedLang == 'EN' ? {'nameEn': val} : (_selectedLang == 'MM' ? {'nameMm': val} : {'nameTh': val})), 'Add-on name')),
+              Expanded(
+                child: Column(
+                  children: [
+                    _buildBareTextField(o.nameEn, (val) => _updateOption(gIndex, oIndex, {'nameEn': val}), 'Item name (EN)'),
+                    _buildBareTextField(o.nameMm, (val) => _updateOption(gIndex, oIndex, {'nameMm': val}), 'Item name (MM)'),
+                    _buildBareTextField(o.nameTh, (val) => _updateOption(gIndex, oIndex, {'nameTh': val}), 'Item name (TH)'),
+                  ],
+                ),
+              ),
               IconButton(icon: const Icon(Icons.close, size: 18, color: Color(0xFFEF4444)), onPressed: () => _removeOption(gIndex, oIndex)),
             ],
           ),

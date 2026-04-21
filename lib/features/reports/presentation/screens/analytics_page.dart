@@ -290,30 +290,6 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
             fontWeight: FontWeight.w600,
           ),
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: TextButton.icon(
-              onPressed: () {},
-              icon: const PhosphorIcon(PhosphorIconsRegular.uploadSimple, size: 16, color: Color(0xFF64748B)),
-              label: Text(
-                "Export",
-                style: GoogleFonts.poppins(
-                  color: const Color(0xFF64748B),
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14,
-                ),
-              ),
-              style: TextButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: const BorderSide(color: Color(0xFFE2E8F0)),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              ),
-            ),
-          ),
-        ],
       ),
       body: Column(
         children: [

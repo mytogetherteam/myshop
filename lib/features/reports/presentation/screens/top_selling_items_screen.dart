@@ -118,18 +118,6 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
         ),
         centerTitle: false,
         actions: [
-          TextButton.icon(
-            onPressed: () {},
-            icon: const PhosphorIcon(PhosphorIconsRegular.export, size: 18, color: Color(0xFF64748B)),
-            label: Text(
-              'Export',
-              style: GoogleFonts.poppins(
-                color: const Color(0xFF64748B),
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
           const SizedBox(width: 8),
         ],
       ),
