@@ -527,6 +527,11 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           maxLines: isMultiline ? 3 : 1,
           keyboardType: keyboardType,
           onChanged: onChanged,
+          onTap: () {
+            if (controller.text == '0.0' || controller.text == '0' || controller.text == '0.00' || controller.text == '0.000') {
+              controller.clear();
+            }
+          },
           style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500),
           decoration: _buildInputDecoration(hint ?? ''),
         ),
@@ -623,6 +628,24 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           decoration: _buildInputDecoration(''),
           items: _currencies.map((c) => DropdownMenuItem(value: c, child: Text(c, style: GoogleFonts.poppins(fontSize: 14)))).toList(),
           onChanged: (v) => setState(() => _selectedCurrency = v!),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDynamicTextField(String label, String? initialValue, Function(String) onChanged, {required String itemKey, TextInputType? keyboardType}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
+        const SizedBox(height: 8),
+        TextFormField(
+          key: ValueKey('${label}_$itemKey'),
+          initialValue: (initialValue == '0.0' || initialValue == '0' || initialValue == '0.00') ? '' : initialValue,
+          keyboardType: keyboardType,
+          onChanged: onChanged,
+          style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500),
+          decoration: _buildInputDecoration((initialValue == '0.0' || initialValue == '0' || initialValue == '0.00') ? '0.00' : ''),
         ),
       ],
     );
@@ -773,31 +796,37 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           final index = entry.key;
           final v = entry.value;
           return _buildDynamicItemCard(
+            key: ValueKey(v.id),
             title: 'Variant #${index + 1}',
             onDelete: () => setState(() => _variants.removeAt(index)),
             child: Column(
               children: [
                 _buildSmallLangSwitcher(),
                 const SizedBox(height: 8),
-                _buildTextField('Variant Name ($_selectedLang)', 
-                  TextEditingController(text: _selectedLang == 'EN' ? v.nameEn : (_selectedLang == 'MM' ? v.nameMm : v.nameTh)),
-                  onChanged: (val) {
-                    final map = v.toJson();
-                    if (_selectedLang == 'EN') map['nameEn'] = val;
-                    else if (_selectedLang == 'MM') map['nameMm'] = val;
-                    else map['nameTh'] = val;
-                    _variants[index] = MenuItemVariantModel.fromJson(map);
+                _buildDynamicTextField('Variant Name ($_selectedLang)', 
+                  _selectedLang == 'EN' ? v.nameEn : (_selectedLang == 'MM' ? v.nameMm : v.nameTh),
+                  (val) {
+                    setState(() {
+                      _variants[index] = v.copyWith(
+                        nameEn: _selectedLang == 'EN' ? val : v.nameEn,
+                        nameMm: _selectedLang == 'MM' ? val : v.nameMm,
+                        nameTh: _selectedLang == 'TH' ? val : v.nameTh,
+                      );
+                    });
                   },
+                  itemKey: '${v.id}_$_selectedLang',
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: _buildTextField('Price', TextEditingController(text: v.price.toString()), keyboardType: TextInputType.number, 
-                      onChanged: (val) {
-                        final map = v.toJson();
-                        map['price'] = double.tryParse(val) ?? 0.0;
-                        _variants[index] = MenuItemVariantModel.fromJson(map);
-                      })),
+                    Expanded(child: _buildDynamicTextField('Price', v.price.toString(), 
+                      (val) {
+                        setState(() {
+                          _variants[index] = v.copyWith(price: double.tryParse(val) ?? 0.0);
+                        });
+                      }, 
+                      itemKey: '${v.id}',
+                      keyboardType: TextInputType.number)),
                   ],
                 ),
               ],
@@ -827,32 +856,41 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               children: [
                 _buildSmallLangSwitcher(),
                 const SizedBox(height: 8),
-                _buildTextField('Add-on Name ($_selectedLang)', 
-                  TextEditingController(text: _selectedLang == 'EN' ? g.nameEn : (_selectedLang == 'MM' ? g.nameMm : g.nameTh)),
-                  onChanged: (val) {
-                    final map = g.toJson();
-                    if (_selectedLang == 'EN') map['nameEn'] = val;
-                    else if (_selectedLang == 'MM') map['nameMm'] = val;
-                    else map['nameTh'] = val;
-                    _optionGroups[gIndex] = MenuItemOptionGroupModel.fromJson(map);
+                _buildDynamicTextField('Add-on Name ($_selectedLang)', 
+                  _selectedLang == 'EN' ? g.nameEn : (_selectedLang == 'MM' ? g.nameMm : g.nameTh),
+                  (val) {
+                    setState(() {
+                      _optionGroups[gIndex] = g.copyWith(
+                        nameEn: _selectedLang == 'EN' ? val : g.nameEn,
+                        nameMm: _selectedLang == 'MM' ? val : g.nameMm,
+                        nameTh: _selectedLang == 'TH' ? val : g.nameTh,
+                      );
+                    });
                   },
+                  itemKey: '${g.id}_$_selectedLang',
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: _buildTextField('Price', TextEditingController(text: g.price.toString()), keyboardType: TextInputType.number, 
-                      onChanged: (val) => _updateGroup(gIndex, {'price': double.tryParse(val) ?? 0.0}))),
+                    Expanded(child: _buildDynamicTextField('Price', g.price.toString(), 
+                      (val) => _updateGroup(gIndex, {'price': double.tryParse(val) ?? 0.0}), 
+                      itemKey: '${g.id}',
+                      keyboardType: TextInputType.number)),
                   ],
                 ),
                 const SizedBox(height: 12),
                 const Divider(),
                 ...g.options.asMap().entries.map((oEntry) => _buildOptionItem(gIndex, oEntry.key, oEntry.value)),
                 _buildAddButton('Add Item', () {
-                  final map = g.toJson();
-                  final options = List<Map<String, dynamic>>.from(map['options'] ?? []);
-                  options.add(MenuItemOptionModel(id: DateTime.now().millisecondsSinceEpoch, price: 0.0, displayOrder: 1).toJson());
-                  map['options'] = options;
-                  setState(() => _optionGroups[gIndex] = MenuItemOptionGroupModel.fromJson(map));
+                  final newOption = MenuItemOptionModel(
+                    id: DateTime.now().millisecondsSinceEpoch, 
+                    price: 0.0, 
+                    displayOrder: g.options.length + 1,
+                  );
+                  final updatedOptions = List<MenuItemOptionModel>.from(g.options)..add(newOption);
+                  setState(() {
+                    _optionGroups[gIndex] = g.copyWith(options: updatedOptions);
+                  });
                 }, small: true),
               ],
             ),
@@ -867,6 +905,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
 
   Widget _buildOptionItem(int gIndex, int oIndex, MenuItemOptionModel o) {
     return Container(
+      key: ValueKey(o.id),
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE2E8F0))),
@@ -880,6 +919,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   _selectedLang == 'EN' ? o.nameEn : (_selectedLang == 'MM' ? o.nameMm : o.nameTh), 
                   (val) => _updateOption(gIndex, oIndex, _selectedLang == 'EN' ? {'nameEn': val} : (_selectedLang == 'MM' ? {'nameMm': val} : {'nameTh': val})), 
                   'Item name ($_selectedLang)',
+                  itemKey: '${o.id}_$_selectedLang',
                 ),
               ),
               IconButton(icon: const Icon(Icons.close, size: 18, color: Color(0xFFEF4444)), onPressed: () => _removeOption(gIndex, oIndex)),
@@ -888,7 +928,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(child: _buildBareTextField(o.price.toString(), (val) => _updateOption(gIndex, oIndex, {'price': double.tryParse(val)}), 'Price', keyboard: TextInputType.number)),
+              Expanded(child: _buildBareTextField(o.price.toString(), (val) => _updateOption(gIndex, oIndex, {'price': double.tryParse(val)}), 'Price', itemKey: '${o.id}', keyboard: TextInputType.number)),
             ],
           ),
         ],
@@ -897,32 +937,57 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   }
 
   void _updateGroup(int index, Map<String, dynamic> updates) {
-    final map = _optionGroups[index].toJson();
-    map.addAll(updates);
-    setState(() => _optionGroups[index] = MenuItemOptionGroupModel.fromJson(map));
+    setState(() {
+      var group = _optionGroups[index];
+      if (updates.containsKey('price')) {
+        group = group.copyWith(price: updates['price'] as double);
+      }
+      _optionGroups[index] = group;
+    });
   }
 
   void _updateOption(int gIndex, int oIndex, Map<String, dynamic> updates) {
-    final map = _optionGroups[gIndex].toJson();
-    final options = List<Map<String, dynamic>>.from(map['options']);
-    options[oIndex].addAll(updates);
-    setState(() => _optionGroups[gIndex] = MenuItemOptionGroupModel.fromJson(map));
+    setState(() {
+      final group = _optionGroups[gIndex];
+      final options = List<MenuItemOptionModel>.from(group.options);
+      var option = options[oIndex];
+
+      if (updates.containsKey('price')) option = option.copyWith(price: updates['price'] as double);
+      if (updates.containsKey('nameEn')) option = option.copyWith(nameEn: updates['nameEn'] as String);
+      if (updates.containsKey('nameMm')) option = option.copyWith(nameMm: updates['nameMm'] as String);
+      if (updates.containsKey('nameTh')) option = option.copyWith(nameTh: updates['nameTh'] as String);
+
+      options[oIndex] = option;
+      _optionGroups[gIndex] = group.copyWith(options: options);
+    });
   }
 
   void _removeOption(int gIndex, int oIndex) {
-    final map = _optionGroups[gIndex].toJson();
-    final options = List<Map<String, dynamic>>.from(map['options']);
-    options.removeAt(oIndex);
-    map['options'] = options;
-    setState(() => _optionGroups[gIndex] = MenuItemOptionGroupModel.fromJson(map));
+    setState(() {
+      final group = _optionGroups[gIndex];
+      final options = List<MenuItemOptionModel>.from(group.options);
+      options.removeAt(oIndex);
+      _optionGroups[gIndex] = group.copyWith(options: options);
+    });
   }
 
-  Widget _buildBareTextField(String? initial, Function(String) onChanged, String hint, {TextInputType keyboard = TextInputType.text}) {
-    return TextFormField(initialValue: initial, onChanged: onChanged, keyboardType: keyboard, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500), decoration: InputDecoration(hintText: hint, isDense: true, border: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey.shade200))));
+  Widget _buildBareTextField(String? initial, Function(String) onChanged, String hint, {required String itemKey, TextInputType keyboard = TextInputType.text}) {
+    return TextFormField(
+      key: ValueKey('${hint}_$itemKey'),
+      initialValue: (initial == '0.0' || initial == '0') ? '' : initial, 
+      onChanged: onChanged, 
+      keyboardType: keyboard, 
+      style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w500), 
+      decoration: InputDecoration(
+        hintText: initial == '0.0' ? '0.00' : hint, 
+        isDense: true, 
+        border: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey.shade200))
+      )
+    );
   }
 
-  Widget _buildDynamicItemCard({required String title, required Widget child, required VoidCallback onDelete}) {
-    return Container(margin: const EdgeInsets.only(bottom: 16), padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE2E8F0))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(title, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600)), IconButton(icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 20), onPressed: onDelete)]), const SizedBox(height: 8), child]));
+  Widget _buildDynamicItemCard({Key? key, required String title, required Widget child, required VoidCallback onDelete}) {
+    return Container(key: key, margin: const EdgeInsets.only(bottom: 16), padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE2E8F0))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(title, style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600)), IconButton(icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 20), onPressed: onDelete)]), const SizedBox(height: 8), child]));
   }
 
   Widget _buildAddButton(String label, VoidCallback onTap, {bool small = false}) {

@@ -295,6 +295,28 @@ class MenuItemVariantModel {
     };
   }
 
+  MenuItemVariantModel copyWith({
+    int? id,
+    String? nameEn,
+    String? nameMm,
+    String? nameTh,
+    double? price,
+    String? displayPrice,
+    bool? isAvailable,
+    int? displayOrder,
+  }) {
+    return MenuItemVariantModel(
+      id: id ?? this.id,
+      nameEn: nameEn ?? this.nameEn,
+      nameMm: nameMm ?? this.nameMm,
+      nameTh: nameTh ?? this.nameTh,
+      price: price ?? this.price,
+      displayPrice: displayPrice ?? this.displayPrice,
+      isAvailable: isAvailable ?? this.isAvailable,
+      displayOrder: displayOrder ?? this.displayOrder,
+    );
+  }
+
   String get displayName => nameEn ?? nameMm ?? nameTh ?? '';
 }
 
@@ -356,6 +378,32 @@ class MenuItemOptionGroupModel {
     };
   }
 
+  MenuItemOptionGroupModel copyWith({
+    int? id,
+    String? nameEn,
+    String? nameMm,
+    String? nameTh,
+    bool? isRequired,
+    int? minSelection,
+    int? maxSelection,
+    int? displayOrder,
+    double? price,
+    List<MenuItemOptionModel>? options,
+  }) {
+    return MenuItemOptionGroupModel(
+      id: id ?? this.id,
+      nameEn: nameEn ?? this.nameEn,
+      nameMm: nameMm ?? this.nameMm,
+      nameTh: nameTh ?? this.nameTh,
+      isRequired: isRequired ?? this.isRequired,
+      minSelection: minSelection ?? this.minSelection,
+      maxSelection: maxSelection ?? this.maxSelection,
+      displayOrder: displayOrder ?? this.displayOrder,
+      price: price ?? this.price,
+      options: options ?? this.options,
+    );
+  }
+
   String get displayName => nameEn ?? nameMm ?? nameTh ?? '';
 }
 
@@ -404,6 +452,28 @@ class MenuItemOptionModel {
       'displayOrder': displayOrder,
       'linkedMenuItemId': linkedMenuItemId,
     };
+  }
+
+  MenuItemOptionModel copyWith({
+    int? id,
+    String? nameEn,
+    String? nameMm,
+    String? nameTh,
+    double? price,
+    String? displayPrice,
+    int? displayOrder,
+    int? linkedMenuItemId,
+  }) {
+    return MenuItemOptionModel(
+      id: id ?? this.id,
+      nameEn: nameEn ?? this.nameEn,
+      nameMm: nameMm ?? this.nameMm,
+      nameTh: nameTh ?? this.nameTh,
+      price: price ?? this.price,
+      displayPrice: displayPrice ?? this.displayPrice,
+      displayOrder: displayOrder ?? this.displayOrder,
+      linkedMenuItemId: linkedMenuItemId ?? this.linkedMenuItemId,
+    );
   }
 
   String get displayName => nameEn ?? nameMm ?? nameTh ?? '';
