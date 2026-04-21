@@ -566,27 +566,27 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             ),
             const SizedBox(height: 32),
 
-            _buildSection(
-              label: 'Order Settings',
-              child: Column(
-                children: [
-                  _buildSmallField(
-                    label: 'Min Order Amount',
-                    controller: _minAmountCtrl,
-                    hint: '0.00',
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSmallField(
-                    label: 'Max Items per Order',
-                    controller: _maxQtyCtrl,
-                    hint: '10',
-                    keyboardType: TextInputType.number,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
+            // _buildSection(
+            //   label: 'Order Settings',
+            //   child: Column(
+            //     children: [
+            //       _buildSmallField(
+            //         label: 'Min Order Amount',
+            //         controller: _minAmountCtrl,
+            //         hint: '0.00',
+            //         keyboardType: TextInputType.number,
+            //       ),
+            //       const SizedBox(height: 16),
+            //       _buildSmallField(
+            //         label: 'Max Items per Order',
+            //         controller: _maxQtyCtrl,
+            //         hint: '10',
+            //         keyboardType: TextInputType.number,
+            //       ),
+            //     ],
+            //   ),
+            // ),
+            // const SizedBox(height: 24),
 
             // _buildSection(
             //   label: 'Map Location',
