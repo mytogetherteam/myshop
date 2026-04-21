@@ -39,7 +39,6 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   final TextEditingController _discountAmountController = TextEditingController();
   final TextEditingController _discountPercentController = TextEditingController();
   final TextEditingController _stockController = TextEditingController();
-  final TextEditingController _displayOrderController = TextEditingController(text: '1');
   
   final List<MenuCategoryModel> _categories = [];
   final List<Map<String, dynamic>> _availableTags = [];
@@ -146,7 +145,6 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       _discountAmountController.text = item.discountAmount?.toString() ?? '';
       _discountPercentController.text = item.discountPercentage?.toString() ?? '';
       _stockController.text = item.stockQuantity?.toString() ?? '100';
-      _displayOrderController.text = item.displayOrder?.toString() ?? '1';
       _selectedMasterItemId = item.masterItemId;
       _selectedMasterCategoryId = item.masterCategoryId;
       // Resolve display names from mock data
@@ -217,6 +215,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           {'id': 1, 'name': 'New Arrival'},
           {'id': 2, 'name': 'Best Seller'},
           {'id': 3, 'name': 'Gluten Free'},
+          {'id': 0, 'name': 'Other'},
         ]);
         _isLoadingTags = false;
       });
@@ -236,7 +235,6 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     _discountAmountController.dispose();
     _discountPercentController.dispose();
     _stockController.dispose();
-    _displayOrderController.dispose();
     super.dispose();
   }
 
@@ -266,12 +264,10 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       'discountPercentage': double.tryParse(_discountPercentController.text) ?? 0.0,
       'categoryId': _selectedCategory?.id,
       'stockQuantity': int.tryParse(_stockController.text) ?? 0,
-      'displayOrder': int.tryParse(_displayOrderController.text) ?? 1,
       'tagIds': _selectedTagIds,
       'masterItemId': _selectedMasterItemId,
       'masterCategoryId': _selectedMasterCategoryId,
       'currency': _selectedCurrency,
-      'isAvailable': _isAvailable,
       'isPopular': _isPopular,
       'isRecommended': _isRecommended,
       'isVegetarian': _isVegetarian,
@@ -448,13 +444,6 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
 
 
                   const SizedBox(height: 32),
-                  _buildSectionTitle('ORGANIZATION & TECHNICAL'),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(child: _buildTextField('Display Order', _displayOrderController, hint: '1', keyboardType: TextInputType.number)),
-                    ],
-                  ),
 
                   const SizedBox(height: 32),
                   _buildSectionTitle('PROPERTIES'),
@@ -467,7 +456,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   _buildVariantsSection(),
                   
                   const SizedBox(height: 32),
-                  _buildSectionTitle('OPTION GROUPS (ADD-ONS)'),
+                  _buildSectionTitle('ADD-ONS'),
                   const SizedBox(height: 8),
                   _buildOptionGroupsSection(),
                   
@@ -782,52 +771,6 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                         map['price'] = double.tryParse(val) ?? 0.0;
                         _variants[index] = MenuItemVariantModel.fromJson(map);
                       })),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildTextField('Display Order', TextEditingController(text: v.displayOrder?.toString() ?? '1'), keyboardType: TextInputType.number,
-                      onChanged: (val) {
-                        final map = v.toJson();
-                        map['displayOrder'] = int.tryParse(val) ?? 1;
-                        _variants[index] = MenuItemVariantModel.fromJson(map);
-                      })),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTextField(
-                        'Display Price', 
-                        TextEditingController(text: v.displayPrice ?? ''), 
-                        hint: 'eg: 15.00 \$',
-                        onChanged: (val) {
-                          final map = v.toJson();
-                          map['displayPrice'] = val;
-                          setState(() => _variants[index] = MenuItemVariantModel.fromJson(map));
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Available', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
-                          Transform.scale(
-                            scale: 0.8,
-                            alignment: Alignment.centerLeft,
-                            child: Switch(
-                              value: v.isAvailable,
-                              activeColor: const Color(0xFFED3A72),
-                              onChanged: (val) {
-                                final map = v.toJson();
-                                map['isAvailable'] = val;
-                                setState(() => _variants[index] = MenuItemVariantModel.fromJson(map));
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
               ],
@@ -850,12 +793,12 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           final gIndex = entry.key;
           final g = entry.value;
           return _buildDynamicItemCard(
-            title: 'Group: ${g.displayName.isEmpty ? "New Group" : g.displayName}',
+            title: 'Add-on: ${g.displayName.isEmpty ? "New Add-on" : g.displayName}',
             onDelete: () => setState(() => _optionGroups.removeAt(gIndex)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildTextField('Group Name ($_selectedLang)', 
+                _buildTextField('Add-on Name ($_selectedLang)', 
                   TextEditingController(text: _selectedLang == 'EN' ? g.nameEn : (_selectedLang == 'MM' ? g.nameMm : g.nameTh)),
                   onChanged: (val) {
                     final map = g.toJson();
@@ -868,21 +811,14 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: _buildTextField('Min', TextEditingController(text: g.minSelection?.toString() ?? '0'), keyboardType: TextInputType.number, 
-                      onChanged: (val) => _updateGroup(gIndex, {'minSelection': int.tryParse(val)}))),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildTextField('Max', TextEditingController(text: g.maxSelection?.toString() ?? '1'), keyboardType: TextInputType.number,
-                      onChanged: (val) => _updateGroup(gIndex, {'maxSelection': int.tryParse(val)}))),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildTextField('Order', TextEditingController(text: g.displayOrder?.toString() ?? '1'), keyboardType: TextInputType.number,
-                      onChanged: (val) => _updateGroup(gIndex, {'displayOrder': int.tryParse(val)}))),
+                    Expanded(child: _buildTextField('Price', TextEditingController(text: g.price.toString()), keyboardType: TextInputType.number, 
+                      onChanged: (val) => _updateGroup(gIndex, {'price': double.tryParse(val) ?? 0.0}))),
                   ],
                 ),
                 const SizedBox(height: 12),
-                _buildToggleRow('Required', g.isRequired, (v) => _updateGroup(gIndex, {'isRequired': v})),
                 const Divider(),
                 ...g.options.asMap().entries.map((oEntry) => _buildOptionItem(gIndex, oEntry.key, oEntry.value)),
-                _buildAddButton('Add Option', () {
+                _buildAddButton('Add Item', () {
                   final map = g.toJson();
                   final options = List<Map<String, dynamic>>.from(map['options'] ?? []);
                   options.add(MenuItemOptionModel(id: DateTime.now().millisecondsSinceEpoch, price: 0.0, displayOrder: 1).toJson());
@@ -893,7 +829,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             ),
           );
         }),
-        _buildAddButton('Add Option Group', () {
+        _buildAddButton('Add Add-on', () {
           setState(() => _optionGroups.add(MenuItemOptionGroupModel(id: DateTime.now().millisecondsSinceEpoch, options: [], displayOrder: 1)));
         }),
       ],
@@ -909,7 +845,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         children: [
           Row(
             children: [
-              Expanded(child: _buildBareTextField(_selectedLang == 'EN' ? o.nameEn : (_selectedLang == 'MM' ? o.nameMm : o.nameTh), (val) => _updateOption(gIndex, oIndex, _selectedLang == 'EN' ? {'nameEn': val} : (_selectedLang == 'MM' ? {'nameMm': val} : {'nameTh': val})), 'Name')),
+              Expanded(child: _buildBareTextField(_selectedLang == 'EN' ? o.nameEn : (_selectedLang == 'MM' ? o.nameMm : o.nameTh), (val) => _updateOption(gIndex, oIndex, _selectedLang == 'EN' ? {'nameEn': val} : (_selectedLang == 'MM' ? {'nameMm': val} : {'nameTh': val})), 'Add-on name')),
               IconButton(icon: const Icon(Icons.close, size: 18, color: Color(0xFFEF4444)), onPressed: () => _removeOption(gIndex, oIndex)),
             ],
           ),
@@ -917,14 +853,8 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           Row(
             children: [
               Expanded(child: _buildBareTextField(o.price.toString(), (val) => _updateOption(gIndex, oIndex, {'price': double.tryParse(val)}), 'Price', keyboard: TextInputType.number)),
-              const SizedBox(width: 8),
-              Expanded(child: _buildBareTextField(o.displayOrder?.toString() ?? '1', (val) => _updateOption(gIndex, oIndex, {'displayOrder': int.tryParse(val)}), 'Order', keyboard: TextInputType.number)),
-              const SizedBox(width: 8),
-              Expanded(child: _buildBareTextField(o.linkedMenuItemId?.toString() ?? '', (val) => _updateOption(gIndex, oIndex, {'linkedMenuItemId': int.tryParse(val)}), 'Linked-ID', keyboard: TextInputType.number)),
             ],
           ),
-          const SizedBox(height: 8),
-          _buildBareTextField(o.displayPrice ?? '', (val) => _updateOption(gIndex, oIndex, {'displayPrice': val}), 'Display Price (eg: 5.00 \$)'),
         ],
       ),
     );

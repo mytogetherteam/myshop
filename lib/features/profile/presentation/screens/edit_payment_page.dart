@@ -28,7 +28,6 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
   
   late final TextEditingController _accountNameCtrl;
   late final TextEditingController _accountNumberCtrl;
-  late final TextEditingController _displayOrderCtrl;
   late bool _isActive;
   bool _isSaving = false;
   bool _isLoading = false;
@@ -40,7 +39,6 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
     _currentPayment = widget.paymentMethod;
     _accountNameCtrl = TextEditingController(text: _currentPayment?.accountName ?? '');
     _accountNumberCtrl = TextEditingController(text: _currentPayment?.accountNumber ?? '');
-    _displayOrderCtrl = TextEditingController(text: (_currentPayment?.displayOrder ?? 0).toString());
     _isActive = _currentPayment?.isActive ?? true;
     
     _loadLatestDetails();
@@ -50,7 +48,6 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
   void dispose() {
     _accountNameCtrl.dispose();
     _accountNumberCtrl.dispose();
-    _displayOrderCtrl.dispose();
     super.dispose();
   }
 
@@ -62,7 +59,6 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
         _currentPayment = detail;
         _accountNameCtrl.text = detail.accountName;
         _accountNumberCtrl.text = detail.accountNumber;
-        _displayOrderCtrl.text = detail.displayOrder.toString();
         _isActive = detail.isActive;
         _isLoading = false;
       });
@@ -76,7 +72,6 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
     
     final requestData = {
       "paymentMethodId": _currentPayment?.paymentMethodId,
-      "displayOrder": int.tryParse(_displayOrderCtrl.text) ?? 0,
       "isActive": _isActive,
       "shopId": widget.shopId,
       "paymentMethodName": _currentPayment?.paymentMethodName,
@@ -315,23 +310,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
           icon: PhosphorIconsRegular.hash,
         ),
         const SizedBox(height: 20),
-        Row(
-          children: [
-            Expanded(
-              child: _buildInputField(
-                label: 'Display Order',
-                controller: _displayOrderCtrl,
-                hint: '0',
-                icon: PhosphorIconsRegular.sortAscending,
-                keyboardType: TextInputType.number,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildStatusToggle(),
-            ),
-          ],
-        ),
+        _buildStatusToggle(),
         const SizedBox(height: 40),
       ],
     );

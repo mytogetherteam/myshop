@@ -229,6 +229,7 @@ class MenuItemOptionGroupModel {
   final int? minSelection;
   final int? maxSelection;
   final int? displayOrder;
+  final double price;
   final List<MenuItemOptionModel> options;
 
   MenuItemOptionGroupModel({
@@ -240,6 +241,7 @@ class MenuItemOptionGroupModel {
     this.minSelection,
     this.maxSelection,
     this.displayOrder,
+    this.price = 0.0,
     this.options = const [],
   });
 
@@ -253,6 +255,7 @@ class MenuItemOptionGroupModel {
       minSelection: json['minSelection'],
       maxSelection: json['maxSelection'],
       displayOrder: json['displayOrder'],
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
       options: (json['options'] as List?)
               ?.map((o) => MenuItemOptionModel.fromJson(o))
               .toList() ??
@@ -270,6 +273,7 @@ class MenuItemOptionGroupModel {
       'minSelection': minSelection,
       'maxSelection': maxSelection,
       'displayOrder': displayOrder,
+      'price': price,
       'options': options.map((e) => e.toJson()).toList(),
     };
   }
