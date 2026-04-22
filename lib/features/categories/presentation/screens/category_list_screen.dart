@@ -22,7 +22,22 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
   void initState() {
     super.initState();
     _fetchCategories();
+    _prefetchCategoryData();
   }
+
+  /// Pre-fetch master data and gallery icons for the category creation/edit screen
+  Future<void> _prefetchCategoryData() async {
+    try {
+      await Future.wait([
+        _categoryService.getMasterCategories(),
+        _categoryService.getCategoryGallery(),
+      ]);
+      debugPrint('[CategoryListScreen] Category master data pre-fetched');
+    } catch (e) {
+      debugPrint('[CategoryListScreen] Error pre-fetching category data: $e');
+    }
+  }
+
 
   Future<void> _fetchCategories() async {
     setState(() => _isLoading = true);

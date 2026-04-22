@@ -7,9 +7,8 @@ import '../models/operating_hours_model.dart';
 
 class ProfileService {
   static const String _profilePath = '/api/shop/profile';
-  static const String _statusPath = '/api/shop/operating-hours/status';
   static const String _operatingHoursPath = '/api/shop/operating-hours';
-  static const String _changePasswordPath = '/api/shop/profile/change-password';
+  static const String _changePasswordPath = '/api/shop/profile/password';
 
   Future<List<OperatingHoursModel>> getOperatingHours() async {
     try {
@@ -79,27 +78,6 @@ class ProfileService {
     return false;
   }
 
-  Future<bool> toggleShopStatus(bool isOpen) async {
-    try {
-      debugPrint('PUT REQUEST: $_statusPath, Query: {open: $isOpen}');
-      final response = await ApiClient().dio.put(
-        _statusPath,
-        queryParameters: {'open': isOpen},
-      );
-
-      if (response.statusCode != null &&
-          response.statusCode! >= 200 &&
-          response.statusCode! < 300) {
-        final Map<String, dynamic> data = response.data;
-        return data['success'] == true;
-      }
-    } on DioException catch (e) {
-      ApiHelper.handleError(e, context: 'ProfileService.toggleShopStatus');
-    } catch (e) {
-      ApiHelper.handleError(e, context: 'ProfileService.toggleShopStatus');
-    }
-    return false;
-  }
 
   Future<Map<String, dynamic>> updateOperatingHours(
     Map<String, dynamic> payload,
@@ -144,16 +122,16 @@ class ProfileService {
   }) async {
     try {
       final payload = {
-        'current_password': currentPassword,
-        'new_password': newPassword,
-        'new_password_confirmation': confirmPassword,
+        'currentPassword': currentPassword,
+        'newPassword': newPassword,
+        'confirmPassword': confirmPassword,
       };
 
-      debugPrint('POST REQUEST: $_changePasswordPath, Data: $payload');
-      final response = await ApiClient().dio.post(
-        _changePasswordPath,
-        data: payload,
-      );
+      debugPrint('PUT REQUEST: $_changePasswordPath, Data: $payload');
+      final response = await ApiClient().dio.put(
+            _changePasswordPath,
+            data: payload,
+          );
 
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&

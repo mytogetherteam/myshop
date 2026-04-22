@@ -9,7 +9,24 @@ class CategoryService {
   static const String _masterCategoriesPath =
       '/api/shop/menu/master/categories';
 
-  Future<List<MenuCategoryModel>?> getCategories() async {
+  // Static cache variables
+  static List<MenuCategoryModel>? _categoriesCache;
+  static List<Map<String, dynamic>>? _masterCategoriesCache;
+  static List<Map<String, dynamic>>? _galleryCache;
+
+  /// Clears all cached category data
+  static void clearCache() {
+    _categoriesCache = null;
+    _masterCategoriesCache = null;
+    _galleryCache = null;
+  }
+
+  Future<List<MenuCategoryModel>?> getCategories({bool forceRefresh = false}) async {
+    if (!forceRefresh && _categoriesCache != null) {
+      debugPrint('CACHE HIT: $_categoriesPath');
+      return _categoriesCache;
+    }
+
     try {
       debugPrint('GET REQUEST: $_categoriesPath');
       final response = await ApiClient().dio.get(_categoriesPath);
@@ -20,7 +37,8 @@ class CategoryService {
         final Map<String, dynamic> data = response.data;
         if (data['success'] == true && data['data'] != null) {
           final List list = data['data'] ?? [];
-          return list.map((json) => MenuCategoryModel.fromJson(json)).toList();
+          _categoriesCache = list.map((json) => MenuCategoryModel.fromJson(json)).toList();
+          return _categoriesCache;
         }
       }
     } on DioException catch (e) {
@@ -28,7 +46,7 @@ class CategoryService {
     } catch (e) {
       ApiHelper.handleError(e, context: 'CategoryService.getCategories');
     }
-    return null;
+    return forceRefresh ? null : _categoriesCache;
   }
 
   Future<MenuCategoryModel?> getCategoryDetail(int categoryId) async {
@@ -53,7 +71,12 @@ class CategoryService {
     return null;
   }
 
-  Future<List<Map<String, dynamic>>?> getMasterCategories() async {
+  Future<List<Map<String, dynamic>>?> getMasterCategories({bool forceRefresh = false}) async {
+    if (!forceRefresh && _masterCategoriesCache != null) {
+      debugPrint('CACHE HIT: $_masterCategoriesPath');
+      return _masterCategoriesCache;
+    }
+
     try {
       debugPrint('GET REQUEST: $_masterCategoriesPath');
       final response = await ApiClient().dio.get(_masterCategoriesPath);
@@ -64,7 +87,8 @@ class CategoryService {
         final Map<String, dynamic> data = response.data;
         if (data['success'] == true && data['data'] != null) {
           final List list = data['data'] ?? [];
-          return list.map((e) => e as Map<String, dynamic>).toList();
+          _masterCategoriesCache = list.map((e) => e as Map<String, dynamic>).toList();
+          return _masterCategoriesCache;
         }
       }
     } on DioException catch (e) {
@@ -72,10 +96,15 @@ class CategoryService {
     } catch (e) {
       ApiHelper.handleError(e, context: 'CategoryService.getMasterCategories');
     }
-    return null;
+    return forceRefresh ? null : _masterCategoriesCache;
   }
 
-  Future<List<Map<String, dynamic>>?> getCategoryGallery() async {
+  Future<List<Map<String, dynamic>>?> getCategoryGallery({bool forceRefresh = false}) async {
+    if (!forceRefresh && _galleryCache != null) {
+      debugPrint('CACHE HIT: $_masterCategoriesPath/gallery');
+      return _galleryCache;
+    }
+
     try {
       final url = '$_masterCategoriesPath/gallery';
       debugPrint('GET REQUEST: $url');
@@ -87,7 +116,8 @@ class CategoryService {
         final Map<String, dynamic> data = response.data;
         if (data['success'] == true && data['data'] != null) {
           final List list = data['data'] ?? [];
-          return list.map((e) => e as Map<String, dynamic>).toList();
+          _galleryCache = list.map((e) => e as Map<String, dynamic>).toList();
+          return _galleryCache;
         }
       }
     } on DioException catch (e) {
@@ -95,8 +125,9 @@ class CategoryService {
     } catch (e) {
       ApiHelper.handleError(e, context: 'CategoryService.getCategoryGallery');
     }
-    return null;
+    return forceRefresh ? null : _galleryCache;
   }
+
 
   Future<bool> createCategory(Map<String, dynamic> payload) async {
     try {

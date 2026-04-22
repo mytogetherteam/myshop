@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter/services.dart' show rootBundle;
-import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import '../../data/models/payment_method.dart';
 import '../../data/models/shop_model.dart';

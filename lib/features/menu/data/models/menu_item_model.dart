@@ -33,6 +33,9 @@ class MenuItemModel {
   final int? masterCategoryId;
   final List<int> tagIds;
   final List<String> mealTypes;
+  final double? discountAmount;
+  final double? discountPercentage;
+  final List<MenuComboComponentModel> components;
 
   MenuItemModel({
     required this.id,
@@ -69,6 +72,9 @@ class MenuItemModel {
     this.masterCategoryId,
     this.tagIds = const [],
     this.mealTypes = const [],
+    this.discountAmount,
+    this.discountPercentage,
+    this.components = const [],
   });
 
   factory MenuItemModel.fromJson(Map<String, dynamic> json) {
@@ -113,6 +119,12 @@ class MenuItemModel {
       masterCategoryId: json['masterCategoryId'],
       tagIds: (json['tagIds'] as List?)?.cast<int>() ?? [],
       mealTypes: (json['mealTypes'] as List?)?.cast<String>() ?? [],
+      discountAmount: (json['discountAmount'] as num?)?.toDouble(),
+      discountPercentage: (json['discountPercentage'] as num?)?.toDouble(),
+      components: (json['components'] as List?)
+              ?.map((c) => MenuComboComponentModel.fromJson(c))
+              .toList() ??
+          [],
     );
   }
 
@@ -145,6 +157,9 @@ class MenuItemModel {
       'masterCategoryId': masterCategoryId,
       'tagIds': tagIds,
       'mealTypes': mealTypes,
+      'discountAmount': discountAmount,
+      'discountPercentage': discountPercentage,
+      'components': components.map((c) => c.toJson()).toList(),
     };
   }
 
@@ -211,6 +226,7 @@ class MenuItemOptionGroupModel {
   final int? minSelection;
   final int? maxSelection;
   final int? displayOrder;
+  final String? groupType;
   final List<MenuItemOptionModel> options;
 
   MenuItemOptionGroupModel({
@@ -222,6 +238,7 @@ class MenuItemOptionGroupModel {
     this.minSelection,
     this.maxSelection,
     this.displayOrder,
+    this.groupType,
     this.options = const [],
   });
 
@@ -235,6 +252,7 @@ class MenuItemOptionGroupModel {
       minSelection: json['minSelection'],
       maxSelection: json['maxSelection'],
       displayOrder: json['displayOrder'],
+      groupType: json['groupType'],
       options: (json['options'] as List?)
               ?.map((o) => MenuItemOptionModel.fromJson(o))
               .toList() ??
@@ -252,6 +270,7 @@ class MenuItemOptionGroupModel {
       'minSelection': minSelection,
       'maxSelection': maxSelection,
       'displayOrder': displayOrder,
+      'groupType': groupType,
       'options': options.map((o) => o.toJson()).toList(),
     };
   }
@@ -307,4 +326,35 @@ class MenuItemOptionModel {
   }
 
   String get displayName => nameEn ?? nameMm ?? nameTh ?? '';
+}
+
+class MenuComboComponentModel {
+  final int? includedItemId;
+  final int quantity;
+  final int? displayOrder;
+  final String? itemNameEn;
+
+  MenuComboComponentModel({
+    this.includedItemId,
+    this.quantity = 1,
+    this.displayOrder,
+    this.itemNameEn,
+  });
+
+  factory MenuComboComponentModel.fromJson(Map<String, dynamic> json) {
+    return MenuComboComponentModel(
+      includedItemId: json['includedItemId'],
+      quantity: json['quantity'] ?? 1,
+      displayOrder: json['displayOrder'],
+      itemNameEn: json['itemNameEn'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'includedItemId': includedItemId,
+      'quantity': quantity,
+      'displayOrder': displayOrder,
+    };
+  }
 }

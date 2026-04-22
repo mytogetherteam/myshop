@@ -3,11 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:dio/dio.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/core/data/services/image_upload_service.dart';
-import 'package:my_shop/core/network/api_client.dart';
 import '../../data/models/menu_item_model.dart';
 import '../../data/models/menu_category_model.dart';
 import '../../data/services/menu_service.dart';
@@ -82,6 +80,8 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   String _selectedItemInfoLang = 'EN';
   final Map<int, String> _variantLangs = {};
   final Map<int, String> _addonLangs = {};
+  
+  List<MenuComboComponentModel> _comboComponents = [];
 
   final List<String> _currencies = ['THB', 'USD', 'MMK'];
 
@@ -123,6 +123,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       _selectedMealTypes = List.from(item.mealTypes);
       _variants = List.from(item.variants);
       _optionGroups = List.from(item.optionGroups);
+      _comboComponents = List.from(item.components);
     }
     
     _fetchAllData();
@@ -202,25 +203,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     if (!_formKey.currentState!.validate()) return;
     
     setState(() => _isSaving = true);
-    String? uploadedImageUrl;
-
-    if (_pickedImage != null) {
-      try {
-        final formData = FormData.fromMap({
-          'image': kIsWeb
-            ? MultipartFile.fromBytes(await _pickedImage!.readAsBytes(), filename: _pickedImage!.name)
-            : await MultipartFile.fromFile(_pickedImage!.path, filename: _pickedImage!.name),
-        });
-        
-        final response = await ApiClient().dio.post('/api/menu/items/upload', data: formData);
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          uploadedImageUrl = response.data['url'];
-        }
-      } catch (e) {
-        debugPrint('Item image upload error: $e');
-      }
-    }
-
+    
     final payload = {
       'nameEn': _nameController.text,
       'nameMm': _nameMmController.text,
@@ -230,6 +213,8 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       'descriptionTh': _descriptionThController.text,
       'price': double.tryParse(_priceController.text) ?? 0.0,
       'originalPrice': double.tryParse(_originalPriceController.text),
+      'discountAmount': double.tryParse(_discountAmountController.text) ?? 0.0,
+      'discountPercentage': double.tryParse(_discountPercentController.text) ?? 0.0,
       'currency': _currency,
       'stockQuantity': int.tryParse(_stockQuantityController.text) ?? 0,
       'displayOrder': int.tryParse(_displayOrderController.text) ?? 0,
@@ -247,16 +232,22 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       'isHotDeal': _isHotDeal,
       'isCombo': _isCombo,
       
-      'imageUrl': uploadedImageUrl ?? widget.item?.imageUrl,
+      'imageUrl': widget.item?.imageUrl, // Keep existing URL if no new image
       'optionGroups': _optionGroups.map((o) => o.toJson()).toList(),
       'variants': _variants.map((v) => v.toJson()).toList(),
+      'components': _isCombo ? _comboComponents.map((c) => c.toJson()).toList() : [],
     };
 
     bool success;
+    File? imageFile;
+    if (_pickedImage != null) {
+      imageFile = File(_pickedImage!.path);
+    }
+
     if (widget.item != null) {
-      success = await _menuService.updateMenuItem(widget.item!.id, payload);
+      success = await _menuService.updateMenuItem(widget.item!.id, payload, image: imageFile);
     } else {
-      success = await _menuService.createMenuItem(payload);
+      success = await _menuService.createMenuItem(payload, image: imageFile);
     }
 
     if (mounted) {
@@ -290,7 +281,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             onPressed: () => Navigator.pop(context),
           ),
           title: Text(
-            'Edit Item',
+            widget.item == null ? 'Create Item' : 'Edit Item',
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -411,6 +402,14 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                     ..._optionGroups.asMap().entries.map((entry) => _buildOptionGroupCard(entry.value, entry.key)),
                     _buildOutlinedButton('+ Add Add-on', _addNewOptionGroup),
                     
+                    if (_isCombo) ...[
+                      const SizedBox(height: 32),
+                      _buildSectionTitle('COMBO COMPONENTS'),
+                      const SizedBox(height: 16),
+                      ..._comboComponents.asMap().entries.map((entry) => _buildComboComponentCard(entry.value, entry.key)),
+                      _buildOutlinedButton('+ Add Component', _addNewComboComponent),
+                    ],
+                    
                     const SizedBox(height: 100), // Padding for bottom button
                   ],
                 ),
@@ -460,6 +459,16 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     });
   }
 
+  void _addNewComboComponent() {
+    setState(() {
+      _comboComponents.add(MenuComboComponentModel(
+        includedItemId: 0,
+        quantity: 1,
+        displayOrder: _comboComponents.length,
+      ));
+    });
+  }
+
   void _addNewOptionToGroup(int groupIndex) {
     setState(() {
       final opts = List<MenuItemOptionModel>.from(_optionGroups[groupIndex].options);
@@ -496,23 +505,8 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       value: _selectedMasterItem,
       items: _masterItems,
       hint: 'Search master items...',
-      onChanged: (val) async {
+      onChanged: (val) {
         setState(() => _selectedMasterItem = val);
-        if (val != null) {
-          // Potentially fetch details to pre-fill
-          final details = await _menuService.getMasterMenuItemDetail(val.id);
-          if (details != null && mounted) {
-             setState(() {
-               _nameController.text = details.nameEn ?? _nameController.text;
-               _nameMmController.text = details.nameMm ?? _nameMmController.text;
-               _nameThController.text = details.nameTh ?? _nameThController.text;
-               _descriptionController.text = details.descriptionEn ?? details.description ?? _descriptionController.text;
-               _descriptionMmController.text = details.descriptionMm ?? _descriptionMmController.text;
-               _descriptionThController.text = details.descriptionTh ?? _descriptionThController.text;
-               _priceController.text = details.price.toString();
-             });
-          }
-        }
       },
     );
   }
@@ -723,6 +717,48 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     );
   }
 
+  Widget _buildComboComponentCard(MenuComboComponentModel component, int index) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Component #${index + 1}', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600)),
+              IconButton(
+                icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 20),
+                onPressed: () => setState(() => _comboComponents.removeAt(index)),
+              ),
+            ],
+          ),
+          _buildTextField('Quantity', TextEditingController(text: component.quantity.toString()), keyboardType: TextInputType.number, onChanged: (v) {
+            _comboComponents[index] = MenuComboComponentModel(
+              includedItemId: component.includedItemId,
+              quantity: int.tryParse(v) ?? 1,
+              displayOrder: component.displayOrder,
+              itemNameEn: component.itemNameEn,
+            );
+          }),
+          const SizedBox(height: 16),
+          _buildTextField('Item ID', TextEditingController(text: component.includedItemId?.toString() ?? ''), keyboardType: TextInputType.number, onChanged: (v) {
+            _comboComponents[index] = MenuComboComponentModel(
+              includedItemId: int.tryParse(v) ?? 0,
+              quantity: component.quantity,
+              displayOrder: component.displayOrder,
+              itemNameEn: component.itemNameEn,
+            );
+          }),
+        ],
+      ),
+    );
+  }
   Widget _buildOptionGroupCard(MenuItemOptionGroupModel group, int index) {
     final lang = _addonLangs[index] ?? 'EN';
     
@@ -774,9 +810,32 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                     minSelection: group.minSelection,
                     maxSelection: group.maxSelection,
                     displayOrder: group.displayOrder,
+                    groupType: group.groupType,
                     options: group.options,
                   );
                 }),
+                const SizedBox(height: 16),
+                _buildDropdownFieldStr(
+                  label: 'Group Type',
+                  value: group.groupType ?? 'RADIO',
+                  items: ['RADIO', 'CHECKBOX'],
+                  onChanged: (v) {
+                    setState(() {
+                      _optionGroups[index] = MenuItemOptionGroupModel(
+                        id: group.id,
+                        nameEn: group.nameEn,
+                        nameMm: group.nameMm,
+                        nameTh: group.nameTh,
+                        isRequired: group.isRequired,
+                        minSelection: group.minSelection,
+                        maxSelection: group.maxSelection,
+                        displayOrder: group.displayOrder,
+                        groupType: v,
+                        options: group.options,
+                      );
+                    });
+                  },
+                ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -785,7 +844,9 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                         _optionGroups[index] = MenuItemOptionGroupModel(
                           id: group.id, nameEn: group.nameEn, nameMm: group.nameMm, nameTh: group.nameTh,
                           isRequired: group.isRequired, minSelection: int.tryParse(v) ?? 0,
-                          maxSelection: group.maxSelection, displayOrder: group.displayOrder, options: group.options,
+                          maxSelection: group.maxSelection, displayOrder: group.displayOrder, 
+                          groupType: group.groupType,
+                          options: group.options,
                         );
                       }),
                     ),
@@ -795,7 +856,9 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                         _optionGroups[index] = MenuItemOptionGroupModel(
                           id: group.id, nameEn: group.nameEn, nameMm: group.nameMm, nameTh: group.nameTh,
                           isRequired: group.isRequired, minSelection: group.minSelection,
-                          maxSelection: int.tryParse(v) ?? 0, displayOrder: group.displayOrder, options: group.options,
+                          maxSelection: int.tryParse(v) ?? 0, displayOrder: group.displayOrder, 
+                          groupType: group.groupType,
+                          options: group.options,
                         );
                       }),
                     ),
@@ -809,7 +872,9 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                         _optionGroups[index] = MenuItemOptionGroupModel(
                           id: group.id, nameEn: group.nameEn, nameMm: group.nameMm, nameTh: group.nameTh,
                           isRequired: group.isRequired, minSelection: group.minSelection,
-                          maxSelection: group.maxSelection, displayOrder: int.tryParse(v) ?? 0, options: group.options,
+                          maxSelection: group.maxSelection, displayOrder: int.tryParse(v) ?? 0, 
+                          groupType: group.groupType,
+                          options: group.options,
                         );
                       }),
                     ),
@@ -827,7 +892,9 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                                 _optionGroups[index] = MenuItemOptionGroupModel(
                                   id: group.id, nameEn: group.nameEn, nameMm: group.nameMm, nameTh: group.nameTh,
                                   isRequired: v, minSelection: group.minSelection,
-                                  maxSelection: group.maxSelection, displayOrder: group.displayOrder, options: group.options,
+                                  maxSelection: group.maxSelection, displayOrder: group.displayOrder, 
+                                  groupType: group.groupType,
+                                  options: group.options,
                                 );
                               });
                             },
@@ -1220,7 +1287,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         child: _isSaving 
           ? const CustomLoadingIndicator(size: 24, color: Colors.white)
           : Text(
-              'Update Item',
+              widget.item == null ? 'Create Item' : 'Update Item',
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,

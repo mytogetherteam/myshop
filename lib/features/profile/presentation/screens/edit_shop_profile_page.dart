@@ -40,9 +40,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   MasterDataModel? _selectedCity;
   
   List<MasterDataModel> _cuisineTypes = [];
-  List<MasterDataModel> _menuTags = [];
   MasterDataModel? _selectedCuisineType;
-  MasterDataModel? _selectedMenuTag;
 
   List<MasterDataModel> _districts = [];
   MasterDataModel? _selectedDistrict;
@@ -102,7 +100,6 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       _masterDataService.getShopSubcategories(),
       _masterDataService.getCities(),
       _masterDataService.getCuisineTypes(),
-      _masterDataService.getMenuTags(),
     ]);
 
     if (mounted) {
@@ -111,7 +108,6 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         _subcategories = futures[1] ?? [];
         _cities = futures[2] ?? [];
         _cuisineTypes = futures[3] ?? [];
-        _menuTags = futures[4] ?? [];
         _setSelectedMasterData();
       });
     }
@@ -365,9 +361,24 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                   filename: _pickedCover!.name,
                 ),
         });
-        await ApiClient().dio.post('/api/shop/profile/cover', data: formData);
+        final response = await ApiClient()
+            .dio
+            .post('/api/shop/profile/cover', data: formData);
+        if (response.statusCode != 200 && response.statusCode != 201) {
+          throw Exception('Cover upload failed');
+        }
       } catch (e) {
         debugPrint('Cover upload error: $e');
+        if (mounted) {
+          setState(() => _isSaving = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to upload cover image. Please try again.'),
+              backgroundColor: Color(0xFFEF4444),
+            ),
+          );
+        }
+        return;
       }
     }
 
@@ -384,9 +395,24 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                   filename: _pickedLogo!.name,
                 ),
         });
-        await ApiClient().dio.post('/api/shop/profile/logo', data: formData);
+        final response = await ApiClient()
+            .dio
+            .post('/api/shop/profile/logo', data: formData);
+        if (response.statusCode != 200 && response.statusCode != 201) {
+          throw Exception('Logo upload failed');
+        }
       } catch (e) {
         debugPrint('Logo upload error: $e');
+        if (mounted) {
+          setState(() => _isSaving = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to upload logo image. Please try again.'),
+              backgroundColor: Color(0xFFEF4444),
+            ),
+          );
+        }
+        return;
       }
     }
 
@@ -415,7 +441,6 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       'subCategoryMm': _selectedSubcategory?.nameMm ?? _subCatMmCtrl.text,
       'subCategoryTh': _selectedSubcategory?.nameTh ?? _subCatThCtrl.text,
       'cuisineTypeId': _selectedCuisineType?.id,
-      'menuTagId': _selectedMenuTag?.id,
       'cityEn': _selectedCity?.nameEn ?? _cityCtrl.text,
       'cityMm': _selectedCity?.nameMm ?? _cityCtrl.text,
       'cityTh': _selectedCity?.nameTh ?? _cityCtrl.text,
@@ -618,20 +643,6 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 'Choose cuisine type',
                 (v) => setState(() {
                   _selectedCuisineType = v;
-                  _markChanged();
-                }),
-              ),
-            ),
-            const SizedBox(height: 32),
-            _buildSection(
-              label: 'Menu Tag',
-              child: _buildDropdown(
-                'Select Menu Tag',
-                _selectedMenuTag,
-                _menuTags,
-                'Choose menu tag',
-                (v) => setState(() {
-                  _selectedMenuTag = v;
                   _markChanged();
                 }),
               ),

@@ -6,7 +6,7 @@ import 'package:my_shop/core/network/api_client.dart';
 import '../models/payment_method.dart';
 
 class PaymentService {
-  static const String _paymentsPath = '/api/shop/payments';
+  static const String _paymentsPath = '/api/shop/profile/payment-types';
 
   Future<List<PaymentMethod>> getShopPaymentMethods(int shopId) async {
     try {

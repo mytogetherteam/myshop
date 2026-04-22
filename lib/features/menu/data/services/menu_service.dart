@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/network/api_client.dart';
@@ -14,7 +16,26 @@ class MenuService {
       '/api/shop/menu/master/categories';
   static const String _masterTagsPath = '/api/shop/master/menu-tags';
 
-  Future<List<MenuCategoryModel>?> getCategories() async {
+  // Static cache variables to store data across the app session
+  static List<MenuCategoryModel>? _categoriesCache;
+  static List<MasterDataModel>? _masterCategoriesCache;
+  static List<MasterDataModel>? _masterItemsCache;
+  static List<MasterDataModel>? _menuTagsCache;
+
+  /// Clears all cached menu data
+  static void clearCache() {
+    _categoriesCache = null;
+    _masterCategoriesCache = null;
+    _masterItemsCache = null;
+    _menuTagsCache = null;
+  }
+
+  Future<List<MenuCategoryModel>?> getCategories({bool forceRefresh = false}) async {
+    if (!forceRefresh && _categoriesCache != null) {
+      debugPrint('CACHE HIT: $_categoriesPath');
+      return _categoriesCache;
+    }
+
     try {
       debugPrint('GET REQUEST: $_categoriesPath');
       final response = await ApiClient().dio.get(_categoriesPath);
@@ -25,7 +46,8 @@ class MenuService {
         final Map<String, dynamic> data = response.data;
         if (data['success'] == true && data['data'] != null) {
           final List list = data['data'] ?? [];
-          return list.map((json) => MenuCategoryModel.fromJson(json)).toList();
+          _categoriesCache = list.map((json) => MenuCategoryModel.fromJson(json)).toList();
+          return _categoriesCache;
         }
       }
     } on DioException catch (e) {
@@ -33,7 +55,7 @@ class MenuService {
     } catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.getCategories');
     }
-    return null;
+    return forceRefresh ? null : _categoriesCache;
   }
 
   Future<MenuCategoryModel?> getMenuCategoryDetail(int categoryId) async {
@@ -113,17 +135,23 @@ class MenuService {
     return null;
   }
 
-  Future<List<MasterDataModel>?> getMasterMenuItems() async {
+  Future<List<MasterDataModel>?> getMasterMenuItems({bool forceRefresh = false}) async {
+    if (!forceRefresh && _masterItemsCache != null) {
+      debugPrint('CACHE HIT: $_masterItemsPath');
+      return _masterItemsCache;
+    }
+
     try {
       debugPrint('GET REQUEST: $_masterItemsPath');
       final response = await ApiClient().dio.get(_masterItemsPath);
-      return _parseMasterDataList(response);
+      _masterItemsCache = _parseMasterDataList(response);
+      return _masterItemsCache;
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.getMasterMenuItems');
     } catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.getMasterMenuItems');
     }
-    return null;
+    return forceRefresh ? null : _masterItemsCache;
   }
 
   Future<MenuItemModel?> getMasterMenuItemDetail(int id) async {
@@ -145,17 +173,23 @@ class MenuService {
     return null;
   }
 
-  Future<List<MasterDataModel>?> getMasterCategories() async {
+  Future<List<MasterDataModel>?> getMasterCategories({bool forceRefresh = false}) async {
+    if (!forceRefresh && _masterCategoriesCache != null) {
+      debugPrint('CACHE HIT: $_masterCategoriesPath');
+      return _masterCategoriesCache;
+    }
+
     try {
       debugPrint('GET REQUEST: $_masterCategoriesPath');
       final response = await ApiClient().dio.get(_masterCategoriesPath);
-      return _parseMasterDataList(response);
+      _masterCategoriesCache = _parseMasterDataList(response);
+      return _masterCategoriesCache;
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.getMasterCategories');
     } catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.getMasterCategories');
     }
-    return null;
+    return forceRefresh ? null : _masterCategoriesCache;
   }
 
   Future<MenuCategoryModel?> getMasterCategoryDetail(int id) async {
@@ -177,17 +211,23 @@ class MenuService {
     return null;
   }
 
-  Future<List<MasterDataModel>?> getMenuTags() async {
+  Future<List<MasterDataModel>?> getMenuTags({bool forceRefresh = false}) async {
+    if (!forceRefresh && _menuTagsCache != null) {
+      debugPrint('CACHE HIT: $_masterTagsPath');
+      return _menuTagsCache;
+    }
+
     try {
       debugPrint('GET REQUEST: $_masterTagsPath');
       final response = await ApiClient().dio.get(_masterTagsPath);
-      return _parseMasterDataList(response);
+      _menuTagsCache = _parseMasterDataList(response);
+      return _menuTagsCache;
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.getMenuTags');
     } catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.getMenuTags');
     }
-    return null;
+    return forceRefresh ? null : _menuTagsCache;
   }
 
   Future<MasterDataModel?> getMenuTagDetail(int id) async {
@@ -222,12 +262,28 @@ class MenuService {
     return null;
   }
 
-  Future<bool> createMenuItem(Map<String, dynamic> payload) async {
+
+  Future<bool> createMenuItem(Map<String, dynamic> payload, {File? image}) async {
     try {
       debugPrint('POST REQUEST: $_menuItemsPath, Data: $payload');
+      
+      final formDataMap = {
+        'data': MultipartFile.fromString(
+          jsonEncode(payload),
+          contentType: DioMediaType.parse('application/json'),
+        ),
+      };
+
+      if (image != null) {
+        formDataMap['image'] = await MultipartFile.fromFile(
+          image.path,
+          filename: image.path.split('/').last,
+        );
+      }
+
       final response = await ApiClient().dio.post(
         _menuItemsPath,
-        data: payload,
+        data: FormData.fromMap(formDataMap),
       );
 
       if (response.statusCode != null &&
@@ -244,11 +300,29 @@ class MenuService {
     return false;
   }
 
-  Future<bool> updateMenuItem(int itemId, Map<String, dynamic> payload) async {
+  Future<bool> updateMenuItem(int itemId, Map<String, dynamic> payload, {File? image}) async {
     try {
       final url = '$_menuItemsPath/$itemId';
       debugPrint('PUT REQUEST: $url, Data: $payload');
-      final response = await ApiClient().dio.put(url, data: payload);
+      
+      final formDataMap = {
+        'data': MultipartFile.fromString(
+          jsonEncode(payload),
+          contentType: DioMediaType.parse('application/json'),
+        ),
+      };
+
+      if (image != null) {
+        formDataMap['image'] = await MultipartFile.fromFile(
+          image.path,
+          filename: image.path.split('/').last,
+        );
+      }
+
+      final response = await ApiClient().dio.put(
+        url,
+        data: FormData.fromMap(formDataMap),
+      );
 
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&

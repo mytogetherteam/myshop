@@ -22,32 +22,11 @@ class ShopService {
         }
       }
     } on DioException catch (e) {
-      final error = ApiHelper.handleError(e, context: 'ShopService.getShops');
-      debugPrint('${error.message} - Returning Mock Data');
+      ApiHelper.handleError(e, context: 'ShopService.getShops');
     } catch (e) {
-      final error = ApiHelper.handleError(e, context: 'ShopService.getShops');
-      debugPrint('${error.message} - Returning Mock Data');
+      ApiHelper.handleError(e, context: 'ShopService.getShops');
     }
-    return _getMockShops();
-  }
-
-  List<Shop> _getMockShops() {
-    return [
-      Shop(
-        id: 1,
-        name: 'Together Coffee',
-        logoUrl:
-            'https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=200&auto=format&fit=crop',
-        address: '123 Coffee St, Bangkok',
-      ),
-      Shop(
-        id: 2,
-        name: 'The Bakery',
-        logoUrl:
-            'https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=200&auto=format&fit=crop',
-        address: '456 Sweet Ave, Bangkok',
-      ),
-    ];
+    return [];
   }
 
   Future<Shop?> getShopById(int id) async {

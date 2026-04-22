@@ -250,7 +250,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                 ),
                 child: _isSaving 
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  ? const CustomLoadingIndicator(size: 24, color: Colors.white)
                   : Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

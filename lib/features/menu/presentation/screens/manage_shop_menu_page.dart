@@ -24,6 +24,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
   void initState() {
     super.initState();
     _fetchItems();
+    _prefetchMasterData();
     _searchCtrl.addListener(_onSearchChanged);
   }
 
@@ -31,6 +32,21 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
+  }
+
+  /// Pre-fetch categories and master data to cache them for the Add/Edit screen
+  Future<void> _prefetchMasterData() async {
+    try {
+      await Future.wait([
+        _menuService.getCategories(),
+        _menuService.getMasterCategories(),
+        _menuService.getMasterMenuItems(),
+        _menuService.getMenuTags(),
+      ]);
+      debugPrint('[ManageShopMenuPage] Master data pre-fetched successfully');
+    } catch (e) {
+      debugPrint('[ManageShopMenuPage] Error pre-fetching master data: $e');
+    }
   }
 
   Future<void> _fetchItems() async {
@@ -53,6 +69,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
+
 
   void _onSearchChanged() {
     final query = _searchCtrl.text.toLowerCase();

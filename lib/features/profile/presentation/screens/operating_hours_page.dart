@@ -35,8 +35,6 @@ class _DayHours {
 }
 
 class _OperatingHoursPageState extends State<OperatingHoursPage> {
-  bool _isOpen = false;
-  bool _isTogglingStatus = false;
   bool _hasChanges = false;
   bool _isSaving = false;
   bool _isLoadingHours = true;
@@ -246,7 +244,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
     final payload = {'activeHours': activeHours};
 
     final response = await _profileService.updateOperatingHours(payload);
-    final bool isSuccess = response['success'] == true || response['status'] == 200;
+    final bool isSuccess = response['success'] == true;
 
     if (!context.mounted) return;
 
@@ -382,93 +380,6 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
-        const SizedBox(height: 16),
-        // Open/Closed toggle banner
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: _isOpen ? const Color(0xFFECFDF5) : const Color(0xFFFFF1F2),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: _isOpen ? const Color(0xFF10B981) : const Color(0xFFED3973),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                PhosphorIcon(
-                  _isOpen ? PhosphorIconsRegular.storefront : PhosphorIconsRegular.door,
-                  size: 24,
-                  color: _isOpen ? const Color(0xFF10B981) : const Color(0xFFED3973),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _isOpen ? 'Shop is Open' : 'Shop is Closed',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          color: _isOpen ? const Color(0xFF065F46) : const Color(0xFFBE123C),
-                        ),
-                      ),
-                      Text(
-                        'Toggle to change status immediately',
-                        style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B)),
-                      ),
-                    ],
-                  ),
-                ),
-                _isTogglingStatus
-                    ? const CustomLoadingIndicator(size: 24, color: Color(0xFFED3973))
-                    : SizedBox(
-                        height: 24,
-                        child: Transform.scale(
-                          scale: 0.65,
-                          child: Switch(
-                            value: _isOpen,
-                            onChanged: (v) async {
-                              setState(() => _isTogglingStatus = true);
-                              // PUT /api/shop/operating-hours/status?open=true|false
-                              // X-Shop-Id injected by ShopInterceptor
-                              final success = await _profileService.toggleShopStatus(v);
-                              if (context.mounted) {
-                                if (success) {
-                                  setState(() {
-                                    _isOpen = v;
-                                    _isTogglingStatus = false;
-                                  });
-                                } else {
-                                  setState(() => _isTogglingStatus = false);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Failed to change shop status.'),
-                                      backgroundColor: Color(0xFFEF4444),
-                                    ),
-                                  );
-                                }
-                              }
-                            },
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            thumbColor: WidgetStateProperty.all(Colors.white),
-                            trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
-                            trackColor: WidgetStateProperty.resolveWith((states) {
-                              if (states.contains(WidgetState.selected)) {
-                                return const Color(0xFFED3973);
-                              }
-                              return const Color(0xFFE2E8F0);
-                            }),
-                          ),
-                        ),
-                      ),
-              ],
-            ),
-          ),
-        ),
         const SizedBox(height: 16),
         // Day rows
         Container(
