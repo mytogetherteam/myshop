@@ -52,17 +52,35 @@ class _MenuItemCardState extends State<MenuItemCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Item Image
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: widget.item.imageUrl != null
-                        ? Image.network(
-                            widget.item.imageUrl!,
-                            width: 72,
-                            height: 72,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => _buildPlaceholderImage(),
-                          )
-                        : _buildPlaceholderImage(),
+                  Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: widget.item.imageUrl != null
+                            ? Image.network(
+                                widget.item.imageUrl!,
+                                width: 72,
+                                height: 72,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => _buildPlaceholderImage(),
+                              )
+                            : _buildPlaceholderImage(),
+                      ),
+                      if (widget.item.imageUrl != null)
+                        Positioned(
+                          top: 4,
+                          right: 4,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                            ),
+                            child: const Icon(Icons.refresh_rounded, size: 12, color: Color(0xFFED3A72)),
+                          ),
+                        ),
+                    ],
                   ),
                   const SizedBox(width: 16),
                   // Content
@@ -142,12 +160,12 @@ class _MenuItemCardState extends State<MenuItemCard> {
   Widget _buildInStockSwitch() {
     return Column(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         SizedBox(
           height: 24,
           child: Transform.scale(
-            scale: 0.65,
+            scale: 0.8,
             child: Switch(
               value: _inStock,
               onChanged: (value) {
@@ -155,23 +173,21 @@ class _MenuItemCardState extends State<MenuItemCard> {
                 widget.onAvailabilityChanged?.call(value);
               },
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              thumbColor: WidgetStateProperty.all(Colors.white),
+              activeColor: Colors.white,
+              activeTrackColor: const Color(0xFF22C55E),
+              inactiveThumbColor: Colors.white,
+              inactiveTrackColor: const Color(0xFFE2E8F0),
               trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
-              trackColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected)) {
-                  return const Color(0xFF22C55E); // Green
-                }
-                return const Color(0xFFEF4444); // Red
-              }),
             ),
           ),
         ),
+        const SizedBox(height: 4),
         Text(
           _inStock ? 'In stock' : 'Out of Stock',
           style: GoogleFonts.poppins(
-            fontSize: 9,
+            fontSize: 10,
             fontWeight: FontWeight.w600,
-            color: _inStock ? const Color(0xFF22C55E) : const Color(0xFFEF4444),
+            color: _inStock ? const Color(0xFF22C55E) : const Color(0xFF94A3B8),
           ),
         ),
       ],

@@ -16,7 +16,7 @@ class PaymentService {
         options: Options(headers: {'X-Shop-Id': shopId}),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         if (data['success'] == true && data['data'] != null) {
           final List<dynamic> list = data['data'];
@@ -69,7 +69,7 @@ class PaymentService {
         options: Options(headers: {'X-Shop-Id': shopId}),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         if (data['success'] == true && data['data'] != null) {
           return PaymentMethod.fromJson(data['data']);
@@ -119,7 +119,7 @@ class PaymentService {
         ),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         return data['success'] == true;
       }

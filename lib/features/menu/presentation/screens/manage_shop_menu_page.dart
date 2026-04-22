@@ -103,23 +103,8 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
           ),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AddNewItemScreen(),
-                ),
-              );
-              if (result == true) _fetchItems();
-            },
-            icon: const Icon(
-              Icons.add_circle_outline,
-              color: Color(0xFFED3A72),
-            ),
-          ),
-          const SizedBox(width: 8),
+        actions: const [
+          SizedBox(width: 8),
         ],
       ),
       body: Column(
@@ -128,11 +113,11 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(
                 color: const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
               ),
               child: TextField(
                 controller: _searchCtrl,
@@ -146,7 +131,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                   icon: const Icon(
                     Icons.search,
                     color: Color(0xFF64748B),
-                    size: 20,
+                    size: 22,
                   ),
                   suffixIcon: _searchCtrl.text.isNotEmpty
                       ? IconButton(
@@ -162,18 +147,14 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
           // Total count
           if (!_isLoading)
             Padding(
-              padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
-              child: Row(
-                children: [
-                  Text(
-                    'Total Items: ${_filteredItems.length}',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF64748B),
-                    ),
-                  ),
-                ],
+              padding: const EdgeInsets.only(left: 20, right: 20, bottom: 16),
+              child: Text(
+                'Total Items: ${_filteredItems.length}',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF64748B),
+                ),
               ),
             ),
 

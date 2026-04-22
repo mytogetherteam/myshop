@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:my_shop/app.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
+import 'package:my_shop/core/network/api_helper.dart';
 import 'package:my_shop/features/auth/data/models/auth_models.dart';
 import 'package:my_shop/core/network/api_client.dart';
 
@@ -26,10 +28,7 @@ class AuthService {
     try {
       final response = await ApiClient().dio.post(
         '$_authPath/login',
-        data: {
-          'emailOrUsername': usernameOrEmail,
-          'password': password,
-        },
+        data: {'emailOrUsername': usernameOrEmail, 'password': password},
       );
 
       final authResponse = AuthResponse.fromJson(response.data);
@@ -45,16 +44,19 @@ class AuthService {
       }
 
       return authResponse;
-    } catch (e) {
-      if (e is DioException && e.response?.data != null) {
+    } on DioException catch (e) {
+      final error = ApiHelper.handleError(e, context: 'AuthService.login');
+      if (e.response?.data != null) {
         try {
           return AuthResponse.fromJson(e.response!.data);
         } catch (_) {}
       }
-      return AuthResponse(success: false, message: 'Connection error: $e');
+      return AuthResponse(success: false, message: error.message);
+    } catch (e) {
+      final error = ApiHelper.handleError(e, context: 'AuthService.login');
+      return AuthResponse(success: false, message: error.message);
     }
   }
-
 
   Future<void> logout() async {
     try {
@@ -66,7 +68,7 @@ class AuthService {
         );
       }
     } catch (e) {
-      // Silently fail if API logout fails, still need to clear local data
+      debugPrint('[AuthService.logout] API error (ignored): $e');
     } finally {
       await StorageService.instance.clearAll();
     }
@@ -74,8 +76,10 @@ class AuthService {
 
   Future<void> logoutWithRedirect() async {
     await logout();
-    // Use the global navigator key to redirect to login
-    App.navigatorKey.currentState?.pushNamedAndRemoveUntil('/login', (route) => false);
+    App.navigatorKey.currentState?.pushNamedAndRemoveUntil(
+      '/login',
+      (route) => false,
+    );
   }
 
   Future<String?> performRefresh(Dio dio) async {
@@ -88,14 +92,20 @@ class AuthService {
       final response = await dio.post(
         '$_authPath/refresh',
         data: {'refreshToken': refreshToken},
-        options: Options(headers: {'Authorization': ''}), // Clear auth header for refresh call
+        options: Options(headers: {'Authorization': ''}),
       );
 
-      if (response.statusCode == 200 && response.data != null) {
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300 &&
+          response.data != null) {
         final data = response.data['data'];
-        final newToken = data['token'] as String? ?? data['accessToken'] as String? ?? '';
+        if (data == null) return null;
+
+        final newToken =
+            data['token'] as String? ?? data['accessToken'] as String? ?? '';
         final newRefreshToken = data['refreshToken'] as String?;
-        
+
         if (newToken.isNotEmpty) {
           await StorageService.instance.saveTokens(
             token: newToken,
@@ -104,8 +114,12 @@ class AuthService {
           return newToken;
         }
       }
+    } on DioException catch (e) {
+      debugPrint(
+        '[AuthService.performRefresh] API error: ${ApiHelper.handleError(e).message}',
+      );
     } catch (e) {
-      // Refresh failed
+      debugPrint('[AuthService.performRefresh] Error: $e');
     }
     return null;
   }

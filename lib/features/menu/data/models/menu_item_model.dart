@@ -29,6 +29,10 @@ class MenuItemModel {
   final List<MenuItemOptionGroupModel> optionGroups;
   final List<MenuItemVariantModel> variants;
   final bool hasVariants;
+  final int? masterItemId;
+  final int? masterCategoryId;
+  final List<int> tagIds;
+  final List<String> mealTypes;
 
   MenuItemModel({
     required this.id,
@@ -61,6 +65,10 @@ class MenuItemModel {
     this.optionGroups = const [],
     this.variants = const [],
     this.hasVariants = false,
+    this.masterItemId,
+    this.masterCategoryId,
+    this.tagIds = const [],
+    this.mealTypes = const [],
   });
 
   factory MenuItemModel.fromJson(Map<String, dynamic> json) {
@@ -101,7 +109,43 @@ class MenuItemModel {
               .toList() ??
           [],
       hasVariants: json['hasVariants'] ?? false,
+      masterItemId: json['masterItemId'],
+      masterCategoryId: json['masterCategoryId'],
+      tagIds: (json['tagIds'] as List?)?.cast<int>() ?? [],
+      mealTypes: (json['mealTypes'] as List?)?.cast<String>() ?? [],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'categoryId': categoryId,
+      'nameEn': nameEn,
+      'nameMm': nameMm,
+      'nameTh': nameTh,
+      'price': price,
+      'currency': currency,
+      'displayPrice': displayPrice,
+      'imageUrl': imageUrl,
+      'isAvailable': isAvailable,
+      'isPopular': isPopular,
+      'isVegetarian': isVegetarian,
+      'isSpicy': isSpicy,
+      'isRecommended': isRecommended,
+      'isHotDeal': isHotDeal,
+      'isCombo': isCombo,
+      'displayOrder': displayOrder,
+      'stockQuantity': stockQuantity,
+      'descriptionEn': descriptionEn,
+      'descriptionMm': descriptionMm,
+      'descriptionTh': descriptionTh,
+      'optionGroups': optionGroups.map((o) => o.toJson()).toList(),
+      'variants': variants.map((v) => v.toJson()).toList(),
+      'masterItemId': masterItemId,
+      'masterCategoryId': masterCategoryId,
+      'tagIds': tagIds,
+      'mealTypes': mealTypes,
+    };
   }
 
   String get displayName => nameEn ?? nameMm ?? nameTh ?? '';
@@ -116,6 +160,7 @@ class MenuItemVariantModel {
   final double price;
   final String? displayPrice;
   final bool isAvailable;
+  final int? displayOrder;
 
   MenuItemVariantModel({
     required this.id,
@@ -125,6 +170,7 @@ class MenuItemVariantModel {
     required this.price,
     this.displayPrice,
     this.isAvailable = true,
+    this.displayOrder,
   });
 
   factory MenuItemVariantModel.fromJson(Map<String, dynamic> json) {
@@ -136,7 +182,21 @@ class MenuItemVariantModel {
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
       displayPrice: json['displayPrice'],
       isAvailable: json['isAvailable'] ?? true,
+      displayOrder: json['displayOrder'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'nameEn': nameEn,
+      'nameMm': nameMm,
+      'nameTh': nameTh,
+      'price': price,
+      'displayPrice': displayPrice,
+      'isAvailable': isAvailable,
+      'displayOrder': displayOrder,
+    };
   }
 
   String get displayName => nameEn ?? nameMm ?? nameTh ?? '';
@@ -150,6 +210,7 @@ class MenuItemOptionGroupModel {
   final bool isRequired;
   final int? minSelection;
   final int? maxSelection;
+  final int? displayOrder;
   final List<MenuItemOptionModel> options;
 
   MenuItemOptionGroupModel({
@@ -160,6 +221,7 @@ class MenuItemOptionGroupModel {
     this.isRequired = false,
     this.minSelection,
     this.maxSelection,
+    this.displayOrder,
     this.options = const [],
   });
 
@@ -172,11 +234,26 @@ class MenuItemOptionGroupModel {
       isRequired: json['isRequired'] ?? false,
       minSelection: json['minSelection'],
       maxSelection: json['maxSelection'],
+      displayOrder: json['displayOrder'],
       options: (json['options'] as List?)
               ?.map((o) => MenuItemOptionModel.fromJson(o))
               .toList() ??
           [],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'nameEn': nameEn,
+      'nameMm': nameMm,
+      'nameTh': nameTh,
+      'isRequired': isRequired,
+      'minSelection': minSelection,
+      'maxSelection': maxSelection,
+      'displayOrder': displayOrder,
+      'options': options.map((o) => o.toJson()).toList(),
+    };
   }
 
   String get displayName => nameEn ?? nameMm ?? nameTh ?? '';
@@ -189,6 +266,8 @@ class MenuItemOptionModel {
   final String? nameTh;
   final double price;
   final String? displayPrice;
+  final int? displayOrder;
+  final int? linkedMenuItemId;
 
   MenuItemOptionModel({
     required this.id,
@@ -197,6 +276,8 @@ class MenuItemOptionModel {
     this.nameTh,
     required this.price,
     this.displayPrice,
+    this.displayOrder,
+    this.linkedMenuItemId,
   });
 
   factory MenuItemOptionModel.fromJson(Map<String, dynamic> json) {
@@ -207,7 +288,22 @@ class MenuItemOptionModel {
       nameTh: json['nameTh'],
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
       displayPrice: json['displayPrice'],
+      displayOrder: json['displayOrder'],
+      linkedMenuItemId: json['linkedMenuItemId'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'nameEn': nameEn,
+      'nameMm': nameMm,
+      'nameTh': nameTh,
+      'price': price,
+      'displayPrice': displayPrice,
+      'displayOrder': displayOrder,
+      'linkedMenuItemId': linkedMenuItemId,
+    };
   }
 
   String get displayName => nameEn ?? nameMm ?? nameTh ?? '';

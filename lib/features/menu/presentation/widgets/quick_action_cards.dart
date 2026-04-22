@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/features/categories/presentation/screens/category_list_screen.dart';
-import 'package:my_shop/features/profile/presentation/screens/shop_profile_page.dart';
+import '../screens/manage_shop_menu_page.dart';
 
 class QuickActionCards extends StatelessWidget {
   const QuickActionCards({super.key});
@@ -33,7 +33,7 @@ class QuickActionCards extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const ShopProfilePage()),
+                  MaterialPageRoute(builder: (context) => const ManageShopMenuPage()),
                 );
               },
               child: _ActionCard(

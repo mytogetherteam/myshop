@@ -1,5 +1,7 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/network/api_client.dart';
+import 'package:my_shop/core/network/api_helper.dart';
 import '../models/shop_profile_model.dart';
 import '../models/operating_hours_model.dart';
 
@@ -9,24 +11,30 @@ class ProfileService {
   static const String _operatingHoursPath = '/api/shop/operating-hours';
   static const String _changePasswordPath = '/api/shop/profile/change-password';
 
-  /// GET /api/shop/operating-hours
-  /// X-Shop-Id is injected automatically by ShopInterceptor from global_shop_selection.
   Future<List<OperatingHoursModel>> getOperatingHours() async {
     try {
       debugPrint('GET REQUEST: $_operatingHoursPath');
       final response = await ApiClient().dio.get(_operatingHoursPath);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         if (data['success'] == true && data['data'] != null) {
           final List<dynamic> activeHours = data['data']['activeHours'] ?? [];
           return activeHours
-              .map((e) => OperatingHoursModel.fromActiveHoursJson(e as Map<String, dynamic>))
+              .map(
+                (e) => OperatingHoursModel.fromActiveHoursJson(
+                  e as Map<String, dynamic>,
+                ),
+              )
               .toList();
         }
       }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'ProfileService.getOperatingHours');
     } catch (e) {
-      debugPrint('API Error in getOperatingHours: $e');
+      ApiHelper.handleError(e, context: 'ProfileService.getOperatingHours');
     }
     return [];
   }
@@ -36,14 +44,18 @@ class ProfileService {
       debugPrint('GET REQUEST: $_profilePath');
       final response = await ApiClient().dio.get(_profilePath);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         if (data['success'] == true && data['data'] != null) {
           return ShopProfileModel.fromJson(data['data']);
         }
       }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'ProfileService.getShopProfile');
     } catch (e) {
-      debugPrint('API Error in getShopProfile: $e');
+      ApiHelper.handleError(e, context: 'ProfileService.getShopProfile');
     }
     return null;
   }
@@ -51,17 +63,18 @@ class ProfileService {
   Future<bool> updateShopProfile(Map<String, dynamic> payload) async {
     try {
       debugPrint('PUT REQUEST: $_profilePath, Data: $payload');
-      final response = await ApiClient().dio.put(
-        _profilePath,
-        data: payload,
-      );
+      final response = await ApiClient().dio.put(_profilePath, data: payload);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         return data['success'] == true;
       }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'ProfileService.updateShopProfile');
     } catch (e) {
-      debugPrint('API Error in updateShopProfile: $e');
+      ApiHelper.handleError(e, context: 'ProfileService.updateShopProfile');
     }
     return false;
   }
@@ -74,17 +87,23 @@ class ProfileService {
         queryParameters: {'open': isOpen},
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         return data['success'] == true;
       }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'ProfileService.toggleShopStatus');
     } catch (e) {
-      debugPrint('API Error in toggleShopStatus: $e');
+      ApiHelper.handleError(e, context: 'ProfileService.toggleShopStatus');
     }
     return false;
   }
 
-  Future<Map<String, dynamic>> updateOperatingHours(Map<String, dynamic> payload) async {
+  Future<Map<String, dynamic>> updateOperatingHours(
+    Map<String, dynamic> payload,
+  ) async {
     try {
       debugPrint('PUT REQUEST: $_operatingHoursPath, Data: $payload');
       final response = await ApiClient().dio.put(
@@ -92,21 +111,28 @@ class ProfileService {
         data: payload,
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         debugPrint('PUT RESPONSE: $data');
         return data;
       }
-    } catch (e) {
-      if (e is DioException) {
-        debugPrint('API Error in updateOperatingHours: ${e.response?.statusCode}');
-        debugPrint('Error Body: ${e.response?.data}');
-        if (e.response?.data is Map) {
-          return e.response?.data;
-        }
-      } else {
-        debugPrint('Error in updateOperatingHours: $e');
+    } on DioException catch (e) {
+      final error = ApiHelper.handleError(
+        e,
+        context: 'ProfileService.updateOperatingHours',
+      );
+      if (e.response?.data is Map) {
+        return Map<String, dynamic>.from(e.response!.data);
       }
+      return {'success': false, 'message': error.message};
+    } catch (e) {
+      final error = ApiHelper.handleError(
+        e,
+        context: 'ProfileService.updateOperatingHours',
+      );
+      return {'success': false, 'message': error.message};
     }
     return {'success': false, 'message': 'Unknown error occurred'};
   }
@@ -129,19 +155,27 @@ class ProfileService {
         data: payload,
       );
 
-      if (response.statusCode == 200) {
-        return response.data;
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        return Map<String, dynamic>.from(response.data);
       }
       return {
         'success': false,
         'message': 'Failed to change password: ${response.statusCode}',
       };
+    } on DioException catch (e) {
+      final error = ApiHelper.handleError(
+        e,
+        context: 'ProfileService.changePassword',
+      );
+      return {'success': false, 'message': error.message};
     } catch (e) {
-      debugPrint('API Error in changePassword: $e');
-      return {
-        'success': false,
-        'message': 'Error: ${e.toString()}',
-      };
+      final error = ApiHelper.handleError(
+        e,
+        context: 'ProfileService.changePassword',
+      );
+      return {'success': false, 'message': error.message};
     }
   }
 }

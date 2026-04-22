@@ -1,24 +1,99 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/network/api_client.dart';
+import 'package:my_shop/core/network/api_helper.dart';
 import 'package:my_shop/features/menu/data/models/menu_category_model.dart';
 
 class CategoryService {
   static const String _categoriesPath = '/api/shop/menu/categories';
+  static const String _masterCategoriesPath =
+      '/api/shop/menu/master/categories';
 
   Future<List<MenuCategoryModel>?> getCategories() async {
     try {
       debugPrint('GET REQUEST: $_categoriesPath');
       final response = await ApiClient().dio.get(_categoriesPath);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         if (data['success'] == true && data['data'] != null) {
           final List list = data['data'] ?? [];
           return list.map((json) => MenuCategoryModel.fromJson(json)).toList();
         }
       }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'CategoryService.getCategories');
     } catch (e) {
-      debugPrint('API Error in getCategories: $e');
+      ApiHelper.handleError(e, context: 'CategoryService.getCategories');
+    }
+    return null;
+  }
+
+  Future<MenuCategoryModel?> getCategoryDetail(int categoryId) async {
+    try {
+      final url = '$_categoriesPath/$categoryId';
+      debugPrint('GET REQUEST: $url');
+      final response = await ApiClient().dio.get(url);
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        final Map<String, dynamic> data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          return MenuCategoryModel.fromJson(data['data']);
+        }
+      }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'CategoryService.getCategoryDetail');
+    } catch (e) {
+      ApiHelper.handleError(e, context: 'CategoryService.getCategoryDetail');
+    }
+    return null;
+  }
+
+  Future<List<Map<String, dynamic>>?> getMasterCategories() async {
+    try {
+      debugPrint('GET REQUEST: $_masterCategoriesPath');
+      final response = await ApiClient().dio.get(_masterCategoriesPath);
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        final Map<String, dynamic> data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          final List list = data['data'] ?? [];
+          return list.map((e) => e as Map<String, dynamic>).toList();
+        }
+      }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'CategoryService.getMasterCategories');
+    } catch (e) {
+      ApiHelper.handleError(e, context: 'CategoryService.getMasterCategories');
+    }
+    return null;
+  }
+
+  Future<List<Map<String, dynamic>>?> getCategoryGallery() async {
+    try {
+      final url = '$_masterCategoriesPath/gallery';
+      debugPrint('GET REQUEST: $url');
+      final response = await ApiClient().dio.get(url);
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        final Map<String, dynamic> data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          final List list = data['data'] ?? [];
+          return list.map((e) => e as Map<String, dynamic>).toList();
+        }
+      }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'CategoryService.getCategoryGallery');
+    } catch (e) {
+      ApiHelper.handleError(e, context: 'CategoryService.getCategoryGallery');
     }
     return null;
   }
@@ -31,31 +106,39 @@ class CategoryService {
         data: payload,
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         return data['success'] == true;
       }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'CategoryService.createCategory');
     } catch (e) {
-      debugPrint('API Error in createCategory: $e');
+      ApiHelper.handleError(e, context: 'CategoryService.createCategory');
     }
     return false;
   }
 
-  Future<bool> updateCategory(int categoryId, Map<String, dynamic> payload) async {
+  Future<bool> updateCategory(
+    int categoryId,
+    Map<String, dynamic> payload,
+  ) async {
     try {
       final url = '$_categoriesPath/$categoryId';
       debugPrint('PUT REQUEST: $url, Data: $payload');
-      final response = await ApiClient().dio.put(
-        url,
-        data: payload,
-      );
+      final response = await ApiClient().dio.put(url, data: payload);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         return data['success'] == true;
       }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'CategoryService.updateCategory');
     } catch (e) {
-      debugPrint('API Error in updateCategory: $e');
+      ApiHelper.handleError(e, context: 'CategoryService.updateCategory');
     }
     return false;
   }
@@ -66,32 +149,37 @@ class CategoryService {
       debugPrint('DELETE REQUEST: $url');
       final response = await ApiClient().dio.delete(url);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         return data['success'] == true;
       }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'CategoryService.deleteCategory');
     } catch (e) {
-      debugPrint('API Error in deleteCategory: $e');
+      ApiHelper.handleError(e, context: 'CategoryService.deleteCategory');
     }
     return false;
   }
 
   Future<bool> reorderCategories(List<int> orderedIds) async {
     try {
-      const url = '$_categoriesPath/reorder';
+      final url = '$_categoriesPath/reorder';
       final payload = {'categoryIds': orderedIds};
       debugPrint('POST REQUEST: $url, Data: $payload');
-      final response = await ApiClient().dio.post(
-        url,
-        data: payload,
-      );
+      final response = await ApiClient().dio.post(url, data: payload);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         return data['success'] == true;
       }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'CategoryService.reorderCategories');
     } catch (e) {
-      debugPrint('API Error in reorderCategories: $e');
+      ApiHelper.handleError(e, context: 'CategoryService.reorderCategories');
     }
     return false;
   }

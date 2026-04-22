@@ -7,6 +7,7 @@ class MenuCategoryModel {
   final bool isActive;
   final String? imageUrl;
   final int itemCount;
+  final int? masterCategoryId;
 
   MenuCategoryModel({
     required this.id,
@@ -17,6 +18,7 @@ class MenuCategoryModel {
     this.isActive = true,
     this.imageUrl,
     this.itemCount = 0,
+    this.masterCategoryId,
   });
 
   factory MenuCategoryModel.fromJson(Map<String, dynamic> json) {
@@ -29,8 +31,23 @@ class MenuCategoryModel {
       isActive: json['isActive'] ?? true,
       imageUrl: json['imageUrl'],
       itemCount: json['itemCount'] ?? 0,
+      masterCategoryId: json['masterCategoryId'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'nameEn': nameEn,
+      'nameMm': nameMm,
+      'nameTh': nameTh,
+      'displayOrder': displayOrder,
+      'isActive': isActive,
+      'imageUrl': imageUrl,
+      'masterCategoryId': masterCategoryId,
+    };
   }
 
   String get displayName => nameEn ?? nameMm ?? nameTh ?? '';
 }
+

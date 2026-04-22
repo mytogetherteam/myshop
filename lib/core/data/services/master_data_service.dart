@@ -1,11 +1,13 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/network/api_client.dart';
+import 'package:my_shop/core/network/api_helper.dart';
 import 'package:my_shop/core/data/models/master_data_model.dart';
 
 class MasterDataService {
   List<MasterDataModel>? _parseResponse(dynamic data) {
     if (data == null) return null;
-    
+
     if (data is List) {
       return data.map((json) => MasterDataModel.fromJson(json)).toList();
     } else if (data is Map && data['success'] == true && data['data'] != null) {
@@ -22,24 +24,42 @@ class MasterDataService {
 
   Future<List<MasterDataModel>?> getShopCategories() async {
     try {
-      final response = await ApiClient().dio.get('/api/shop/master/shop-categories');
-      if (response.statusCode == 200) {
+      final response = await ApiClient().dio.get(
+        '/api/shop/master/shop-categories',
+      );
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
         return _parseResponse(response.data);
       }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'MasterDataService.getShopCategories');
     } catch (e) {
-      debugPrint('API Error in getShopCategories: $e');
+      ApiHelper.handleError(e, context: 'MasterDataService.getShopCategories');
     }
     return null;
   }
 
   Future<List<MasterDataModel>?> getShopSubcategories() async {
     try {
-      final response = await ApiClient().dio.get('/api/shop/master/shop-subcategories');
-      if (response.statusCode == 200) {
+      final response = await ApiClient().dio.get(
+        '/api/shop/master/shop-subcategories',
+      );
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
         return _parseResponse(response.data);
       }
+    } on DioException catch (e) {
+      ApiHelper.handleError(
+        e,
+        context: 'MasterDataService.getShopSubcategories',
+      );
     } catch (e) {
-      debugPrint('API Error in getShopSubcategories: $e');
+      ApiHelper.handleError(
+        e,
+        context: 'MasterDataService.getShopSubcategories',
+      );
     }
     return null;
   }
@@ -47,11 +67,15 @@ class MasterDataService {
   Future<List<MasterDataModel>?> getCities() async {
     try {
       final response = await ApiClient().dio.get('/api/shop/master/cities');
-      if (response.statusCode == 200) {
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
         return _parseResponse(response.data);
       }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'MasterDataService.getCities');
     } catch (e) {
-      debugPrint('API Error in getCities: $e');
+      ApiHelper.handleError(e, context: 'MasterDataService.getCities');
     }
     return null;
   }
@@ -62,23 +86,33 @@ class MasterDataService {
         '/api/shop/master/districts',
         queryParameters: cityId != null ? {'cityId': cityId} : null,
       );
-      if (response.statusCode == 200) {
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
         return _parseResponse(response.data);
       }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'MasterDataService.getDistricts');
     } catch (e) {
-      debugPrint('API Error in getDistricts: $e');
+      ApiHelper.handleError(e, context: 'MasterDataService.getDistricts');
     }
     return null;
   }
 
   Future<List<MasterDataModel>?> getCuisineTypes() async {
     try {
-      final response = await ApiClient().dio.get('/api/shop/master/cuisine-types');
-      if (response.statusCode == 200) {
+      final response = await ApiClient().dio.get(
+        '/api/shop/master/cuisine-types',
+      );
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
         return _parseResponse(response.data);
       }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'MasterDataService.getCuisineTypes');
     } catch (e) {
-      debugPrint('API Error in getCuisineTypes: $e');
+      ApiHelper.handleError(e, context: 'MasterDataService.getCuisineTypes');
     }
     return null;
   }
@@ -86,11 +120,15 @@ class MasterDataService {
   Future<List<MasterDataModel>?> getMenuTags() async {
     try {
       final response = await ApiClient().dio.get('/api/shop/master/menu-tags');
-      if (response.statusCode == 200) {
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
         return _parseResponse(response.data);
       }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'MasterDataService.getMenuTags');
     } catch (e) {
-      debugPrint('API Error in getMenuTags: $e');
+      ApiHelper.handleError(e, context: 'MasterDataService.getMenuTags');
     }
     return null;
   }
