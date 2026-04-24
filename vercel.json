@@ -1,9 +1,24 @@
 {
   "outputDirectory": "build/web",
   "cleanUrls": true,
-  "rewrites": [
+  "headers": [
     {
       "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin"
+        },
+        {
+          "key": "Cross-Origin-Embedder-Policy",
+          "value": "credentialless"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/((?!.*\\.(?:js|css|wasm|mjs|png|jpg|jpeg|gif|svg|ico|json|ttf|woff|woff2)$).*)",
       "destination": "/"
     }
   ]

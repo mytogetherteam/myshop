@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
@@ -15,7 +15,7 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  FirebaseMessaging? _fcm;
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
 
@@ -24,75 +24,93 @@ class NotificationService {
   Future<void> initialize() async {
     if (_isInitialized) return;
 
-    // Initialize local notifications
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    const DarwinInitializationSettings initializationSettingsIOS = DarwinInitializationSettings();
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-      iOS: initializationSettingsIOS,
-    );
-    await _localNotifications.initialize(
-      initializationSettings,
-      onDidReceiveNotificationResponse: (details) {
-        _handleNotificationClick(null);
-      },
-    );
+    // Only skip messaging on web if Firebase is not properly initialized
+    final bool isFirebaseAvailable = Firebase.apps.isNotEmpty;
+    if (kIsWeb && !isFirebaseAvailable) {
+      debugPrint('⚠️ Skipping NotificationService initialization on web: Firebase not configured.');
+      _isInitialized = true;
+      return;
+    }
 
-    // Create high importance channel for Android
-    const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'shop_important_notifications',
-      'Shop Important Notifications',
-      description: 'This channel is used for shop orders and alerts.',
-      importance: Importance.high,
-    );
-    await _localNotifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(channel);
+    if (isFirebaseAvailable) {
+      _fcm = FirebaseMessaging.instance;
+    }
+
+    if (!kIsWeb) {
+      const AndroidInitializationSettings initializationSettingsAndroid =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
+      const DarwinInitializationSettings initializationSettingsIOS = DarwinInitializationSettings();
+      const InitializationSettings initializationSettings = InitializationSettings(
+        android: initializationSettingsAndroid,
+        iOS: initializationSettingsIOS,
+      );
+      await _localNotifications.initialize(
+        initializationSettings,
+        onDidReceiveNotificationResponse: (details) {
+          _handleNotificationClick(null);
+        },
+      );
+
+      // Create high importance channel for Android
+      const AndroidNotificationChannel channel = AndroidNotificationChannel(
+        'shop_important_notifications',
+        'Shop Important Notifications',
+        description: 'This channel is used for shop orders and alerts.',
+        importance: Importance.high,
+      );
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(channel);
+    }
 
     // Handle foreground messages
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (message.notification != null) {
-        NotificationRepository().incrementCount();
-        _showLocalNotification(message);
-      } else if (message.data.isNotEmpty) {
-        NotificationRepository().getUnreadCount();
-        _showLocalNotification(message);
-      }
-    });
+    if (isFirebaseAvailable) {
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        if (message.notification != null) {
+          NotificationRepository().incrementCount();
+          if (!kIsWeb) _showLocalNotification(message);
+        } else if (message.data.isNotEmpty) {
+          NotificationRepository().getUnreadCount();
+          if (!kIsWeb) _showLocalNotification(message);
+        }
+      });
 
-    // Handle background message clicks
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      _handleNotificationClick(message);
-    });
+      // Handle background message clicks
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        _handleNotificationClick(message);
+      });
 
-    // Check if the app was opened from a terminated state via a notification
-    try {
-      RemoteMessage? initialMessage = await _fcm.getInitialMessage().timeout(
-        const Duration(seconds: 2),
-      );
-      if (initialMessage != null) {
-        _handleNotificationClick(initialMessage);
-      }
-    } catch (_) {}
+      // Check if the app was opened from a terminated state via a notification
+      try {
+        RemoteMessage? initialMessage = await _fcm?.getInitialMessage().timeout(
+          const Duration(seconds: 2),
+        );
+        if (initialMessage != null) {
+          _handleNotificationClick(initialMessage);
+        }
+      } catch (_) {}
+    }
 
     // Register token if already logged in
-    if (await AuthService.instance.isLoggedIn) {
+    if (isFirebaseAvailable && await AuthService.instance.isLoggedIn) {
       await registerDevice();
     }
 
     // Listen for token refreshes
-    _fcm.onTokenRefresh.listen((newToken) async {
-      if (await AuthService.instance.isLoggedIn) {
-        _sendTokenToServer(newToken);
-      }
-    });
+    if (isFirebaseAvailable) {
+      _fcm?.onTokenRefresh.listen((newToken) async {
+        if (await AuthService.instance.isLoggedIn) {
+          _sendTokenToServer(newToken);
+        }
+      });
+    }
 
     _isInitialized = true;
   }
 
   Future<void> requestSystemPermission() async {
-    await _fcm.requestPermission(
+    if (_fcm == null) return;
+    await _fcm!.requestPermission(
       alert: true,
       announcement: false,
       badge: true,
@@ -108,8 +126,9 @@ class NotificationService {
   }
 
   Future<void> registerDevice() async {
+    if (_fcm == null) return;
     try {
-      String? token = await _fcm.getToken().timeout(const Duration(seconds: 5));
+      String? token = await _fcm!.getToken().timeout(const Duration(seconds: 5));
       if (token != null) {
         await _sendTokenToServer(token);
       }
@@ -125,7 +144,7 @@ class NotificationService {
         '/api/shop/notifications/register-device',
         data: {
           'token': token,
-          'deviceType': Platform.isAndroid ? 'ANDROID' : 'IOS',
+          'deviceType': kIsWeb ? 'WEB' : (defaultTargetPlatform == TargetPlatform.android ? 'ANDROID' : 'IOS'),
           'deviceId': deviceId,
         },
       );
@@ -155,10 +174,14 @@ class NotificationService {
   }
 
   Future<String> _getDeviceId() async {
-    if (Platform.isAndroid) {
+    if (kIsWeb) {
+      WebBrowserInfo webInfo = await _deviceInfo.webBrowserInfo;
+      return webInfo.userAgent ?? 'web_device';
+    }
+    if (defaultTargetPlatform == TargetPlatform.android) {
       AndroidDeviceInfo androidInfo = await _deviceInfo.androidInfo;
       return androidInfo.id;
-    } else if (Platform.isIOS) {
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
       IosDeviceInfo iosInfo = await _deviceInfo.iosInfo;
       return iosInfo.identifierForVendor ?? 'unknown_ios_device';
     }

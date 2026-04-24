@@ -997,13 +997,23 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   Widget _buildImageUploadSection() {
     ImageProvider? imageProvider;
     if (_pickedImage != null) {
-      imageProvider = FileImage(File(_pickedImage!.path));
+      if (kIsWeb) {
+        imageProvider = NetworkImage(_pickedImage!.path);
+      } else {
+        imageProvider = FileImage(File(_pickedImage!.path));
+      }
     } else if (widget.item?.imageUrl != null && widget.item!.imageUrl!.isNotEmpty) {
       final url = widget.item!.imageUrl!;
       if (url.startsWith('http')) {
         imageProvider = CachedNetworkImageProvider(url);
+      } else if (url.startsWith('assets/')) {
+        // Handle assets if any (though usually handled by decoration)
       } else {
-        imageProvider = FileImage(File(url));
+        if (kIsWeb) {
+          imageProvider = NetworkImage(url);
+        } else {
+          imageProvider = FileImage(File(url));
+        }
       }
     }
 
