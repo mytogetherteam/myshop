@@ -69,6 +69,7 @@ class ShopProfileModel {
   final int viewCount;
   final bool deliveryEnabled;
   final String? slug;
+  final List<int> cuisineTypeIds;
 
   ShopProfileModel({
     required this.id,
@@ -124,6 +125,7 @@ class ShopProfileModel {
     this.viewCount = 0,
     this.deliveryEnabled = false,
     this.slug,
+    this.cuisineTypeIds = const [],
     required this.operatingHours,
   });
 
@@ -190,6 +192,9 @@ class ShopProfileModel {
       viewCount: json['viewCount'] ?? 0,
       deliveryEnabled: json['deliveryEnabled'] ?? false,
       slug: json['slug'],
+      cuisineTypeIds: json['cuisineTypeIds'] != null
+          ? List<int>.from(json['cuisineTypeIds'])
+          : [],
     );
   }
 }

@@ -7,9 +7,20 @@ import 'package:my_shop/core/network/api_helper.dart';
 class OrderService {
   static const String _ordersPath = '/api/shop/orders';
 
-  Future<List<OrderModel>?> getOrders({String? status}) async {
+  Future<List<OrderModel>?> getOrders({
+    String? status,
+    String? tab,
+    int page = 0,
+    int size = 20,
+  }) async {
     try {
-      final queryParams = status != null ? {'status': status} : null;
+      final queryParams = <String, dynamic>{
+        'page': page,
+        'size': size,
+      };
+      if (status != null) queryParams['status'] = status;
+      if (tab != null) queryParams['tab'] = tab;
+      
       debugPrint('GET REQUEST: $_ordersPath, Params: $queryParams');
       final response = await ApiClient().dio.get(
         _ordersPath,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/features/reports/presentation/widgets/best_seller_tile.dart';
@@ -19,7 +18,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
   bool _isLoadingMore = false;
   int _selectedFilterIndex = 0;
   final List<String> _filters = ["Today", "Yesterday", "This Week", "Custom"];
-  
+
   // Dummy data generated for Infinite Scroll
   final List<Map<String, dynamic>> _dummyData = [
     {"name": "Kimchi Jigae", "soldCount": 38, "progress": 0.90},
@@ -58,7 +57,8 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
       _loadMoreData();
     }
   }
@@ -68,9 +68,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
       _isLoading = true;
       _items.clear();
     });
-    
 
-    
     if (mounted) {
       setState(() {
         _items.addAll(_dummyData.take(10));
@@ -81,11 +79,9 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
 
   Future<void> _loadMoreData() async {
     if (_isLoadingMore || _items.length >= _dummyData.length) return;
-    
-    setState(() => _isLoadingMore = true);
-    
 
-    
+    setState(() => _isLoadingMore = true);
+
     if (mounted) {
       setState(() {
         final currentLength = _items.length;
@@ -138,20 +134,31 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                     },
                     borderRadius: BorderRadius.circular(20),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFFED3A72) : Colors.white,
+                        color: isSelected
+                            ? const Color(0xFFED3A72)
+                            : Colors.white,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: isSelected ? const Color(0xFFED3A72) : const Color(0xFFE2E8F0),
+                          color: isSelected
+                              ? const Color(0xFFED3A72)
+                              : const Color(0xFFE2E8F0),
                         ),
                       ),
                       child: Text(
                         _filters[index],
                         style: GoogleFonts.poppins(
-                          color: isSelected ? Colors.white : const Color(0xFF64748B),
+                          color: isSelected
+                              ? Colors.white
+                              : const Color(0xFF64748B),
                           fontSize: 14,
-                          fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
+                          fontWeight: isSelected
+                              ? FontWeight.w500
+                              : FontWeight.w400,
                         ),
                       ),
                     ),
@@ -165,33 +172,39 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
             child: RefreshIndicator(
               onRefresh: _loadInitialData,
               color: const Color(0xFFED3A72),
-              child: _isLoading 
-                ? _buildSkeletons()
-                : ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                    itemCount: _items.length + (_isLoadingMore ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == _items.length) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          child: Center(
-                            child: CustomLoadingIndicator(size: 24, color: Color(0xFFED3A72)),
-                          ),
+              child: _isLoading
+                  ? _buildSkeletons()
+                  : ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                      itemCount: _items.length + (_isLoadingMore ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == _items.length) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(
+                              child: CustomLoadingIndicator(
+                                size: 24,
+                                color: Color(0xFFED3A72),
+                              ),
+                            ),
+                          );
+                        }
+                        final item = _items[index];
+                        // Display items accurately per screenshot design.
+                        return BestSellerTile(
+                          rank: index + 1,
+                          name: item['name'],
+                          soldCount: item['soldCount'],
+                          progress: item['progress'],
+                          // Make progress top three looking if rank is 1-3
+                          isTopThree: index < 3,
                         );
-                      }
-                      final item = _items[index];
-                      // Display items accurately per screenshot design.
-                      return BestSellerTile(
-                        rank: index + 1,
-                        name: item['name'],
-                        soldCount: item['soldCount'],
-                        progress: item['progress'],
-                        // Make progress top three looking if rank is 1-3
-                        isTopThree: index < 3,
-                      );
-                    },
-                  ),
+                      },
+                    ),
             ),
           ),
         ],

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:my_shop/core/data/services/storage_service.dart';
+import 'package:my_shop/features/auth/data/services/auth_service.dart';
 import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import '../../../../core/presentation/widgets/global_modal.dart';
 import 'otp_verification_sheet.dart';
@@ -32,15 +34,28 @@ class _PasswordConfirmationSheetState extends State<PasswordConfirmationSheet> {
       _errorMessage = null;
     });
     
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
+    final userInfo = await StorageService.instance.getUserInfo();
+    if (userInfo != null) {
+      final usernameOrEmail = userInfo.email.isNotEmpty ? userInfo.email : userInfo.username;
+      final authResponse = await AuthService.instance.login(
+        usernameOrEmail: usernameOrEmail,
+        password: _passwordController.text,
+      );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    if (_passwordController.text.toLowerCase() == 'fail') {
+      if (!authResponse.success) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Incorrect password';
+        });
+        return;
+      }
+    } else {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Incorrect password. (Test mode: any other input works)';
+        _errorMessage = 'User info not found';
       });
       return;
     }

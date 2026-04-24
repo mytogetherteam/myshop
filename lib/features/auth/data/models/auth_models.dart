@@ -93,4 +93,34 @@ class UserInfo {
     'fullName': fullName,
     'role': role,
   };
+
+  static const String roleAdmin = 'ADMIN';
+  static const String roleManager = 'MANAGER';
+  static const String roleStaff = 'STAFF';
+  static const String roleCashier = 'CASHIER';
+
+  bool get isAdmin => role == roleAdmin;
+  bool get isManager => role == roleManager || role == roleAdmin;
+  bool get isStaff =>
+      role == roleStaff || role == roleManager || role == roleAdmin;
+  bool get isCashier =>
+      role == roleCashier ||
+      role == roleStaff ||
+      role == roleManager ||
+      role == roleAdmin;
+
+  bool hasRole(String requiredRole) {
+    switch (requiredRole) {
+      case roleAdmin:
+        return isAdmin;
+      case roleManager:
+        return isManager;
+      case roleStaff:
+        return isStaff;
+      case roleCashier:
+        return isCashier;
+      default:
+        return false;
+    }
+  }
 }

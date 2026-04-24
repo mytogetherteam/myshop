@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:my_shop/core/data/services/storage_service.dart';
+import 'dart:convert';
 import '../../data/models/payment_method.dart';
 import '../../data/services/payment_service.dart';
 import '../widgets/password_confirmation_sheet.dart';
@@ -14,9 +16,8 @@ import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import '../../../../core/data/services/image_upload_service.dart';
 
 class EditPaymentPage extends StatefulWidget {
-  final int shopId;
   final PaymentMethod paymentMethod;
-  const EditPaymentPage({super.key, required this.shopId, required this.paymentMethod});
+  const EditPaymentPage({super.key, required this.paymentMethod});
 
   @override
   State<EditPaymentPage> createState() => _EditPaymentPageState();
@@ -25,7 +26,7 @@ class EditPaymentPage extends StatefulWidget {
 class _EditPaymentPageState extends State<EditPaymentPage> {
   final PaymentService _paymentService = PaymentService();
   final Map<String, XFile?> _pickedImages = {};
-  
+
   late final TextEditingController _accountNameCtrl;
   late final TextEditingController _accountNumberCtrl;
   late final TextEditingController _displayOrderCtrl;
@@ -38,11 +39,17 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
   void initState() {
     super.initState();
     _currentPayment = widget.paymentMethod;
-    _accountNameCtrl = TextEditingController(text: _currentPayment?.accountName ?? '');
-    _accountNumberCtrl = TextEditingController(text: _currentPayment?.accountNumber ?? '');
-    _displayOrderCtrl = TextEditingController(text: (_currentPayment?.displayOrder ?? 0).toString());
+    _accountNameCtrl = TextEditingController(
+      text: _currentPayment?.accountName ?? '',
+    );
+    _accountNumberCtrl = TextEditingController(
+      text: _currentPayment?.accountNumber ?? '',
+    );
+    _displayOrderCtrl = TextEditingController(
+      text: (_currentPayment?.displayOrder ?? 0).toString(),
+    );
     _isActive = _currentPayment?.isActive ?? true;
-    
+
     _loadLatestDetails();
   }
 
@@ -56,7 +63,9 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
 
   Future<void> _loadLatestDetails() async {
     setState(() => _isLoading = true);
-    final detail = await _paymentService.getPaymentMethodDetail(widget.shopId, widget.paymentMethod.id);
+    final detail = await _paymentService.getPaymentMethodDetail(
+      widget.paymentMethod.id,
+    );
     if (detail != null && mounted) {
       setState(() {
         _currentPayment = detail;
@@ -73,38 +82,64 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
 
   Future<void> _handleUpdate() async {
     setState(() => _isSaving = true);
-    
+
+    int? shopId = _currentPayment?.shopId;
+    if (shopId == null || shopId == 0) {
+      shopId = await StorageService.instance.getSelectedShopId();
+    }
+
     final requestData = {
-      "paymentMethodId": _currentPayment?.paymentMethodId,
+      "paymentMethodId":
+          _currentPayment?.paymentMethodId ??
+          widget.paymentMethod.paymentMethodId,
       "displayOrder": int.tryParse(_displayOrderCtrl.text) ?? 0,
       "isActive": _isActive,
-      "shopId": widget.shopId,
-      "paymentMethodName": _currentPayment?.paymentMethodName,
-      "paymentMethodCode": _currentPayment?.paymentMethodCode,
-      "accountNumber": _accountNumberCtrl.text,
-      "accountName": _accountNameCtrl.text,
-      "id": _currentPayment?.id,
+      "shopId": shopId,
+      "paymentMethodName":
+          _currentPayment?.paymentMethodName ??
+          widget.paymentMethod.paymentMethodName,
+      "paymentMethodCode":
+          _currentPayment?.paymentMethodCode ??
+          widget.paymentMethod.paymentMethodCode,
+      "accountNumber": _accountNumberCtrl.text.trim(),
+      "accountName": _accountNameCtrl.text.trim(),
+      "id": _currentPayment?.id ?? widget.paymentMethod.id,
     };
 
-    final success = await _paymentService.updatePaymentMethod(
-      shopId: widget.shopId,
+    debugPrint('PAYMENT UPDATE DATA: ${jsonEncode(requestData)}');
+
+    File? qrPhoto;
+    final pickedFile = _pickedImages[_currentPayment?.id.toString()];
+    if (pickedFile != null) {
+      qrPhoto = File(pickedFile.path);
+    }
+
+    final result = await _paymentService.updatePaymentMethod(
       paymentTypeId: widget.paymentMethod.id,
       requestData: requestData,
-      qrFile: _pickedImages[_currentPayment?.id.toString()] != null 
-          ? File(_pickedImages[_currentPayment?.id.toString()]!.path) 
-          : null,
+      qrPhoto: qrPhoto,
     );
 
     if (mounted) {
       setState(() => _isSaving = false);
-      if (success) {
+      if (result['success'] == true) {
         GlobalModal.show(
           context: context,
-          child: const PaymentSuccessSheet(),
+          child: PaymentSuccessSheet(
+            onDone: () {
+              Navigator.pop(context); // Close modal
+              Navigator.pop(context, true); // Go back with refresh signal
+            },
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to update payment method'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(
+              result['message'] ?? 'Failed to update payment method',
+            ),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -135,7 +170,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
               child: Text(
-                'Upload Item Photo',
+                'Upload QR Photo',
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
@@ -145,7 +180,10 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
             ),
             const Divider(height: 1),
             ListTile(
-              leading: const Icon(Icons.photo_library_outlined, color: Color(0xFFED3973)),
+              leading: const Icon(
+                Icons.photo_library_outlined,
+                color: Color(0xFFED3973),
+              ),
               title: Text('Choose from Gallery', style: GoogleFonts.poppins()),
               onTap: () async {
                 Navigator.pop(context);
@@ -157,7 +195,10 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
             ),
             const Divider(height: 1, indent: 56),
             ListTile(
-              leading: const Icon(Icons.camera_alt_outlined, color: Color(0xFFED3973)),
+              leading: const Icon(
+                Icons.camera_alt_outlined,
+                color: Color(0xFFED3973),
+              ),
               title: Text('Take a Photo', style: GoogleFonts.poppins()),
               onTap: () async {
                 Navigator.pop(context);
@@ -205,7 +246,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
         ),
         centerTitle: false,
       ),
-      body: _isLoading 
+      body: _isLoading
           ? const Center(child: CustomLoadingIndicator())
           : Column(
               children: [
@@ -231,48 +272,57 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
               width: double.infinity,
               height: 64,
               child: ElevatedButton(
-                onPressed: _isSaving ? null : () {
-                  GlobalModal.show(
-                    context: context,
-                    child: PasswordConfirmationSheet(
-                      onConfirm: (password) {
-                        Navigator.pop(context); // Close sheet
-                        _handleUpdate();
+                onPressed: _isSaving
+                    ? null
+                    : () {
+                        GlobalModal.show(
+                          context: context,
+                          child: PasswordConfirmationSheet(
+                            onConfirm: (password) {
+                              Navigator.pop(context); // Close sheet
+                              _handleUpdate();
+                            },
+                          ),
+                        );
                       },
-                    ),
-                  );
-                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFED3973),
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor: const Color(0xFFED3973).withValues(alpha: 0.6),
+                  disabledBackgroundColor: const Color(
+                    0xFFED3973,
+                  ).withValues(alpha: 0.6),
                   elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
                 ),
-                child: _isSaving 
-                  ? const CustomLoadingIndicator(size: 24, color: Colors.white)
-                  : Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Update Payment Method',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                child: _isSaving
+                    ? const CustomLoadingIndicator(
+                        size: 24,
+                        color: Colors.white,
+                      )
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Update Payment Method',
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Changes will take effect after verified',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            color: Colors.white.withValues(alpha: 0.9),
-                            fontWeight: FontWeight.w500,
+                          const SizedBox(height: 2),
+                          Text(
+                            'Changes will take effect after verified',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              color: Colors.white.withValues(alpha: 0.9),
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
               ),
             ),
           ),
@@ -317,9 +367,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
               ),
             ),
             const SizedBox(width: 16),
-            Expanded(
-              child: _buildStatusToggle(),
-            ),
+            Expanded(child: _buildStatusToggle()),
           ],
         ),
         const SizedBox(height: 40),
@@ -337,11 +385,10 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: const Color(0xFFF1F5F9)),
           ),
-          child: Image.network(
-            _currentPayment?.logoUrl ?? '',
-            width: 24,
-            height: 24,
-            errorBuilder: (_, __, ___) => const Icon(PhosphorIconsRegular.creditCard, size: 24),
+          child: Icon(
+            _getPaymentIcon(_currentPayment?.paymentMethodCode ?? ''),
+            size: 24,
+            color: const Color(0xFF475569),
           ),
         ),
         const SizedBox(width: 12),
@@ -357,9 +404,27 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
     );
   }
 
+  IconData _getPaymentIcon(String code) {
+    final upper = code.toUpperCase();
+    if (upper.contains('PROMPT') || upper.contains('QR')) {
+      return PhosphorIconsRegular.qrCode;
+    } else if (upper.contains('BANK') || upper.contains('TRANSFER')) {
+      return PhosphorIconsRegular.bank;
+    } else if (upper.contains('WALLET') || upper.contains('MONEY')) {
+      return PhosphorIconsRegular.wallet;
+    } else if (upper.contains('CARD') ||
+        upper.contains('CREDIT') ||
+        upper.contains('DEBIT')) {
+      return PhosphorIconsRegular.creditCard;
+    }
+    return PhosphorIconsRegular.currencyCircleDollar;
+  }
+
   Widget _buildImagePicker() {
     final pickedImage = _pickedImages[_currentPayment?.id.toString()];
-    final hasImage = pickedImage != null || (_currentPayment?.qrImageUrl.isNotEmpty ?? false);
+    final hasImage =
+        pickedImage != null ||
+        (_currentPayment?.qrImageUrl.isNotEmpty ?? false);
 
     return Stack(
       children: [
@@ -377,17 +442,28 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
               borderRadius: BorderRadius.circular(12),
               child: pickedImage != null
                   ? (kIsWeb
-                      ? Image.network(pickedImage.path, width: double.infinity, height: 250, fit: BoxFit.cover)
-                      : Image.file(File(pickedImage.path), width: double.infinity, height: 250, fit: BoxFit.cover))
+                        ? Image.network(
+                            pickedImage.path,
+                            width: double.infinity,
+                            height: 250,
+                            fit: BoxFit.cover,
+                          )
+                        : Image.file(
+                            File(pickedImage.path),
+                            width: double.infinity,
+                            height: 250,
+                            fit: BoxFit.cover,
+                          ))
                   : (_currentPayment?.qrImageUrl.isNotEmpty ?? false
-                      ? Image.network(
-                          _currentPayment!.qrImageUrl,
-                          width: double.infinity,
-                          height: 250,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _buildPlaceholder(),
-                        )
-                      : _buildPlaceholder()),
+                        ? Image.network(
+                            _currentPayment!.qrImageUrl,
+                            width: double.infinity,
+                            height: 250,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stack) =>
+                                _buildPlaceholder(),
+                          )
+                        : _buildPlaceholder()),
             ),
           ),
         ),
@@ -404,7 +480,11 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                   shape: BoxShape.circle,
                   boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
                 ),
-                child: const Icon(Icons.refresh_rounded, size: 20, color: Color(0xFFED3973)),
+                child: const Icon(
+                  Icons.refresh_rounded,
+                  size: 20,
+                  color: Color(0xFFED3973),
+                ),
               ),
             ),
           ),
@@ -423,9 +503,19 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.add_a_photo_outlined, size: 40, color: Color(0xFF94A3B8)),
+          const Icon(
+            Icons.add_a_photo_outlined,
+            size: 40,
+            color: Color(0xFF94A3B8),
+          ),
           const SizedBox(height: 8),
-          Text('Tap to upload QR Code', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF94A3B8))),
+          Text(
+            'Tap to upload QR Code',
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              color: const Color(0xFF94A3B8),
+            ),
+          ),
         ],
       ),
     );
@@ -471,7 +561,10 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
             prefixIcon: Icon(icon, size: 20, color: const Color(0xFF94A3B8)),
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
@@ -482,7 +575,10 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFED3973), width: 1.5),
+              borderSide: const BorderSide(
+                color: Color(0xFFED3973),
+                width: 1.5,
+              ),
             ),
           ),
         ),
@@ -515,12 +611,15 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
             children: [
               Text(
                 'Is Active',
-                style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B)),
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: const Color(0xFF1E293B),
+                ),
               ),
               const Spacer(),
               CupertinoSwitch(
                 value: _isActive,
-                activeColor: const Color(0xFFED3973),
+                activeTrackColor: const Color(0xFFED3973),
                 onChanged: (v) => setState(() => _isActive = v),
               ),
             ],
@@ -554,10 +653,12 @@ class DashedBorderPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     final path = Path()
-      ..addRRect(RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-        Radius.circular(borderRadius),
-      ));
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(0, 0, size.width, size.height),
+          Radius.circular(borderRadius),
+        ),
+      );
 
     for (final metric in path.computeMetrics()) {
       double distance = 0;

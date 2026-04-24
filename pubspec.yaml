@@ -41,7 +41,9 @@ dependencies:
   intl: ^0.20.2
   http: ^1.1.0
   shared_preferences: ^2.5.2
+  flutter_secure_storage: ^9.2.4
   dio: ^5.8.0
+  dio_http2_adapter: ^2.1.0
   dio_cache_interceptor: ^3.5.0
   stomp_dart_client: ^2.0.0
   

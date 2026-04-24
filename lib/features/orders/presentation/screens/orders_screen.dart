@@ -14,12 +14,24 @@ class OrdersScreen extends StatefulWidget {
   State<OrdersScreen> createState() => OrdersScreenState();
 }
 
-class OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+class OrdersScreenState extends State<OrdersScreen>
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late TabController _tabController;
   final OrderService _orderService = OrderService();
-  List<OrderModel> _allOrders = [];
-  bool _isLoading = true;
   StreamSubscription? _socketSubscription;
+  final StreamController<OrderModel> _orderUpdatesController =
+      StreamController<OrderModel>.broadcast();
+  final StreamController<void> _refreshController =
+      StreamController<void>.broadcast();
+
+  final Map<String, int> _tabCounts = {
+    'NEW': 0,
+    'PAYMENT': 0,
+    'PREPARING': 0,
+    'DELIVERING': 0,
+    'DELIVERED': 0,
+    'CANCELLED': 0,
+  };
 
   @override
   bool get wantKeepAlive => true;
@@ -28,11 +40,6 @@ class OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMixi
   void initState() {
     super.initState();
     _tabController = TabController(length: 6, vsync: this);
-    _tabController.addListener(() {
-      // Rebuild to update tab badges color immediately during change
-      setState(() {}); 
-    });
-    fetchOrders();
     _setupWebSocketListener();
   }
 
@@ -40,44 +47,16 @@ class OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMixi
     _socketSubscription = WebSocketService().orderUpdates.listen((event) {
       if (event['order'] != null) {
         final newOrder = OrderModel.fromJson(event['order']);
-        setState(() {
-          // Update existing order or add new one
-          final index = _allOrders.indexWhere((o) => o.id == newOrder.id);
-          if (index != -1) {
-            _allOrders[index] = newOrder;
-          } else {
-            _allOrders.insert(0, newOrder);
-          }
-        });
+        _orderUpdatesController.add(newOrder);
       }
     });
-  }
-
-  Future<void> fetchOrders() async {
-    setState(() => _isLoading = true);
-    final orders = await _orderService.getOrders();
-    
-    if (mounted) {
-      if (orders == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to load orders. Please try again.'),
-            backgroundColor: Color(0xFFEF4444),
-          ),
-        );
-        setState(() => _isLoading = false);
-      } else {
-        setState(() {
-          _allOrders = orders;
-          _isLoading = false;
-        });
-      }
-    }
   }
 
   @override
   void dispose() {
     _socketSubscription?.cancel();
+    _orderUpdatesController.close();
+    _refreshController.close();
     _tabController.dispose();
     super.dispose();
   }
@@ -85,25 +64,42 @@ class OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMixi
   void switchToStatus(String status) {
     int index = 0;
     final upperStatus = status.toUpperCase();
-    
-    // Map order status to tab index
+
     if (['PENDING', 'CONFIRMED', 'AWAITING_APPROVAL'].contains(upperStatus)) {
-      index = 0; // New order
-    } else if (['PAYMENT_SLIP_REQUESTED', 'PAYMENT_UPLOADED', 'PAYMENT_VERIFIED'].contains(upperStatus)) {
-      index = 1; // Payment
+      index = 0;
+    } else if ([
+      'PAYMENT_SLIP_REQUESTED',
+      'PAYMENT_UPLOADED',
+      'PAYMENT_VERIFIED',
+    ].contains(upperStatus)) {
+      index = 1;
     } else if (upperStatus == 'PREPARING') {
-      index = 2; // Preparing
+      index = 2;
     } else if (upperStatus == 'ON_THE_WAY') {
-      index = 3; // Delivering
+      index = 3;
     } else if (upperStatus == 'DELIVERED') {
-      index = 4; // Delivered
+      index = 4;
     } else if (upperStatus == 'CANCELLED') {
-      index = 5; // Cancelled
+      index = 5;
     }
-    
+
     if (_tabController.index != index) {
       _tabController.animateTo(index);
     }
+  }
+
+  void _updateTabCount(String tab, int count) {
+    if (_tabCounts[tab] != count) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() => _tabCounts[tab] = count);
+        }
+      });
+    }
+  }
+
+  void refreshAll() {
+    _refreshController.add(null);
   }
 
   @override
@@ -133,145 +129,382 @@ class OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMixi
                 fontWeight: FontWeight.w500,
               ),
               tabs: [
-                _buildTab('New order', _getCount('NEW'), 0),
-                _buildTab('Payment', _getCount('PAYMENT'), 1),
-                _buildTab('Preparing', _getCount('PREPARING'), 2),
-                _buildTab('Delivering', _getCount('DELIVERING'), 3),
-                _buildTab('Delivered', _getCount('DELIVERED'), 4),
-                _buildTab('Cancelled', _getCount('CANCELLED'), 5),
+                _buildTab('New order', 'NEW', 0),
+                _buildTab('Payment', 'PAYMENT', 1),
+                _buildTab('Preparing', 'PREPARING', 2),
+                _buildTab('Delivering', 'DELIVERING', 3),
+                _buildTab('Delivered', 'DELIVERED', 4),
+                _buildTab('Cancelled', 'CANCELLED', 5),
               ],
             ),
           ),
           Expanded(
-            child: _isLoading
-                ? _buildSkeletonList()
-                : TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildOrderList('NEW'),
-                      _buildOrderList('PAYMENT'),
-                      _buildOrderList('PREPARING'),
-                      _buildOrderList('DELIVERING'),
-                      _buildOrderList('DELIVERED'),
-                      _buildOrderList('CANCELLED'),
-                    ],
-                  ),
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                OrderListTabView(
+                  tabStatus: 'NEW',
+                  orderService: _orderService,
+                  updateStream: _orderUpdatesController.stream,
+                  refreshStream: _refreshController.stream,
+                  onCountUpdated: (count) => _updateTabCount('NEW', count),
+                ),
+                OrderListTabView(
+                  tabStatus: 'PAYMENT',
+                  orderService: _orderService,
+                  updateStream: _orderUpdatesController.stream,
+                  refreshStream: _refreshController.stream,
+                  onCountUpdated: (count) => _updateTabCount('PAYMENT', count),
+                ),
+                OrderListTabView(
+                  tabStatus: 'PREPARING',
+                  orderService: _orderService,
+                  updateStream: _orderUpdatesController.stream,
+                  refreshStream: _refreshController.stream,
+                  onCountUpdated: (count) =>
+                      _updateTabCount('PREPARING', count),
+                ),
+                OrderListTabView(
+                  tabStatus: 'DELIVERING',
+                  orderService: _orderService,
+                  updateStream: _orderUpdatesController.stream,
+                  refreshStream: _refreshController.stream,
+                  onCountUpdated: (count) =>
+                      _updateTabCount('DELIVERING', count),
+                ),
+                OrderListTabView(
+                  tabStatus: 'DELIVERED',
+                  orderService: _orderService,
+                  updateStream: _orderUpdatesController.stream,
+                  refreshStream: _refreshController.stream,
+                  onCountUpdated: (count) =>
+                      _updateTabCount('DELIVERED', count),
+                ),
+                OrderListTabView(
+                  tabStatus: 'CANCELLED',
+                  orderService: _orderService,
+                  updateStream: _orderUpdatesController.stream,
+                  refreshStream: _refreshController.stream,
+                  onCountUpdated: (count) =>
+                      _updateTabCount('CANCELLED', count),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTab(String label, int count, int index) {
-    return Tab(
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(label),
-          if (count > 0) ...[
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: _tabController.index == index 
-                    ? const Color(0xFFED3A72) 
-                    : const Color(0xFFE2E8F0),
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                '$count',
-                style: GoogleFonts.poppins(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: _tabController.index == index ? Colors.white : const Color(0xFF64748B),
+  Widget _buildTab(String label, String tabKey, int index) {
+    return AnimatedBuilder(
+      animation: _tabController.animation ?? _tabController,
+      builder: (context, child) {
+        final double animationValue =
+            _tabController.animation?.value ?? _tabController.index.toDouble();
+        final double diff = (animationValue - index).abs();
+        final isSelected = diff < 0.5;
+        final count = _tabCounts[tabKey] ?? 0;
+
+        return Tab(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(label),
+              if (count > 0) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? const Color(0xFFED3A72)
+                        : const Color(0xFFE2E8F0),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    '$count',
+                    style: GoogleFonts.poppins(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected
+                          ? Colors.white
+                          : const Color(0xFF64748B),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ],
-        ],
-      ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class OrderListTabView extends StatefulWidget {
+  final String tabStatus;
+  final OrderService orderService;
+  final Stream<OrderModel> updateStream;
+  final Stream<void> refreshStream;
+  final Function(int) onCountUpdated;
+
+  const OrderListTabView({
+    super.key,
+    required this.tabStatus,
+    required this.orderService,
+    required this.updateStream,
+    required this.refreshStream,
+    required this.onCountUpdated,
+  });
+
+  @override
+  State<OrderListTabView> createState() => _OrderListTabViewState();
+}
+
+class _OrderListTabViewState extends State<OrderListTabView>
+    with AutomaticKeepAliveClientMixin {
+  final List<OrderModel> _orders = [];
+  bool _isLoading = true;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
+  bool _hasError = false;
+  int _page = 0;
+  final int _size = 20;
+  final ScrollController _scrollController = ScrollController();
+  StreamSubscription? _updateSub;
+  StreamSubscription? _refreshSub;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    _updateSub = widget.updateStream.listen(_onOrderUpdated);
+    _refreshSub = widget.refreshStream.listen(
+      (_) => _fetchOrders(isRefresh: true),
+    );
+    _fetchOrders(isRefresh: true);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _updateSub?.cancel();
+    _refreshSub?.cancel();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _fetchOrders();
+    }
+  }
+
+  void _onOrderUpdated(OrderModel newOrder) {
+    if (!mounted) return;
+
+    // Check if the order belongs to this tab
+    bool belongsHere = false;
+    final upperStatus = newOrder.status.toUpperCase();
+    switch (widget.tabStatus) {
+      case 'NEW':
+        belongsHere = [
+          'PENDING',
+          'CONFIRMED',
+          'AWAITING_APPROVAL',
+        ].contains(upperStatus);
+        break;
+      case 'PAYMENT':
+        belongsHere = [
+          'PAYMENT_SLIP_REQUESTED',
+          'PAYMENT_UPLOADED',
+          'PAYMENT_VERIFIED',
+        ].contains(upperStatus);
+        break;
+      case 'PREPARING':
+        belongsHere = upperStatus == 'PREPARING';
+        break;
+      case 'DELIVERING':
+        belongsHere = upperStatus == 'ON_THE_WAY';
+        break;
+      case 'DELIVERED':
+        belongsHere = upperStatus == 'DELIVERED';
+        break;
+      case 'CANCELLED':
+        belongsHere = upperStatus == 'CANCELLED';
+        break;
+    }
+
+    setState(() {
+      final index = _orders.indexWhere((o) => o.id == newOrder.id);
+      if (index != -1) {
+        if (belongsHere) {
+          _orders[index] = newOrder; // Update existing
+        } else {
+          _orders.removeAt(index); // Moved to another tab
+        }
+      } else if (belongsHere) {
+        _orders.insert(0, newOrder); // Add new
+      }
+    });
+    widget.onCountUpdated(_orders.length);
+  }
+
+  Future<void> _fetchOrders({bool isRefresh = false}) async {
+    if (isRefresh) {
+      _page = 0;
+      _hasMore = true;
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+          _hasError = false;
+        });
+      }
+    } else {
+      if (_isLoading || _isLoadingMore || !_hasMore) return;
+      if (mounted) setState(() => _isLoadingMore = true);
+    }
+
+    final fetchedOrders = await widget.orderService.getOrders(
+      tab: widget.tabStatus,
+      page: _page,
+      size: _size,
+    );
+
+    if (!mounted) return;
+
+    if (fetchedOrders == null) {
+      setState(() {
+        _hasError = isRefresh;
+        _isLoading = false;
+        _isLoadingMore = false;
+      });
+      if (!isRefresh) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to load more orders.'),
+            backgroundColor: Color(0xFFEF4444),
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() {
+      if (isRefresh) {
+        _orders.clear();
+      }
+      _orders.addAll(fetchedOrders);
+      _hasMore = fetchedOrders.length == _size;
+      if (_hasMore) _page++;
+      _isLoading = false;
+      _isLoadingMore = false;
+      _hasError = false;
+    });
+    widget.onCountUpdated(_orders.length);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      child: _buildContent(),
     );
   }
 
-  int _getCount(String tab) {
-    switch (tab) {
-      case 'NEW':
-        return _allOrders
-            .where((o) => ['PENDING', 'CONFIRMED', 'AWAITING_APPROVAL'].contains(o.status))
-            .length;
-      case 'PAYMENT':
-        return _allOrders
-            .where((o) => ['PAYMENT_SLIP_REQUESTED', 'PAYMENT_UPLOADED', 'PAYMENT_VERIFIED']
-                .contains(o.status))
-            .length;
-      case 'PREPARING':
-        return _allOrders.where((o) => o.status == 'PREPARING').length;
-      case 'DELIVERING':
-        return _allOrders.where((o) => o.status == 'ON_THE_WAY').length;
-      case 'DELIVERED':
-        return _allOrders.where((o) => o.status == 'DELIVERED').length;
-      case 'CANCELLED':
-        return _allOrders.where((o) => o.status == 'CANCELLED').length;
-      default:
-        return 0;
-    }
-  }
-
-  Widget _buildOrderList(String tab) {
-    List<OrderModel> filteredOrders = [];
-    switch (tab) {
-      case 'NEW':
-        filteredOrders = _allOrders
-            .where((o) => ['PENDING', 'CONFIRMED', 'AWAITING_APPROVAL'].contains(o.status))
-            .toList();
-        break;
-      case 'PAYMENT':
-        filteredOrders = _allOrders
-            .where((o) => ['PAYMENT_SLIP_REQUESTED', 'PAYMENT_UPLOADED', 'PAYMENT_VERIFIED']
-                .contains(o.status))
-            .toList();
-        break;
-      case 'PREPARING':
-        filteredOrders = _allOrders.where((o) => o.status == 'PREPARING').toList();
-        break;
-      case 'DELIVERING':
-        filteredOrders = _allOrders.where((o) => o.status == 'ON_THE_WAY').toList();
-        break;
-      case 'DELIVERED':
-        filteredOrders = _allOrders.where((o) => o.status == 'DELIVERED').toList();
-        break;
-      case 'CANCELLED':
-        filteredOrders = _allOrders.where((o) => o.status == 'CANCELLED').toList();
-        break;
+  Widget _buildContent() {
+    if (_isLoading) {
+      return _buildSkeletonList(key: const ValueKey('loading'));
     }
 
-    if (filteredOrders.isEmpty) {
+    if (_hasError) {
       return Center(
-        child: Text(
-          'No orders yet',
-          style: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
+        key: const ValueKey('error'),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Color(0xFFCBD5E1)),
+            const SizedBox(height: 16),
+            Text(
+              'Failed to load orders',
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF64748B),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => _fetchOrders(isRefresh: true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFED3A72),
+              ),
+              child: const Text('Retry', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_orders.isEmpty) {
+      return Center(
+        key: const ValueKey('empty'),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.receipt_long_outlined,
+              size: 64,
+              color: Color(0xFFCBD5E1),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No orders yet',
+              style: GoogleFonts.poppins(
+                color: const Color(0xFF94A3B8),
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
       );
     }
 
     return RefreshIndicator(
-      onRefresh: fetchOrders,
+      key: const ValueKey('data'),
+      onRefresh: () => _fetchOrders(isRefresh: true),
       child: ListView.builder(
+        controller: _scrollController,
         padding: const EdgeInsets.only(top: 12, bottom: 20),
-        itemCount: filteredOrders.length,
+        itemCount: _orders.length + (_isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
+          if (index == _orders.length) {
+            return const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(
+                child: CircularProgressIndicator(color: Color(0xFFED3A72)),
+              ),
+            );
+          }
           return OrderCard(
-            order: filteredOrders[index],
-            isPaymentTab: tab == 'PAYMENT',
-            isDeliveryTab: tab == 'DELIVERING',
+            order: _orders[index],
+            isPaymentTab: widget.tabStatus == 'PAYMENT',
+            isDeliveryTab: widget.tabStatus == 'DELIVERING',
           );
         },
       ),
     );
   }
 
-  Widget _buildSkeletonList() {
+  Widget _buildSkeletonList({Key? key}) {
     return ListView.builder(
+      key: key,
       padding: const EdgeInsets.only(top: 12, bottom: 20),
       itemCount: 3,
       itemBuilder: (context, index) {
@@ -301,8 +534,8 @@ class OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMixi
                 ],
               ),
               const SizedBox(height: 16),
-              const Row(
-                children: [
+              Row(
+                children: const [
                   Skeleton(width: 70, height: 14),
                   SizedBox(width: 12),
                   Skeleton(width: 80, height: 14),
@@ -317,8 +550,8 @@ class OrdersScreenState extends State<OrdersScreen> with TickerProviderStateMixi
               const SizedBox(height: 24),
               const Divider(color: Color(0xFFF1F5F9), height: 1),
               const SizedBox(height: 16),
-              const Row(
-                children: [
+              Row(
+                children: const [
                   Expanded(child: Skeleton(height: 54)),
                   SizedBox(width: 12),
                   Expanded(flex: 2, child: Skeleton(height: 54)),

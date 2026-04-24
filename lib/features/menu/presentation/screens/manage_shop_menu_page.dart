@@ -5,6 +5,7 @@ import '../widgets/menu_item_card.dart';
 import '../../data/services/menu_service.dart';
 import '../../data/models/menu_item_model.dart';
 import 'add_new_item_screen.dart';
+import 'dart:async';
 
 class ManageShopMenuPage extends StatefulWidget {
   const ManageShopMenuPage({super.key});
@@ -18,23 +19,45 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
   List<MenuItemModel> _items = [];
   List<MenuItemModel> _filteredItems = [];
   bool _isLoading = true;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
+  int _page =
+      0; // or 1 depending on backend, let's assume 0-indexed as per spring standard or 1-indexed. The original code used `limit: 100` but no page. I'll use `page: 0`.
+  final int _limit = 20;
+
   final TextEditingController _searchCtrl = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
-    _fetchItems();
+    _page =
+        0; // The original getMenuItems defaults to page=1 if not specified, I'll pass 0 or 1. Let's use 0. If backend is 1-indexed, it might return empty for 0. Let's use 1 as default in menu_service was 1.
+    _page = 1;
+    _fetchItems(isRefresh: true);
     _prefetchMasterData();
     _searchCtrl.addListener(_onSearchChanged);
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
     _searchCtrl.dispose();
+    _scrollController.dispose();
+    _debounce?.cancel();
     super.dispose();
   }
 
-  /// Pre-fetch categories and master data to cache them for the Add/Edit screen
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      if (!_isLoadingMore && _hasMore) {
+        _fetchItems();
+      }
+    }
+  }
+
   Future<void> _prefetchMasterData() async {
     try {
       await Future.wait([
@@ -49,54 +72,101 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
     }
   }
 
-  Future<void> _fetchItems() async {
-    setState(() => _isLoading = true);
+  Future<void> _fetchItems({bool isRefresh = false}) async {
+    if (isRefresh) {
+      _page = 1;
+      _hasMore = true;
+      if (mounted) setState(() => _isLoading = true);
+    } else {
+      if (mounted) setState(() => _isLoadingMore = true);
+    }
+
     try {
-      // Fetch all items (categoryId: null)
-      final items = await _menuService.getMenuItems(
+      final fetchedItems = await _menuService.getMenuItems(
         categoryId: null,
-        limit: 100,
+        limit: _limit,
+        page: _page,
       );
+
       if (mounted) {
         setState(() {
-          _items = items ?? [];
-          _filteredItems = items ?? [];
+          if (isRefresh) {
+            _items.clear();
+          }
+          if (fetchedItems != null) {
+            _items.addAll(fetchedItems);
+            _hasMore = fetchedItems.length == _limit;
+            if (_hasMore) _page++;
+          } else {
+            _hasMore = false;
+          }
+          _applyFilter();
           _isLoading = false;
+          _isLoadingMore = false;
         });
       }
     } catch (e) {
       debugPrint('[ManageShopMenuPage] Error fetching items: $e');
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isLoadingMore = false;
+        });
+      }
     }
   }
 
-
   void _onSearchChanged() {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      setState(() {
+        _applyFilter();
+      });
+    });
+  }
+
+  void _applyFilter() {
     final query = _searchCtrl.text.toLowerCase();
-    setState(() {
+    if (query.isEmpty) {
+      _filteredItems = List.from(_items);
+    } else {
       _filteredItems = _items.where((item) {
         return item.displayName.toLowerCase().contains(query) ||
-            (item.descriptionEn?.toLowerCase().contains(query) ?? false);
+            (item.displayDescription.toLowerCase().contains(query));
       }).toList();
-    });
+    }
   }
 
   Future<void> _toggleItemAvailability(
     MenuItemModel item,
     bool available,
   ) async {
-    final success = await _menuService.toggleAvailability(
-      item.id,
-      available,
-    );
+    final index = _filteredItems.indexWhere((i) => i.id == item.id);
+    final globalIndex = _items.indexWhere((i) => i.id == item.id);
+    if (index == -1 || globalIndex == -1) return;
+
+    // Optimistic Update
+    setState(() {
+      final updatedItem = item.copyWith(isAvailable: available);
+      _filteredItems[index] = updatedItem;
+      _items[globalIndex] = updatedItem;
+    });
+
+    final success = await _menuService.toggleAvailability(item.id, available);
+
     if (!success && mounted) {
+      // Revert on failure
+      setState(() {
+        final revertedItem = item.copyWith(isAvailable: !available);
+        _filteredItems[index] = revertedItem;
+        _items[globalIndex] = revertedItem;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to update availability'),
           backgroundColor: Color(0xFFEF4444),
         ),
       );
-      _fetchItems(); // Refresh to revert UI
     }
   }
 
@@ -120,9 +190,6 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
           ),
         ),
         centerTitle: true,
-        actions: const [
-          SizedBox(width: 8),
-        ],
       ),
       body: Column(
         children: [
@@ -153,7 +220,10 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                   suffixIcon: _searchCtrl.text.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.clear, size: 18),
-                          onPressed: () => _searchCtrl.clear(),
+                          onPressed: () {
+                            _searchCtrl.clear();
+                            // clearing instantly triggers listener which debounces
+                          },
                         )
                       : null,
                 ),
@@ -177,37 +247,53 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
 
           // Menu List
           Expanded(
-            child: _isLoading
-                ? _buildSkeletonList()
-                : _filteredItems.isEmpty
-                ? _buildEmptyState()
-                : RefreshIndicator(
-                    onRefresh: _fetchItems,
-                    color: const Color(0xFFED3A72),
-                    child: ListView.builder(
-                      padding: const EdgeInsets.only(bottom: 100),
-                      itemCount: _filteredItems.length,
-                      itemBuilder: (context, index) {
-                        final item = _filteredItems[index];
-                        return MenuItemCard(
-                          item: item,
-                          onTap: () async {
-                            final result = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    AddNewItemScreen(item: item),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: _isLoading
+                  ? _buildSkeletonList(key: const ValueKey('loading'))
+                  : _filteredItems.isEmpty
+                  ? _buildEmptyState(key: const ValueKey('empty'))
+                  : RefreshIndicator(
+                      key: const ValueKey('data'),
+                      onRefresh: () => _fetchItems(isRefresh: true),
+                      color: const Color(0xFFED3A72),
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.only(bottom: 100),
+                        itemCount:
+                            _filteredItems.length + (_isLoadingMore ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index == _filteredItems.length) {
+                            return const Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  color: Color(0xFFED3A72),
+                                ),
                               ),
                             );
-                            if (result == true) _fetchItems();
-                          },
-                          onAvailabilityChanged: (available) {
-                            _toggleItemAvailability(item, available);
-                          },
-                        );
-                      },
+                          }
+                          final item = _filteredItems[index];
+                          return MenuItemCard(
+                            item: item,
+                            onTap: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      AddNewItemScreen(item: item),
+                                ),
+                              );
+                              if (result == true) _fetchItems(isRefresh: true);
+                            },
+                            onAvailabilityChanged: (available) {
+                              _toggleItemAvailability(item, available);
+                            },
+                          );
+                        },
+                      ),
                     ),
-                  ),
+            ),
           ),
         ],
       ),
@@ -217,7 +303,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
             context,
             MaterialPageRoute(builder: (context) => const AddNewItemScreen()),
           );
-          if (result == true) _fetchItems();
+          if (result == true) _fetchItems(isRefresh: true);
         },
         backgroundColor: const Color(0xFFED3A72),
         elevation: 4,
@@ -227,15 +313,16 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState({Key? key}) {
     return Center(
+      key: key,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.fastfood_outlined,
             size: 64,
-            color: const Color(0xFFCBD5E1),
+            color: Color(0xFFCBD5E1),
           ),
           const SizedBox(height: 16),
           Text(
@@ -261,8 +348,9 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
     );
   }
 
-  Widget _buildSkeletonList() {
+  Widget _buildSkeletonList({Key? key}) {
     return ListView.builder(
+      key: key,
       itemCount: 8,
       padding: const EdgeInsets.symmetric(vertical: 0),
       itemBuilder: (context, index) {

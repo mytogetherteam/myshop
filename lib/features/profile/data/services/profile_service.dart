@@ -62,7 +62,12 @@ class ProfileService {
   Future<bool> updateShopProfile(Map<String, dynamic> payload) async {
     try {
       debugPrint('PUT REQUEST: $_profilePath, Data: $payload');
-      final response = await ApiClient().dio.put(_profilePath, data: payload);
+      final formData = FormData.fromMap(payload);
+      final response = await ApiClient().dio.put(
+        _profilePath, 
+        data: formData,
+        options: Options(headers: {'Content-Type': 'multipart/form-data'}),
+      );
 
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&

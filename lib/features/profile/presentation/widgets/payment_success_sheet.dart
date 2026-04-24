@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class PaymentSuccessSheet extends StatelessWidget {
-  const PaymentSuccessSheet({super.key});
+  final VoidCallback? onDone;
+  const PaymentSuccessSheet({super.key, this.onDone});
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +52,7 @@ class PaymentSuccessSheet extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Text(
-            'Your payment method has been successfully requested. We’ll notify you once it’s approved.',
+            'Your payment method has been successfully requested. We\u2019ll notify you once it\u2019s approved.',
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 14,
@@ -66,8 +67,12 @@ class PaymentSuccessSheet extends StatelessWidget {
           height: 56,
           child: ElevatedButton(
             onPressed: () {
-              Navigator.pop(context); // Close sheet
-              Navigator.pop(context); // Go back to AcceptedPaymentPage
+              if (onDone != null) {
+                onDone!();
+              } else {
+                Navigator.pop(context); // Close sheet
+                Navigator.pop(context); // Go back to AcceptedPaymentPage
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFED3973),

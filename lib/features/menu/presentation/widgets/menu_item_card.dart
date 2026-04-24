@@ -62,7 +62,8 @@ class _MenuItemCardState extends State<MenuItemCard> {
                                 width: 72,
                                 height: 72,
                                 fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) => _buildPlaceholderImage(),
+                                errorBuilder: (context, error, stackTrace) =>
+                                    _buildPlaceholderImage(),
                               )
                             : _buildPlaceholderImage(),
                       ),
@@ -75,9 +76,15 @@ class _MenuItemCardState extends State<MenuItemCard> {
                             decoration: const BoxDecoration(
                               color: Colors.white,
                               shape: BoxShape.circle,
-                              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                              boxShadow: [
+                                BoxShadow(color: Colors.black12, blurRadius: 4),
+                              ],
                             ),
-                            child: const Icon(Icons.refresh_rounded, size: 12, color: Color(0xFFED3A72)),
+                            child: const Icon(
+                              Icons.refresh_rounded,
+                              size: 12,
+                              color: Color(0xFFED3A72),
+                            ),
                           ),
                         ),
                     ],
@@ -112,7 +119,9 @@ class _MenuItemCardState extends State<MenuItemCard> {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            if (widget.item.originalPrice != null && widget.item.originalPrice! > widget.item.price) ...[
+                            if (widget.item.originalPrice != null &&
+                                widget.item.originalPrice! >
+                                    widget.item.price) ...[
                               Text(
                                 '${widget.item.originalPrice!.toInt()} THB',
                                 style: GoogleFonts.poppins(
@@ -173,7 +182,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                 widget.onAvailabilityChanged?.call(value);
               },
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              activeColor: Colors.white,
+              activeThumbColor: Colors.white,
               activeTrackColor: const Color(0xFF22C55E),
               inactiveThumbColor: Colors.white,
               inactiveTrackColor: const Color(0xFFE2E8F0),

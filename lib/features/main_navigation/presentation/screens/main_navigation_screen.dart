@@ -12,7 +12,6 @@ import 'package:my_shop/features/orders/presentation/widgets/order_warning_dialo
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:my_shop/features/notifications/presentation/widgets/notification_badge_icon.dart';
-import 'package:my_shop/features/reports/presentation/screens/analytics_page.dart';
 import 'package:flutter/services.dart';
 import 'package:my_shop/core/presentation/widgets/app_bar_title_with_logo.dart';
 import 'dart:async';
@@ -28,7 +27,8 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   late int _currentIndex;
   StreamSubscription? _socketSubscription;
-  final GlobalKey<OrdersScreenState> _ordersKey = GlobalKey<OrdersScreenState>();
+  final GlobalKey<OrdersScreenState> _ordersKey =
+      GlobalKey<OrdersScreenState>();
 
   @override
   void initState() {
@@ -46,24 +46,32 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   void _setupWebSocketListener() {
     debugPrint('🚀 [MainNavigation] SETTING UP LISTENER...');
     _socketSubscription = WebSocketService().orderUpdates.listen((event) {
-      debugPrint('🔔 [MainNavigation] EVENT: ${event['type']}, MSG: ${event['message']}');
-      
+      debugPrint(
+        '🔔 [MainNavigation] EVENT: ${event['type']}, MSG: ${event['message']}',
+      );
+
       final dynamic rawOrder = event['order'];
       final dynamic rawMsg = event['message'];
       final String? msg = rawMsg?.toString();
-      
+
       if (rawOrder != null) {
         final orderData = OrderModel.fromJson(rawOrder);
-        
+
         if (mounted) {
           final String status = orderData.status.toUpperCase();
           final String? lowerMsg = msg?.toLowerCase();
-          final bool isTwoMinWarning = lowerMsg != null && (lowerMsg.contains('2 min') || lowerMsg.contains('2 မိနစ်'));
-          
-          debugPrint('🧪 [MainNavigation] LOGIC CHECK -> Status: $status, isTwoMin: $isTwoMinWarning, Msg: $msg');
+          final bool isTwoMinWarning =
+              lowerMsg != null &&
+              (lowerMsg.contains('2 min') || lowerMsg.contains('2 မိနစ်'));
+
+          debugPrint(
+            '🧪 [MainNavigation] LOGIC CHECK -> Status: $status, isTwoMin: $isTwoMinWarning, Msg: $msg',
+          );
 
           if (isTwoMinWarning) {
-            debugPrint('⚠️ [MainNavigation] TRIGGERING OrderWarningDialog (2-min alert)');
+            debugPrint(
+              '⚠️ [MainNavigation] TRIGGERING OrderWarningDialog (2-min alert)',
+            );
             HapticFeedback.vibrate();
             showDialog(
               context: context,
@@ -77,7 +85,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 },
               ),
             );
-          } else if (status == 'PENDING' || status == 'NEW' || event['type'] == 'NEW_ORDER') {
+          } else if (status == 'PENDING' ||
+              status == 'NEW' ||
+              event['type'] == 'NEW_ORDER') {
             debugPrint('📦 [MainNavigation] TRIGGERING NewOrderDialog');
             HapticFeedback.heavyImpact();
             showDialog(
@@ -93,7 +103,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             );
           } else if (msg != null && msg.trim().isNotEmpty) {
             // Generic warning for other status updates with messages
-            debugPrint('⚠️ [MainNavigation] TRIGGERING OrderWarningDialog (Generic message)');
+            debugPrint(
+              '⚠️ [MainNavigation] TRIGGERING OrderWarningDialog (Generic message)',
+            );
             HapticFeedback.vibrate();
             showDialog(
               context: context,
@@ -115,7 +127,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   Future<void> _navigateToOrderDetail(OrderModel order) async {
     final routeName = 'order_detail_${order.id}';
-    
+
     // Check if we are already viewing this order
     bool isAlreadyOnThisOrder = false;
     Navigator.popUntil(context, (route) {
@@ -134,13 +146,20 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       context,
       PageRouteBuilder(
         settings: RouteSettings(name: routeName),
-        pageBuilder: (context, animation, secondaryAnimation) => OrderDetailScreen(order: order),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            OrderDetailScreen(order: order),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(1.0, 0.0);
           const end = Offset.zero;
           const curve = Curves.easeOut;
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-          return SlideTransition(position: animation.drive(tween), child: child);
+          var tween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: curve));
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
         },
         reverseTransitionDuration: Duration.zero,
       ),
@@ -175,13 +194,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        title: AppBarTitleWithLogo(
-          title: _titles[_currentIndex],
-        ),
-        actions: [
-          const NotificationBadgeIcon(),
-          const SizedBox(width: 8),
-        ],
+        title: AppBarTitleWithLogo(title: _titles[_currentIndex]),
+        actions: [const NotificationBadgeIcon(), const SizedBox(width: 8)],
       ),
       body: _pages[_currentIndex],
       bottomNavigationBar: Container(
@@ -201,7 +215,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             onTap: (index) => setState(() => _currentIndex = index),
             backgroundColor: Colors.white,
             selectedItemColor: const Color(0xFFED3A72),
-            unselectedItemColor: const Color(0xFF94A3B8), // slate-400 equivalent for generic grey
+            unselectedItemColor: const Color(
+              0xFF94A3B8,
+            ), // slate-400 equivalent for generic grey
             selectedLabelStyle: GoogleFonts.poppins(
               fontSize: 12,
               fontWeight: FontWeight.w500,
@@ -215,7 +231,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             items: [
               BottomNavigationBarItem(
                 icon: PhosphorIcon(PhosphorIconsRegular.cookingPot, size: 28),
-                activeIcon: PhosphorIcon(PhosphorIconsFill.cookingPot, size: 28),
+                activeIcon: PhosphorIcon(
+                  PhosphorIconsFill.cookingPot,
+                  size: 28,
+                ),
                 label: 'Order',
               ),
               BottomNavigationBarItem(
@@ -230,7 +249,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               ),
               BottomNavigationBarItem(
                 icon: PhosphorIcon(PhosphorIconsRegular.storefront, size: 28),
-                activeIcon: PhosphorIcon(PhosphorIconsFill.storefront, size: 28),
+                activeIcon: PhosphorIcon(
+                  PhosphorIconsFill.storefront,
+                  size: 28,
+                ),
                 label: 'Profile',
               ),
             ],

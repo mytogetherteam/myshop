@@ -34,16 +34,14 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
 
     try {
       final shops = await _shopService.getShops();
-      
+
       if (!mounted) return;
 
       if (shops.length == 1) {
         // Auto-skip logic
         Navigator.pushReplacement(
           context,
-          CupertinoPageRoute(
-            builder: (_) => AcceptedPaymentPage(shop: shops[0]),
-          ),
+          CupertinoPageRoute(builder: (_) => const AcceptedPaymentPage()),
         );
       } else {
         setState(() {
@@ -84,10 +82,10 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
       body: _isLoading
           ? const Center(child: CustomLoadingIndicator())
           : _error != null
-              ? _buildErrorState()
-              : _shops.isEmpty
-                  ? _buildEmptyState()
-                  : _buildShopList(),
+          ? _buildErrorState()
+          : _shops.isEmpty
+          ? _buildEmptyState()
+          : _buildShopList(),
     );
   }
 
@@ -98,7 +96,7 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
       child: ListView.separated(
         padding: const EdgeInsets.all(24),
         itemCount: _shops.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 16),
+        separatorBuilder: (context, index) => const SizedBox(height: 16),
         itemBuilder: (context, index) => _buildShopCard(_shops[index]),
       ),
     );
@@ -109,9 +107,7 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
       onTap: () {
         Navigator.push(
           context,
-          CupertinoPageRoute(
-            builder: (_) => AcceptedPaymentPage(shop: shop),
-          ),
+          CupertinoPageRoute(builder: (_) => const AcceptedPaymentPage()),
         );
       },
       child: Container(
@@ -143,9 +139,15 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
                     ? Image.network(
                         shop.logoUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(PhosphorIconsRegular.storefront, color: Color(0xFF64748B)),
+                        errorBuilder: (context, error, stack) => const Icon(
+                          PhosphorIconsRegular.storefront,
+                          color: Color(0xFF64748B),
+                        ),
                       )
-                    : const Icon(PhosphorIconsRegular.storefront, color: Color(0xFF64748B)),
+                    : const Icon(
+                        PhosphorIconsRegular.storefront,
+                        color: Color(0xFF64748B),
+                      ),
               ),
             ),
             const SizedBox(width: 16),
@@ -176,7 +178,11 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
                 ],
               ),
             ),
-            const Icon(PhosphorIconsRegular.caretRight, color: Color(0xFF94A3B8), size: 20),
+            const Icon(
+              PhosphorIconsRegular.caretRight,
+              color: Color(0xFF94A3B8),
+              size: 20,
+            ),
           ],
         ),
       ),
@@ -188,7 +194,11 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(PhosphorIconsRegular.storefront, size: 64, color: Colors.grey[300]),
+          Icon(
+            PhosphorIconsRegular.storefront,
+            size: 64,
+            color: Colors.grey[300],
+          ),
           const SizedBox(height: 16),
           Text(
             'No shops found',
@@ -222,9 +232,14 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
               onPressed: _loadShops,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFED3973),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-              child: Text('Retry', style: GoogleFonts.poppins(color: Colors.white)),
+              child: Text(
+                'Retry',
+                style: GoogleFonts.poppins(color: Colors.white),
+              ),
             ),
           ],
         ),

@@ -61,7 +61,7 @@ class OrderCard extends StatelessWidget {
             if (context.mounted) {
               final state = context.findAncestorStateOfType<OrdersScreenState>();
               if (state != null) {
-                state.fetchOrders();
+                state.refreshAll();
                 if (result != null && result is String) {
                   state.switchToStatus(result);
                 }

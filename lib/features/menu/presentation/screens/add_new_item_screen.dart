@@ -24,7 +24,7 @@ class AddNewItemScreen extends StatefulWidget {
 class _AddNewItemScreenState extends State<AddNewItemScreen> {
   final MenuService _menuService = MenuService();
   final _formKey = GlobalKey<FormState>();
-  
+
   // Controllers
   late final TextEditingController _nameController;
   late final TextEditingController _nameMmController;
@@ -32,19 +32,19 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   late final TextEditingController _descriptionController;
   late final TextEditingController _descriptionMmController;
   late final TextEditingController _descriptionThController;
-  
+
   late final TextEditingController _priceController;
   late final TextEditingController _originalPriceController;
   late final TextEditingController _stockQuantityController;
   late final TextEditingController _displayOrderController;
   late final TextEditingController _discountAmountController;
   late final TextEditingController _discountPercentController;
-  
+
   String _currency = 'THB';
-  
+
   List<MenuCategoryModel> _categories = [];
   MenuCategoryModel? _selectedCategory;
-  
+
   // Master Data
   List<MasterDataModel> _masterItems = [];
   MasterDataModel? _selectedMasterItem;
@@ -80,7 +80,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   String _selectedItemInfoLang = 'EN';
   final Map<int, String> _variantLangs = {};
   final Map<int, String> _addonLangs = {};
-  
+
   List<MenuComboComponentModel> _comboComponents = [];
 
   final List<String> _currencies = ['THB', 'USD', 'MMK'];
@@ -92,21 +92,35 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     _nameController = TextEditingController(text: item?.nameEn ?? '');
     _nameMmController = TextEditingController(text: item?.nameMm ?? '');
     _nameThController = TextEditingController(text: item?.nameTh ?? '');
-    
-    _descriptionController = TextEditingController(text: item?.descriptionEn ?? item?.description ?? '');
-    _descriptionMmController = TextEditingController(text: item?.descriptionMm ?? '');
-    _descriptionThController = TextEditingController(text: item?.descriptionTh ?? '');
-    
-    _priceController = TextEditingController(text: item?.price.toString() ?? '');
-    _originalPriceController = TextEditingController(text: item?.originalPrice?.toString() ?? '');
-    _stockQuantityController = TextEditingController(text: item?.stockQuantity?.toString() ?? '');
-    _displayOrderController = TextEditingController(text: item?.displayOrder?.toString() ?? '0');
-    _discountAmountController = TextEditingController(text: '0.00'); 
+
+    _descriptionController = TextEditingController(
+      text: item?.descriptionEn ?? item?.description ?? '',
+    );
+    _descriptionMmController = TextEditingController(
+      text: item?.descriptionMm ?? '',
+    );
+    _descriptionThController = TextEditingController(
+      text: item?.descriptionTh ?? '',
+    );
+
+    _priceController = TextEditingController(
+      text: item?.price.toString() ?? '',
+    );
+    _originalPriceController = TextEditingController(
+      text: item?.originalPrice?.toString() ?? '',
+    );
+    _stockQuantityController = TextEditingController(
+      text: item?.stockQuantity?.toString() ?? '',
+    );
+    _displayOrderController = TextEditingController(
+      text: item?.displayOrder?.toString() ?? '0',
+    );
+    _discountAmountController = TextEditingController(text: '0.00');
     _discountPercentController = TextEditingController(text: '0');
-    
+
     if (item?.currency != null && item!.currency!.isNotEmpty) {
       if (_currencies.contains(item.currency)) {
-         _currency = item.currency!;
+        _currency = item.currency!;
       }
     }
 
@@ -118,14 +132,14 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       _isHotDeal = item.isHotDeal;
       _isCombo = item.isCombo;
       _isAvailable = item.isAvailable;
-      
+
       _selectedTagIds = List.from(item.tagIds);
       _selectedMealTypes = List.from(item.mealTypes);
       _variants = List.from(item.variants);
       _optionGroups = List.from(item.optionGroups);
       _comboComponents = List.from(item.components);
     }
-    
+
     _fetchAllData();
   }
 
@@ -155,19 +169,25 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           if (item != null) {
             if (_categories.isNotEmpty) {
               try {
-                _selectedCategory = _categories.firstWhere((c) => c.id == item.categoryId);
+                _selectedCategory = _categories.firstWhere(
+                  (c) => c.id == item.categoryId,
+                );
               } catch (_) {
                 _selectedCategory = _categories.first;
               }
             }
             if (_masterCategories.isNotEmpty && item.masterCategoryId != null) {
               try {
-                _selectedMasterCategory = _masterCategories.firstWhere((c) => c.id == item.masterCategoryId);
+                _selectedMasterCategory = _masterCategories.firstWhere(
+                  (c) => c.id == item.masterCategoryId,
+                );
               } catch (_) {}
             }
             if (_masterItems.isNotEmpty && item.masterItemId != null) {
               try {
-                _selectedMasterItem = _masterItems.firstWhere((i) => i.id == item.masterItemId);
+                _selectedMasterItem = _masterItems.firstWhere(
+                  (i) => i.id == item.masterItemId,
+                );
               } catch (_) {}
             }
           } else if (_categories.isNotEmpty) {
@@ -201,9 +221,9 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
 
   Future<void> _handleSave() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isSaving = true);
-    
+
     final payload = {
       'nameEn': _nameController.text,
       'nameMm': _nameMmController.text,
@@ -214,7 +234,8 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       'price': double.tryParse(_priceController.text) ?? 0.0,
       'originalPrice': double.tryParse(_originalPriceController.text),
       'discountAmount': double.tryParse(_discountAmountController.text) ?? 0.0,
-      'discountPercentage': double.tryParse(_discountPercentController.text) ?? 0.0,
+      'discountPercentage':
+          double.tryParse(_discountPercentController.text) ?? 0.0,
       'currency': _currency,
       'stockQuantity': int.tryParse(_stockQuantityController.text) ?? 0,
       'displayOrder': int.tryParse(_displayOrderController.text) ?? 0,
@@ -223,7 +244,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       'masterItemId': _selectedMasterItem?.id,
       'tagIds': _selectedTagIds,
       'mealTypes': _selectedMealTypes,
-      
+
       'isAvailable': _isAvailable,
       'isPopular': _isPopular,
       'isVegetarian': _isVegetarian,
@@ -231,11 +252,13 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       'isRecommended': _isRecommended,
       'isHotDeal': _isHotDeal,
       'isCombo': _isCombo,
-      
+
       'imageUrl': widget.item?.imageUrl, // Keep existing URL if no new image
       'optionGroups': _optionGroups.map((o) => o.toJson()).toList(),
       'variants': _variants.map((v) => v.toJson()).toList(),
-      'components': _isCombo ? _comboComponents.map((c) => c.toJson()).toList() : [],
+      'components': _isCombo
+          ? _comboComponents.map((c) => c.toJson()).toList()
+          : [],
     };
 
     bool success;
@@ -245,7 +268,11 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     }
 
     if (widget.item != null) {
-      success = await _menuService.updateMenuItem(widget.item!.id, payload, image: imageFile);
+      success = await _menuService.updateMenuItem(
+        widget.item!.id,
+        payload,
+        image: imageFile,
+      );
     } else {
       success = await _menuService.createMenuItem(payload, image: imageFile);
     }
@@ -254,12 +281,18 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       setState(() => _isSaving = false);
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Item stored successfully'), backgroundColor: Color(0xFFED3A72)),
+          const SnackBar(
+            content: Text('Item stored successfully'),
+            backgroundColor: Color(0xFFED3A72),
+          ),
         );
         Navigator.pop(context, true);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to save item'), backgroundColor: Color(0xFFEF4444)),
+          const SnackBar(
+            content: Text('Failed to save item'),
+            backgroundColor: Color(0xFFEF4444),
+          ),
         );
       }
     }
@@ -290,131 +323,190 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           ),
           centerTitle: false,
         ),
-        body: _isLoadingData 
-          ? _buildSkeletonForm()
-          : SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 10),
-                    _buildImageUploadSection(),
-                    const SizedBox(height: 32),
-                    
-                    // Item Information Section
-                    _buildSectionTitle('ITEM INFORMATION'),
-                    const SizedBox(height: 16),
-                    _buildMasterItemSelection(),
-                    const SizedBox(height: 16),
-                    _buildLanguagePills(
-                      selectedLang: _selectedItemInfoLang,
-                      onChanged: (val) => setState(() => _selectedItemInfoLang = val),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildItemInfoFields(),
-                    const SizedBox(height: 16),
-                    _buildDropdownField<MasterDataModel>(
-                      label: 'Master Category',
-                      value: _selectedMasterCategory,
-                      items: _masterCategories,
-                      hint: 'Search master categories...',
-                      onChanged: (val) => setState(() => _selectedMasterCategory = val),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildDropdownField<MenuCategoryModel>(
-                      label: 'Category',
-                      value: _selectedCategory,
-                      items: _categories,
-                      hint: 'Search categories...',
-                      onChanged: (val) => setState(() => _selectedCategory = val),
-                      showClearIcon: true,
-                      onClear: () => setState(() => _selectedCategory = null),
-                    ),
-                    const SizedBox(height: 32),
-                    
-                    // Categorization Section
-                    _buildSectionTitle('CATEGORIZATION'),
-                    const SizedBox(height: 16),
-                    _buildMealTypesSelection(),
-                    const SizedBox(height: 24),
-                    _buildTagsSelection(),
-                    const SizedBox(height: 32),
-
-                    // Pricing & Stock Section
-                    _buildSectionTitle('PRICING & STOCK'),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(child: _buildTextField('Price', _priceController, hint: '0.00', keyboardType: TextInputType.number)),
-                        const SizedBox(width: 16),
-                        Expanded(child: _buildDropdownFieldStr(
-                          label: 'Currency',
-                          value: _currency,
-                          items: _currencies,
-                          onChanged: (v) => setState(() => _currency = v ?? 'THB'),
-                        )),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(child: _buildTextField('Original Price', _originalPriceController, hint: '0.00', keyboardType: TextInputType.number)),
-                        const SizedBox(width: 16),
-                        Expanded(child: _buildTextField('Stock Quantity', _stockQuantityController, hint: '100', keyboardType: TextInputType.number)),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(child: _buildTextField('Discount Amount', _discountAmountController, hint: '0.00', keyboardType: TextInputType.number)),
-                        const SizedBox(width: 16),
-                        Expanded(child: _buildTextField('Discount %', _discountPercentController, hint: '0', keyboardType: TextInputType.number)),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(child: _buildTextField('Display Order', _displayOrderController, hint: '0', keyboardType: TextInputType.number)),
-                        const SizedBox(width: 16),
-                        const Spacer(),
-                      ],
-                    ),
-                    const SizedBox(height: 32),
-                    
-                    // Properties Section
-                    _buildSectionTitle('PROPERTIES'),
-                    const SizedBox(height: 16),
-                    _buildPropertiesSection(),
-                    const SizedBox(height: 32),
-
-                    // Variants Section
-                    _buildSectionTitle('VARIANTS'),
-                    const SizedBox(height: 16),
-                    ..._variants.asMap().entries.map((entry) => _buildVariantCard(entry.value, entry.key)),
-                    _buildOutlinedButton('+ Add Variant', _addNewVariant),
-                    const SizedBox(height: 32),
-                    
-                    // Add On Section
-                    _buildSectionTitle('ADD-ONS'),
-                    const SizedBox(height: 16),
-                    ..._optionGroups.asMap().entries.map((entry) => _buildOptionGroupCard(entry.value, entry.key)),
-                    _buildOutlinedButton('+ Add Add-on', _addNewOptionGroup),
-                    
-                    if (_isCombo) ...[
+        body: _isLoadingData
+            ? _buildSkeletonForm()
+            : SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 10),
+                      _buildImageUploadSection(),
                       const SizedBox(height: 32),
-                      _buildSectionTitle('COMBO COMPONENTS'),
+
+                      // Item Information Section
+                      _buildSectionTitle('ITEM INFORMATION'),
                       const SizedBox(height: 16),
-                      ..._comboComponents.asMap().entries.map((entry) => _buildComboComponentCard(entry.value, entry.key)),
-                      _buildOutlinedButton('+ Add Component', _addNewComboComponent),
+                      _buildLanguagePills(
+                        selectedLang: _selectedItemInfoLang,
+                        onChanged: (val) =>
+                            setState(() => _selectedItemInfoLang = val),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildItemInfoFields(),
+                      const SizedBox(height: 16),
+                      _buildMasterItemSelection(),
+                      const SizedBox(height: 16),
+                      _buildDropdownField<MasterDataModel>(
+                        label: 'Master Category',
+                        value: _selectedMasterCategory,
+                        items: _masterCategories,
+                        hint: 'Search master categories...',
+                        onChanged: (val) =>
+                            setState(() => _selectedMasterCategory = val),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildDropdownField<MenuCategoryModel>(
+                        label: 'Category',
+                        value: _selectedCategory,
+                        items: _categories,
+                        hint: 'Search categories...',
+                        onChanged: (val) =>
+                            setState(() => _selectedCategory = val),
+                        showClearIcon: true,
+                        onClear: () => setState(() => _selectedCategory = null),
+                      ),
+                      const SizedBox(height: 32),
+
+                      // Categorization Section
+                      _buildSectionTitle('CATEGORIZATION'),
+                      const SizedBox(height: 16),
+                      _buildMealTypesSelection(),
+                      const SizedBox(height: 24),
+                      _buildTagsSelection(),
+                      const SizedBox(height: 32),
+
+                      // Pricing & Stock Section
+                      _buildSectionTitle('PRICING & STOCK'),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              'Price',
+                              _priceController,
+                              hint: '0.00',
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildDropdownFieldStr(
+                              label: 'Currency',
+                              value: _currency,
+                              items: _currencies,
+                              onChanged: (v) =>
+                                  setState(() => _currency = v ?? 'THB'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              'Original Price',
+                              _originalPriceController,
+                              hint: '0.00',
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildTextField(
+                              'Stock Quantity',
+                              _stockQuantityController,
+                              hint: '100',
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              'Discount Amount',
+                              _discountAmountController,
+                              hint: '0.00',
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildTextField(
+                              'Discount %',
+                              _discountPercentController,
+                              hint: '0',
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              'Display Order',
+                              _displayOrderController,
+                              hint: '0',
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          const Spacer(),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+
+                      // Properties Section
+                      _buildSectionTitle('PROPERTIES'),
+                      const SizedBox(height: 16),
+                      _buildPropertiesSection(),
+                      const SizedBox(height: 32),
+
+                      // Variants Section
+                      _buildSectionTitle('VARIANTS'),
+                      const SizedBox(height: 16),
+                      ..._variants.asMap().entries.map(
+                        (entry) => _buildVariantCard(entry.value, entry.key),
+                      ),
+                      _buildOutlinedButton('+ Add Variant', _addNewVariant),
+                      const SizedBox(height: 32),
+
+                      // Add On Section
+                      _buildSectionTitle('ADD-ONS'),
+                      const SizedBox(height: 16),
+                      ..._optionGroups.asMap().entries.map(
+                        (entry) =>
+                            _buildOptionGroupCard(entry.value, entry.key),
+                      ),
+                      _buildOutlinedButton('+ Add Add-on', _addNewOptionGroup),
+
+                      if (_isCombo) ...[
+                        const SizedBox(height: 32),
+                        _buildSectionTitle('COMBO COMPONENTS'),
+                        const SizedBox(height: 16),
+                        ..._comboComponents.asMap().entries.map(
+                          (entry) =>
+                              _buildComboComponentCard(entry.value, entry.key),
+                        ),
+                        _buildOutlinedButton(
+                          '+ Add Component',
+                          _addNewComboComponent,
+                        ),
+                      ],
+
+                      const SizedBox(height: 100), // Padding for bottom button
                     ],
-                    
-                    const SizedBox(height: 100), // Padding for bottom button
-                  ],
+                  ),
                 ),
               ),
-            ),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -435,44 +527,56 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
 
   void _addNewVariant() {
     setState(() {
-      _variants.add(MenuItemVariantModel(
-        id: 0,
-        nameEn: '',
-        price: 0.0,
-        isAvailable: true,
-        displayOrder: 0,
-      ));
+      _variants.add(
+        MenuItemVariantModel(
+          id: 0,
+          nameEn: '',
+          price: 0.0,
+          isAvailable: true,
+          displayOrder: 0,
+        ),
+      );
     });
   }
 
   void _addNewOptionGroup() {
     setState(() {
-      _optionGroups.add(MenuItemOptionGroupModel(
-        id: 0,
-        nameEn: '',
-        isRequired: false,
-        minSelection: 0,
-        maxSelection: 0,
-        displayOrder: 0,
-        options: [MenuItemOptionModel(id: 0, nameEn: '', price: 0.0, displayOrder: 0)],
-      ));
+      _optionGroups.add(
+        MenuItemOptionGroupModel(
+          id: 0,
+          nameEn: '',
+          isRequired: false,
+          minSelection: 0,
+          maxSelection: 0,
+          displayOrder: 0,
+          options: [
+            MenuItemOptionModel(id: 0, nameEn: '', price: 0.0, displayOrder: 0),
+          ],
+        ),
+      );
     });
   }
 
   void _addNewComboComponent() {
     setState(() {
-      _comboComponents.add(MenuComboComponentModel(
-        includedItemId: 0,
-        quantity: 1,
-        displayOrder: _comboComponents.length,
-      ));
+      _comboComponents.add(
+        MenuComboComponentModel(
+          includedItemId: 0,
+          quantity: 1,
+          displayOrder: _comboComponents.length,
+        ),
+      );
     });
   }
 
   void _addNewOptionToGroup(int groupIndex) {
     setState(() {
-      final opts = List<MenuItemOptionModel>.from(_optionGroups[groupIndex].options);
-      opts.add(MenuItemOptionModel(id: 0, nameEn: '', price: 0.0, displayOrder: 0));
+      final opts = List<MenuItemOptionModel>.from(
+        _optionGroups[groupIndex].options,
+      );
+      opts.add(
+        MenuItemOptionModel(id: 0, nameEn: '', price: 0.0, displayOrder: 0),
+      );
       _optionGroups[groupIndex] = MenuItemOptionGroupModel(
         id: _optionGroups[groupIndex].id,
         nameEn: _optionGroups[groupIndex].nameEn,
@@ -520,25 +624,57 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       ),
       child: Column(
         children: [
-          _buildPropertySwitch('Available', _isAvailable, (v) => setState(() => _isAvailable = v)),
+          _buildPropertySwitch(
+            'Available',
+            _isAvailable,
+            (v) => setState(() => _isAvailable = v),
+          ),
           const Divider(height: 1, color: Color(0xFFE2E8F0)),
-          _buildPropertySwitch('Popular', _isPopular, (v) => setState(() => _isPopular = v)),
+          _buildPropertySwitch(
+            'Popular',
+            _isPopular,
+            (v) => setState(() => _isPopular = v),
+          ),
           const Divider(height: 1, color: Color(0xFFE2E8F0)),
-          _buildPropertySwitch('Recommended', _isRecommended, (v) => setState(() => _isRecommended = v)),
+          _buildPropertySwitch(
+            'Recommended',
+            _isRecommended,
+            (v) => setState(() => _isRecommended = v),
+          ),
           const Divider(height: 1, color: Color(0xFFE2E8F0)),
-          _buildPropertySwitch('Combo Set', _isCombo, (v) => setState(() => _isCombo = v)),
+          _buildPropertySwitch(
+            'Combo Set',
+            _isCombo,
+            (v) => setState(() => _isCombo = v),
+          ),
           const Divider(height: 1, color: Color(0xFFE2E8F0)),
-          _buildPropertySwitch('Vegetarian', _isVegetarian, (v) => setState(() => _isVegetarian = v)),
+          _buildPropertySwitch(
+            'Vegetarian',
+            _isVegetarian,
+            (v) => setState(() => _isVegetarian = v),
+          ),
           const Divider(height: 1, color: Color(0xFFE2E8F0)),
-          _buildPropertySwitch('Spicy', _isSpicy, (v) => setState(() => _isSpicy = v)),
+          _buildPropertySwitch(
+            'Spicy',
+            _isSpicy,
+            (v) => setState(() => _isSpicy = v),
+          ),
           const Divider(height: 1, color: Color(0xFFE2E8F0)),
-          _buildPropertySwitch('Hot Deal', _isHotDeal, (v) => setState(() => _isHotDeal = v)),
+          _buildPropertySwitch(
+            'Hot Deal',
+            _isHotDeal,
+            (v) => setState(() => _isHotDeal = v),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildPropertySwitch(String label, bool value, ValueChanged<bool> onChanged) {
+  Widget _buildPropertySwitch(
+    String label,
+    bool value,
+    ValueChanged<bool> onChanged,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
@@ -555,7 +691,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: const Color(0xFFED3A72),
+            activeThumbColor: const Color(0xFFED3A72),
             activeTrackColor: const Color(0xFFED3A72).withValues(alpha: 0.2),
           ),
         ],
@@ -576,17 +712,29 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       nameCtrl = _nameController;
       descCtrl = _descriptionController;
     }
-    
+
     return Column(
       children: [
-        _buildTextField('Item Name ($_selectedItemInfoLang)', nameCtrl, hint: 'Enter item name'),
+        _buildTextField(
+          'Item Name ($_selectedItemInfoLang)',
+          nameCtrl,
+          hint: 'Enter item name',
+        ),
         const SizedBox(height: 16),
-        _buildTextField('Description ($_selectedItemInfoLang)', descCtrl, hint: 'Enter description', isMultiline: true),
+        _buildTextField(
+          'Description ($_selectedItemInfoLang)',
+          descCtrl,
+          hint: 'Enter description',
+          isMultiline: true,
+        ),
       ],
     );
   }
 
-  Widget _buildLanguagePills({required String selectedLang, required ValueChanged<String> onChanged}) {
+  Widget _buildLanguagePills({
+    required String selectedLang,
+    required ValueChanged<String> onChanged,
+  }) {
     final languages = ['EN', 'MM', 'TH'];
     return Row(
       children: languages.map((lang) {
@@ -602,7 +750,9 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                 color: isSelected ? const Color(0xFFED3973) : Colors.white,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: isSelected ? Colors.transparent : const Color(0xFFE2E8F0),
+                  color: isSelected
+                      ? Colors.transparent
+                      : const Color(0xFFE2E8F0),
                 ),
               ),
               child: Text(
@@ -622,9 +772,11 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
 
   Widget _buildVariantCard(MenuItemVariantModel variant, int index) {
     final lang = _variantLangs[index] ?? 'EN';
-    
+
     final nameCtrl = TextEditingController(
-      text: lang == 'MM' ? variant.nameMm : (lang == 'TH' ? variant.nameTh : variant.nameEn)
+      text: lang == 'MM'
+          ? variant.nameMm
+          : (lang == 'TH' ? variant.nameTh : variant.nameEn),
     );
     final priceCtrl = TextEditingController(text: variant.price.toString());
 
@@ -643,9 +795,20 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Variant #${index + 1}', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
+                Text(
+                  'Variant #${index + 1}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1E293B),
+                  ),
+                ),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 20),
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    color: Color(0xFFEF4444),
+                    size: 20,
+                  ),
                   onPressed: () => setState(() => _variants.removeAt(index)),
                 ),
               ],
@@ -658,66 +821,104 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               children: [
                 _buildLanguagePills(
                   selectedLang: lang,
-                  onChanged: (val) => setState(() => _variantLangs[index] = val),
+                  onChanged: (val) =>
+                      setState(() => _variantLangs[index] = val),
                 ),
                 const SizedBox(height: 16),
-                _buildTextField('Variant Name ($lang)', nameCtrl, onChanged: (v) {
-                  _variants[index] = MenuItemVariantModel(
-                    id: variant.id, price: variant.price,
-                    nameEn: lang == 'EN' ? v : variant.nameEn,
-                    nameMm: lang == 'MM' ? v : variant.nameMm,
-                    nameTh: lang == 'TH' ? v : variant.nameTh,
-                    isAvailable: variant.isAvailable,
-                    displayOrder: variant.displayOrder,
-                  );
-                }),
+                _buildTextField(
+                  'Variant Name ($lang)',
+                  nameCtrl,
+                  onChanged: (v) {
+                    _variants[index] = MenuItemVariantModel(
+                      id: variant.id,
+                      price: variant.price,
+                      nameEn: lang == 'EN' ? v : variant.nameEn,
+                      nameMm: lang == 'MM' ? v : variant.nameMm,
+                      nameTh: lang == 'TH' ? v : variant.nameTh,
+                      isAvailable: variant.isAvailable,
+                      displayOrder: variant.displayOrder,
+                    );
+                  },
+                ),
                 const SizedBox(height: 16),
-                _buildTextField('Price', priceCtrl, keyboardType: TextInputType.number, onChanged: (v) {
-                  _variants[index] = MenuItemVariantModel(
-                    id: variant.id, price: double.tryParse(v) ?? 0.0,
-                    nameEn: variant.nameEn, nameMm: variant.nameMm, nameTh: variant.nameTh,
-                    isAvailable: variant.isAvailable,
-                    displayOrder: variant.displayOrder,
-                  );
-                }),
+                _buildTextField(
+                  'Price',
+                  priceCtrl,
+                  keyboardType: TextInputType.number,
+                  onChanged: (v) {
+                    _variants[index] = MenuItemVariantModel(
+                      id: variant.id,
+                      price: double.tryParse(v) ?? 0.0,
+                      nameEn: variant.nameEn,
+                      nameMm: variant.nameMm,
+                      nameTh: variant.nameTh,
+                      isAvailable: variant.isAvailable,
+                      displayOrder: variant.displayOrder,
+                    );
+                  },
+                ),
                 const SizedBox(height: 16),
-                _buildTextField('Display Order', TextEditingController(text: variant.displayOrder?.toString() ?? '0'), keyboardType: TextInputType.number, onChanged: (v) {
-                  _variants[index] = MenuItemVariantModel(
-                    id: variant.id, price: variant.price,
-                    nameEn: variant.nameEn, nameMm: variant.nameMm, nameTh: variant.nameTh,
-                    isAvailable: variant.isAvailable,
-                    displayOrder: int.tryParse(v) ?? 0,
-                  );
-                }),
+                _buildTextField(
+                  'Display Order',
+                  TextEditingController(
+                    text: variant.displayOrder?.toString() ?? '0',
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (v) {
+                    _variants[index] = MenuItemVariantModel(
+                      id: variant.id,
+                      price: variant.price,
+                      nameEn: variant.nameEn,
+                      nameMm: variant.nameMm,
+                      nameTh: variant.nameTh,
+                      isAvailable: variant.isAvailable,
+                      displayOrder: int.tryParse(v) ?? 0,
+                    );
+                  },
+                ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Text('Available', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
+                    Text(
+                      'Available',
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1E293B),
+                      ),
+                    ),
                     const Spacer(),
                     Switch(
                       value: variant.isAvailable,
                       onChanged: (v) {
                         setState(() {
                           _variants[index] = MenuItemVariantModel(
-                            id: variant.id, price: variant.price,
-                            nameEn: variant.nameEn, nameMm: variant.nameMm, nameTh: variant.nameTh,
-                            isAvailable: v, displayOrder: variant.displayOrder,
+                            id: variant.id,
+                            price: variant.price,
+                            nameEn: variant.nameEn,
+                            nameMm: variant.nameMm,
+                            nameTh: variant.nameTh,
+                            isAvailable: v,
+                            displayOrder: variant.displayOrder,
                           );
                         });
                       },
-                      activeColor: const Color(0xFFED3A72),
+                      activeThumbColor: const Color(0xFFED3A72),
                     ),
                   ],
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildComboComponentCard(MenuComboComponentModel component, int index) {
+  Widget _buildComboComponentCard(
+    MenuComboComponentModel component,
+    int index,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -731,39 +932,65 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Component #${index + 1}', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600)),
+              Text(
+                'Component #${index + 1}',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               IconButton(
-                icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 20),
-                onPressed: () => setState(() => _comboComponents.removeAt(index)),
+                icon: const Icon(
+                  Icons.delete_outline,
+                  color: Color(0xFFEF4444),
+                  size: 20,
+                ),
+                onPressed: () =>
+                    setState(() => _comboComponents.removeAt(index)),
               ),
             ],
           ),
-          _buildTextField('Quantity', TextEditingController(text: component.quantity.toString()), keyboardType: TextInputType.number, onChanged: (v) {
-            _comboComponents[index] = MenuComboComponentModel(
-              includedItemId: component.includedItemId,
-              quantity: int.tryParse(v) ?? 1,
-              displayOrder: component.displayOrder,
-              itemNameEn: component.itemNameEn,
-            );
-          }),
+          _buildTextField(
+            'Quantity',
+            TextEditingController(text: component.quantity.toString()),
+            keyboardType: TextInputType.number,
+            onChanged: (v) {
+              _comboComponents[index] = MenuComboComponentModel(
+                includedItemId: component.includedItemId,
+                quantity: int.tryParse(v) ?? 1,
+                displayOrder: component.displayOrder,
+                itemNameEn: component.itemNameEn,
+              );
+            },
+          ),
           const SizedBox(height: 16),
-          _buildTextField('Item ID', TextEditingController(text: component.includedItemId?.toString() ?? ''), keyboardType: TextInputType.number, onChanged: (v) {
-            _comboComponents[index] = MenuComboComponentModel(
-              includedItemId: int.tryParse(v) ?? 0,
-              quantity: component.quantity,
-              displayOrder: component.displayOrder,
-              itemNameEn: component.itemNameEn,
-            );
-          }),
+          _buildTextField(
+            'Item ID',
+            TextEditingController(
+              text: component.includedItemId?.toString() ?? '',
+            ),
+            keyboardType: TextInputType.number,
+            onChanged: (v) {
+              _comboComponents[index] = MenuComboComponentModel(
+                includedItemId: int.tryParse(v) ?? 0,
+                quantity: component.quantity,
+                displayOrder: component.displayOrder,
+                itemNameEn: component.itemNameEn,
+              );
+            },
+          ),
         ],
       ),
     );
   }
+
   Widget _buildOptionGroupCard(MenuItemOptionGroupModel group, int index) {
     final lang = _addonLangs[index] ?? 'EN';
-    
+
     final groupNameCtrl = TextEditingController(
-      text: lang == 'MM' ? group.nameMm : (lang == 'TH' ? group.nameTh : group.nameEn)
+      text: lang == 'MM'
+          ? group.nameMm
+          : (lang == 'TH' ? group.nameTh : group.nameEn),
     );
 
     return Container(
@@ -781,11 +1008,22 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Add-on: ${group.displayName.isEmpty ? "New Add-on" : group.displayName}', 
-                  style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
+                Text(
+                  'Add-on: ${group.displayName.isEmpty ? "New Add-on" : group.displayName}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1E293B),
+                  ),
+                ),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 20),
-                  onPressed: () => setState(() => _optionGroups.removeAt(index)),
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    color: Color(0xFFEF4444),
+                    size: 20,
+                  ),
+                  onPressed: () =>
+                      setState(() => _optionGroups.removeAt(index)),
                 ),
               ],
             ),
@@ -800,20 +1038,24 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   onChanged: (val) => setState(() => _addonLangs[index] = val),
                 ),
                 const SizedBox(height: 16),
-                _buildTextField('Add-on Name ($lang)', groupNameCtrl, onChanged: (v) {
-                  _optionGroups[index] = MenuItemOptionGroupModel(
-                    id: group.id,
-                    nameEn: lang == 'EN' ? v : group.nameEn,
-                    nameMm: lang == 'MM' ? v : group.nameMm,
-                    nameTh: lang == 'TH' ? v : group.nameTh,
-                    isRequired: group.isRequired,
-                    minSelection: group.minSelection,
-                    maxSelection: group.maxSelection,
-                    displayOrder: group.displayOrder,
-                    groupType: group.groupType,
-                    options: group.options,
-                  );
-                }),
+                _buildTextField(
+                  'Add-on Name ($lang)',
+                  groupNameCtrl,
+                  onChanged: (v) {
+                    _optionGroups[index] = MenuItemOptionGroupModel(
+                      id: group.id,
+                      nameEn: lang == 'EN' ? v : group.nameEn,
+                      nameMm: lang == 'MM' ? v : group.nameMm,
+                      nameTh: lang == 'TH' ? v : group.nameTh,
+                      isRequired: group.isRequired,
+                      minSelection: group.minSelection,
+                      maxSelection: group.maxSelection,
+                      displayOrder: group.displayOrder,
+                      groupType: group.groupType,
+                      options: group.options,
+                    );
+                  },
+                ),
                 const SizedBox(height: 16),
                 _buildDropdownFieldStr(
                   label: 'Group Type',
@@ -840,27 +1082,51 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: _buildTextField('Min Selection', TextEditingController(text: group.minSelection?.toString() ?? '0'), keyboardType: TextInputType.number, onChanged: (v) {
-                        _optionGroups[index] = MenuItemOptionGroupModel(
-                          id: group.id, nameEn: group.nameEn, nameMm: group.nameMm, nameTh: group.nameTh,
-                          isRequired: group.isRequired, minSelection: int.tryParse(v) ?? 0,
-                          maxSelection: group.maxSelection, displayOrder: group.displayOrder, 
-                          groupType: group.groupType,
-                          options: group.options,
-                        );
-                      }),
+                      child: _buildTextField(
+                        'Min Selection',
+                        TextEditingController(
+                          text: group.minSelection?.toString() ?? '0',
+                        ),
+                        keyboardType: TextInputType.number,
+                        onChanged: (v) {
+                          _optionGroups[index] = MenuItemOptionGroupModel(
+                            id: group.id,
+                            nameEn: group.nameEn,
+                            nameMm: group.nameMm,
+                            nameTh: group.nameTh,
+                            isRequired: group.isRequired,
+                            minSelection: int.tryParse(v) ?? 0,
+                            maxSelection: group.maxSelection,
+                            displayOrder: group.displayOrder,
+                            groupType: group.groupType,
+                            options: group.options,
+                          );
+                        },
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: _buildTextField('Max Selection', TextEditingController(text: group.maxSelection?.toString() ?? '0'), keyboardType: TextInputType.number, onChanged: (v) {
-                        _optionGroups[index] = MenuItemOptionGroupModel(
-                          id: group.id, nameEn: group.nameEn, nameMm: group.nameMm, nameTh: group.nameTh,
-                          isRequired: group.isRequired, minSelection: group.minSelection,
-                          maxSelection: int.tryParse(v) ?? 0, displayOrder: group.displayOrder, 
-                          groupType: group.groupType,
-                          options: group.options,
-                        );
-                      }),
+                      child: _buildTextField(
+                        'Max Selection',
+                        TextEditingController(
+                          text: group.maxSelection?.toString() ?? '0',
+                        ),
+                        keyboardType: TextInputType.number,
+                        onChanged: (v) {
+                          _optionGroups[index] = MenuItemOptionGroupModel(
+                            id: group.id,
+                            nameEn: group.nameEn,
+                            nameMm: group.nameMm,
+                            nameTh: group.nameTh,
+                            isRequired: group.isRequired,
+                            minSelection: group.minSelection,
+                            maxSelection: int.tryParse(v) ?? 0,
+                            displayOrder: group.displayOrder,
+                            groupType: group.groupType,
+                            options: group.options,
+                          );
+                        },
+                      ),
                     ),
                   ],
                 ),
@@ -868,37 +1134,61 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: _buildTextField('Display Order', TextEditingController(text: group.displayOrder?.toString() ?? '0'), keyboardType: TextInputType.number, onChanged: (v) {
-                        _optionGroups[index] = MenuItemOptionGroupModel(
-                          id: group.id, nameEn: group.nameEn, nameMm: group.nameMm, nameTh: group.nameTh,
-                          isRequired: group.isRequired, minSelection: group.minSelection,
-                          maxSelection: group.maxSelection, displayOrder: int.tryParse(v) ?? 0, 
-                          groupType: group.groupType,
-                          options: group.options,
-                        );
-                      }),
+                      child: _buildTextField(
+                        'Display Order',
+                        TextEditingController(
+                          text: group.displayOrder?.toString() ?? '0',
+                        ),
+                        keyboardType: TextInputType.number,
+                        onChanged: (v) {
+                          _optionGroups[index] = MenuItemOptionGroupModel(
+                            id: group.id,
+                            nameEn: group.nameEn,
+                            nameMm: group.nameMm,
+                            nameTh: group.nameTh,
+                            isRequired: group.isRequired,
+                            minSelection: group.minSelection,
+                            maxSelection: group.maxSelection,
+                            displayOrder: int.tryParse(v) ?? 0,
+                            groupType: group.groupType,
+                            options: group.options,
+                          );
+                        },
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Required', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
+                          Text(
+                            'Required',
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF1E293B),
+                            ),
+                          ),
                           const SizedBox(height: 4),
                           Switch(
                             value: group.isRequired,
                             onChanged: (v) {
                               setState(() {
                                 _optionGroups[index] = MenuItemOptionGroupModel(
-                                  id: group.id, nameEn: group.nameEn, nameMm: group.nameMm, nameTh: group.nameTh,
-                                  isRequired: v, minSelection: group.minSelection,
-                                  maxSelection: group.maxSelection, displayOrder: group.displayOrder, 
+                                  id: group.id,
+                                  nameEn: group.nameEn,
+                                  nameMm: group.nameMm,
+                                  nameTh: group.nameTh,
+                                  isRequired: v,
+                                  minSelection: group.minSelection,
+                                  maxSelection: group.maxSelection,
+                                  displayOrder: group.displayOrder,
                                   groupType: group.groupType,
                                   options: group.options,
                                 );
                               });
                             },
-                            activeColor: const Color(0xFFED3A72),
+                            activeThumbColor: const Color(0xFFED3A72),
                           ),
                         ],
                       ),
@@ -908,90 +1198,166 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                 const SizedBox(height: 16),
                 const SizedBox(height: 16),
                 ...group.options.asMap().entries.map((optEntry) {
-                   final opt = optEntry.value;
-                   final oIndex = optEntry.key;
-                   
-                   final optNameCtrl = TextEditingController(
-                     text: lang == 'MM' ? opt.nameMm : (lang == 'TH' ? opt.nameTh : opt.nameEn)
-                   );
-                   final optPriceCtrl = TextEditingController(text: opt.price.toString());
-                   return Column(
-                     children: [
-                       if (oIndex > 0) const Divider(height: 24, color: Color(0xFFE2E8F0)),
-                       if (group.options.length > 1) 
-                         _buildTextField('Option Name ($lang)', optNameCtrl, onChanged: (v) {
-                            final newOpts = List<MenuItemOptionModel>.from(group.options);
+                  final opt = optEntry.value;
+                  final oIndex = optEntry.key;
+
+                  final optNameCtrl = TextEditingController(
+                    text: lang == 'MM'
+                        ? opt.nameMm
+                        : (lang == 'TH' ? opt.nameTh : opt.nameEn),
+                  );
+                  final optPriceCtrl = TextEditingController(
+                    text: opt.price.toString(),
+                  );
+                  return Column(
+                    children: [
+                      if (oIndex > 0)
+                        const Divider(height: 24, color: Color(0xFFE2E8F0)),
+                      if (group.options.length > 1)
+                        _buildTextField(
+                          'Option Name ($lang)',
+                          optNameCtrl,
+                          onChanged: (v) {
+                            final newOpts = List<MenuItemOptionModel>.from(
+                              group.options,
+                            );
                             newOpts[oIndex] = MenuItemOptionModel(
-                              id: opt.id, price: opt.price,
+                              id: opt.id,
+                              price: opt.price,
                               nameEn: lang == 'EN' ? v : opt.nameEn,
                               nameMm: lang == 'MM' ? v : opt.nameMm,
                               nameTh: lang == 'TH' ? v : opt.nameTh,
                             );
-                             _optionGroups[index] = MenuItemOptionGroupModel(
-                               id: group.id, nameEn: group.nameEn, nameMm: group.nameMm, nameTh: group.nameTh,
-                               isRequired: group.isRequired, minSelection: group.minSelection,
-                               maxSelection: group.maxSelection, displayOrder: group.displayOrder,
-                               options: newOpts,
-                             );
-                         }),
-                       if (group.options.length > 1) const SizedBox(height: 16),
-                        _buildTextField('Price', optPriceCtrl, keyboardType: TextInputType.number, onChanged: (v) {
-                           final newOpts = List<MenuItemOptionModel>.from(group.options);
-                           newOpts[oIndex] = MenuItemOptionModel(
-                             id: opt.id, price: double.tryParse(v) ?? 0.0,
-                             nameEn: opt.nameEn, nameMm: opt.nameMm, nameTh: opt.nameTh,
-                             displayOrder: opt.displayOrder, linkedMenuItemId: opt.linkedMenuItemId,
-                           );
-                           _optionGroups[index] = MenuItemOptionGroupModel(
-                             id: group.id, nameEn: group.nameEn, nameMm: group.nameMm, nameTh: group.nameTh,
-                             isRequired: group.isRequired, minSelection: group.minSelection,
-                             maxSelection: group.maxSelection, displayOrder: group.displayOrder,
-                             options: newOpts,
-                           );
-                        }),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildTextField('Display Order', TextEditingController(text: opt.displayOrder?.toString() ?? '0'), keyboardType: TextInputType.number, onChanged: (v) {
-                                final newOpts = List<MenuItemOptionModel>.from(group.options);
-                                newOpts[oIndex] = MenuItemOptionModel(
-                                  id: opt.id, price: opt.price, nameEn: opt.nameEn, nameMm: opt.nameMm, nameTh: opt.nameTh,
-                                  displayOrder: int.tryParse(v) ?? 0, linkedMenuItemId: opt.linkedMenuItemId,
-                                );
-                                _optionGroups[index] = MenuItemOptionGroupModel(
-                                  id: group.id, nameEn: group.nameEn, nameMm: group.nameMm, nameTh: group.nameTh,
-                                  isRequired: group.isRequired, minSelection: group.minSelection,
-                                  maxSelection: group.maxSelection, displayOrder: group.displayOrder, options: newOpts,
-                                );
-                              }),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: _buildTextField('Linked Item ID', TextEditingController(text: opt.linkedMenuItemId?.toString() ?? ''), keyboardType: TextInputType.number, onChanged: (v) {
-                                final newOpts = List<MenuItemOptionModel>.from(group.options);
-                                newOpts[oIndex] = MenuItemOptionModel(
-                                  id: opt.id, price: opt.price, nameEn: opt.nameEn, nameMm: opt.nameMm, nameTh: opt.nameTh,
-                                  displayOrder: opt.displayOrder, linkedMenuItemId: int.tryParse(v),
-                                );
-                                _optionGroups[index] = MenuItemOptionGroupModel(
-                                  id: group.id, nameEn: group.nameEn, nameMm: group.nameMm, nameTh: group.nameTh,
-                                  isRequired: group.isRequired, minSelection: group.minSelection,
-                                  maxSelection: group.maxSelection, displayOrder: group.displayOrder, options: newOpts,
-                                );
-                              }),
-                            ),
-                          ],
+                            _optionGroups[index] = MenuItemOptionGroupModel(
+                              id: group.id,
+                              nameEn: group.nameEn,
+                              nameMm: group.nameMm,
+                              nameTh: group.nameTh,
+                              isRequired: group.isRequired,
+                              minSelection: group.minSelection,
+                              maxSelection: group.maxSelection,
+                              displayOrder: group.displayOrder,
+                              options: newOpts,
+                            );
+                          },
                         ),
-                     ],
-                   );
+                      if (group.options.length > 1) const SizedBox(height: 16),
+                      _buildTextField(
+                        'Price',
+                        optPriceCtrl,
+                        keyboardType: TextInputType.number,
+                        onChanged: (v) {
+                          final newOpts = List<MenuItemOptionModel>.from(
+                            group.options,
+                          );
+                          newOpts[oIndex] = MenuItemOptionModel(
+                            id: opt.id,
+                            price: double.tryParse(v) ?? 0.0,
+                            nameEn: opt.nameEn,
+                            nameMm: opt.nameMm,
+                            nameTh: opt.nameTh,
+                            displayOrder: opt.displayOrder,
+                            linkedMenuItemId: opt.linkedMenuItemId,
+                          );
+                          _optionGroups[index] = MenuItemOptionGroupModel(
+                            id: group.id,
+                            nameEn: group.nameEn,
+                            nameMm: group.nameMm,
+                            nameTh: group.nameTh,
+                            isRequired: group.isRequired,
+                            minSelection: group.minSelection,
+                            maxSelection: group.maxSelection,
+                            displayOrder: group.displayOrder,
+                            options: newOpts,
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              'Display Order',
+                              TextEditingController(
+                                text: opt.displayOrder?.toString() ?? '0',
+                              ),
+                              keyboardType: TextInputType.number,
+                              onChanged: (v) {
+                                final newOpts = List<MenuItemOptionModel>.from(
+                                  group.options,
+                                );
+                                newOpts[oIndex] = MenuItemOptionModel(
+                                  id: opt.id,
+                                  price: opt.price,
+                                  nameEn: opt.nameEn,
+                                  nameMm: opt.nameMm,
+                                  nameTh: opt.nameTh,
+                                  displayOrder: int.tryParse(v) ?? 0,
+                                  linkedMenuItemId: opt.linkedMenuItemId,
+                                );
+                                _optionGroups[index] = MenuItemOptionGroupModel(
+                                  id: group.id,
+                                  nameEn: group.nameEn,
+                                  nameMm: group.nameMm,
+                                  nameTh: group.nameTh,
+                                  isRequired: group.isRequired,
+                                  minSelection: group.minSelection,
+                                  maxSelection: group.maxSelection,
+                                  displayOrder: group.displayOrder,
+                                  options: newOpts,
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildTextField(
+                              'Linked Item ID',
+                              TextEditingController(
+                                text: opt.linkedMenuItemId?.toString() ?? '',
+                              ),
+                              keyboardType: TextInputType.number,
+                              onChanged: (v) {
+                                final newOpts = List<MenuItemOptionModel>.from(
+                                  group.options,
+                                );
+                                newOpts[oIndex] = MenuItemOptionModel(
+                                  id: opt.id,
+                                  price: opt.price,
+                                  nameEn: opt.nameEn,
+                                  nameMm: opt.nameMm,
+                                  nameTh: opt.nameTh,
+                                  displayOrder: opt.displayOrder,
+                                  linkedMenuItemId: int.tryParse(v),
+                                );
+                                _optionGroups[index] = MenuItemOptionGroupModel(
+                                  id: group.id,
+                                  nameEn: group.nameEn,
+                                  nameMm: group.nameMm,
+                                  nameTh: group.nameTh,
+                                  isRequired: group.isRequired,
+                                  minSelection: group.minSelection,
+                                  maxSelection: group.maxSelection,
+                                  displayOrder: group.displayOrder,
+                                  options: newOpts,
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
                 }).toList(),
                 const SizedBox(height: 16),
-                const Divider(height: 24, color: Color(0xFFFEE2E2)), 
-                _buildOutlinedButton('+ Add Item', () => _addNewOptionToGroup(index)),
+                const Divider(height: 24, color: Color(0xFFFEE2E2)),
+                _buildOutlinedButton(
+                  '+ Add Item',
+                  () => _addNewOptionToGroup(index),
+                ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -1008,7 +1374,11 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       children: [
         Text(
           label,
-          style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF1E293B),
+          ),
         ),
         const SizedBox(height: 8),
         Container(
@@ -1022,7 +1392,17 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             child: DropdownButton<String>(
               value: value,
               isExpanded: true,
-              items: items.map((item) => DropdownMenuItem(value: item, child: Text(item, style: GoogleFonts.poppins(fontSize: 14)))).toList(),
+              items: items
+                  .map(
+                    (item) => DropdownMenuItem(
+                      value: item,
+                      child: Text(
+                        item,
+                        style: GoogleFonts.poppins(fontSize: 14),
+                      ),
+                    ),
+                  )
+                  .toList(),
               onChanged: onChanged,
             ),
           ),
@@ -1045,7 +1425,11 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       children: [
         Text(
           label,
-          style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF1E293B),
+          ),
         ),
         const SizedBox(height: 8),
         Container(
@@ -1062,15 +1446,27 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   child: DropdownButton<T>(
                     value: value,
                     isExpanded: true,
-                    icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF94A3B8)),
-                    hint: Text(hint, style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13)),
+                    icon: const Icon(
+                      Icons.keyboard_arrow_down,
+                      color: Color(0xFF94A3B8),
+                    ),
+                    hint: Text(
+                      hint,
+                      style: GoogleFonts.poppins(
+                        color: const Color(0xFF94A3B8),
+                        fontSize: 13,
+                      ),
+                    ),
                     items: items.map((item) {
                       String name = '';
                       if (item is MasterDataModel) name = item.displayName;
                       if (item is MenuCategoryModel) name = item.displayName;
                       return DropdownMenuItem<T>(
                         value: item,
-                        child: Text(name, style: GoogleFonts.poppins(fontSize: 14)),
+                        child: Text(
+                          name,
+                          style: GoogleFonts.poppins(fontSize: 14),
+                        ),
                       );
                     }).toList(),
                     onChanged: onChanged,
@@ -1079,7 +1475,11 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               ),
               if (showClearIcon && value != null)
                 IconButton(
-                  icon: const Icon(Icons.close, size: 18, color: Color(0xFF94A3B8)),
+                  icon: const Icon(
+                    Icons.close,
+                    size: 18,
+                    color: Color(0xFF94A3B8),
+                  ),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   onPressed: onClear,
@@ -1091,7 +1491,14 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {String? hint, bool isMultiline = false, TextInputType? keyboardType, ValueChanged<String>? onChanged}) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    String? hint,
+    bool isMultiline = false,
+    TextInputType? keyboardType,
+    ValueChanged<String>? onChanged,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1112,7 +1519,10 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13),
+            hintStyle: GoogleFonts.poppins(
+              color: const Color(0xFF94A3B8),
+              fontSize: 13,
+            ),
             filled: true,
             fillColor: Colors.white,
             border: OutlineInputBorder(
@@ -1130,7 +1540,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             contentPadding: const EdgeInsets.all(16),
           ),
           validator: (value) {
-            return null; 
+            return null;
           },
         ),
       ],
@@ -1147,12 +1557,36 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           spacing: 8,
           runSpacing: 10,
           children: [
-            _buildCustomChip(label: 'Best Seller', selected: _isPopular, onTap: () => setState(() => _isPopular = !_isPopular)),
-            _buildCustomChip(label: 'Vegetarian', selected: _isVegetarian, onTap: () => setState(() => _isVegetarian = !_isVegetarian)),
-            _buildCustomChip(label: 'Spicy', selected: _isSpicy, onTap: () => setState(() => _isSpicy = !_isSpicy)),
-            _buildCustomChip(label: 'Combo', selected: _isCombo, onTap: () => setState(() => _isCombo = !_isCombo)),
-            _buildCustomChip(label: 'Recommended', selected: _isRecommended, onTap: () => setState(() => _isRecommended = !_isRecommended)),
-            _buildCustomChip(label: 'Hot Deal', selected: _isHotDeal, onTap: () => setState(() => _isHotDeal = !_isHotDeal)),
+            _buildCustomChip(
+              label: 'Best Seller',
+              selected: _isPopular,
+              onTap: () => setState(() => _isPopular = !_isPopular),
+            ),
+            _buildCustomChip(
+              label: 'Vegetarian',
+              selected: _isVegetarian,
+              onTap: () => setState(() => _isVegetarian = !_isVegetarian),
+            ),
+            _buildCustomChip(
+              label: 'Spicy',
+              selected: _isSpicy,
+              onTap: () => setState(() => _isSpicy = !_isSpicy),
+            ),
+            _buildCustomChip(
+              label: 'Combo',
+              selected: _isCombo,
+              onTap: () => setState(() => _isCombo = !_isCombo),
+            ),
+            _buildCustomChip(
+              label: 'Recommended',
+              selected: _isRecommended,
+              onTap: () => setState(() => _isRecommended = !_isRecommended),
+            ),
+            _buildCustomChip(
+              label: 'Hot Deal',
+              selected: _isHotDeal,
+              onTap: () => setState(() => _isHotDeal = !_isHotDeal),
+            ),
             ..._menuTags.map((tag) {
               final isSelected = _selectedTagIds.contains(tag.id);
               return _buildCustomChip(
@@ -1185,30 +1619,34 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         Wrap(
           spacing: 8,
           runSpacing: 10,
-          children: _mealTypeOptions.map((type) {
-            final isSelected = _selectedMealTypes.contains(type);
-            return _buildCustomChip(
-              label: type,
-              selected: isSelected,
-              onTap: () {
-                setState(() {
-                  if (isSelected) {
-                    _selectedMealTypes.remove(type);
-                  } else {
-                    _selectedMealTypes.add(type);
-                  }
-                });
-              },
-            );
-          }).toList() + [
-            _buildCustomChip(label: 'Other', selected: false, onTap: () {}),
-          ],
+          children:
+              _mealTypeOptions.map((type) {
+                final isSelected = _selectedMealTypes.contains(type);
+                return _buildCustomChip(
+                  label: type,
+                  selected: isSelected,
+                  onTap: () {
+                    setState(() {
+                      if (isSelected) {
+                        _selectedMealTypes.remove(type);
+                      } else {
+                        _selectedMealTypes.add(type);
+                      }
+                    });
+                  },
+                );
+              }).toList() +
+              [_buildCustomChip(label: 'Other', selected: false, onTap: () {})],
         ),
       ],
     );
   }
 
-  Widget _buildCustomChip({required String label, required bool selected, required VoidCallback onTap}) {
+  Widget _buildCustomChip({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -1250,15 +1688,16 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         style: OutlinedButton.styleFrom(
           backgroundColor: const Color(0xFFFEF2F2),
           side: const BorderSide(color: Color(0xFFFEE2E2), width: 1.0),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           padding: const EdgeInsets.symmetric(vertical: 14),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (label.startsWith('+')) const Padding(
-              padding: EdgeInsets.only(right: 6),
-            ),
+            if (label.startsWith('+'))
+              const Padding(padding: EdgeInsets.only(right: 6)),
             Text(
               label,
               style: GoogleFonts.poppins(
@@ -1281,19 +1720,21 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         onPressed: _isSaving ? null : _handleSave,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFED3A72),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           elevation: 0,
         ),
-        child: _isSaving 
-          ? const CustomLoadingIndicator(size: 24, color: Colors.white)
-          : Text(
-              widget.item == null ? 'Create Item' : 'Update Item',
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
+        child: _isSaving
+            ? const CustomLoadingIndicator(size: 24, color: Colors.white)
+            : Text(
+                widget.item == null ? 'Create Item' : 'Update Item',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
               ),
-            ),
       ),
     );
   }
@@ -1309,9 +1750,9 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         decoration: BoxDecoration(
           color: const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(16),
-          border: _pickedImage == null && existingUrl == null 
-            ? Border.all(color: const Color(0xFFE2E8F0), width: 1.5) 
-            : null,
+          border: _pickedImage == null && existingUrl == null
+              ? Border.all(color: const Color(0xFFE2E8F0), width: 1.5)
+              : null,
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
@@ -1320,13 +1761,14 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             children: [
               if (_pickedImage != null)
                 kIsWeb
-                  ? Image.network(_pickedImage!.path, fit: BoxFit.cover)
-                  : Image.file(File(_pickedImage!.path), fit: BoxFit.cover)
+                    ? Image.network(_pickedImage!.path, fit: BoxFit.cover)
+                    : Image.file(File(_pickedImage!.path), fit: BoxFit.cover)
               else if (existingUrl != null && existingUrl.isNotEmpty)
                 CachedNetworkImage(
                   imageUrl: existingUrl,
                   fit: BoxFit.cover,
-                  placeholder: (context, url) => const Center(child: CustomLoadingIndicator(size: 24)),
+                  placeholder: (context, url) =>
+                      const Center(child: CustomLoadingIndicator(size: 24)),
                   errorWidget: (context, url, error) => const Icon(Icons.error),
                 )
               else
@@ -1334,13 +1776,25 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.camera_alt_outlined, color: Color(0xFFED3973), size: 32),
+                      const Icon(
+                        Icons.camera_alt_outlined,
+                        color: Color(0xFFED3973),
+                        size: 32,
+                      ),
                       const SizedBox(height: 12),
-                      Text('Tap to upload', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
+                      Text(
+                        'Tap to upload',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF1E293B),
+                        ),
+                      ),
                     ],
                   ),
                 ),
-              if (_pickedImage != null || (existingUrl != null && existingUrl.isNotEmpty))
+              if (_pickedImage != null ||
+                  (existingUrl != null && existingUrl.isNotEmpty))
                 Positioned(
                   top: 12,
                   right: 12,
@@ -1349,9 +1803,15 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                     decoration: const BoxDecoration(
                       color: Colors.white,
                       shape: BoxShape.circle,
-                      boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                      boxShadow: [
+                        BoxShadow(color: Colors.black12, blurRadius: 4),
+                      ],
                     ),
-                    child: const Icon(Icons.refresh_rounded, size: 20, color: Color(0xFFED3973)),
+                    child: const Icon(
+                      Icons.refresh_rounded,
+                      size: 20,
+                      color: Color(0xFFED3973),
+                    ),
                   ),
                 ),
             ],

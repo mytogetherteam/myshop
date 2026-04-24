@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/core/presentation/widgets/app_logo.dart';
@@ -13,7 +12,8 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
+class _LoginPageState extends State<LoginPage>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _identifierController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -28,10 +28,15 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   @override
   void initState() {
     super.initState();
-    _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
     _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
-    _slideAnim = Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.05),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
     _animController.forward();
   }
 
@@ -45,14 +50,16 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
 
   Future<void> _handleLogin() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    setState(() { _isLoading = true; });
+    setState(() {
+      _isLoading = true;
+    });
 
     try {
       final response = await AuthService.instance.login(
         usernameOrEmail: _identifierController.text.trim(),
         password: _passwordController.text,
       );
-      
+
       if (!mounted) return;
 
       if (response.success) {
@@ -65,7 +72,11 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
       if (!mounted) return;
       _showError('An unexpected error occurred: $e');
     } finally {
-      if (mounted) setState(() { _isLoading = false; });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -74,7 +85,11 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
+            const Icon(
+              Icons.error_outline_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -115,9 +130,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                     const SizedBox(height: 64),
 
                     // Logo
-                    const Center(
-                      child: AppLogo(size: 88),
-                    ),
+                    const Center(child: AppLogo(size: 88)),
 
                     const SizedBox(height: 48),
 
@@ -149,7 +162,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                       hint: 'admin@shop.com',
                       icon: Icons.person_outline_rounded,
                       validator: (v) {
-                        if (v == null || v.trim().isEmpty) return 'Please enter your username or email';
+                        if (v == null || v.trim().isEmpty) {
+                          return 'Please enter your username or email';
+                        }
                         return null;
                       },
                     ),
@@ -166,14 +181,20 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                       obscure: _obscurePassword,
                       suffixWidget: IconButton(
                         icon: Icon(
-                          _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                          _obscurePassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
                           color: Colors.grey[500],
                           size: 20,
                         ),
-                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
                       ),
                       validator: (v) {
-                        if (v == null || v.isEmpty) return 'Please enter your password';
+                        if (v == null || v.isEmpty) {
+                          return 'Please enter your password';
+                        }
                         return null;
                       },
                     ),
@@ -184,7 +205,6 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                     _buildLoginButton(),
 
                     const SizedBox(height: 24),
-
 
                     const SizedBox(height: 40),
                   ],
@@ -228,7 +248,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         suffixIcon: suffixWidget,
         filled: true,
         fillColor: Colors.grey[50],
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: Colors.grey[200]!, width: 1),
@@ -259,16 +282,23 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
       height: 54,
       child: ElevatedButton(
         onPressed: _isLoading ? null : _handleLogin,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFED3973),
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: const Color(0xFFED3973).withValues(alpha: 0.6),
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        ).copyWith(
-          overlayColor: WidgetStateProperty.all(Colors.white.withValues(alpha: 0.1)),
-        ),
+        style:
+            ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFED3973),
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: const Color(
+                0xFFED3973,
+              ).withValues(alpha: 0.6),
+              elevation: 0,
+              shadowColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ).copyWith(
+              overlayColor: WidgetStateProperty.all(
+                Colors.white.withValues(alpha: 0.1),
+              ),
+            ),
         child: _isLoading
             ? const CustomLoadingIndicator(size: 22, color: Colors.white)
             : Text(

@@ -9,7 +9,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:my_shop/core/data/services/image_upload_service.dart';
-import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/core/presentation/widgets/fullscreen_image_viewer.dart';
 import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
@@ -38,13 +37,13 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   MasterDataModel? _selectedCategory;
   MasterDataModel? _selectedSubcategory;
   MasterDataModel? _selectedCity;
-  
+
   List<MasterDataModel> _cuisineTypes = [];
-  MasterDataModel? _selectedCuisineType;
+  List<MasterDataModel> _selectedCuisineTypes = [];
 
   List<MasterDataModel> _districts = [];
   MasterDataModel? _selectedDistrict;
-  
+
   final MasterDataService _masterDataService = MasterDataService();
 
   XFile? _pickedCover;
@@ -53,8 +52,6 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   String _nameLang = 'EN';
   String _descLang = 'EN';
   String _addressLang = 'EN';
-  String _catLang = 'EN';
-  String _subCatLang = 'EN';
 
   late final TextEditingController _nameEnCtrl;
   late final TextEditingController _nameMmCtrl;
@@ -69,14 +66,14 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   late final TextEditingController _addressThCtrl;
   late final TextEditingController _districtCtrl;
   late final TextEditingController _cityCtrl;
-  
+
   late final TextEditingController _catEnCtrl;
   late final TextEditingController _catMmCtrl;
   late final TextEditingController _catThCtrl;
   late final TextEditingController _subCatEnCtrl;
   late final TextEditingController _subCatMmCtrl;
   late final TextEditingController _subCatThCtrl;
-  
+
   // New Controllers
   late final TextEditingController _maxQtyCtrl;
   late final TextEditingController _minAmountCtrl;
@@ -115,29 +112,48 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
 
   void _setSelectedMasterData() {
     if (_currentProfile == null) return;
-    
+
     try {
       if (_currentProfile!.categoryId != null) {
-        _selectedCategory = _categories.firstWhere((c) => c.id == _currentProfile!.categoryId);
+        _selectedCategory = _categories.firstWhere(
+          (c) => c.id == _currentProfile!.categoryId,
+        );
       } else if (_currentProfile!.categoryEn != null) {
-        _selectedCategory = _categories.firstWhere((c) => c.nameEn == _currentProfile!.categoryEn);
+        _selectedCategory = _categories.firstWhere(
+          (c) => c.nameEn == _currentProfile!.categoryEn,
+        );
       }
     } catch (_) {}
 
     try {
       if (_currentProfile!.subCategoryId != null) {
-        _selectedSubcategory = _subcategories.firstWhere((c) => c.id == _currentProfile!.subCategoryId);
+        _selectedSubcategory = _subcategories.firstWhere(
+          (c) => c.id == _currentProfile!.subCategoryId,
+        );
       } else if (_currentProfile!.subCategoryEn != null) {
-        _selectedSubcategory = _subcategories.firstWhere((c) => c.nameEn == _currentProfile!.subCategoryEn);
+        _selectedSubcategory = _subcategories.firstWhere(
+          (c) => c.nameEn == _currentProfile!.subCategoryEn,
+        );
       }
     } catch (_) {}
 
     try {
-      if (_currentProfile!.cityEn != null && _currentProfile!.cityEn!.isNotEmpty) {
-        _selectedCity = _cities.firstWhere((c) => c.nameEn == _currentProfile!.cityEn);
+      if (_currentProfile!.cityEn != null &&
+          _currentProfile!.cityEn!.isNotEmpty) {
+        _selectedCity = _cities.firstWhere(
+          (c) => c.nameEn == _currentProfile!.cityEn,
+        );
         if (_selectedCity != null) {
           _fetchDistricts(_selectedCity!.id);
         }
+      }
+    } catch (_) {}
+
+    try {
+      if (_currentProfile!.cuisineTypeIds.isNotEmpty) {
+        _selectedCuisineTypes = _cuisineTypes
+            .where((c) => _currentProfile!.cuisineTypeIds.contains(c.id))
+            .toList();
       }
     } catch (_) {}
   }
@@ -147,9 +163,12 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     if (mounted) {
       setState(() {
         _districts = fetched ?? [];
-        if (_currentProfile?.districtEn != null && _currentProfile!.districtEn!.isNotEmpty) {
+        if (_currentProfile?.districtEn != null &&
+            _currentProfile!.districtEn!.isNotEmpty) {
           try {
-            _selectedDistrict = _districts.firstWhere((d) => d.nameEn == _currentProfile!.districtEn);
+            _selectedDistrict = _districts.firstWhere(
+              (d) => d.nameEn == _currentProfile!.districtEn,
+            );
           } catch (_) {}
         }
       });
@@ -183,17 +202,23 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     _addressThCtrl = TextEditingController(text: p?.addressTh ?? '');
     _districtCtrl = TextEditingController(text: p?.districtEn ?? '');
     _cityCtrl = TextEditingController(text: p?.cityEn ?? '');
-    
+
     _catEnCtrl = TextEditingController(text: p?.categoryEn ?? '');
     _catMmCtrl = TextEditingController(text: p?.categoryMm ?? '');
     _catThCtrl = TextEditingController(text: p?.categoryTh ?? '');
     _subCatEnCtrl = TextEditingController(text: p?.subCategoryEn ?? '');
     _subCatMmCtrl = TextEditingController(text: p?.subCategoryMm ?? '');
     _subCatThCtrl = TextEditingController(text: p?.subCategoryTh ?? '');
-    
-    _maxQtyCtrl = TextEditingController(text: (p?.maxItemQuantityPerOrder ?? 10).toString());
-    _minAmountCtrl = TextEditingController(text: (p?.minOrderAmount ?? 0.0).toString());
-    _baseFeeCtrl = TextEditingController(text: (p?.baseDeliveryFee ?? 0.0).toString());
+
+    _maxQtyCtrl = TextEditingController(
+      text: (p?.maxItemQuantityPerOrder ?? 10).toString(),
+    );
+    _minAmountCtrl = TextEditingController(
+      text: (p?.minOrderAmount ?? 0.0).toString(),
+    );
+    _baseFeeCtrl = TextEditingController(
+      text: (p?.baseDeliveryFee ?? 0.0).toString(),
+    );
     _mapsLinkCtrl = TextEditingController(text: p?.googleMapsLink ?? '');
 
     _latitude = p?.latitude;
@@ -207,8 +232,12 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     _deliveryEnabled = p?.deliveryEnabled ?? false;
 
     _priceRange = 1;
-    if (p?.pricePreference == 'LOW') _priceRange = 0;
-    if (p?.pricePreference == 'HIGH') _priceRange = 2;
+    if (p?.pricePreference == 'LOW') {
+      _priceRange = 0;
+    }
+    if (p?.pricePreference == 'HIGH') {
+      _priceRange = 2;
+    }
   }
 
   Future<void> _loadProfile() async {
@@ -252,7 +281,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     _minAmountCtrl.text = p.minOrderAmount.toString();
     _baseFeeCtrl.text = p.baseDeliveryFee.toString();
     _mapsLinkCtrl.text = p.googleMapsLink ?? '';
-    
+
     _latitude = p.latitude;
     _longitude = p.longitude;
     _hasParking = p.hasParking;
@@ -261,10 +290,14 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     _isHalal = p.isHalal;
     _isVegetarian = p.isVegetarian;
     _deliveryEnabled = p.deliveryEnabled;
-    
-    if (p.pricePreference == 'LOW') _priceRange = 0;
-    else if (p.pricePreference == 'HIGH') _priceRange = 2;
-    else _priceRange = 1;
+
+    if (p.pricePreference == 'LOW') {
+      _priceRange = 0;
+    } else if (p.pricePreference == 'HIGH') {
+      _priceRange = 2;
+    } else {
+      _priceRange = 1;
+    }
   }
 
   @override
@@ -344,78 +377,6 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   Future<void> _save() async {
     setState(() => _isSaving = true);
 
-    String pricePref = 'MEDIUM';
-    if (_priceRange == 0) pricePref = 'LOW';
-    if (_priceRange == 2) pricePref = 'HIGH';
-
-    if (_pickedCover != null) {
-      try {
-        final formData = FormData.fromMap({
-          'cover': kIsWeb
-              ? MultipartFile.fromBytes(
-                  await _pickedCover!.readAsBytes(),
-                  filename: _pickedCover!.name,
-                )
-              : await MultipartFile.fromFile(
-                  _pickedCover!.path,
-                  filename: _pickedCover!.name,
-                ),
-        });
-        final response = await ApiClient()
-            .dio
-            .post('/api/shop/profile/cover', data: formData);
-        if (response.statusCode != 200 && response.statusCode != 201) {
-          throw Exception('Cover upload failed');
-        }
-      } catch (e) {
-        debugPrint('Cover upload error: $e');
-        if (mounted) {
-          setState(() => _isSaving = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to upload cover image. Please try again.'),
-              backgroundColor: Color(0xFFEF4444),
-            ),
-          );
-        }
-        return;
-      }
-    }
-
-    if (_pickedLogo != null) {
-      try {
-        final formData = FormData.fromMap({
-          'logo': kIsWeb
-              ? MultipartFile.fromBytes(
-                  await _pickedLogo!.readAsBytes(),
-                  filename: _pickedLogo!.name,
-                )
-              : await MultipartFile.fromFile(
-                  _pickedLogo!.path,
-                  filename: _pickedLogo!.name,
-                ),
-        });
-        final response = await ApiClient()
-            .dio
-            .post('/api/shop/profile/logo', data: formData);
-        if (response.statusCode != 200 && response.statusCode != 201) {
-          throw Exception('Logo upload failed');
-        }
-      } catch (e) {
-        debugPrint('Logo upload error: $e');
-        if (mounted) {
-          setState(() => _isSaving = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to upload logo image. Please try again.'),
-              backgroundColor: Color(0xFFEF4444),
-            ),
-          );
-        }
-        return;
-      }
-    }
-
     final payload = {
       'nameEn': _nameEnCtrl.text,
       'nameMm': _nameMmCtrl.text,
@@ -440,7 +401,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       'subCategoryEn': _selectedSubcategory?.nameEn ?? _subCatEnCtrl.text,
       'subCategoryMm': _selectedSubcategory?.nameMm ?? _subCatMmCtrl.text,
       'subCategoryTh': _selectedSubcategory?.nameTh ?? _subCatThCtrl.text,
-      'cuisineTypeId': _selectedCuisineType?.id,
+      'cuisineTypeIds': _selectedCuisineTypes.map((c) => c.id).toList(),
       'cityEn': _selectedCity?.nameEn ?? _cityCtrl.text,
       'cityMm': _selectedCity?.nameMm ?? _cityCtrl.text,
       'cityTh': _selectedCity?.nameTh ?? _cityCtrl.text,
@@ -451,13 +412,39 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       'hasDelivery': _hasDelivery,
       'isHalal': _isHalal,
       'isVegetarian': _isVegetarian,
-      'pricePreference': _priceRange == 0 ? 'LOW' : (_priceRange == 1 ? 'MEDIUM' : 'HIGH'),
+      'pricePreference': _priceRange == 0
+          ? 'LOW'
+          : (_priceRange == 1 ? 'MEDIUM' : 'HIGH'),
       'maxItemQuantityPerOrder': int.tryParse(_maxQtyCtrl.text) ?? 10,
       'minOrderAmount': double.tryParse(_minAmountCtrl.text) ?? 0.0,
       'baseDeliveryFee': double.tryParse(_baseFeeCtrl.text) ?? 0.0,
       'deliveryEnabled': _deliveryEnabled,
       'googleMapsLink': _mapsLinkCtrl.text,
     };
+
+    if (_pickedCover != null) {
+      payload['coverPhoto'] = kIsWeb
+          ? MultipartFile.fromBytes(
+              await _pickedCover!.readAsBytes(),
+              filename: _pickedCover!.name,
+            )
+          : await MultipartFile.fromFile(
+              _pickedCover!.path,
+              filename: _pickedCover!.name,
+            );
+    }
+
+    if (_pickedLogo != null) {
+      payload['logoPhoto'] = kIsWeb
+          ? MultipartFile.fromBytes(
+              await _pickedLogo!.readAsBytes(),
+              filename: _pickedLogo!.name,
+            )
+          : await MultipartFile.fromFile(
+              _pickedLogo!.path,
+              filename: _pickedLogo!.name,
+            );
+    }
 
     final success = await ProfileService().updateShopProfile(payload);
 
@@ -511,19 +498,34 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         child: DropdownButton<MasterDataModel>(
           value: value,
           isExpanded: true,
-          hint: Text(hint, style: GoogleFonts.poppins(color: const Color(0xFF94A3B8), fontSize: 13)),
+          hint: Text(
+            hint,
+            style: GoogleFonts.poppins(
+              color: const Color(0xFF94A3B8),
+              fontSize: 13,
+            ),
+          ),
           items: safeItems.isEmpty
               ? [
                   DropdownMenuItem<MasterDataModel>(
                     value: null,
                     enabled: false,
-                    child: Text('No data found', style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF94A3B8))),
-                  )
+                    child: Text(
+                      'No data found',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: const Color(0xFF94A3B8),
+                      ),
+                    ),
+                  ),
                 ]
               : safeItems.map((c) {
                   return DropdownMenuItem<MasterDataModel>(
                     value: c,
-                    child: Text(c.displayName, style: GoogleFonts.poppins(fontSize: 14)),
+                    child: Text(
+                      c.displayName,
+                      style: GoogleFonts.poppins(fontSize: 14),
+                    ),
                   );
                 }).toList(),
           onChanged: safeItems.isEmpty ? (_) {} : onChanged,
@@ -540,7 +542,10 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       return Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
-          title: Text('Edit Profile', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+          title: Text(
+            'Edit Profile',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+          ),
           backgroundColor: Colors.white,
           foregroundColor: const Color(0xFF1E293B),
           elevation: 0,
@@ -635,16 +640,49 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             ),
             const SizedBox(height: 32),
             _buildSection(
-              label: 'Cuisine Type',
-              child: _buildDropdown(
-                'Select Cuisine Type',
-                _selectedCuisineType,
-                _cuisineTypes,
-                'Choose cuisine type',
-                (v) => setState(() {
-                  _selectedCuisineType = v;
-                  _markChanged();
-                }),
+              label: 'Cuisine Types',
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _cuisineTypes.map((c) {
+                    final isSelected = _selectedCuisineTypes.contains(c);
+                    return FilterChip(
+                      label: Text(
+                        c.displayName,
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          color: isSelected
+                              ? Colors.white
+                              : const Color(0xFF475569),
+                        ),
+                      ),
+                      selected: isSelected,
+                      selectedColor: const Color(0xFFED3973),
+                      backgroundColor: Colors.white,
+                      checkmarkColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(
+                          color: isSelected
+                              ? const Color(0xFFED3973)
+                              : const Color(0xFFE2E8F0),
+                        ),
+                      ),
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            _selectedCuisineTypes.add(c);
+                          } else {
+                            _selectedCuisineTypes.remove(c);
+                          }
+                          _markChanged();
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
               ),
             ),
             const SizedBox(height: 32),
@@ -750,7 +788,11 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
 
             _buildSection(
               label: 'Google Maps Link',
-              child: _buildTextField(_mapsLinkCtrl, 'Paste Google Maps URL', icon: PhosphorIconsRegular.mapPin),
+              child: _buildTextField(
+                _mapsLinkCtrl,
+                'Paste Google Maps URL',
+                icon: PhosphorIconsRegular.mapPin,
+              ),
             ),
             const SizedBox(height: 32),
 
@@ -773,7 +815,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                   Expanded(
+                  Expanded(
                     child: _buildSmallField(
                       label: 'Base Delivery Fee',
                       controller: _baseFeeCtrl,
@@ -1041,7 +1083,9 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         children: [
           // ── Full hero image ───────────────────────────────────────────
           Positioned(
-            top: 0, left: 0, right: 0,
+            top: 0,
+            left: 0,
+            right: 0,
             height: heroHeight,
             child: ClipRRect(
               borderRadius: const BorderRadius.vertical(
@@ -1052,74 +1096,81 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                  // Image or gradient fallback
-                  if (_pickedCover != null)
-                    kIsWeb
-                        ? Image.network(_pickedCover!.path, fit: BoxFit.cover)
-                        : Image.file(File(_pickedCover!.path), fit: BoxFit.cover)
-                  else if (coverUrl != null && coverUrl.isNotEmpty)
-                    CachedNetworkImage(
-                      imageUrl: coverUrl,
-                      fit: BoxFit.cover,
-                      placeholder: (_, _) => _buildCoverGradient(),
-                      errorWidget: (_, _, _) => _buildCoverGradient(),
-                    )
-                  else
-                    _buildCoverGradient(),
+                    // Image or gradient fallback
+                    if (_pickedCover != null)
+                      kIsWeb
+                          ? Image.network(_pickedCover!.path, fit: BoxFit.cover)
+                          : Image.file(
+                              File(_pickedCover!.path),
+                              fit: BoxFit.cover,
+                            )
+                    else if (coverUrl != null && coverUrl.isNotEmpty)
+                      CachedNetworkImage(
+                        imageUrl: coverUrl,
+                        fit: BoxFit.cover,
+                        placeholder: (_, _) => _buildCoverGradient(),
+                        errorWidget: (_, _, _) => _buildCoverGradient(),
+                      )
+                    else
+                      _buildCoverGradient(),
 
-                  // Dark overlay at top for back button contrast
-                  Positioned(
-                    top: 0, left: 0, right: 0, height: 90,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.black.withValues(alpha: 0.35),
-                            Colors.transparent,
-                          ],
+                    // Dark overlay at top for back button contrast
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: 90,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withValues(alpha: 0.35),
+                              Colors.transparent,
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
 
-                  // Camera hint when no cover photo
-                  if (_pickedCover == null && (coverUrl == null || coverUrl.isEmpty))
-                    Container(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.25),
-                                shape: BoxShape.circle,
+                    // Camera hint when no cover photo
+                    if (_pickedCover == null &&
+                        (coverUrl == null || coverUrl.isEmpty))
+                      Container(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.25),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const PhosphorIcon(
+                                  PhosphorIconsRegular.camera,
+                                  size: 28,
+                                  color: Colors.white,
+                                ),
                               ),
-                              child: const PhosphorIcon(
-                                PhosphorIconsRegular.camera,
-                                size: 28,
-                                color: Colors.white,
+                              const SizedBox(height: 10),
+                              Text(
+                                'Tap to add cover photo',
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              'Tap to add cover photo',
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
-            ),
             ),
           ),
 
@@ -1159,28 +1210,42 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                             borderRadius: BorderRadius.circular(14),
                             child: _pickedLogo != null
                                 ? (kIsWeb
-                                    ? Image.network(_pickedLogo!.path, fit: BoxFit.cover)
-                                    : Image.file(File(_pickedLogo!.path), fit: BoxFit.cover))
+                                      ? Image.network(
+                                          _pickedLogo!.path,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : Image.file(
+                                          File(_pickedLogo!.path),
+                                          fit: BoxFit.cover,
+                                        ))
                                 : logoUrl != null && logoUrl.isNotEmpty
-                                    ? CachedNetworkImage(
-                                        imageUrl: logoUrl,
-                                        fit: BoxFit.cover,
-                                        placeholder: (_, _) => _buildLogoPlaceholder(),
-                                        errorWidget: (_, _, _) => _buildLogoPlaceholder(),
-                                      )
-                                    : _buildLogoPlaceholder(),
+                                ? CachedNetworkImage(
+                                    imageUrl: logoUrl,
+                                    fit: BoxFit.cover,
+                                    placeholder: (_, _) =>
+                                        _buildLogoPlaceholder(),
+                                    errorWidget: (_, _, _) =>
+                                        _buildLogoPlaceholder(),
+                                  )
+                                : _buildLogoPlaceholder(),
                           ),
                         ),
                         Positioned(
-                          bottom: 0, right: 0,
+                          bottom: 0,
+                          right: 0,
                           child: Container(
-                            width: 22, height: 22,
+                            width: 22,
+                            height: 22,
                             decoration: BoxDecoration(
                               color: const Color(0xFFED3973),
                               shape: BoxShape.circle,
                               border: Border.all(color: Colors.white, width: 2),
                             ),
-                            child: const Icon(Icons.camera_alt, size: 11, color: Colors.white),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              size: 11,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ],
@@ -1631,6 +1696,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       ),
     );
   }
+
   Widget _buildSmallField({
     required String label,
     required TextEditingController controller,

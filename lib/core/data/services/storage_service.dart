@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_shop/features/auth/data/models/auth_models.dart';
 
@@ -6,46 +7,68 @@ class StorageService {
   static const String _keyToken = 'access_token';
   static const String _keyRefreshToken = 'refresh_token';
   static const String _keyUserInfo = 'user_info';
-  static const String _keyNotificationHandled = 'notification_permission_handled';
+  static const String _keyNotificationHandled =
+      'notification_permission_handled';
   static const String _keySelectedShopId = 'selected_shop_id';
 
   static final StorageService instance = StorageService._();
+
+  late final FlutterSecureStorage _secureStorage;
+  SharedPreferences? _prefs;
+  bool _initialized = false;
+
   StorageService._();
 
-  Future<void> saveTokens({required String token, required String refreshToken}) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_keyToken, token);
-    await prefs.setString(_keyRefreshToken, refreshToken);
+  Future<void> _ensureInitialized() async {
+    if (!_initialized) {
+      _secureStorage = const FlutterSecureStorage(
+        aOptions: AndroidOptions(encryptedSharedPreferences: true),
+        iOptions: IOSOptions(
+          accessibility: KeychainAccessibility.first_unlock_this_device,
+        ),
+      );
+      _prefs = await SharedPreferences.getInstance();
+      _initialized = true;
+    }
+  }
+
+  Future<void> saveTokens({
+    required String token,
+    required String refreshToken,
+  }) async {
+    await _ensureInitialized();
+    await _secureStorage.write(key: _keyToken, value: token);
+    await _secureStorage.write(key: _keyRefreshToken, value: refreshToken);
   }
 
   Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_keyToken);
+    await _ensureInitialized();
+    return await _secureStorage.read(key: _keyToken);
   }
 
   Future<String?> getRefreshToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_keyRefreshToken);
+    await _ensureInitialized();
+    return await _secureStorage.read(key: _keyRefreshToken);
   }
 
   Future<void> saveUserInfo(UserInfo userInfo) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_keyUserInfo, json.encode(userInfo.toJson()));
+    await _ensureInitialized();
+    await _prefs!.setString(_keyUserInfo, json.encode(userInfo.toJson()));
   }
 
   Future<UserInfo?> getUserInfo() async {
-    final prefs = await SharedPreferences.getInstance();
-    final data = prefs.getString(_keyUserInfo);
+    await _ensureInitialized();
+    final data = _prefs!.getString(_keyUserInfo);
     if (data == null) return null;
     return UserInfo.fromJson(json.decode(data));
   }
 
   Future<void> clearAll() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_keyToken);
-    await prefs.remove(_keyRefreshToken);
-    await prefs.remove(_keyUserInfo);
-    await prefs.remove(_keySelectedShopId);
+    await _ensureInitialized();
+    await _secureStorage.delete(key: _keyToken);
+    await _secureStorage.delete(key: _keyRefreshToken);
+    await _prefs!.remove(_keyUserInfo);
+    await _prefs!.remove(_keySelectedShopId);
   }
 
   Future<bool> hasToken() async {
@@ -54,27 +77,27 @@ class StorageService {
   }
 
   Future<void> setNotificationHandled(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_keyNotificationHandled, value);
+    await _ensureInitialized();
+    await _prefs!.setBool(_keyNotificationHandled, value);
   }
 
   Future<bool> isNotificationHandled() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_keyNotificationHandled) ?? false;
+    await _ensureInitialized();
+    return _prefs!.getBool(_keyNotificationHandled) ?? false;
   }
 
   Future<void> saveSelectedShopId(int shopId) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_keySelectedShopId, shopId);
+    await _ensureInitialized();
+    await _prefs!.setInt(_keySelectedShopId, shopId);
   }
 
   Future<int?> getSelectedShopId() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_keySelectedShopId);
+    await _ensureInitialized();
+    return _prefs!.getInt(_keySelectedShopId);
   }
 
   Future<void> removeSelectedShopId() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_keySelectedShopId);
+    await _ensureInitialized();
+    await _prefs!.remove(_keySelectedShopId);
   }
 }
