@@ -236,63 +236,63 @@ class _ShopProfilePageState extends State<ShopProfilePage>
         children: [
           // ── Main scrollable content ──────────────────────────────────────
           NestedScrollView(
-            controller: _scrollController,
-            headerSliverBuilder: (context, _) => [
-              SliverToBoxAdapter(child: _buildHero()),
-              SliverToBoxAdapter(
-                child: Transform.translate(
-                  offset: const Offset(0, -32),
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(32),
+              controller: _scrollController,
+              headerSliverBuilder: (context, _) => [
+                SliverToBoxAdapter(child: _buildHero()),
+                SliverToBoxAdapter(
+                  child: Transform.translate(
+                    offset: const Offset(0, -32),
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(32),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 100), // Space for floating card
+                          _buildInfoSection(),
+                        ],
                       ),
                     ),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 100), // Space for floating card
-                        _buildInfoSection(),
+                  ),
+                ),
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _TabHeaderDelegate(
+                    TabBar(
+                      controller: _tabController,
+                      labelColor: const Color(0xFFED3973),
+                      unselectedLabelColor: const Color(0xFF64748B),
+                      indicatorColor: const Color(0xFFED3973),
+                      indicatorWeight: 2,
+                      labelStyle: GoogleFonts.poppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      unselectedLabelStyle: GoogleFonts.poppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      tabs: const [
+                        Tab(text: 'Menu'),
+                        Tab(text: 'Reviews'),
+                        Tab(text: 'Info'),
+                        Tab(text: 'Photos'),
                       ],
                     ),
                   ),
                 ),
-              ),
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _TabHeaderDelegate(
-                  TabBar(
-                    controller: _tabController,
-                    labelColor: const Color(0xFFED3973),
-                    unselectedLabelColor: const Color(0xFF64748B),
-                    indicatorColor: const Color(0xFFED3973),
-                    indicatorWeight: 2,
-                    labelStyle: GoogleFonts.poppins(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    unselectedLabelStyle: GoogleFonts.poppins(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    tabs: const [
-                      Tab(text: 'Menu'),
-                      Tab(text: 'Reviews'),
-                      Tab(text: 'Info'),
-                      Tab(text: 'Photos'),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-            body: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildMenuTab(),
-                _buildReviewsTab(),
-                _buildInfoTab(),
-                _buildPhotosTab(),
               ],
+              body: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildMenuTab(),
+                  _buildReviewsTab(),
+                  _buildInfoTab(),
+                  _buildPhotosTab(),
+                ],
             ),
           ),
 
@@ -663,8 +663,9 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                   ),
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFFED3973),
+                    overlayColor: Colors.white.withValues(alpha: 0.12),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     padding: const EdgeInsets.symmetric(
                       vertical: 12,
@@ -700,8 +701,9 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                   ),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFFE2E8F0)),
+                    overlayColor: const Color(0xFF1E293B).withValues(alpha: 0.04),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     padding: const EdgeInsets.symmetric(
                       vertical: 12,

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
-import '../widgets/quick_action_cards.dart';
 import '../widgets/menu_item_card.dart';
 import 'add_new_item_screen.dart';
 import '../../data/services/menu_service.dart';
 import '../../data/models/menu_item_model.dart';
 import '../../data/models/menu_category_model.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
+import 'package:my_shop/features/menu/presentation/widgets/quick_action_cards.dart';
 
 class MenuPage extends StatefulWidget {
   const MenuPage({super.key});
