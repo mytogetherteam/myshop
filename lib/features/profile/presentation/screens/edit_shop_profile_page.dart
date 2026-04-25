@@ -68,7 +68,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   late final TextEditingController _descEnCtrl;
   late final TextEditingController _descMmCtrl;
   late final TextEditingController _descThCtrl;
-  late final TextEditingController _phoneCtrl;
+  List<TextEditingController> _phoneControllers = [];
   late final TextEditingController _emailCtrl;
   late final TextEditingController _addressEnCtrl;
   late final TextEditingController _addressMmCtrl;
@@ -204,7 +204,15 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     _descEnCtrl = TextEditingController(text: p?.descriptionEn ?? '');
     _descMmCtrl = TextEditingController(text: p?.descriptionMm ?? '');
     _descThCtrl = TextEditingController(text: p?.descriptionTh ?? '');
-    _phoneCtrl = TextEditingController(text: p?.phone ?? '');
+    
+    final phoneString = p?.phone ?? '';
+    final phones = phoneString.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    if (phones.isEmpty) {
+      _phoneControllers = [TextEditingController()];
+    } else {
+      _phoneControllers = phones.map((ph) => TextEditingController(text: ph)).toList();
+    }
+
     _emailCtrl = TextEditingController(text: p?.email ?? '');
     _addressEnCtrl = TextEditingController(text: p?.addressEn ?? '');
     _addressMmCtrl = TextEditingController(text: p?.addressMm ?? '');
@@ -273,7 +281,17 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     _descEnCtrl.text = p.descriptionEn ?? '';
     _descMmCtrl.text = p.descriptionMm ?? '';
     _descThCtrl.text = p.descriptionTh ?? '';
-    _phoneCtrl.text = p.phone ?? '';
+
+    for (var c in _phoneControllers) {
+      c.dispose();
+    }
+    final phones = (p.phone ?? '').split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    if (phones.isEmpty) {
+      _phoneControllers = [TextEditingController()];
+    } else {
+      _phoneControllers = phones.map((ph) => TextEditingController(text: ph)).toList();
+    }
+
     _emailCtrl.text = p.email ?? '';
     _addressEnCtrl.text = p.addressEn ?? '';
     _addressMmCtrl.text = p.addressMm ?? '';
@@ -319,7 +337,6 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       _descEnCtrl,
       _descMmCtrl,
       _descThCtrl,
-      _phoneCtrl,
       _emailCtrl,
       _addressEnCtrl,
       _addressMmCtrl,
@@ -331,6 +348,9 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       _baseFeeCtrl,
       _mapsLinkCtrl,
     ]) {
+      c.dispose();
+    }
+    for (final c in _phoneControllers) {
       c.dispose();
     }
     super.dispose();
@@ -416,9 +436,10 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       _showError('Category is required');
       return false;
     }
-    if (_phoneCtrl.text.trim().isEmpty) {
+    final validPhones = _phoneControllers.where((c) => c.text.trim().isNotEmpty).toList();
+    if (validPhones.isEmpty) {
       _scrollToKey(_phoneKey);
-      _showError('Phone Number is required');
+      _showError('At least one Phone Number is required');
       return false;
     }
     if (_addressEnCtrl.text.trim().isEmpty) {
@@ -448,7 +469,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       'descriptionEn': _descEnCtrl.text,
       'descriptionMm': _descMmCtrl.text,
       'descriptionTh': _descThCtrl.text,
-      'phone': _phoneCtrl.text,
+      'phone': _phoneControllers.map((c) => c.text.trim()).where((t) => t.isNotEmpty).join(','),
       'email': _emailCtrl.text,
       'addressEn': _addressEnCtrl.text,
       'addressMm': _addressMmCtrl.text,
@@ -674,6 +695,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                     ? _nameMmCtrl
                     : _nameThCtrl,
                 hint: 'Enter shop name',
+                enabled: false,
               ),
             ),
             const SizedBox(height: 32),
@@ -772,12 +794,55 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
 
             _buildSection(
               key: _phoneKey,
-              label: 'Phone Number',
+              label: 'Phone Numbers',
               required: true,
-              child: _buildTextField(
-                _phoneCtrl,
-                '+95 9 XXX XXX XXX',
-                icon: PhosphorIconsRegular.phone,
+              child: Column(
+                children: [
+                  for (int i = 0; i < _phoneControllers.length; i++)
+                    Padding(
+                      padding: EdgeInsets.only(bottom: i < _phoneControllers.length - 1 ? 12.0 : 0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              _phoneControllers[i],
+                              '+95 9 XXX XXX XXX',
+                              icon: PhosphorIconsRegular.phone,
+                            ),
+                          ),
+                          if (_phoneControllers.length > 1 || i == _phoneControllers.length - 1)
+                            const SizedBox(width: 8),
+                          if (_phoneControllers.length > 1)
+                            IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _phoneControllers[i].dispose();
+                                  _phoneControllers.removeAt(i);
+                                  _markChanged();
+                                });
+                              },
+                              icon: const Icon(PhosphorIconsRegular.minusCircle, color: Color(0xFFEF4444)),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                          if (_phoneControllers.length > 1 && i == _phoneControllers.length - 1)
+                            const SizedBox(width: 8),
+                          if (i == _phoneControllers.length - 1)
+                            IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _phoneControllers.add(TextEditingController());
+                                  _markChanged();
+                                });
+                              },
+                              icon: const Icon(PhosphorIconsRegular.plusCircle, color: Color(0xFFED3973)),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                        ],
+                      ),
+                    ),
+                ],
               ),
             ),
             const SizedBox(height: 32),
@@ -788,6 +853,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 _emailCtrl,
                 'shop@example.com',
                 icon: PhosphorIconsRegular.envelope,
+                enabled: false,
               ),
             ),
             const SizedBox(height: 32),
@@ -1484,6 +1550,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     required String hint,
     int maxLines = 1,
     String? requiredLang,
+    bool enabled = true,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1550,6 +1617,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         TextField(
           controller: controller,
           maxLines: maxLines,
+          enabled: enabled,
           onChanged: (_) => _markChanged(),
           decoration: InputDecoration(
             hintText: hint,
