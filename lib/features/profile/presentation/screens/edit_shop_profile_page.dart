@@ -11,6 +11,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:my_shop/core/data/services/image_upload_service.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/core/presentation/widgets/fullscreen_image_viewer.dart';
+import 'package:my_shop/core/presentation/widgets/custom_search_dropdown.dart';
 import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import 'package:my_shop/core/data/models/master_data_model.dart';
@@ -572,50 +573,51 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       safeItems.add(value);
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<MasterDataModel>(
-          value: value,
-          isExpanded: true,
-          hint: Text(
-            hint,
-            style: GoogleFonts.poppins(
-              color: const Color(0xFF94A3B8),
-              fontSize: 13,
-            ),
-          ),
-          items: safeItems.isEmpty
-              ? [
-                  DropdownMenuItem<MasterDataModel>(
-                    value: null,
-                    enabled: false,
-                    child: Text(
-                      'No data found',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: const Color(0xFF94A3B8),
-                      ),
-                    ),
-                  ),
-                ]
-              : safeItems.map((c) {
-                  return DropdownMenuItem<MasterDataModel>(
-                    value: c,
-                    child: Text(
-                      c.displayName,
-                      style: GoogleFonts.poppins(fontSize: 14),
-                    ),
-                  );
-                }).toList(),
-          onChanged: safeItems.isEmpty ? (_) {} : onChanged,
+    if (safeItems.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
         ),
-      ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<MasterDataModel>(
+            value: null,
+            isExpanded: true,
+            hint: Text(
+              hint,
+              style: GoogleFonts.poppins(
+                color: const Color(0xFF94A3B8),
+                fontSize: 13,
+              ),
+            ),
+            items: [
+              DropdownMenuItem<MasterDataModel>(
+                value: null,
+                enabled: false,
+                child: Text(
+                  'No data found',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: const Color(0xFF94A3B8),
+                  ),
+                ),
+              ),
+            ],
+            onChanged: null,
+          ),
+        ),
+      );
+    }
+
+    return CustomSearchDropdown<MasterDataModel>(
+      items: safeItems,
+      value: value,
+      hintText: hint,
+      searchHintText: 'Search...',
+      itemLabelBuilder: (item) => item.displayName,
+      onChanged: onChanged,
     );
   }
 
