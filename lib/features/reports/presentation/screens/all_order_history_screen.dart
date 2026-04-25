@@ -168,11 +168,12 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_filterScrollController.hasClients) {
         final screenWidth = MediaQuery.of(context).size.width;
-        const double approxItemWidth = 92.0; // item width + padding
-        const int initialIndex = 5000 + (11 - (5000 % 12));
+        const double itemTotalWidth = 96.0; // 84 width + 12 right padding
+        const int initialIndex = 1200 + 11; // Multiple of 12 plus the 11th index
         
-        // Offset to center the item
-        final double initialOffset = (initialIndex * approxItemWidth) - (screenWidth / 2) + (approxItemWidth / 2);
+        // Offset to center the item:
+        // list padding (20) + items before it (initialIndex * itemTotalWidth) + half item width (42) - half screen width
+        final double initialOffset = 20.0 + (initialIndex * itemTotalWidth) + 42.0 - (screenWidth / 2);
         
         _filterScrollController.jumpTo(initialOffset);
       }
@@ -276,8 +277,8 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
                       
                       // Animate centering
                       final screenWidth = MediaQuery.of(context).size.width;
-                      const double approxItemWidth = 92.0;
-                      final double targetOffset = (index * approxItemWidth) - (screenWidth / 2) + (approxItemWidth / 2);
+                      const double itemTotalWidth = 96.0;
+                      final double targetOffset = 20.0 + (index * itemTotalWidth) + 42.0 - (screenWidth / 2);
                       
                       _filterScrollController.animateTo(
                         targetOffset,
@@ -287,10 +288,9 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
                     },
                     borderRadius: BorderRadius.circular(20),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 8,
-                      ),
+                      width: 84,
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? const Color(0xFFED3A72)
