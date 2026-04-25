@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:my_shop/core/presentation/widgets/custom_search_dropdown.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/features/menu/data/models/menu_category_model.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
+import 'package:my_shop/core/presentation/widgets/global_modal.dart';
+import 'package:my_shop/core/presentation/widgets/confirmation_sheet.dart';
 
 class EditCategoryScreen extends StatefulWidget {
   final MenuCategoryModel category;
@@ -15,7 +18,7 @@ class EditCategoryScreen extends StatefulWidget {
 
 class _EditCategoryScreenState extends State<EditCategoryScreen> {
   final CategoryService _categoryService = CategoryService();
-  
+
   late final TextEditingController _nameEnController;
   late final TextEditingController _nameMmController;
   late final TextEditingController _nameThController;
@@ -23,19 +26,25 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
 
   List<Map<String, dynamic>> _masterCategories = [];
   int? _selectedMasterCategoryId;
-  
+
   List<Map<String, dynamic>> _gallery = [];
   int _selectedGalleryIndex = 0;
-  
+
   bool _isSaving = false;
   bool _isLoadingData = true;
 
   @override
   void initState() {
     super.initState();
-    _nameEnController = TextEditingController(text: widget.category.nameEn ?? '');
-    _nameMmController = TextEditingController(text: widget.category.nameMm ?? '');
-    _nameThController = TextEditingController(text: widget.category.nameTh ?? '');
+    _nameEnController = TextEditingController(
+      text: widget.category.nameEn ?? '',
+    );
+    _nameMmController = TextEditingController(
+      text: widget.category.nameMm ?? '',
+    );
+    _nameThController = TextEditingController(
+      text: widget.category.nameTh ?? '',
+    );
     _selectedMasterCategoryId = widget.category.masterCategoryId;
     _fetchInitialData();
   }
@@ -51,13 +60,15 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
       setState(() {
         _masterCategories = results[0] ?? [];
         _gallery = results[1] ?? [];
-        
+
         // Find existing icon in gallery
         if (widget.category.imageUrl != null) {
-          _selectedGalleryIndex = _gallery.indexWhere((icon) => icon['imageUrl'] == widget.category.imageUrl);
+          _selectedGalleryIndex = _gallery.indexWhere(
+            (icon) => icon['imageUrl'] == widget.category.imageUrl,
+          );
           if (_selectedGalleryIndex == -1) _selectedGalleryIndex = 0;
         }
-        
+
         _isLoadingData = false;
       });
     }
@@ -72,26 +83,47 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
   }
 
   Future<void> _updateCategory() async {
-    if (_nameEnController.text.isEmpty && _nameMmController.text.isEmpty && _nameThController.text.isEmpty) {
+    if (_nameEnController.text.isEmpty &&
+        _nameMmController.text.isEmpty &&
+        _nameThController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter at least one category name')),
+        const SnackBar(
+          content: Text('Please enter at least one category name'),
+        ),
       );
       return;
     }
 
+    GlobalModal.show(
+      context: context,
+      child: ConfirmationSheet(
+        title: 'Update Category?',
+        message: 'Are you sure you want to save the changes to this category?',
+        confirmLabel: 'Update',
+        onConfirm: _performUpdate,
+      ),
+    );
+  }
+
+  Future<void> _performUpdate() async {
     setState(() => _isSaving = true);
-    
+
     final payload = {
       'nameEn': _nameEnController.text,
       'nameMm': _nameMmController.text,
       'nameTh': _nameThController.text,
-      'imageUrl': _gallery.isNotEmpty ? _gallery[_selectedGalleryIndex]['imageUrl'] : null,
+      'imageUrl': _gallery.isNotEmpty
+          ? _gallery[_selectedGalleryIndex]['imageUrl']
+          : null,
       'masterCategoryId': _selectedMasterCategoryId,
       'isActive': widget.category.isActive,
-      'displayOrder': widget.category.displayOrder,
+      'displayOrder': 1,
     };
 
-    final success = await _categoryService.updateCategory(widget.category.id, payload);
+    final success = await _categoryService.updateCategory(
+      widget.category.id,
+      payload,
+    );
 
     if (mounted) {
       if (success) {
@@ -109,36 +141,32 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
   }
 
   Future<void> _deleteCategory() async {
-    final confirm = await showDialog<bool>(
+    GlobalModal.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Category'),
-        content: const Text('Are you sure you want to delete this category?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
+      child: ConfirmationSheet(
+        title: 'Delete Category?',
+        message:
+            'Are you sure you want to delete this category? This action cannot be undone.',
+        confirmLabel: 'Delete',
+        confirmColor: const Color(0xFFEF4444),
+        onConfirm: () async {
+          final success =
+              await _categoryService.deleteCategory(widget.category.id);
+          if (mounted) {
+            if (success) {
+              Navigator.pop(context, true);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Failed to delete category'),
+                  backgroundColor: Color(0xFFEF4444),
+                ),
+              );
+            }
+          }
+        },
       ),
     );
-
-    if (confirm == true) {
-      final success = await _categoryService.deleteCategory(widget.category.id);
-      if (mounted) {
-        if (success) {
-          Navigator.pop(context, true);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to delete category'),
-              backgroundColor: Color(0xFFEF4444),
-            ),
-          );
-        }
-      }
-    }
   }
 
   @override
@@ -162,106 +190,107 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
           ),
         ),
         centerTitle: false,
-        actions: const [
-          SizedBox(width: 8),
-        ],
+        actions: const [SizedBox(width: 8)],
       ),
-      body: _isLoadingData 
-        ? const Center(child: CustomLoadingIndicator())
-        : ListView(
-            padding: const EdgeInsets.all(24.0),
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 20,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'EDIT CATEGORY',
-                      style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFFCBD5E1),
-                        letterSpacing: 0.8,
+      body: _isLoadingData
+          ? const Center(child: CustomLoadingIndicator())
+          : ListView(
+              padding: const EdgeInsets.all(24.0),
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    
-                    // Master Category Dropdown
-                    Text(
-                      'Master Category',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF1E293B),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'EDIT CATEGORY',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFFCBD5E1),
+                          letterSpacing: 0.8,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildMasterCategoryDropdown(),
-                    const SizedBox(height: 24),
+                      const SizedBox(height: 20),
 
-                    // Icon Gallery
-                    Text(
-                      'Choose icon',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF1E293B),
+                      // Master Category Dropdown
+                      Text(
+                        'Master Category',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF1E293B),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildIconGallery(),
-                    const SizedBox(height: 24),
+                      const SizedBox(height: 8),
+                      _buildMasterCategoryDropdown(),
+                      const SizedBox(height: 24),
 
-                    // Name Lang Switcher
-                    Text(
-                      'Category name',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF1E293B),
+                      // Icon Gallery
+                      Text(
+                        'Choose icon',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF1E293B),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildLangField(
-                      selectedLang: _nameLang,
-                      onLangChanged: (l) => setState(() => _nameLang = l),
-                      controller: _nameLang == 'EN'
-                        ? _nameEnController
-                        : _nameLang == 'MM'
-                          ? _nameMmController
-                          : _nameThController,
-                      hint: 'Enter category name',
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              TextButton.icon(
-                onPressed: _deleteCategory,
-                icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444)),
-                label: Text(
-                  'Delete category',
-                  style: GoogleFonts.poppins(
-                    color: const Color(0xFFEF4444),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                      const SizedBox(height: 12),
+                      _buildIconGallery(),
+                      const SizedBox(height: 24),
+
+                      // Name Lang Switcher
+                      Text(
+                        'Category name',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF1E293B),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildLangField(
+                        selectedLang: _nameLang,
+                        onLangChanged: (l) => setState(() => _nameLang = l),
+                        controller: _nameLang == 'EN'
+                            ? _nameEnController
+                            : _nameLang == 'MM'
+                            ? _nameMmController
+                            : _nameThController,
+                        hint: 'Enter category name',
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ],
-          ),
+                const SizedBox(height: 24),
+                TextButton.icon(
+                  onPressed: _deleteCategory,
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    color: Color(0xFFEF4444),
+                  ),
+                  label: Text(
+                    'Delete category',
+                    style: GoogleFonts.poppins(
+                      color: const Color(0xFFEF4444),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -306,33 +335,27 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
   }
 
   Widget _buildMasterCategoryDropdown() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<int>(
-          value: _selectedMasterCategoryId,
-          isExpanded: true,
-          hint: Text('Choose master category', style: GoogleFonts.poppins(color: const Color(0xFFCBD5E1), fontSize: 14)),
-          items: _masterCategories.map((c) {
-            return DropdownMenuItem<int>(
-              value: c['id'],
-              child: Text(c['nameEn'] ?? 'Null', style: GoogleFonts.poppins(fontSize: 14)),
-            );
-          }).toList(),
-          onChanged: (v) => setState(() => _selectedMasterCategoryId = v),
-        ),
-      ),
+    return CustomSearchDropdown<Map<String, dynamic>>(
+      items: _masterCategories,
+      value: _selectedMasterCategoryId != null
+          ? _masterCategories.firstWhere(
+              (c) => c['id'] == _selectedMasterCategoryId,
+              orElse: () => {},
+            )
+          : null,
+      hintText: 'Choose master category',
+      itemLabelBuilder: (c) => c['nameEn'] ?? 'Null',
+      onChanged: (v) => setState(() => _selectedMasterCategoryId = v?['id']),
     );
   }
 
   Widget _buildIconGallery() {
-    if (_gallery.isEmpty) return const Text('No icons available', style: TextStyle(fontSize: 12, color: Colors.grey));
-    
+    if (_gallery.isEmpty)
+      return const Text(
+        'No icons available',
+        style: TextStyle(fontSize: 12, color: Colors.grey),
+      );
+
     return SizedBox(
       height: 60,
       child: ListView.separated(
@@ -350,13 +373,19 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
                 color: const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isSelected ? const Color(0xFFED3A72) : const Color(0xFFE2E8F0),
+                  color: isSelected
+                      ? const Color(0xFFED3A72)
+                      : const Color(0xFFE2E8F0),
                   width: 2,
                 ),
               ),
               child: Image.network(
                 _gallery[index]['imageUrl'],
-                errorBuilder: (context, error, stackTrace) => const Icon(Icons.restaurant, size: 24, color: Color(0xFF94A3B8)),
+                errorBuilder: (context, error, stackTrace) => const Icon(
+                  Icons.restaurant,
+                  size: 24,
+                  color: Color(0xFF94A3B8),
+                ),
               ),
             ),
           );
@@ -382,12 +411,17 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
               child: GestureDetector(
                 onTap: () => onLangChanged(lang),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: selected ? const Color(0xFFED3973) : Colors.white,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: selected ? const Color(0xFFED3973) : const Color(0xFFE2E8F0),
+                      color: selected
+                          ? const Color(0xFFED3973)
+                          : const Color(0xFFE2E8F0),
                     ),
                   ),
                   child: Text(
@@ -415,11 +449,13 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
           ),
         ),
       ],
     );
   }
 }
-

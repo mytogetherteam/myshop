@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:my_shop/core/presentation/widgets/skeleton.dart';
+import 'package:intl/intl.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/features/reports/presentation/widgets/order_history_item.dart';
 
@@ -13,11 +13,12 @@ class AllOrderHistoryScreen extends StatefulWidget {
 
 class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
   final ScrollController _scrollController = ScrollController();
+  final ScrollController _filterScrollController = ScrollController();
   final List<Map<String, dynamic>> _days = [];
   bool _isLoading = true;
   bool _isLoadingMore = false;
-  int _selectedFilterIndex = 0;
-  final List<String> _filters = ["Mar", "Feb", "Dec", "Nov", "Oct"];
+  int _selectedFilterIndex = 11;
+  final List<String> _filters = [];
 
   // Dummy data generated for Infinite Scroll
   final List<Map<String, dynamic>> _dummyData = [
@@ -160,13 +161,36 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
   @override
   void initState() {
     super.initState();
+    _generateFilters();
     _loadInitialData();
     _scrollController.addListener(_onScroll);
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_filterScrollController.hasClients) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        const double approxItemWidth = 92.0; // item width + padding
+        const int initialIndex = 5000 + (11 - (5000 % 12));
+        
+        // Offset to center the item
+        final double initialOffset = (initialIndex * approxItemWidth) - (screenWidth / 2) + (approxItemWidth / 2);
+        
+        _filterScrollController.jumpTo(initialOffset);
+      }
+    });
+  }
+
+  void _generateFilters() {
+    final now = DateTime.now();
+    for (int i = 11; i >= 0; i--) {
+      final monthDate = DateTime(now.year, now.month - i, 1);
+      _filters.add(DateFormat('MMM').format(monthDate));
+    }
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _filterScrollController.dispose();
     super.dispose();
   }
 
@@ -233,18 +257,33 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 8),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: List.generate(_filters.length, (index) {
-                final isSelected = _selectedFilterIndex == index;
+          SizedBox(
+            height: 40,
+            child: ListView.builder(
+              controller: _filterScrollController,
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: 10000,
+              itemBuilder: (context, index) {
+                final realIndex = index % _filters.length;
+                final isSelected = _selectedFilterIndex == realIndex;
                 return Padding(
                   padding: const EdgeInsets.only(right: 12),
                   child: InkWell(
                     onTap: () {
-                      setState(() => _selectedFilterIndex = index);
+                      setState(() => _selectedFilterIndex = realIndex);
                       _loadInitialData();
+                      
+                      // Animate centering
+                      final screenWidth = MediaQuery.of(context).size.width;
+                      const double approxItemWidth = 92.0;
+                      final double targetOffset = (index * approxItemWidth) - (screenWidth / 2) + (approxItemWidth / 2);
+                      
+                      _filterScrollController.animateTo(
+                        targetOffset,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      );
                     },
                     borderRadius: BorderRadius.circular(20),
                     child: Container(
@@ -264,7 +303,7 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
                         ),
                       ),
                       child: Text(
-                        _filters[index],
+                        _filters[realIndex],
                         style: GoogleFonts.poppins(
                           color: isSelected
                               ? Colors.white
@@ -278,7 +317,7 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
                     ),
                   ),
                 );
-              }),
+              },
             ),
           ),
           const Divider(color: Color(0xFFF1F5F9), height: 32, thickness: 1),
@@ -287,7 +326,9 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
               onRefresh: _loadInitialData,
               color: const Color(0xFFED3A72),
               child: _isLoading
-                  ? _buildSkeletons()
+                  ? const Center(
+                      child: CustomLoadingIndicator(size: 40),
+                    )
                   : ListView.builder(
                       controller: _scrollController,
                       padding: const EdgeInsets.symmetric(
@@ -300,10 +341,7 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
                           return const Padding(
                             padding: EdgeInsets.symmetric(vertical: 16),
                             child: Center(
-                              child: CustomLoadingIndicator(
-                                size: 24,
-                                color: Color(0xFFED3A72),
-                              ),
+                              child: CustomLoadingIndicator(size: 24),
                             ),
                           );
                         }
@@ -353,47 +391,6 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSkeletons() {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      itemCount: 3,
-      itemBuilder: (context, index) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Skeleton(height: 24, width: 120),
-            ),
-            ...List.generate(
-              4,
-              (_) => const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12),
-                child: Row(
-                  children: [
-                    Skeleton(width: 8, height: 8, borderRadius: 4),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Skeleton(height: 18, width: 140),
-                          SizedBox(height: 4),
-                          Skeleton(height: 14, width: 80),
-                        ],
-                      ),
-                    ),
-                    Skeleton(height: 20, width: 60),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 }

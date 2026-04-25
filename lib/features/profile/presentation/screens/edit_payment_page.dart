@@ -1,17 +1,19 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:my_shop/core/presentation/widgets/confirmation_sheet.dart';
+import 'package:my_shop/core/presentation/widgets/global_modal.dart';
+import 'package:my_shop/features/profile/data/models/payment_method.dart';
+import 'package:my_shop/features/profile/data/services/payment_service.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
-import 'dart:convert';
-import '../../data/models/payment_method.dart';
-import '../../data/services/payment_service.dart';
+import 'package:image_picker/image_picker.dart';
+
 import '../widgets/password_confirmation_sheet.dart';
 import '../widgets/payment_success_sheet.dart';
-import '../../../../core/presentation/widgets/global_modal.dart';
 import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import '../../../../core/data/services/image_upload_service.dart';
 
@@ -26,6 +28,12 @@ class EditPaymentPage extends StatefulWidget {
 class _EditPaymentPageState extends State<EditPaymentPage> {
   final PaymentService _paymentService = PaymentService();
   final Map<String, XFile?> _pickedImages = {};
+  final _scrollController = ScrollController();
+
+  // GlobalKeys for scroll-to-error
+  final _qrImageKey = GlobalKey();
+  final _accountNameKey = GlobalKey();
+  final _accountNumberKey = GlobalKey();
 
   late final TextEditingController _accountNameCtrl;
   late final TextEditingController _accountNumberCtrl;
@@ -55,10 +63,23 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _accountNameCtrl.dispose();
     _accountNumberCtrl.dispose();
     _displayOrderCtrl.dispose();
     super.dispose();
+  }
+
+  void _scrollToKey(GlobalKey key) {
+    final context = key.currentContext;
+    if (context != null) {
+      Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+        alignment: 0.1,
+      );
+    }
   }
 
   Future<void> _loadLatestDetails() async {
@@ -80,9 +101,65 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
     }
   }
 
-  Future<void> _handleUpdate() async {
-    setState(() => _isSaving = true);
+  bool _isFormValid() {
+    final accountName = _accountNameCtrl.text.trim();
+    final accountNumber = _accountNumberCtrl.text.trim();
+    final pickedImage = _pickedImages[_currentPayment?.id.toString()];
+    final hasExistingImage = _currentPayment?.qrImageUrl.isNotEmpty ?? false;
+    final hasImage = pickedImage != null || hasExistingImage;
 
+    if (!hasImage) {
+      _scrollToKey(_qrImageKey);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('QR Image is required'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return false;
+    }
+
+    if (accountName.isEmpty) {
+      _scrollToKey(_accountNameKey);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Account Name is required'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return false;
+    }
+
+    if (accountNumber.isEmpty) {
+      _scrollToKey(_accountNumberKey);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Account Number is required'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  Future<void> _handleUpdate() async {
+    GlobalModal.show(
+      context: context,
+      child: ConfirmationSheet(
+        title: 'Update Payment',
+        message: 'Are you sure you want to update this payment method?',
+        confirmLabel: 'Yes, Update',
+        onConfirm: () async {
+          Navigator.pop(context);
+          await _performUpdate();
+        },
+      ),
+    );
+  }
+
+  Future<void> _performUpdate() async {
     int? shopId = _currentPayment?.shopId;
     if (shopId == null || shopId == 0) {
       shopId = await StorageService.instance.getSelectedShopId();
@@ -92,7 +169,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
       "paymentMethodId":
           _currentPayment?.paymentMethodId ??
           widget.paymentMethod.paymentMethodId,
-      "displayOrder": int.tryParse(_displayOrderCtrl.text) ?? 0,
+      "displayOrder": 1,
       "isActive": _isActive,
       "shopId": shopId,
       "paymentMethodName":
@@ -252,6 +329,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
               children: [
                 Expanded(
                   child: SingleChildScrollView(
+                    controller: _scrollController,
                     padding: const EdgeInsets.all(24),
                     child: _buildForm(),
                   ),
@@ -275,6 +353,8 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                 onPressed: _isSaving
                     ? null
                     : () {
+                        if (!_isFormValid()) return;
+
                         GlobalModal.show(
                           context: context,
                           child: PasswordConfirmationSheet(
@@ -337,11 +417,12 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
       children: [
         _buildPaymentIconAndName(),
         const SizedBox(height: 24),
-        _buildImagePicker(),
+        SizedBox(key: _qrImageKey, child: _buildImagePicker()),
         const SizedBox(height: 32),
         _buildSectionTitle('Account Details'),
         const SizedBox(height: 16),
         _buildInputField(
+          key: _accountNameKey,
           label: 'Account Name',
           controller: _accountNameCtrl,
           hint: 'e.g. John Doe',
@@ -349,27 +430,14 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
         ),
         const SizedBox(height: 20),
         _buildInputField(
+          key: _accountNumberKey,
           label: 'Account Number',
           controller: _accountNumberCtrl,
           hint: 'e.g. 123456789',
           icon: PhosphorIconsRegular.hash,
         ),
         const SizedBox(height: 20),
-        Row(
-          children: [
-            Expanded(
-              child: _buildInputField(
-                label: 'Display Order',
-                controller: _displayOrderCtrl,
-                hint: '0',
-                icon: PhosphorIconsRegular.sortAscending,
-                keyboardType: TextInputType.number,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(child: _buildStatusToggle()),
-          ],
-        ),
+        _buildStatusToggle(),
         const SizedBox(height: 40),
       ],
     );
@@ -534,6 +602,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
   }
 
   Widget _buildInputField({
+    Key? key,
     required String label,
     required TextEditingController controller,
     required String hint,
@@ -541,6 +610,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
     TextInputType keyboardType = TextInputType.text,
   }) {
     return Column(
+      key: key,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(

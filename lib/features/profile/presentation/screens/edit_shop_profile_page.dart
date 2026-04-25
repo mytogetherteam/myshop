@@ -30,6 +30,15 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   bool _isLoading = false;
   ShopProfileModel? _currentProfile;
 
+  final _scrollController = ScrollController();
+
+  // GlobalKeys for scroll-to-error
+  final _nameKey = GlobalKey();
+  final _categoryKey = GlobalKey();
+  final _phoneKey = GlobalKey();
+  final _addressKey = GlobalKey();
+  final _baseFeeKey = GlobalKey();
+
   List<MasterDataModel> _categories = [];
   List<MasterDataModel> _subcategories = [];
   List<MasterDataModel> _cities = [];
@@ -302,6 +311,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     for (final c in [
       _nameEnCtrl,
       _nameMmCtrl,
@@ -374,7 +384,61 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     return result ?? false;
   }
 
+  void _scrollToKey(GlobalKey key) {
+    final ctx = key.currentContext;
+    if (ctx != null) {
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+        alignment: 0.1,
+      );
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color(0xFFEF4444),
+      ),
+    );
+  }
+
+  bool _validate() {
+    if (_nameEnCtrl.text.trim().isEmpty) {
+      _scrollToKey(_nameKey);
+      _showError('Shop Name (EN) is required');
+      return false;
+    }
+    if (_selectedCategory == null) {
+      _scrollToKey(_categoryKey);
+      _showError('Category is required');
+      return false;
+    }
+    if (_phoneCtrl.text.trim().isEmpty) {
+      _scrollToKey(_phoneKey);
+      _showError('Phone Number is required');
+      return false;
+    }
+    if (_addressEnCtrl.text.trim().isEmpty) {
+      // Switch to EN tab if not already on it so the user sees the empty field
+      if (_addressLang != 'EN') setState(() => _addressLang = 'EN');
+      _scrollToKey(_addressKey);
+      _showError('Street Address (EN) is required');
+      return false;
+    }
+    final baseFee = double.tryParse(_baseFeeCtrl.text.trim());
+    if (baseFee == null || baseFee < 0) {
+      _scrollToKey(_baseFeeKey);
+      _showError('Base Delivery Fee must be a valid non-negative number');
+      return false;
+    }
+    return true;
+  }
+
   Future<void> _save() async {
+    if (!_validate()) return;
     setState(() => _isSaving = true);
 
     final payload = {
@@ -590,6 +654,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
           ),
         ),
         body: ListView(
+          controller: _scrollController,
           padding: const EdgeInsets.only(bottom: 24),
           children: [
             // ── FIXED: Hero cover + floating info card ──────────────────
@@ -598,6 +663,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             const SizedBox(height: 20),
 
             _buildSection(
+              key: _nameKey,
               label: 'Shop Name',
               child: _buildLangField(
                 selectedLang: _nameLang,
@@ -612,6 +678,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             ),
             const SizedBox(height: 32),
             _buildSection(
+              key: _categoryKey,
               label: 'Category',
               child: _buildDropdown(
                 'Select Category',
@@ -704,7 +771,9 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             const SizedBox(height: 32),
 
             _buildSection(
+              key: _phoneKey,
               label: 'Phone Number',
+              required: true,
               child: _buildTextField(
                 _phoneCtrl,
                 '+95 9 XXX XXX XXX',
@@ -724,7 +793,9 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             const SizedBox(height: 32),
 
             _buildSection(
+              key: _addressKey,
               label: 'Street Address',
+              required: true,
               child: _buildLangField(
                 selectedLang: _addressLang,
                 onLangChanged: (l) => setState(() => _addressLang = l),
@@ -734,6 +805,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                     ? _addressMmCtrl
                     : _addressThCtrl,
                 hint: 'Enter street address',
+                requiredLang: 'EN',
               ),
             ),
             const SizedBox(height: 32),
@@ -786,16 +858,6 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             ),
             const SizedBox(height: 32),
 
-            _buildSection(
-              label: 'Google Maps Link',
-              child: _buildTextField(
-                _mapsLinkCtrl,
-                'Paste Google Maps URL',
-                icon: PhosphorIconsRegular.mapPin,
-              ),
-            ),
-            const SizedBox(height: 32),
-
             _buildToggleSection(
               title: 'Standard Delivery Settings',
               items: [
@@ -812,6 +874,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             ),
             const SizedBox(height: 32),
             Padding(
+              key: _baseFeeKey,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
@@ -821,6 +884,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                       controller: _baseFeeCtrl,
                       hint: '0.00',
                       keyboardType: TextInputType.number,
+                      required: true,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -830,93 +894,6 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             ),
             const SizedBox(height: 32),
 
-            _buildSection(
-              label: 'Order Settings',
-              child: Column(
-                children: [
-                  _buildSmallField(
-                    label: 'Min Order Amount',
-                    controller: _minAmountCtrl,
-                    hint: '0.00',
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSmallField(
-                    label: 'Max Items per Order',
-                    controller: _maxQtyCtrl,
-                    hint: '10',
-                    keyboardType: TextInputType.number,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            _buildSection(
-              label: 'Map Location',
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Row(
-                  children: [
-                    const PhosphorIcon(
-                      PhosphorIconsRegular.mapPin,
-                      size: 20,
-                      color: Color(0xFFED3973),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${_latitude?.toStringAsFixed(4) ?? "16.8409"}° N, '
-                            '${_longitude?.toStringAsFixed(4) ?? "96.1735"}° E',
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF1E293B),
-                            ),
-                          ),
-                          Text(
-                            'Current pin location',
-                            style: GoogleFonts.poppins(
-                              fontSize: 11,
-                              color: const Color(0xFF94A3B8),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    TextButton.icon(
-                      onPressed: _markChanged,
-                      icon: const PhosphorIcon(
-                        PhosphorIconsRegular.pencilSimple,
-                        size: 14,
-                        color: Color(0xFF475569),
-                      ),
-                      label: Text(
-                        'Reposition',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: const Color(0xFF475569),
-                        ),
-                      ),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
             const SizedBox(height: 24),
 
             _buildToggleSection(
@@ -1458,21 +1435,39 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   // ── Form helpers ──────────────────────────────────────────────────────────
 
   Widget _buildSection({
+    Key? key,
     required String label,
     required Widget child,
     EdgeInsets? padding,
+    bool required = false,
   }) {
     return Padding(
+      key: key,
       padding: padding ?? const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: GoogleFonts.poppins(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF475569),
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: label,
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF475569),
+                  ),
+                ),
+                if (required)
+                  const TextSpan(
+                    text: ' *',
+                    style: TextStyle(
+                      color: Color(0xFFED3973),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+              ],
             ),
           ),
           const SizedBox(height: 16),
@@ -1488,6 +1483,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     required TextEditingController controller,
     required String hint,
     int maxLines = 1,
+    String? requiredLang,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1495,6 +1491,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         Row(
           children: ['EN', 'MM', 'TH'].map((lang) {
             final selected = selectedLang == lang;
+            final isRequired = requiredLang == lang;
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: GestureDetector(
@@ -1517,12 +1514,31 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                           : const Color(0xFFE2E8F0),
                     ),
                   ),
-                  child: Text(
-                    lang,
-                    style: GoogleFonts.poppins(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: selected ? Colors.white : const Color(0xFF64748B),
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: lang,
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: selected
+                                ? Colors.white
+                                : const Color(0xFF64748B),
+                          ),
+                        ),
+                        if (isRequired)
+                          TextSpan(
+                            text: ' *',
+                            style: TextStyle(
+                              color: selected
+                                  ? Colors.white
+                                  : const Color(0xFFED3973),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 11,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),
@@ -1702,16 +1718,32 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     required TextEditingController controller,
     required String hint,
     TextInputType keyboardType = TextInputType.text,
+    bool required = false,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: const Color(0xFF64748B),
+        RichText(
+          text: TextSpan(
+            children: [
+              TextSpan(
+                text: label,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+              if (required)
+                const TextSpan(
+                  text: ' *',
+                  style: TextStyle(
+                    color: Color(0xFFED3972),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
+            ],
           ),
         ),
         const SizedBox(height: 6),

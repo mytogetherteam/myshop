@@ -229,15 +229,17 @@ class _AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
-              GestureDetector(
-                onTap: () => _handleDelete(pm),
-                child: const Icon(
-                  PhosphorIconsRegular.trash,
-                  size: 20,
-                  color: Color(0xFFEF4444),
+              if (_paymentMethods.length > 1) ...[
+                const SizedBox(width: 16),
+                GestureDetector(
+                  onTap: () => _handleDelete(pm),
+                  child: const Icon(
+                    PhosphorIconsRegular.trash,
+                    size: 20,
+                    color: Color(0xFFEF4444),
+                  ),
                 ),
-              ),
+              ],
             ],
           ],
         ),

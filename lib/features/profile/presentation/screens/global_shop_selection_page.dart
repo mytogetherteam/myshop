@@ -48,10 +48,25 @@ class _GlobalShopSelectionPageState extends State<GlobalShopSelectionPage> {
             _isLoading = false;
           });
         }
-      } else if (shops.length == 1 && widget.isInitialFlow) {
-        await StorageService.instance.saveSelectedShopId(shops[0].id);
-        if (!mounted) return;
-        Navigator.of(context).pushReplacementNamed('/home');
+      } else if (shops.length == 1) {
+        if (widget.isInitialFlow) {
+          await StorageService.instance.saveSelectedShopId(shops[0].id);
+          if (!mounted) return;
+          Navigator.of(context).pushReplacementNamed('/home');
+        } else {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Only one shop available: ${shops[0].name}',
+                style: GoogleFonts.poppins(),
+              ),
+              backgroundColor: const Color(0xFF10B981),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          Navigator.of(context).pop();
+        }
       } else {
         setState(() {
           _shops = shops;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_shop/core/presentation/widgets/custom_search_dropdown.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
@@ -12,7 +13,7 @@ class CreateCategoryScreen extends StatefulWidget {
 
 class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
   final CategoryService _categoryService = CategoryService();
-  
+
   final TextEditingController _nameEnController = TextEditingController();
   final TextEditingController _nameMmController = TextEditingController();
   final TextEditingController _nameThController = TextEditingController();
@@ -20,10 +21,10 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
 
   List<Map<String, dynamic>> _masterCategories = [];
   int? _selectedMasterCategoryId;
-  
+
   List<Map<String, dynamic>> _gallery = [];
   int _selectedGalleryIndex = 0;
-  
+
   bool _isSaving = false;
   bool _isLoadingData = true;
 
@@ -58,23 +59,29 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
   }
 
   Future<void> _saveCategory() async {
-    if (_nameEnController.text.isEmpty && _nameMmController.text.isEmpty && _nameThController.text.isEmpty) {
+    if (_nameEnController.text.isEmpty &&
+        _nameMmController.text.isEmpty &&
+        _nameThController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter at least one category name')),
+        const SnackBar(
+          content: Text('Please enter at least one category name'),
+        ),
       );
       return;
     }
 
     setState(() => _isSaving = true);
-    
+
     final payload = {
       'nameEn': _nameEnController.text,
       'nameMm': _nameMmController.text,
       'nameTh': _nameThController.text,
-      'imageUrl': _gallery.isNotEmpty ? _gallery[_selectedGalleryIndex]['imageUrl'] : null,
+      'imageUrl': _gallery.isNotEmpty
+          ? _gallery[_selectedGalleryIndex]['imageUrl']
+          : null,
       'masterCategoryId': _selectedMasterCategoryId,
       'isActive': true,
-      'displayOrder': 0,
+      'displayOrder': 1,
     };
 
     final success = await _categoryService.createCategory(payload);
@@ -115,93 +122,91 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
           ),
         ),
         centerTitle: false,
-        actions: const [
-          SizedBox(width: 8),
-        ],
+        actions: const [SizedBox(width: 8)],
       ),
-      body: _isLoadingData 
-        ? const Center(child: CustomLoadingIndicator())
-        : ListView(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 20,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+      body: _isLoadingData
+          ? const Center(child: CustomLoadingIndicator())
+          : ListView(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'CREATE NEW CATEGORY',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFFCBD5E1),
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Master Category Dropdown
+                      Text(
+                        'Master Category',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF1E293B),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildMasterCategoryDropdown(),
+                      const SizedBox(height: 24),
+
+                      // Icon Gallery
+                      Text(
+                        'Choose icon',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF1E293B),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildIconGallery(),
+                      const SizedBox(height: 24),
+
+                      // Name Lang Switcher
+                      Text(
+                        'Category name',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF1E293B),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildLangField(
+                        selectedLang: _nameLang,
+                        onLangChanged: (l) => setState(() => _nameLang = l),
+                        controller: _nameLang == 'EN'
+                            ? _nameEnController
+                            : _nameLang == 'MM'
+                            ? _nameMmController
+                            : _nameThController,
+                        hint: 'Enter category name',
+                      ),
+                    ],
+                  ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'CREATE NEW CATEGORY',
-                      style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFFCBD5E1),
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    
-                    // Master Category Dropdown
-                    Text(
-                      'Master Category',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF1E293B),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildMasterCategoryDropdown(),
-                    const SizedBox(height: 24),
-    
-                    // Icon Gallery
-                    Text(
-                      'Choose icon',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF1E293B),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildIconGallery(),
-                    const SizedBox(height: 24),
-    
-                    // Name Lang Switcher
-                    Text(
-                      'Category name',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF1E293B),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildLangField(
-                      selectedLang: _nameLang,
-                      onLangChanged: (l) => setState(() => _nameLang = l),
-                      controller: _nameLang == 'EN'
-                        ? _nameEnController
-                        : _nameLang == 'MM'
-                          ? _nameMmController
-                          : _nameThController,
-                      hint: 'Enter category name',
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+              ],
+            ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -246,33 +251,27 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
   }
 
   Widget _buildMasterCategoryDropdown() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<int>(
-          value: _selectedMasterCategoryId,
-          isExpanded: true,
-          hint: Text('Choose master category', style: GoogleFonts.poppins(color: const Color(0xFFCBD5E1), fontSize: 14)),
-          items: _masterCategories.map((c) {
-            return DropdownMenuItem<int>(
-              value: c['id'],
-              child: Text(c['nameEn'] ?? 'Null', style: GoogleFonts.poppins(fontSize: 14)),
-            );
-          }).toList(),
-          onChanged: (v) => setState(() => _selectedMasterCategoryId = v),
-        ),
-      ),
+    return CustomSearchDropdown<Map<String, dynamic>>(
+      items: _masterCategories,
+      value: _selectedMasterCategoryId != null
+          ? _masterCategories.firstWhere(
+              (c) => c['id'] == _selectedMasterCategoryId,
+              orElse: () => {},
+            )
+          : null,
+      hintText: 'Choose master category',
+      itemLabelBuilder: (c) => c['nameEn'] ?? 'Null',
+      onChanged: (v) => setState(() => _selectedMasterCategoryId = v?['id']),
     );
   }
 
   Widget _buildIconGallery() {
-    if (_gallery.isEmpty) return const Text('No icons available', style: TextStyle(fontSize: 12, color: Colors.grey));
-    
+    if (_gallery.isEmpty)
+      return const Text(
+        'No icons available',
+        style: TextStyle(fontSize: 12, color: Colors.grey),
+      );
+
     return SizedBox(
       height: 60,
       child: ListView.separated(
@@ -290,13 +289,19 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
                 color: const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isSelected ? const Color(0xFFED3A72) : const Color(0xFFE2E8F0),
+                  color: isSelected
+                      ? const Color(0xFFED3A72)
+                      : const Color(0xFFE2E8F0),
                   width: 2,
                 ),
               ),
               child: Image.network(
                 _gallery[index]['imageUrl'],
-                errorBuilder: (context, error, stackTrace) => const Icon(Icons.restaurant, size: 24, color: Color(0xFF94A3B8)),
+                errorBuilder: (context, error, stackTrace) => const Icon(
+                  Icons.restaurant,
+                  size: 24,
+                  color: Color(0xFF94A3B8),
+                ),
               ),
             ),
           );
@@ -322,12 +327,17 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
               child: GestureDetector(
                 onTap: () => onLangChanged(lang),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: selected ? const Color(0xFFED3973) : Colors.white,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: selected ? const Color(0xFFED3973) : const Color(0xFFE2E8F0),
+                      color: selected
+                          ? const Color(0xFFED3973)
+                          : const Color(0xFFE2E8F0),
                     ),
                   ),
                   child: Text(
@@ -355,11 +365,13 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
           ),
         ),
       ],
     );
   }
 }
-

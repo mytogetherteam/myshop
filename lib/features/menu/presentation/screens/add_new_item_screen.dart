@@ -1,11 +1,14 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/core/data/services/image_upload_service.dart';
+import 'package:my_shop/core/presentation/widgets/custom_search_dropdown.dart';
 import '../../data/models/menu_item_model.dart';
 import '../../data/models/menu_category_model.dart';
 import '../../data/services/menu_service.dart';
@@ -24,6 +27,15 @@ class AddNewItemScreen extends StatefulWidget {
 class _AddNewItemScreenState extends State<AddNewItemScreen> {
   final MenuService _menuService = MenuService();
   final _formKey = GlobalKey<FormState>();
+  final _scrollController = ScrollController();
+
+  // GlobalKeys for scroll-to-error
+  final _nameKey = GlobalKey();
+  final _masterCategoryKey = GlobalKey();
+  final _categoryKey = GlobalKey();
+  final _mealTypesKey = GlobalKey();
+  final _tagsKey = GlobalKey();
+  final _priceKey = GlobalKey();
 
   // Controllers
   late final TextEditingController _nameController;
@@ -68,6 +80,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
 
   bool _isLoadingData = true;
   bool _isSaving = false;
+  String? _priceWarning;
 
   // Image state
   XFile? _pickedImage;
@@ -82,6 +95,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   final Map<int, String> _addonLangs = {};
 
   List<MenuComboComponentModel> _comboComponents = [];
+  List<MenuItemModel> _availableItems = [];
 
   final List<String> _currencies = ['THB', 'USD', 'MMK'];
 
@@ -151,12 +165,14 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         _menuService.getMasterCategories(),
         _menuService.getMasterMenuItems(),
         _menuService.getMenuTags(),
+        _menuService.getMenuItems(limit: 1000), // Fetch items for combo components
       ]);
 
       final categories = results[0] as List<MenuCategoryModel>?;
       final mCategories = results[1] as List<MasterDataModel>?;
       final mItems = results[2] as List<MasterDataModel>?;
       final tags = results[3] as List<MasterDataModel>?;
+      final allItems = results[4] as List<MenuItemModel>?;
 
       if (mounted) {
         setState(() {
@@ -164,6 +180,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           _masterCategories = mCategories ?? [];
           _masterItems = mItems ?? [];
           _menuTags = tags ?? [];
+          _availableItems = allItems ?? [];
 
           final item = widget.item;
           if (item != null) {
@@ -202,8 +219,25 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     }
   }
 
+  void _validatePrices() {
+    final originalPriceText = _originalPriceController.text.replaceAll(',', '');
+    final discountPriceText = _priceController.text.replaceAll(',', '');
+
+    final originalPrice = double.tryParse(originalPriceText) ?? 0;
+    final discountPrice = double.tryParse(discountPriceText) ?? 0;
+
+    setState(() {
+      if (discountPrice > originalPrice && originalPrice > 0) {
+        _priceWarning = 'Discount price cannot be greater than original price';
+      } else {
+        _priceWarning = null;
+      }
+    });
+  }
+
   @override
   void dispose() {
+    _scrollController.dispose();
     _nameController.dispose();
     _nameMmController.dispose();
     _nameThController.dispose();
@@ -219,8 +253,65 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     super.dispose();
   }
 
+  void _scrollToKey(GlobalKey key) {
+    final context = key.currentContext;
+    if (context != null) {
+      Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+        alignment: 0.1,
+      );
+    }
+  }
+
   Future<void> _handleSave() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Additional validations — scroll to first error
+    if (_nameController.text.trim().isEmpty) {
+      _scrollToKey(_nameKey);
+      _showError('Item Name (EN) is required');
+      return;
+    }
+    if (_selectedMasterCategory == null) {
+      _scrollToKey(_masterCategoryKey);
+      _showError('Master Category is required');
+      return;
+    }
+    if (_selectedCategory == null) {
+      _scrollToKey(_categoryKey);
+      _showError('Category is required');
+      return;
+    }
+    if (_selectedMealTypes.isEmpty) {
+      _scrollToKey(_mealTypesKey);
+      _showError('At least one Meal Type is required');
+      return;
+    }
+    if (_selectedTagIds.isEmpty &&
+        !_isPopular &&
+        !_isVegetarian &&
+        !_isSpicy &&
+        !_isCombo &&
+        !_isRecommended &&
+        !_isHotDeal) {
+      _scrollToKey(_tagsKey);
+      _showError('At least one Tag is required');
+      return;
+    }
+    final opText = _originalPriceController.text.replaceAll(',', '');
+    if (opText.isEmpty || (double.tryParse(opText) ?? 0) <= 0) {
+      _scrollToKey(_priceKey);
+      _showError('Original Price is required and must be greater than 0');
+      return;
+    }
+
+    if (_priceWarning != null) {
+      _scrollToKey(_priceKey);
+      _showError(_priceWarning!);
+      return;
+    }
 
     setState(() => _isSaving = true);
 
@@ -231,9 +322,14 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       'descriptionEn': _descriptionController.text,
       'descriptionMm': _descriptionMmController.text,
       'descriptionTh': _descriptionThController.text,
-      'price': double.tryParse(_priceController.text) ?? 0.0,
-      'originalPrice': double.tryParse(_originalPriceController.text),
-      'discountAmount': double.tryParse(_discountAmountController.text) ?? 0.0,
+      'price':
+          double.tryParse(_priceController.text.replaceAll(',', '')) ?? 0.0,
+      'originalPrice': double.tryParse(
+        _originalPriceController.text.replaceAll(',', ''),
+      ),
+      'discountAmount':
+          double.tryParse(_discountAmountController.text.replaceAll(',', '')) ??
+          0.0,
       'discountPercentage':
           double.tryParse(_discountPercentController.text) ?? 0.0,
       'currency': _currency,
@@ -298,6 +394,15 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     }
   }
 
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color(0xFFEF4444),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -326,6 +431,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         body: _isLoadingData
             ? _buildSkeletonForm()
             : SingleChildScrollView(
+                controller: _scrollController,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Form(
                   key: _formKey,
@@ -345,24 +451,28 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                             setState(() => _selectedItemInfoLang = val),
                       ),
                       const SizedBox(height: 16),
-                      _buildItemInfoFields(),
+                      SizedBox(key: _nameKey, child: _buildItemInfoFields()),
                       const SizedBox(height: 16),
                       _buildMasterItemSelection(),
                       const SizedBox(height: 16),
                       _buildDropdownField<MasterDataModel>(
+                        key: _masterCategoryKey,
                         label: 'Master Category',
                         value: _selectedMasterCategory,
                         items: _masterCategories,
                         hint: 'Search master categories...',
+                        isRequired: true,
                         onChanged: (val) =>
                             setState(() => _selectedMasterCategory = val),
                       ),
                       const SizedBox(height: 16),
                       _buildDropdownField<MenuCategoryModel>(
+                        key: _categoryKey,
                         label: 'Category',
                         value: _selectedCategory,
                         items: _categories,
                         hint: 'Search categories...',
+                        isRequired: true,
                         onChanged: (val) =>
                             setState(() => _selectedCategory = val),
                         showClearIcon: true,
@@ -373,36 +483,13 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                       // Categorization Section
                       _buildSectionTitle('CATEGORIZATION'),
                       const SizedBox(height: 16),
-                      _buildMealTypesSelection(),
+                      SizedBox(key: _mealTypesKey, child: _buildMealTypesSelection()),
                       const SizedBox(height: 24),
-                      _buildTagsSelection(),
+                      SizedBox(key: _tagsKey, child: _buildTagsSelection()),
                       const SizedBox(height: 32),
 
-                      // Pricing & Stock Section
-                      _buildSectionTitle('PRICING & STOCK'),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
-                              'Price',
-                              _priceController,
-                              hint: '0.00',
-                              keyboardType: TextInputType.number,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildDropdownFieldStr(
-                              label: 'Currency',
-                              value: _currency,
-                              items: _currencies,
-                              onChanged: (v) =>
-                                  setState(() => _currency = v ?? 'THB'),
-                            ),
-                          ),
-                        ],
-                      ),
+                      // Pricing Section
+                      SizedBox(key: _priceKey, child: _buildSectionTitle('PRICING')),
                       const SizedBox(height: 16),
                       Row(
                         children: [
@@ -412,56 +499,37 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                               _originalPriceController,
                               hint: '0.00',
                               keyboardType: TextInputType.number,
+                              isRequired: true,
+                              prefixText: '฿ ',
+                              textAlign: TextAlign.right,
+                              onChanged: (_) => _validatePrices(),
                             ),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
                             child: _buildTextField(
-                              'Stock Quantity',
-                              _stockQuantityController,
-                              hint: '100',
-                              keyboardType: TextInputType.number,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
-                              'Discount Amount',
-                              _discountAmountController,
+                              'Discount Price',
+                              _priceController,
                               hint: '0.00',
                               keyboardType: TextInputType.number,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildTextField(
-                              'Discount %',
-                              _discountPercentController,
-                              hint: '0',
-                              keyboardType: TextInputType.number,
+                              prefixText: '฿ ',
+                              textAlign: TextAlign.right,
+                              onChanged: (_) => _validatePrices(),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
-                              'Display Order',
-                              _displayOrderController,
-                              hint: '0',
-                              keyboardType: TextInputType.number,
-                            ),
+                      if (_priceWarning != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          _priceWarning!,
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: const Color(0xFFEF4444),
+                            fontWeight: FontWeight.w500,
                           ),
-                          const SizedBox(width: 16),
-                          const Spacer(),
-                        ],
-                      ),
+                        ),
+                      ],
                       const SizedBox(height: 32),
 
                       // Properties Section
@@ -719,6 +787,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           'Item Name ($_selectedItemInfoLang)',
           nameCtrl,
           hint: 'Enter item name',
+          isRequired: _selectedItemInfoLang == 'EN',
         ),
         const SizedBox(height: 16),
         _buildTextField(
@@ -858,24 +927,6 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                _buildTextField(
-                  'Display Order',
-                  TextEditingController(
-                    text: variant.displayOrder?.toString() ?? '0',
-                  ),
-                  keyboardType: TextInputType.number,
-                  onChanged: (v) {
-                    _variants[index] = MenuItemVariantModel(
-                      id: variant.id,
-                      price: variant.price,
-                      nameEn: variant.nameEn,
-                      nameMm: variant.nameMm,
-                      nameTh: variant.nameTh,
-                      isAvailable: variant.isAvailable,
-                      displayOrder: int.tryParse(v) ?? 0,
-                    );
-                  },
-                ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -964,19 +1015,29 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             },
           ),
           const SizedBox(height: 16),
-          _buildTextField(
-            'Item ID',
-            TextEditingController(
-              text: component.includedItemId?.toString() ?? '',
-            ),
-            keyboardType: TextInputType.number,
-            onChanged: (v) {
-              _comboComponents[index] = MenuComboComponentModel(
-                includedItemId: int.tryParse(v) ?? 0,
-                quantity: component.quantity,
-                displayOrder: component.displayOrder,
-                itemNameEn: component.itemNameEn,
-              );
+          _buildDropdownField<MenuItemModel>(
+            label: 'Included Item',
+            value: () {
+              try {
+                return _availableItems.firstWhere(
+                  (i) => i.id == component.includedItemId,
+                );
+              } catch (_) {
+                return null;
+              }
+            }(),
+            items: _availableItems,
+            hint: 'Select an item...',
+            isRequired: true,
+            onChanged: (val) {
+              setState(() {
+                _comboComponents[index] = MenuComboComponentModel(
+                  includedItemId: val?.id ?? 0,
+                  quantity: component.quantity,
+                  displayOrder: component.displayOrder,
+                  itemNameEn: val?.nameEn ?? '',
+                );
+              });
             },
           ),
         ],
@@ -1082,82 +1143,6 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: _buildTextField(
-                        'Min Selection',
-                        TextEditingController(
-                          text: group.minSelection?.toString() ?? '0',
-                        ),
-                        keyboardType: TextInputType.number,
-                        onChanged: (v) {
-                          _optionGroups[index] = MenuItemOptionGroupModel(
-                            id: group.id,
-                            nameEn: group.nameEn,
-                            nameMm: group.nameMm,
-                            nameTh: group.nameTh,
-                            isRequired: group.isRequired,
-                            minSelection: int.tryParse(v) ?? 0,
-                            maxSelection: group.maxSelection,
-                            displayOrder: group.displayOrder,
-                            groupType: group.groupType,
-                            options: group.options,
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildTextField(
-                        'Max Selection',
-                        TextEditingController(
-                          text: group.maxSelection?.toString() ?? '0',
-                        ),
-                        keyboardType: TextInputType.number,
-                        onChanged: (v) {
-                          _optionGroups[index] = MenuItemOptionGroupModel(
-                            id: group.id,
-                            nameEn: group.nameEn,
-                            nameMm: group.nameMm,
-                            nameTh: group.nameTh,
-                            isRequired: group.isRequired,
-                            minSelection: group.minSelection,
-                            maxSelection: int.tryParse(v) ?? 0,
-                            displayOrder: group.displayOrder,
-                            groupType: group.groupType,
-                            options: group.options,
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTextField(
-                        'Display Order',
-                        TextEditingController(
-                          text: group.displayOrder?.toString() ?? '0',
-                        ),
-                        keyboardType: TextInputType.number,
-                        onChanged: (v) {
-                          _optionGroups[index] = MenuItemOptionGroupModel(
-                            id: group.id,
-                            nameEn: group.nameEn,
-                            nameMm: group.nameMm,
-                            nameTh: group.nameTh,
-                            isRequired: group.isRequired,
-                            minSelection: group.minSelection,
-                            maxSelection: group.maxSelection,
-                            displayOrder: int.tryParse(v) ?? 0,
-                            groupType: group.groupType,
-                            options: group.options,
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -1193,9 +1178,9 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                         ],
                       ),
                     ),
+                    const Spacer(),
                   ],
                 ),
-                const SizedBox(height: 16),
                 const SizedBox(height: 16),
                 ...group.options.asMap().entries.map((optEntry) {
                   final opt = optEntry.value;
@@ -1273,79 +1258,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                         },
                       ),
                       const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
-                              'Display Order',
-                              TextEditingController(
-                                text: opt.displayOrder?.toString() ?? '0',
-                              ),
-                              keyboardType: TextInputType.number,
-                              onChanged: (v) {
-                                final newOpts = List<MenuItemOptionModel>.from(
-                                  group.options,
-                                );
-                                newOpts[oIndex] = MenuItemOptionModel(
-                                  id: opt.id,
-                                  price: opt.price,
-                                  nameEn: opt.nameEn,
-                                  nameMm: opt.nameMm,
-                                  nameTh: opt.nameTh,
-                                  displayOrder: int.tryParse(v) ?? 0,
-                                  linkedMenuItemId: opt.linkedMenuItemId,
-                                );
-                                _optionGroups[index] = MenuItemOptionGroupModel(
-                                  id: group.id,
-                                  nameEn: group.nameEn,
-                                  nameMm: group.nameMm,
-                                  nameTh: group.nameTh,
-                                  isRequired: group.isRequired,
-                                  minSelection: group.minSelection,
-                                  maxSelection: group.maxSelection,
-                                  displayOrder: group.displayOrder,
-                                  options: newOpts,
-                                );
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildTextField(
-                              'Linked Item ID',
-                              TextEditingController(
-                                text: opt.linkedMenuItemId?.toString() ?? '',
-                              ),
-                              keyboardType: TextInputType.number,
-                              onChanged: (v) {
-                                final newOpts = List<MenuItemOptionModel>.from(
-                                  group.options,
-                                );
-                                newOpts[oIndex] = MenuItemOptionModel(
-                                  id: opt.id,
-                                  price: opt.price,
-                                  nameEn: opt.nameEn,
-                                  nameMm: opt.nameMm,
-                                  nameTh: opt.nameTh,
-                                  displayOrder: opt.displayOrder,
-                                  linkedMenuItemId: int.tryParse(v),
-                                );
-                                _optionGroups[index] = MenuItemOptionGroupModel(
-                                  id: group.id,
-                                  nameEn: group.nameEn,
-                                  nameMm: group.nameMm,
-                                  nameTh: group.nameTh,
-                                  isRequired: group.isRequired,
-                                  minSelection: group.minSelection,
-                                  maxSelection: group.maxSelection,
-                                  displayOrder: group.displayOrder,
-                                  options: newOpts,
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
+                      const SizedBox(height: 16),
                     ],
                   );
                 }).toList(),
@@ -1368,17 +1281,31 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     required String value,
     required List<String> items,
     required ValueChanged<String?> onChanged,
+    bool isRequired = false,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
-          ),
+        Row(
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF1E293B),
+              ),
+            ),
+            if (isRequired)
+              Text(
+                ' *',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFFED3973),
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: 8),
         Container(
@@ -1412,6 +1339,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   }
 
   Widget _buildDropdownField<T>({
+    Key? key,
     required String label,
     required T? value,
     required List<T> items,
@@ -1419,73 +1347,67 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     required ValueChanged<T?> onChanged,
     bool showClearIcon = false,
     VoidCallback? onClear,
+    bool isRequired = false,
   }) {
+    String labelFor(T item) {
+      if (item is MasterDataModel) return item.displayName;
+      if (item is MenuCategoryModel) return item.displayName;
+      if (item is MenuItemModel) return item.nameEn ?? item.displayName;
+      return item.toString();
+    }
+
     return Column(
+      key: key,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<T>(
-                    value: value,
-                    isExpanded: true,
-                    icon: const Icon(
-                      Icons.keyboard_arrow_down,
-                      color: Color(0xFF94A3B8),
-                    ),
-                    hint: Text(
-                      hint,
-                      style: GoogleFonts.poppins(
-                        color: const Color(0xFF94A3B8),
-                        fontSize: 13,
-                      ),
-                    ),
-                    items: items.map((item) {
-                      String name = '';
-                      if (item is MasterDataModel) name = item.displayName;
-                      if (item is MenuCategoryModel) name = item.displayName;
-                      return DropdownMenuItem<T>(
-                        value: item,
-                        child: Text(
-                          name,
-                          style: GoogleFonts.poppins(fontSize: 14),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: onChanged,
-                  ),
+        Row(
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF1E293B),
+              ),
+            ),
+            if (isRequired)
+              Text(
+                ' *',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFFED3973),
                 ),
               ),
-              if (showClearIcon && value != null)
-                IconButton(
-                  icon: const Icon(
-                    Icons.close,
-                    size: 18,
-                    color: Color(0xFF94A3B8),
-                  ),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  onPressed: onClear,
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: CustomSearchDropdown<T>(
+                items: items,
+                value: value,
+                hintText: hint,
+                searchHintText: 'Search $label...',
+                itemLabelBuilder: labelFor,
+                onChanged: onChanged,
+              ),
+            ),
+            if (showClearIcon && value != null) ...[
+              const SizedBox(width: 4),
+              IconButton(
+                icon: const Icon(
+                  Icons.close,
+                  size: 18,
+                  color: Color(0xFF94A3B8),
                 ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: onClear,
+              ),
             ],
-          ),
+          ],
         ),
       ],
     );
@@ -1498,17 +1420,33 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     bool isMultiline = false,
     TextInputType? keyboardType,
     ValueChanged<String>? onChanged,
+    bool isRequired = false,
+    String? prefixText,
+    TextAlign textAlign = TextAlign.start,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
-          ),
+        Row(
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF1E293B),
+              ),
+            ),
+            if (isRequired)
+              Text(
+                ' *',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFFED3973),
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: 8),
         TextFormField(
@@ -1516,8 +1454,22 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           maxLines: isMultiline ? 4 : 1,
           keyboardType: keyboardType,
           onChanged: onChanged,
+          textAlign: textAlign,
           style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500),
+          inputFormatters:
+              keyboardType == TextInputType.number
+                  ? [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                    _NumberThousandSeparatorFormatter(),
+                  ]
+                  : null,
           decoration: InputDecoration(
+            prefixText: prefixText,
+            prefixStyle: GoogleFonts.poppins(
+              color: const Color(0xFF1E293B),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
             hintText: hint,
             hintStyle: GoogleFonts.poppins(
               color: const Color(0xFF94A3B8),
@@ -1551,7 +1503,19 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionLabel('Discovery Tags'),
+        Row(
+          children: [
+            _buildSectionLabel('Discovery Tags'),
+            Text(
+              ' *',
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFFED3973),
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
@@ -1614,7 +1578,19 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionLabel('Meal Types'),
+        Row(
+          children: [
+            _buildSectionLabel('Meal Types'),
+            Text(
+              ' *',
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFFED3973),
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
@@ -1852,6 +1828,34 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           Skeleton(width: double.infinity, height: 50),
         ],
       ),
+    );
+  }
+}
+
+class _NumberThousandSeparatorFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) return newValue;
+
+    final String cleanText = newValue.text.replaceAll(',', '');
+    final double? value = double.tryParse(cleanText);
+
+    if (value == null) return newValue;
+
+    final parts = cleanText.split('.');
+    final formatter = NumberFormat('#,###');
+    String formatted = formatter.format(double.parse(parts[0]));
+
+    if (parts.length > 1) {
+      formatted += '.${parts[1]}';
+    }
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
     );
   }
 }

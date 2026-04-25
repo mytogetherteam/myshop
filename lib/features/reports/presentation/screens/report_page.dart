@@ -18,7 +18,8 @@ class ReportPage extends StatefulWidget {
   State<ReportPage> createState() => _ReportPageState();
 }
 
-class _ReportPageState extends State<ReportPage> with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+class _ReportPageState extends State<ReportPage>
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late TabController _tabController;
   bool _isLoading = false;
   DateTimeRange? _selectedDateRange;
@@ -55,26 +56,30 @@ class _ReportPageState extends State<ReportPage> with TickerProviderStateMixin, 
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
-        List<DateTime?> tempValues = _selectedDateRange != null 
-            ? [_selectedDateRange!.start, _selectedDateRange!.end] 
+        List<DateTime?> tempValues = _selectedDateRange != null
+            ? [_selectedDateRange!.start, _selectedDateRange!.end]
             : [DateTime.now(), DateTime.now().add(const Duration(days: 7))];
-            
+
         return StatefulBuilder(
           builder: (context, setModalState) {
             String rangeText = "Select Dates";
-            if (tempValues.length == 2 && tempValues[0] != null && tempValues[1] != null) {
+            if (tempValues.length == 2 &&
+                tempValues[0] != null &&
+                tempValues[1] != null) {
               final start = tempValues[0]!;
               final end = tempValues[1]!;
               if (start.month == end.month) {
-                rangeText = "${DateFormat('dd').format(start)} - ${DateFormat('dd MMM').format(end)}";
+                rangeText =
+                    "${DateFormat('dd').format(start)} - ${DateFormat('dd MMM').format(end)}";
               } else {
-                rangeText = "${DateFormat('dd MMM').format(start)} - ${DateFormat('dd MMM').format(end)}";
+                rangeText =
+                    "${DateFormat('dd MMM').format(start)} - ${DateFormat('dd MMM').format(end)}";
               }
             }
 
             return Container(
               padding: EdgeInsets.only(
-                top: 16, 
+                top: 16,
                 bottom: MediaQuery.of(context).padding.bottom + 16,
               ),
               child: Column(
@@ -87,7 +92,10 @@ class _ReportPageState extends State<ReportPage> with TickerProviderStateMixin, 
                       children: [
                         IconButton(
                           onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.expand_more, color: Color(0xFF64748B)),
+                          icon: const Icon(
+                            Icons.expand_more,
+                            color: Color(0xFF64748B),
+                          ),
                         ),
                         Expanded(
                           child: Text(
@@ -120,7 +128,16 @@ class _ReportPageState extends State<ReportPage> with TickerProviderStateMixin, 
                     config: CalendarDatePicker2Config(
                       calendarType: CalendarDatePicker2Type.range,
                       selectedDayHighlightColor: const Color(0xFFED3A72),
-                      selectedRangeHighlightColor: const Color(0xFFED3A72).withValues(alpha: 0.1),
+                      selectedRangeHighlightColor: const Color(
+                        0xFFED3A72,
+                      ).withValues(alpha: 0.25),
+                      dayBorderRadius: BorderRadius.circular(8),
+                      centerAlignModePicker: true,
+                      controlsHeight: 50,
+                      dayMaxWidth: 45,
+                      modePickersGap: 16,
+                      disableVibration: true,
+                      rangeBidirectional: true,
                       weekdayLabelTextStyle: GoogleFonts.poppins(
                         color: const Color(0xFF64748B),
                         fontWeight: FontWeight.w500,
@@ -171,7 +188,9 @@ class _ReportPageState extends State<ReportPage> with TickerProviderStateMixin, 
                         ),
                         TextButton(
                           onPressed: () {
-                            if (tempValues.length == 2 && tempValues[0] != null && tempValues[1] != null) {
+                            if (tempValues.length == 2 &&
+                                tempValues[0] != null &&
+                                tempValues[1] != null) {
                               Navigator.pop(context, tempValues);
                             }
                           },
@@ -195,9 +214,15 @@ class _ReportPageState extends State<ReportPage> with TickerProviderStateMixin, 
       },
     );
 
-    if (results != null && results.length == 2 && results[0] != null && results[1] != null) {
+    if (results != null &&
+        results.length == 2 &&
+        results[0] != null &&
+        results[1] != null) {
       setState(() {
-        _selectedDateRange = DateTimeRange(start: results[0]!, end: results[1]!);
+        _selectedDateRange = DateTimeRange(
+          start: results[0]!,
+          end: results[1]!,
+        );
       });
     }
   }
@@ -390,7 +415,9 @@ class _ReportPageState extends State<ReportPage> with TickerProviderStateMixin, 
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const TopSellingItemsScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const TopSellingItemsScreen(),
+                ),
               );
             },
             child: Row(
@@ -464,7 +491,9 @@ class _ReportPageState extends State<ReportPage> with TickerProviderStateMixin, 
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const AllOrderHistoryScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const AllOrderHistoryScreen(),
+                ),
               );
             },
             child: Row(
@@ -510,14 +539,14 @@ class _ReportPageState extends State<ReportPage> with TickerProviderStateMixin, 
         amount: "120",
         statusColor: Color(0xFF22C55E),
       ),
-       const OrderHistoryItem(
+      const OrderHistoryItem(
         orderId: "QW-8349",
         time: "04:59 AM",
         status: "Cancelled",
         amount: "235",
         statusColor: Color(0xFFEF4444),
       ),
-       const OrderHistoryItem(
+      const OrderHistoryItem(
         orderId: "LP-7539",
         time: "08:00 AM",
         status: "Completed",
@@ -555,10 +584,13 @@ class _ReportPageState extends State<ReportPage> with TickerProviderStateMixin, 
       const SizedBox(height: 32),
       const Skeleton(width: 150, height: 24),
       const SizedBox(height: 16),
-      ...List.generate(5, (_) => const Padding(
-        padding: EdgeInsets.symmetric(vertical: 8),
-        child: Skeleton(height: 40),
-      )),
+      ...List.generate(
+        5,
+        (_) => const Padding(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Skeleton(height: 40),
+        ),
+      ),
     ];
   }
 }

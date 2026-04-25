@@ -16,7 +16,8 @@ class AnalyticsPage extends StatefulWidget {
   State<AnalyticsPage> createState() => _AnalyticsPageState();
 }
 
-class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateMixin {
+class _AnalyticsPageState extends State<AnalyticsPage>
+    with TickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = true;
   Map<String, dynamic>? _data;
@@ -31,10 +32,10 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    
+
     // Simulate network delay
     await Future.delayed(const Duration(seconds: 1));
-    
+
     // Mock JSON Data
     _data = {
       "orders": {
@@ -56,7 +57,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
           {"date": "Mar 02", "value": 4500.0},
           {"date": "Mar 06", "value": 6200.0},
           {"date": "Mar 11", "value": 10000.0},
-        ]
+        ],
       },
       "newCustomers": {
         "total": "418",
@@ -85,20 +86,32 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
           {"label": "Checkout visit", "value": "2,003", "percentage": 0.3},
           {"label": "Ordered", "value": "640", "percentage": 0.15},
           {"label": "Reviews tapped", "value": "500", "percentage": 0.1},
-        ]
+        ],
       },
       "totalCustomers": {
         "total": "6,284",
         "trend": "42%",
         "trendPositive": true,
         "items": [
-          {"label": "Lunch • 12:00-14:00", "value": "9,820", "percentage": 0.95},
-          {"label": "Dinner • 18:00-20:00", "value": "4,260", "percentage": 0.75},
-          {"label": "Breakfast • 18:00-20:00", "value": "2,003", "percentage": 0.4},
-        ]
-      }
+          {
+            "label": "Lunch • 12:00-14:00",
+            "value": "9,820",
+            "percentage": 0.95,
+          },
+          {
+            "label": "Dinner • 18:00-20:00",
+            "value": "4,260",
+            "percentage": 0.75,
+          },
+          {
+            "label": "Breakfast • 18:00-20:00",
+            "value": "2,003",
+            "percentage": 0.4,
+          },
+        ],
+      },
     };
-    
+
     if (mounted) {
       setState(() => _isLoading = false);
     }
@@ -119,26 +132,30 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
-        List<DateTime?> tempValues = _selectedDateRange != null 
-            ? [_selectedDateRange!.start, _selectedDateRange!.end] 
+        List<DateTime?> tempValues = _selectedDateRange != null
+            ? [_selectedDateRange!.start, _selectedDateRange!.end]
             : [DateTime.now(), DateTime.now().add(const Duration(days: 7))];
-            
+
         return StatefulBuilder(
           builder: (context, setModalState) {
             String rangeText = "Select Dates";
-            if (tempValues.length == 2 && tempValues[0] != null && tempValues[1] != null) {
+            if (tempValues.length == 2 &&
+                tempValues[0] != null &&
+                tempValues[1] != null) {
               final start = tempValues[0]!;
               final end = tempValues[1]!;
               if (start.month == end.month) {
-                rangeText = "${DateFormat('dd').format(start)} - ${DateFormat('dd MMM').format(end)}";
+                rangeText =
+                    "${DateFormat('dd').format(start)} - ${DateFormat('dd MMM').format(end)}";
               } else {
-                rangeText = "${DateFormat('dd MMM').format(start)} - ${DateFormat('dd MMM').format(end)}";
+                rangeText =
+                    "${DateFormat('dd MMM').format(start)} - ${DateFormat('dd MMM').format(end)}";
               }
             }
 
             return Container(
               padding: EdgeInsets.only(
-                top: 16, 
+                top: 16,
                 bottom: MediaQuery.of(context).padding.bottom + 16,
               ),
               child: Column(
@@ -151,7 +168,10 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
                       children: [
                         IconButton(
                           onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.expand_more, color: Color(0xFF64748B)),
+                          icon: const Icon(
+                            Icons.expand_more,
+                            color: Color(0xFF64748B),
+                          ),
                         ),
                         Expanded(
                           child: Text(
@@ -184,7 +204,16 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
                     config: CalendarDatePicker2Config(
                       calendarType: CalendarDatePicker2Type.range,
                       selectedDayHighlightColor: const Color(0xFFED3A72),
-                      selectedRangeHighlightColor: const Color(0xFFED3A72).withValues(alpha: 0.1),
+                      selectedRangeHighlightColor: const Color(
+                        0xFFED3A72,
+                      ).withValues(alpha: 0.25),
+                      dayBorderRadius: BorderRadius.circular(8),
+                      centerAlignModePicker: true,
+                      controlsHeight: 50,
+                      dayMaxWidth: 45,
+                      modePickersGap: 16,
+                      disableVibration: true,
+                      rangeBidirectional: true,
                       weekdayLabelTextStyle: GoogleFonts.poppins(
                         color: const Color(0xFF64748B),
                         fontWeight: FontWeight.w500,
@@ -235,7 +264,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
                         ),
                         TextButton(
                           onPressed: () {
-                            if (tempValues.length == 2 && tempValues[0] != null && tempValues[1] != null) {
+                            if (tempValues.length == 2 &&
+                                tempValues[0] != null &&
+                                tempValues[1] != null) {
                               Navigator.pop(context, tempValues);
                             }
                           },
@@ -259,10 +290,16 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
       },
     );
 
-    if (results != null && results.length == 2 && results[0] != null && results[1] != null) {
+    if (results != null &&
+        results.length == 2 &&
+        results[0] != null &&
+        results[1] != null) {
       if (mounted) {
         setState(() {
-          _selectedDateRange = DateTimeRange(start: results[0]!, end: results[1]!);
+          _selectedDateRange = DateTimeRange(
+            start: results[0]!,
+            end: results[1]!,
+          );
         });
       }
     }
@@ -277,7 +314,10 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
         elevation: 0,
         centerTitle: false,
         leading: IconButton(
-          icon: const PhosphorIcon(PhosphorIconsRegular.arrowLeft, color: Color(0xFF1E293B)),
+          icon: const PhosphorIcon(
+            PhosphorIconsRegular.arrowLeft,
+            color: Color(0xFF1E293B),
+          ),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -295,7 +335,11 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
             padding: const EdgeInsets.only(right: 16),
             child: TextButton.icon(
               onPressed: () {},
-              icon: const PhosphorIcon(PhosphorIconsRegular.uploadSimple, size: 16, color: Color(0xFF64748B)),
+              icon: const PhosphorIcon(
+                PhosphorIconsRegular.uploadSimple,
+                size: 16,
+                color: Color(0xFF64748B),
+              ),
               label: Text(
                 "Export",
                 style: GoogleFonts.poppins(
@@ -309,7 +353,10 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
                   borderRadius: BorderRadius.circular(8),
                   side: const BorderSide(color: Color(0xFFE2E8F0)),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
               ),
             ),
           ),
@@ -402,7 +449,12 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
     );
   }
 
-  Widget _buildHeader(String title, String trend, bool isPositive, {String? subtitle}) {
+  Widget _buildHeader(
+    String title,
+    String trend,
+    bool isPositive, {
+    String? subtitle,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -418,9 +470,13 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
         Row(
           children: [
             PhosphorIcon(
-              isPositive ? PhosphorIconsRegular.arrowUp : PhosphorIconsRegular.arrowDown,
+              isPositive
+                  ? PhosphorIconsRegular.arrowUp
+                  : PhosphorIconsRegular.arrowDown,
               size: 14,
-              color: isPositive ? const Color(0xFF22C55E) : const Color(0xFFEF4444),
+              color: isPositive
+                  ? const Color(0xFF22C55E)
+                  : const Color(0xFFEF4444),
             ),
             const SizedBox(width: 4),
             Text(
@@ -428,7 +484,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
               style: GoogleFonts.poppins(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: isPositive ? const Color(0xFF22C55E) : const Color(0xFFEF4444),
+                color: isPositive
+                    ? const Color(0xFF22C55E)
+                    : const Color(0xFFEF4444),
               ),
             ),
             const SizedBox(width: 4),
@@ -440,7 +498,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
                   color: const Color(0xFF64748B),
                 ),
               ),
-            ]
+            ],
           ],
         ),
       ],
@@ -452,9 +510,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
       width: double.infinity,
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: Color(0xFFE2E8F0)),
-        ),
+        border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
       ),
       padding: const EdgeInsets.all(20),
       child: child,
@@ -498,20 +554,29 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader("${orders['total']} Orders", orders['trend'], orders['trendPositive'], subtitle: "from previous 30days"),
+            _buildHeader(
+              "${orders['total']} Orders",
+              orders['trend'],
+              orders['trendPositive'],
+              subtitle: "from previous 30days",
+            ),
             const SizedBox(height: 24),
             ProgressBarItem(
               label: "Last 30days",
               value: "2,764",
               percentage: 0.9,
-              barGradient: const LinearGradient(colors: [Color(0xFFED3A72), Color(0xFFFB923C)]),
+              barGradient: const LinearGradient(
+                colors: [Color(0xFFED3A72), Color(0xFFFB923C)],
+              ),
             ),
             const SizedBox(height: 16),
             ProgressBarItem(
               label: "Previous 30 days",
               value: "2,003",
               percentage: 0.65,
-              barGradient: const LinearGradient(colors: [Color(0xFFED3A72), Color(0xFFFB923C)]),
+              barGradient: const LinearGradient(
+                colors: [Color(0xFFED3A72), Color(0xFFFB923C)],
+              ),
             ),
           ],
         ),
@@ -520,13 +585,20 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-             _buildHeader("${revenue['total']} in approximate revenue", revenue['trend'], revenue['trendPositive'], subtitle: "from previous 30 days"),
+            _buildHeader(
+              "${revenue['total']} in approximate revenue",
+              revenue['trend'],
+              revenue['trendPositive'],
+              subtitle: "from previous 30 days",
+            ),
             const SizedBox(height: 32),
             AnalyticsLineChart(
               spots: (revenue['chartData'] as List).asMap().entries.map((e) {
                 return FlSpot(e.key.toDouble(), e.value['value'] as double);
               }).toList(),
-              bottomLabels: (revenue['chartData'] as List).map((e) => e['date'] as String).toList(),
+              bottomLabels: (revenue['chartData'] as List)
+                  .map((e) => e['date'] as String)
+                  .toList(),
               maxY: 10000,
             ),
           ],
@@ -536,7 +608,12 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-             _buildHeader("${newCustomers['total']} New customers", newCustomers['trend'], newCustomers['trendPositive'], subtitle: "from previous 28 days"),
+            _buildHeader(
+              "${newCustomers['total']} New customers",
+              newCustomers['trend'],
+              newCustomers['trendPositive'],
+              subtitle: "from previous 28 days",
+            ),
             const SizedBox(height: 24),
             AnalyticsDonutChart(
               section1Value: newCustomers['organicPercentage'].toDouble(),
@@ -552,11 +629,21 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                 _buildLegendDot("Ads / Promotion", const Color(0xFFFBCFE8), "${newCustomers['adsPercentage']}%", "${newCustomers['adsPromotion']}"),
-                 const SizedBox(width: 32),
-                 _buildLegendDot("Organic", const Color(0xFFED3A72), "${newCustomers['organicPercentage']}%", "${newCustomers['organic']}"),
+                _buildLegendDot(
+                  "Ads / Promotion",
+                  const Color(0xFFFBCFE8),
+                  "${newCustomers['adsPercentage']}%",
+                  "${newCustomers['adsPromotion']}",
+                ),
+                const SizedBox(width: 32),
+                _buildLegendDot(
+                  "Organic",
+                  const Color(0xFFED3A72),
+                  "${newCustomers['organicPercentage']}%",
+                  "${newCustomers['organic']}",
+                ),
               ],
-            )
+            ),
           ],
         ),
       ),
@@ -564,7 +651,12 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-             _buildHeader("Order Status Breakdown", orderStatus['trend'], orderStatus['trendPositive'], subtitle: "from previous 28 days"),
+            _buildHeader(
+              "Order Status Breakdown",
+              orderStatus['trend'],
+              orderStatus['trendPositive'],
+              subtitle: "from previous 28 days",
+            ),
             const SizedBox(height: 24),
             AnalyticsDonutChart(
               section1Value: orderStatus['completedPercentage'].toDouble(),
@@ -578,36 +670,22 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
             ),
             const SizedBox(height: 16),
             Row(
-               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                 _buildLegendDot("Cancelled", const Color(0xFFFBCFE8), "${orderStatus['cancelledPercentage']}%", "${orderStatus['cancelled']}"),
-                 const SizedBox(width: 32),
-                 _buildLegendDot("Completed", const Color(0xFFED3A72), "${orderStatus['completedPercentage']}%", "${orderStatus['completed']}"),
+                _buildLegendDot(
+                  "Cancelled",
+                  const Color(0xFFFBCFE8),
+                  "${orderStatus['cancelledPercentage']}%",
+                  "${orderStatus['cancelled']}",
+                ),
+                const SizedBox(width: 32),
+                _buildLegendDot(
+                  "Completed",
+                  const Color(0xFFED3A72),
+                  "${orderStatus['completedPercentage']}%",
+                  "${orderStatus['completed']}",
+                ),
               ],
-            )
-          ],
-        ),
-      ),
-      _buildCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-             _buildHeader("${interactions['total']} Interactions", interactions['trend'], interactions['trendPositive'], subtitle: "from previous 30days"),
-            const SizedBox(height: 24),
-            ...List.generate(
-              interactions['items'].length,
-              (index) {
-                final item = interactions['items'][index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  child: ProgressBarItem(
-                    label: item['label'],
-                    value: item['value'],
-                    percentage: item['percentage'],
-                    barGradient: const LinearGradient(colors: [Color(0xFFED3A72), Color(0xFFFB923C)]),
-                  ),
-                );
-              },
             ),
           ],
         ),
@@ -616,31 +694,66 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-             _buildHeader("${totalCustomers['total']} Total customers", totalCustomers['trend'], totalCustomers['trendPositive'], subtitle: "from previous 30days"),
+            _buildHeader(
+              "${interactions['total']} Interactions",
+              interactions['trend'],
+              interactions['trendPositive'],
+              subtitle: "from previous 30days",
+            ),
+            const SizedBox(height: 24),
+            ...List.generate(interactions['items'].length, (index) {
+              final item = interactions['items'][index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: ProgressBarItem(
+                  label: item['label'],
+                  value: item['value'],
+                  percentage: item['percentage'],
+                  barGradient: const LinearGradient(
+                    colors: [Color(0xFFED3A72), Color(0xFFFB923C)],
+                  ),
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+      _buildCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(
+              "${totalCustomers['total']} Total customers",
+              totalCustomers['trend'],
+              totalCustomers['trendPositive'],
+              subtitle: "from previous 30days",
+            ),
             const SizedBox(height: 24),
             Row(
               children: [
-                _buildSimpleLegendDot("Returning customers", const Color(0xFFED3A72)),
+                _buildSimpleLegendDot(
+                  "Returning customers",
+                  const Color(0xFFED3A72),
+                ),
                 const SizedBox(width: 16),
                 _buildSimpleLegendDot("New customers", const Color(0xFF22C55E)),
               ],
             ),
             const SizedBox(height: 24),
-            ...List.generate(
-              totalCustomers['items'].length,
-              (index) {
-                final item = totalCustomers['items'][index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  child: ProgressBarItem(
-                    label: item['label'],
-                    value: item['value'],
-                    percentage: item['percentage'],
-                    barGradient: const LinearGradient(colors: [Color(0xFFED3A72), Color(0xFFFB923C)]),
+            ...List.generate(totalCustomers['items'].length, (index) {
+              final item = totalCustomers['items'][index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: ProgressBarItem(
+                  label: item['label'],
+                  value: item['value'],
+                  percentage: item['percentage'],
+                  barGradient: const LinearGradient(
+                    colors: [Color(0xFFED3A72), Color(0xFFFB923C)],
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            }),
           ],
         ),
       ),
@@ -648,7 +761,12 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
     ];
   }
 
-  Widget _buildLegendDot(String label, Color color, String percent, String count) {
+  Widget _buildLegendDot(
+    String label,
+    Color color,
+    String percent,
+    String count,
+  ) {
     return Column(
       children: [
         Text(
@@ -680,10 +798,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
             Container(
               width: 8,
               height: 8,
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
           ],
         ),
@@ -697,10 +812,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
         Container(
           width: 8,
           height: 8,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 6),
         Text(
@@ -715,17 +827,24 @@ class _AnalyticsPageState extends State<AnalyticsPage> with TickerProviderStateM
   }
 
   List<Widget> _buildSkeletons() {
-    return List.generate(4, (index) => _buildCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Skeleton(width: 150, height: 24),
-          const SizedBox(height: 8),
-          const Skeleton(width: 200, height: 20),
-          const SizedBox(height: 24),
-          const Skeleton(width: double.infinity, height: 160, borderRadius: 16),
-        ],
+    return List.generate(
+      4,
+      (index) => _buildCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Skeleton(width: 150, height: 24),
+            const SizedBox(height: 8),
+            const Skeleton(width: 200, height: 20),
+            const SizedBox(height: 24),
+            const Skeleton(
+              width: double.infinity,
+              height: 160,
+              borderRadius: 16,
+            ),
+          ],
+        ),
       ),
-    ));
+    );
   }
 }

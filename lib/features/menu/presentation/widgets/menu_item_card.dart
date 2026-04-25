@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../data/models/menu_item_model.dart';
+import '../../../../core/presentation/widgets/global_modal.dart';
+import '../../../../core/presentation/widgets/confirmation_sheet.dart';
 
 class MenuItemCard extends StatefulWidget {
   final MenuItemModel item;
@@ -178,8 +180,24 @@ class _MenuItemCardState extends State<MenuItemCard> {
             child: Switch(
               value: _inStock,
               onChanged: (value) {
-                setState(() => _inStock = value);
-                widget.onAvailabilityChanged?.call(value);
+                GlobalModal.show(
+                  context: context,
+                  child: ConfirmationSheet(
+                    title: value ? 'Mark as In Stock?' : 'Mark as Out of Stock?',
+                    message: value
+                        ? 'This item will be available for customers to order.'
+                        : 'This item will be hidden or marked as unavailable for customers.',
+                    confirmLabel: value ? 'Mark In Stock' : 'Mark Out of Stock',
+                    confirmColor:
+                        value
+                            ? const Color(0xFF22C55E)
+                            : const Color(0xFFEF4444),
+                    onConfirm: () {
+                      setState(() => _inStock = value);
+                      widget.onAvailabilityChanged?.call(value);
+                    },
+                  ),
+                );
               },
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               activeThumbColor: Colors.white,

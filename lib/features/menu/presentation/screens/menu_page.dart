@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_shop/core/presentation/widgets/custom_search_dropdown.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import '../widgets/quick_action_cards.dart';
@@ -169,16 +170,6 @@ class _MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin 
                             Expanded(
                               child: _buildCategoryDropdown(),
                             ),
-                            const SizedBox(width: 12),
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                border: Border.all(color: const Color(0xFFE2E8F0)),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: const Icon(Icons.search, color: Color(0xFF1E293B), size: 24),
-                            ),
                           ],
                         ),
                       ),
@@ -282,38 +273,12 @@ class _MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin 
   }
 
   Widget _buildCategoryDropdown() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<MenuCategoryModel>(
-          value: _selectedCategory,
-          isExpanded: true,
-          icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF1E293B), size: 24),
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            color: const Color(0xFF1E293B),
-          ),
-          hint: Text(
-            'Select Category',
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              color: const Color(0xFF94A3B8),
-            ),
-          ),
-          items: _categories.map((category) {
-            return DropdownMenuItem<MenuCategoryModel>(
-              value: category,
-              child: Text(category.displayName),
-            );
-          }).toList(),
-          onChanged: _onCategoryChanged,
-        ),
-      ),
+    return CustomSearchDropdown<MenuCategoryModel>(
+      items: _categories,
+      value: _selectedCategory,
+      itemLabelBuilder: (category) => category.displayName,
+      onChanged: _onCategoryChanged,
+      hintText: 'Select Category',
     );
   }
 

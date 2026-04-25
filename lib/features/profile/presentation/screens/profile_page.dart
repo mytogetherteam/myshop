@@ -13,8 +13,10 @@ import 'operating_hours_page.dart';
 import 'app_permissions_page.dart';
 import 'change_password_page.dart';
 import 'reviews_page.dart';
-import 'shop_selection_page.dart';
-import 'global_shop_selection_page.dart';
+import 'accepted_payment_page.dart';
+
+import 'package:my_shop/features/profile/data/services/profile_service.dart';
+import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -23,8 +25,12 @@ class ProfilePage extends StatefulWidget {
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClientMixin {
+class _ProfilePageState extends State<ProfilePage>
+    with AutomaticKeepAliveClientMixin {
+  final ProfileService _profileService = ProfileService();
   UserInfo? _userInfo;
+  bool _deliveryEnabled = false;
+  bool _isTogglingDelivery = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -40,8 +46,46 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
   }
 
   Future<void> _loadUserInfo() async {
-    final info = await StorageService.instance.getUserInfo();
-    setState(() { _userInfo = info; });
+    final results = await Future.wait([
+      StorageService.instance.getUserInfo(),
+      _profileService.getShopProfile(),
+    ]);
+
+    final info = results[0] as UserInfo?;
+    final profile = results[1] as ShopProfileModel?;
+
+    if (mounted) {
+      setState(() {
+        _userInfo = info;
+        _deliveryEnabled = profile?.deliveryEnabled ?? false;
+      });
+    }
+  }
+
+  Future<void> _toggleDelivery(bool value) async {
+    setState(() => _isTogglingDelivery = true);
+
+    try {
+      final success = await _profileService.updateShopProfile({
+        'deliveryEnabled': value,
+      });
+
+      if (mounted && success) {
+        setState(() {
+          _deliveryEnabled = value;
+          _isTogglingDelivery = false;
+        });
+      } else if (mounted) {
+        setState(() => _isTogglingDelivery = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update delivery status')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isTogglingDelivery = false);
+      }
+    }
   }
 
   Future<void> _handleLogout() async {
@@ -49,13 +93,16 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
       context: context,
       child: ConfirmationSheet(
         title: 'Logout',
-        message: 'Are you sure you want to logout? This will revoke your current session.',
+        message:
+            'Are you sure you want to logout? This will revoke your current session.',
         confirmLabel: 'Yes, Logout',
         onConfirm: () async {
           WebSocketService().disconnect();
           await AuthService.instance.logout();
           if (!mounted) return;
-          Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil('/login', (route) => false);
         },
       ),
     );
@@ -88,6 +135,60 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
     );
   }
 
+  Widget _buildToggleOption({
+    required IconData icon,
+    required String title,
+    required bool value,
+    required bool isLoading,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1),
+        ),
+      ),
+      child: Row(
+        children: [
+          PhosphorIcon(
+            icon,
+            size: 24,
+            color: const Color(0xFF475569),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF1E293B),
+              ),
+            ),
+          ),
+          if (isLoading)
+            const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFED3973)),
+              ),
+            )
+          else
+            CupertinoSwitch(
+              value: value,
+              onChanged: onChanged,
+              activeTrackColor: const Color(0xFFED3973),
+              inactiveTrackColor: const Color(0xFFE2E8F0),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildProfileHeader() {
     return Container(
       width: double.infinity,
@@ -109,7 +210,9 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
             ),
             child: Center(
               child: Text(
-                (_userInfo?.fullName.isNotEmpty == true) ? _userInfo!.fullName[0].toUpperCase() : 'A',
+                (_userInfo?.fullName.isNotEmpty == true)
+                    ? _userInfo!.fullName[0].toUpperCase()
+                    : 'A',
                 style: GoogleFonts.poppins(
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
@@ -140,7 +243,10 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
                 ),
                 const SizedBox(height: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(4),
@@ -178,13 +284,12 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
             ),
           ),
         ),
-        _buildMenuOption(
-          icon: PhosphorIconsRegular.arrowsLeftRight,
-          title: 'Switch Shop',
-          onTap: () => Navigator.push(
-            context,
-            CupertinoPageRoute(builder: (_) => const GlobalShopSelectionPage(isInitialFlow: false)),
-          ),
+        _buildToggleOption(
+          icon: PhosphorIconsRegular.truck,
+          title: 'Delivery Enabled',
+          value: _deliveryEnabled,
+          isLoading: _isTogglingDelivery,
+          onChanged: _toggleDelivery,
         ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.storefront,
@@ -207,7 +312,7 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
           title: 'Accepted payment',
           onTap: () => Navigator.push(
             context,
-            CupertinoPageRoute(builder: (_) => const ShopSelectionPage()),
+            CupertinoPageRoute(builder: (_) => const AcceptedPaymentPage()),
           ),
         ),
         _buildMenuOption(
@@ -237,11 +342,6 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
               letterSpacing: 0.8,
             ),
           ),
-        ),
-        _buildMenuOption(
-          icon: PhosphorIconsRegular.user,
-          title: 'Account Settings',
-          onTap: () {},
         ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.shieldCheck,
@@ -290,7 +390,11 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
         ),
         child: Row(
           children: [
-            PhosphorIcon(icon, size: 24, color: titleColor ?? const Color(0xFF475569)),
+            PhosphorIcon(
+              icon,
+              size: 24,
+              color: titleColor ?? const Color(0xFF475569),
+            ),
             const SizedBox(width: 16),
             Expanded(
               child: Text(
@@ -303,7 +407,11 @@ class _ProfilePageState extends State<ProfilePage> with AutomaticKeepAliveClient
               ),
             ),
             if (showArrow)
-              const PhosphorIcon(PhosphorIconsRegular.caretRight, size: 18, color: Color(0xFF94A3B8)),
+              const PhosphorIcon(
+                PhosphorIconsRegular.caretRight,
+                size: 18,
+                color: Color(0xFF94A3B8),
+              ),
           ],
         ),
       ),
