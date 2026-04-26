@@ -101,12 +101,12 @@ class CategoryService {
 
   Future<List<Map<String, dynamic>>?> getCategoryGallery({bool forceRefresh = false}) async {
     if (!forceRefresh && _galleryCache != null) {
-      debugPrint('CACHE HIT: $_masterCategoriesPath/gallery');
+      debugPrint('CACHE HIT: $_categoriesPath/gallery');
       return _galleryCache;
     }
 
     try {
-      final url = '$_masterCategoriesPath/gallery';
+      final url = '$_categoriesPath/gallery';
       debugPrint('GET REQUEST: $url');
       final response = await ApiClient().dio.get(url);
 

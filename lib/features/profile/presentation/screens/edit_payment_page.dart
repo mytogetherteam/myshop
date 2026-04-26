@@ -204,8 +204,10 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
           context: context,
           child: PaymentSuccessSheet(
             onDone: () {
-              Navigator.pop(context); // Close modal
-              Navigator.pop(context, true); // Go back with refresh signal
+              if (mounted) {
+                Navigator.of(context).pop(); // Close modal
+                Navigator.of(context).pop(true); // Go back with refresh signal
+              }
             },
           ),
         );

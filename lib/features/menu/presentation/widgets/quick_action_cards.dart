@@ -4,7 +4,8 @@ import 'package:my_shop/features/categories/presentation/screens/category_list_s
 import '../screens/manage_shop_menu_page.dart';
 
 class QuickActionCards extends StatelessWidget {
-  const QuickActionCards({super.key});
+  final VoidCallback? onRefresh;
+  const QuickActionCards({super.key, this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
@@ -14,11 +15,12 @@ class QuickActionCards extends StatelessWidget {
         children: [
           Expanded(
             child: GestureDetector(
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const CategoryListScreen()),
                 );
+                onRefresh?.call();
               },
               child: _ActionCard(
                 title: 'Manage\nCategory',
@@ -30,11 +32,12 @@ class QuickActionCards extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: GestureDetector(
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const ManageShopMenuPage()),
                 );
+                onRefresh?.call();
               },
               child: _ActionCard(
                 title: 'Manage\nShop Menu',

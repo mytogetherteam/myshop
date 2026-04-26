@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
+import 'package:http_parser/http_parser.dart';
 import '../models/shop_profile_model.dart';
 import '../models/operating_hours_model.dart';
 
@@ -62,7 +64,26 @@ class ProfileService {
   Future<bool> updateShopProfile(Map<String, dynamic> payload) async {
     try {
       debugPrint('PUT REQUEST: $_profilePath, Data: $payload');
-      final formData = FormData.fromMap(payload);
+      
+      final Map<String, dynamic> dataPayload = Map.from(payload);
+      final Map<String, dynamic> formDataMap = {};
+      
+      if (dataPayload.containsKey('logoPhoto')) {
+        formDataMap['logoPhoto'] = dataPayload.remove('logoPhoto');
+      }
+      if (dataPayload.containsKey('coverPhoto')) {
+        formDataMap['coverPhoto'] = dataPayload.remove('coverPhoto');
+      }
+      
+      if (dataPayload.isNotEmpty) {
+        formDataMap['data'] = MultipartFile.fromString(
+          jsonEncode(dataPayload),
+          contentType: MediaType('application', 'json'),
+        );
+      }
+      
+      final formData = FormData.fromMap(formDataMap);
+      
       final response = await ApiClient().dio.put(
         _profilePath, 
         data: formData,
@@ -83,6 +104,28 @@ class ProfileService {
     return false;
   }
 
+  Future<bool> toggleDeliveryStatus(bool enabled) async {
+    try {
+      final url = '$_profilePath/delivery-status';
+      debugPrint('PUT REQUEST: $url, Query: {enabled: $enabled}');
+      final response = await ApiClient().dio.put(
+        url,
+        queryParameters: {'enabled': enabled},
+      );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        final Map<String, dynamic> data = response.data;
+        return data['success'] == true;
+      }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'ProfileService.toggleDeliveryStatus');
+    } catch (e) {
+      ApiHelper.handleError(e, context: 'ProfileService.toggleDeliveryStatus');
+    }
+    return false;
+  }
 
   Future<Map<String, dynamic>> updateOperatingHours(
     Map<String, dynamic> payload,

@@ -58,6 +58,52 @@ class MenuService {
     return forceRefresh ? null : _categoriesCache;
   }
 
+  Future<List<MenuCategoryModel>?> searchCategories(String query) async {
+    try {
+      final url = '$_categoriesPath/search';
+      debugPrint('GET REQUEST: $url, Query: {q: $query}');
+      final response = await ApiClient().dio.get(url, queryParameters: {'q': query});
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        final Map<String, dynamic> data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          final List list = data['data'] ?? [];
+          return list.map((json) => MenuCategoryModel.fromJson(json)).toList();
+        }
+      }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'MenuService.searchCategories');
+    } catch (e) {
+      ApiHelper.handleError(e, context: 'MenuService.searchCategories');
+    }
+    return null;
+  }
+
+  Future<List<Map<String, dynamic>>?> getCategoryGallery() async {
+    try {
+      final url = '$_categoriesPath/gallery';
+      debugPrint('GET REQUEST: $url');
+      final response = await ApiClient().dio.get(url);
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        final Map<String, dynamic> data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          final List list = data['data'] ?? [];
+          return list.map((e) => Map<String, dynamic>.from(e)).toList();
+        }
+      }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'MenuService.getCategoryGallery');
+    } catch (e) {
+      ApiHelper.handleError(e, context: 'MenuService.getCategoryGallery');
+    }
+    return null;
+  }
+
   Future<MenuCategoryModel?> getMenuCategoryDetail(int categoryId) async {
     try {
       final url = '$_categoriesPath/$categoryId';
@@ -109,6 +155,29 @@ class MenuService {
       ApiHelper.handleError(e, context: 'MenuService.getMenuItems');
     } catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.getMenuItems');
+    }
+    return null;
+  }
+
+  Future<List<MenuItemModel>?> searchMenuItems(String query) async {
+    try {
+      final url = '$_menuItemsPath/search';
+      debugPrint('GET REQUEST: $url, Query: {q: $query}');
+      final response = await ApiClient().dio.get(url, queryParameters: {'q': query});
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        final Map<String, dynamic> data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          final List list = data['data'] ?? [];
+          return list.map((json) => MenuItemModel.fromJson(json)).toList();
+        }
+      }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'MenuService.searchMenuItems');
+    } catch (e) {
+      ApiHelper.handleError(e, context: 'MenuService.searchMenuItems');
     }
     return null;
   }

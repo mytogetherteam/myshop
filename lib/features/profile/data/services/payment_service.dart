@@ -10,9 +10,9 @@ class PaymentService {
 
   /// GET /api/shop/profile/payment-types
   /// Get Shop Payment Types
-  Future<List<PaymentMethod>> getShopPaymentMethods() async {
+  Future<List<PaymentMethod>> getShopPaymentMethods({bool forceRefresh = false}) async {
     try {
-      debugPrint('GET REQUEST: $_paymentsPath');
+      debugPrint('GET REQUEST: $_paymentsPath, forceRefresh: $forceRefresh');
       final response = await ApiClient().dio.get(_paymentsPath);
 
       if (response.statusCode != null &&

@@ -39,9 +39,13 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
   }
 
 
+  Future<void> refresh() async {
+    await _fetchCategories();
+  }
+
   Future<void> _fetchCategories() async {
     setState(() => _isLoading = true);
-    final categories = await _categoryService.getCategories();
+    final categories = await _categoryService.getCategories(forceRefresh: true);
     if (mounted) {
       setState(() {
         _categories = categories ?? [];

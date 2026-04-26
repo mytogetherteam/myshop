@@ -37,7 +37,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
   Future<void> _fetchInitialData() async {
     setState(() => _isLoadingData = true);
     final results = await Future.wait([
-      _categoryService.getMasterCategories(),
+      _categoryService.getMasterCategories(forceRefresh: true),
       _categoryService.getCategoryGallery(),
     ]);
 
@@ -266,11 +266,12 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
   }
 
   Widget _buildIconGallery() {
-    if (_gallery.isEmpty)
+    if (_gallery.isEmpty) {
       return const Text(
         'No icons available',
         style: TextStyle(fontSize: 12, color: Colors.grey),
       );
+    }
 
     return SizedBox(
       height: 60,

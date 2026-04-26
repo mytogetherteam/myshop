@@ -22,10 +22,10 @@ class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  State<ProfilePage> createState() => ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage>
+class ProfilePageState extends State<ProfilePage>
     with AutomaticKeepAliveClientMixin {
   final ProfileService _profileService = ProfileService();
   UserInfo? _userInfo;
@@ -39,6 +39,10 @@ class _ProfilePageState extends State<ProfilePage>
   void initState() {
     super.initState();
     _loadUserInfo();
+  }
+
+  Future<void> refresh() async {
+    await _handleRefresh();
   }
 
   Future<void> _handleRefresh() async {
@@ -66,9 +70,7 @@ class _ProfilePageState extends State<ProfilePage>
     setState(() => _isTogglingDelivery = true);
 
     try {
-      final success = await _profileService.updateShopProfile({
-        'deliveryEnabled': value,
-      });
+      final success = await _profileService.toggleDeliveryStatus(value);
 
       if (mounted && success) {
         setState(() {
@@ -313,7 +315,7 @@ class _ProfilePageState extends State<ProfilePage>
           onTap: () => Navigator.push(
             context,
             CupertinoPageRoute(builder: (_) => const AcceptedPaymentPage()),
-          ),
+          ).then((_) => refresh()),
         ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.star,

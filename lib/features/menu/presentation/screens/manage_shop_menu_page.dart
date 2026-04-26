@@ -16,7 +16,7 @@ class ManageShopMenuPage extends StatefulWidget {
 
 class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
   final MenuService _menuService = MenuService();
-  List<MenuItemModel> _items = [];
+  final List<MenuItemModel> _items = [];
   List<MenuItemModel> _filteredItems = [];
   bool _isLoading = true;
   bool _isLoadingMore = false;
@@ -58,11 +58,16 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
     }
   }
 
+  Future<void> refresh() async {
+    await _fetchItems(isRefresh: true);
+    await _prefetchMasterData();
+  }
+
   Future<void> _prefetchMasterData() async {
     try {
       await Future.wait([
-        _menuService.getCategories(),
-        _menuService.getMasterCategories(),
+        _menuService.getCategories(forceRefresh: true),
+        _menuService.getMasterCategories(forceRefresh: true),
         _menuService.getMasterMenuItems(),
         _menuService.getMenuTags(),
       ]);

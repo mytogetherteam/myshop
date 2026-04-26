@@ -14,10 +14,10 @@ class AcceptedPaymentPage extends StatefulWidget {
   const AcceptedPaymentPage({super.key});
 
   @override
-  State<AcceptedPaymentPage> createState() => _AcceptedPaymentPageState();
+  State<AcceptedPaymentPage> createState() => AcceptedPaymentPageState();
 }
 
-class _AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
+class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
   final PaymentService _paymentService = PaymentService();
   List<PaymentMethod> _paymentMethods = [];
   bool _isLoading = true;
@@ -28,10 +28,16 @@ class _AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
     _loadPaymentMethods();
   }
 
-  Future<void> _loadPaymentMethods() async {
+  Future<void> refresh() async {
+    await _loadPaymentMethods(forceRefresh: true);
+  }
+
+  Future<void> _loadPaymentMethods({bool forceRefresh = false}) async {
     setState(() => _isLoading = true);
     try {
-      final list = await _paymentService.getShopPaymentMethods();
+      final list = await _paymentService.getShopPaymentMethods(
+        forceRefresh: forceRefresh,
+      );
 
       if (mounted) {
         setState(() {
@@ -50,7 +56,7 @@ class _AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
   }
 
   Future<void> _handleRefresh() async {
-    await _loadPaymentMethods();
+    await _loadPaymentMethods(forceRefresh: true);
   }
 
   Future<void> _handleDelete(PaymentMethod pm) async {

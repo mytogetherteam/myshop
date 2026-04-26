@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class PaymentSuccessSheet extends StatelessWidget {
+class PaymentSuccessSheet extends StatefulWidget {
   final VoidCallback? onDone;
   const PaymentSuccessSheet({super.key, this.onDone});
+
+  @override
+  State<PaymentSuccessSheet> createState() => _PaymentSuccessSheetState();
+}
+
+class _PaymentSuccessSheetState extends State<PaymentSuccessSheet> {
+  bool _isProcessing = false;
 
   @override
   Widget build(BuildContext context) {
@@ -66,17 +73,22 @@ class PaymentSuccessSheet extends StatelessWidget {
           width: double.infinity,
           height: 56,
           child: ElevatedButton(
-            onPressed: () {
-              if (onDone != null) {
-                onDone!();
-              } else {
-                Navigator.pop(context); // Close sheet
-                Navigator.pop(context); // Go back to AcceptedPaymentPage
-              }
-            },
+            onPressed: _isProcessing
+                ? null
+                : () {
+                    setState(() => _isProcessing = true);
+                    if (widget.onDone != null) {
+                      widget.onDone!();
+                    } else {
+                      Navigator.pop(context); // Close sheet
+                      Navigator.pop(context); // Go back to AcceptedPaymentPage
+                    }
+                  },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFED3973),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               elevation: 0,
             ),
             child: Text(

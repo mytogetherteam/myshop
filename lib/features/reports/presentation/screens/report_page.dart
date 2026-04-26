@@ -15,10 +15,10 @@ class ReportPage extends StatefulWidget {
   const ReportPage({super.key});
 
   @override
-  State<ReportPage> createState() => _ReportPageState();
+  State<ReportPage> createState() => ReportPageState();
 }
 
-class _ReportPageState extends State<ReportPage>
+class ReportPageState extends State<ReportPage>
     with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late TabController _tabController;
   bool _isLoading = false;
@@ -32,6 +32,10 @@ class _ReportPageState extends State<ReportPage>
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
     _loadData();
+  }
+
+  Future<void> refresh() async {
+    await _loadData();
   }
 
   Future<void> _loadData() async {

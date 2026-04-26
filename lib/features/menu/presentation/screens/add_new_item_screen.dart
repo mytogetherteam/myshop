@@ -161,8 +161,8 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     setState(() => _isLoadingData = true);
     try {
       final results = await Future.wait<dynamic>([
-        _menuService.getCategories(),
-        _menuService.getMasterCategories(),
+        _menuService.getCategories(forceRefresh: true),
+        _menuService.getMasterCategories(forceRefresh: true),
         _menuService.getMasterMenuItems(),
         _menuService.getMenuTags(),
         _menuService.getMenuItems(limit: 1000), // Fetch items for combo components
@@ -1261,7 +1261,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                       const SizedBox(height: 16),
                     ],
                   );
-                }).toList(),
+                }),
                 const SizedBox(height: 16),
                 const Divider(height: 24, color: Color(0xFFFEE2E2)),
                 _buildOutlinedButton(
@@ -1566,7 +1566,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   });
                 },
               );
-            }).toList(),
+            }),
             _buildCustomChip(label: 'Other', selected: false, onTap: () {}),
           ],
         ),
@@ -1595,24 +1595,25 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         Wrap(
           spacing: 8,
           runSpacing: 10,
-          children:
-              _mealTypeOptions.map((type) {
-                final isSelected = _selectedMealTypes.contains(type);
-                return _buildCustomChip(
-                  label: type,
-                  selected: isSelected,
-                  onTap: () {
-                    setState(() {
-                      if (isSelected) {
-                        _selectedMealTypes.remove(type);
-                      } else {
-                        _selectedMealTypes.add(type);
-                      }
-                    });
-                  },
-                );
-              }).toList() +
-              [_buildCustomChip(label: 'Other', selected: false, onTap: () {})],
+          children: [
+            ..._mealTypeOptions.map((type) {
+              final isSelected = _selectedMealTypes.contains(type);
+              return _buildCustomChip(
+                label: type,
+                selected: isSelected,
+                onTap: () {
+                  setState(() {
+                    if (isSelected) {
+                      _selectedMealTypes.remove(type);
+                    } else {
+                      _selectedMealTypes.add(type);
+                    }
+                  });
+                },
+              );
+            }),
+            _buildCustomChip(label: 'Other', selected: false, onTap: () {}),
+          ],
         ),
       ],
     );

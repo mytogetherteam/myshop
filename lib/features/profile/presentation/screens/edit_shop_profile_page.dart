@@ -506,6 +506,9 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       'baseDeliveryFee': double.tryParse(_baseFeeCtrl.text) ?? 0.0,
       'deliveryEnabled': _deliveryEnabled,
       'googleMapsLink': _mapsLinkCtrl.text,
+      'cityId': _selectedCity?.id,
+      'logoUrl': _currentProfile?.logoUrl,
+      'coverUrl': _currentProfile?.coverUrl,
     };
 
     if (_pickedCover != null) {

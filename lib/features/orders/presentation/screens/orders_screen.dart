@@ -98,6 +98,10 @@ class OrdersScreenState extends State<OrdersScreen>
     }
   }
 
+  void refresh() {
+    refreshAll();
+  }
+
   void refreshAll() {
     _refreshController.add(null);
   }

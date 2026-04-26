@@ -14,10 +14,10 @@ class MenuPage extends StatefulWidget {
   const MenuPage({super.key});
 
   @override
-  State<MenuPage> createState() => _MenuPageState();
+  State<MenuPage> createState() => MenuPageState();
 }
 
-class _MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
+class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
   final MenuService _menuService = MenuService();
   List<MenuCategoryModel> _categories = [];
   List<MenuItemModel> _items = [];
@@ -54,9 +54,13 @@ class _MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin 
     }
   }
 
+  Future<void> refresh() async {
+    await _fetchCategories();
+  }
+
   Future<void> _fetchCategories() async {
     setState(() => _isLoadingCategories = true);
-    final categories = await _menuService.getCategories();
+    final categories = await _menuService.getCategories(forceRefresh: true);
     if (mounted) {
       setState(() {
         _categories = [
@@ -66,7 +70,7 @@ class _MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin 
         _isLoadingCategories = false;
         if (_categories.isNotEmpty) {
           _selectedCategory = _categories.first;
-          _fetchItems();
+          _fetchItems(refresh: true);
         } else {
           _isLoadingItems = false;
         }
@@ -151,10 +155,9 @@ class _MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin 
             // Header removed, handled by global AppBar
             Expanded(
               child: RefreshIndicator(
-                onRefresh: () async {
-                  await _fetchCategories();
-                },
+                onRefresh: refresh,
                 color: const Color(0xFFED3A72),
+
                 child: SingleChildScrollView(
                   controller: _scrollController,
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -174,7 +177,7 @@ class _MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin 
                         ),
                       ),
                       const SizedBox(height: 24),
-                      const QuickActionCards(),
+                      QuickActionCards(onRefresh: refresh),
                       const SizedBox(height: 24),
                       // Menu Sections
                       if (_isLoadingCategories || _isLoadingItems)

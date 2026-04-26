@@ -29,6 +29,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   StreamSubscription? _socketSubscription;
   final GlobalKey<OrdersScreenState> _ordersKey =
       GlobalKey<OrdersScreenState>();
+  final GlobalKey<MenuPageState> _menuKey = GlobalKey<MenuPageState>();
+  final GlobalKey<ReportPageState> _reportKey = GlobalKey<ReportPageState>();
+  final GlobalKey<ProfilePageState> _profileKey = GlobalKey<ProfilePageState>();
 
   @override
   void initState() {
@@ -177,11 +180,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 
   List<Widget> get _pages => [
-    OrdersScreen(key: _ordersKey),
-    const MenuPage(),
-    const ReportPage(),
-    const ProfilePage(),
-  ];
+        OrdersScreen(key: _ordersKey),
+        MenuPage(key: _menuKey),
+        ReportPage(key: _reportKey),
+        ProfilePage(key: _profileKey),
+      ];
 
   final List<String> _titles = ['Order', 'Menu', 'Report', 'Profile'];
 
@@ -212,7 +215,26 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         child: ClipRRect(
           child: BottomNavigationBar(
             currentIndex: _currentIndex,
-            onTap: (index) => setState(() => _currentIndex = index),
+            onTap: (index) {
+              if (_currentIndex == index) {
+                // If clicking the current tab, trigger a refresh
+                switch (index) {
+                  case 0:
+                    _ordersKey.currentState?.refresh();
+                    break;
+                  case 1:
+                    _menuKey.currentState?.refresh();
+                    break;
+                  case 2:
+                    _reportKey.currentState?.refresh();
+                    break;
+                  case 3:
+                    _profileKey.currentState?.refresh();
+                    break;
+                }
+              }
+              setState(() => _currentIndex = index);
+            },
             backgroundColor: Colors.white,
             selectedItemColor: const Color(0xFFED3A72),
             unselectedItemColor: const Color(
