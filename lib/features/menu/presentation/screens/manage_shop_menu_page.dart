@@ -66,8 +66,8 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
   Future<void> _prefetchMasterData() async {
     try {
       await Future.wait([
-        _menuService.getCategories(forceRefresh: true),
-        _menuService.getMasterCategories(forceRefresh: true),
+        _menuService.getCategories(forceRefresh: false),
+        _menuService.getMasterCategories(forceRefresh: false),
         _menuService.getMasterMenuItems(),
         _menuService.getMenuTags(),
       ]);
@@ -91,6 +91,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
         categoryId: null,
         limit: _limit,
         page: _page,
+        forceRefresh: isRefresh,
       );
 
       if (mounted) {
@@ -169,6 +170,62 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to update availability'),
+          backgroundColor: Color(0xFFEF4444),
+        ),
+      );
+    }
+  }
+
+  Future<void> _toggleItemPublishStatus(
+    MenuItemModel item,
+    bool isPublished,
+  ) async {
+    final index = _filteredItems.indexWhere((i) => i.id == item.id);
+    final globalIndex = _items.indexWhere((i) => i.id == item.id);
+    if (index == -1 || globalIndex == -1) return;
+
+    final newStatus = isPublished ? 'PUBLISHED' : 'UNPUBLISHED';
+
+    // Optimistic Update
+    setState(() {
+      final updatedItem = item.copyWith(publishStatus: newStatus);
+      _filteredItems[index] = updatedItem;
+      _items[globalIndex] = updatedItem;
+    });
+
+    final success =
+        await _menuService.toggleMenuItemPublishStatus(item.id, newStatus);
+
+    if (!success && mounted) {
+      // Revert on failure
+      setState(() {
+        final revertedItem = item.copyWith(publishStatus: item.publishStatus);
+        _filteredItems[index] = revertedItem;
+        _items[globalIndex] = revertedItem;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to update publish status'),
+          backgroundColor: Color(0xFFEF4444),
+        ),
+      );
+    }
+  }
+
+  Future<void> _deleteMenuItem(MenuItemModel item) async {
+    final success = await _menuService.deleteMenuItem(item.id);
+    if (success && mounted) {
+      _fetchItems(isRefresh: true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Item deleted successfully'),
+          backgroundColor: Color(0xFFED3A72),
+        ),
+      );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to delete item'),
           backgroundColor: Color(0xFFEF4444),
         ),
       );
@@ -293,6 +350,9 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                             },
                             onAvailabilityChanged: (available) {
                               _toggleItemAvailability(item, available);
+                            },
+                            onPublishStatusChanged: (isPublished) {
+                              _toggleItemPublishStatus(item, isPublished);
                             },
                           );
                         },

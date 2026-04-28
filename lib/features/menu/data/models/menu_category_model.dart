@@ -8,6 +8,9 @@ class MenuCategoryModel {
   final String? imageUrl;
   final int itemCount;
   final int? masterCategoryId;
+  final String? pendingStatus;
+  final String? publishStatus;
+
 
   MenuCategoryModel({
     required this.id,
@@ -19,7 +22,10 @@ class MenuCategoryModel {
     this.imageUrl,
     this.itemCount = 0,
     this.masterCategoryId,
+    this.pendingStatus,
+    this.publishStatus,
   });
+
 
   factory MenuCategoryModel.fromJson(Map<String, dynamic> json) {
     return MenuCategoryModel(
@@ -32,7 +38,10 @@ class MenuCategoryModel {
       imageUrl: json['imageUrl'],
       itemCount: json['itemCount'] ?? 0,
       masterCategoryId: json['masterCategoryId'],
+      pendingStatus: json['pendingStatus'],
+      publishStatus: json['publishStatus'],
     );
+
   }
 
   Map<String, dynamic> toJson() {
@@ -45,8 +54,39 @@ class MenuCategoryModel {
       'isActive': isActive,
       'imageUrl': imageUrl,
       'masterCategoryId': masterCategoryId,
+      'pendingStatus': pendingStatus,
+      'publishStatus': publishStatus,
     };
   }
+
+  MenuCategoryModel copyWith({
+    int? id,
+    String? nameEn,
+    String? nameMm,
+    String? nameTh,
+    int? displayOrder,
+    bool? isActive,
+    String? imageUrl,
+    int? itemCount,
+    int? masterCategoryId,
+    String? pendingStatus,
+    String? publishStatus,
+  }) {
+    return MenuCategoryModel(
+      id: id ?? this.id,
+      nameEn: nameEn ?? this.nameEn,
+      nameMm: nameMm ?? this.nameMm,
+      nameTh: nameTh ?? this.nameTh,
+      displayOrder: displayOrder ?? this.displayOrder,
+      isActive: isActive ?? this.isActive,
+      imageUrl: imageUrl ?? this.imageUrl,
+      itemCount: itemCount ?? this.itemCount,
+      masterCategoryId: masterCategoryId ?? this.masterCategoryId,
+      pendingStatus: pendingStatus ?? this.pendingStatus,
+      publishStatus: publishStatus ?? this.publishStatus,
+    );
+  }
+
 
   String get displayName => nameEn ?? nameMm ?? nameTh ?? '';
 }

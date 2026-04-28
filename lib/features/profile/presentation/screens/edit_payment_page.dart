@@ -202,11 +202,14 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
       if (result['success'] == true) {
         GlobalModal.show(
           context: context,
+          barrierDismissible: false,
           child: PaymentSuccessSheet(
             onDone: () {
+              // Close the bottom sheet first
+              Navigator.of(context).pop();
+              // Then pop EditPaymentPage with refresh signal
               if (mounted) {
-                Navigator.of(context).pop(); // Close modal
-                Navigator.of(context).pop(true); // Go back with refresh signal
+                Navigator.of(context).pop(true);
               }
             },
           ),

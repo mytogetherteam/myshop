@@ -10,8 +10,6 @@ class PaymentSuccessSheet extends StatefulWidget {
 }
 
 class _PaymentSuccessSheetState extends State<PaymentSuccessSheet> {
-  bool _isProcessing = false;
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -73,17 +71,16 @@ class _PaymentSuccessSheetState extends State<PaymentSuccessSheet> {
           width: double.infinity,
           height: 56,
           child: ElevatedButton(
-            onPressed: _isProcessing
-                ? null
-                : () {
-                    setState(() => _isProcessing = true);
-                    if (widget.onDone != null) {
-                      widget.onDone!();
-                    } else {
-                      Navigator.pop(context); // Close sheet
-                      Navigator.pop(context); // Go back to AcceptedPaymentPage
-                    }
-                  },
+            onPressed: () {
+              if (widget.onDone != null) {
+                widget.onDone!();
+              } else {
+                // Default behavior: close this sheet AND the parent screen
+                // Important: pass true to signal that a refresh is needed
+                Navigator.pop(context); // Close sheet
+                Navigator.pop(context, true); // Go back with refresh signal
+              }
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFED3973),
               shape: RoundedRectangleBorder(

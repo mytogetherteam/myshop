@@ -152,6 +152,7 @@ class OrdersScreenState extends State<OrdersScreen>
                   updateStream: _orderUpdatesController.stream,
                   refreshStream: _refreshController.stream,
                   onCountUpdated: (count) => _updateTabCount('NEW', count),
+                  loadImmediately: true,
                 ),
                 OrderListTabView(
                   tabStatus: 'PAYMENT',
@@ -192,6 +193,7 @@ class OrdersScreenState extends State<OrdersScreen>
                   onCountUpdated: (count) =>
                       _updateTabCount('CANCELLED', count),
                 ),
+
               ],
             ),
           ),
@@ -251,6 +253,7 @@ class OrderListTabView extends StatefulWidget {
   final Stream<OrderModel> updateStream;
   final Stream<void> refreshStream;
   final Function(int) onCountUpdated;
+  final bool loadImmediately;
 
   const OrderListTabView({
     super.key,
@@ -259,7 +262,9 @@ class OrderListTabView extends StatefulWidget {
     required this.updateStream,
     required this.refreshStream,
     required this.onCountUpdated,
+    this.loadImmediately = false,
   });
+
 
   @override
   State<OrderListTabView> createState() => _OrderListTabViewState();
@@ -289,8 +294,19 @@ class _OrderListTabViewState extends State<OrderListTabView>
     _refreshSub = widget.refreshStream.listen(
       (_) => _fetchOrders(isRefresh: true),
     );
-    _fetchOrders(isRefresh: true);
+    
+    if (widget.loadImmediately) {
+      _fetchOrders(isRefresh: true);
+    } else {
+      // Lazy load: fetch when first built OR after a delay to stagger initial requests
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted && _orders.isEmpty && _isLoading) {
+          _fetchOrders(isRefresh: true);
+        }
+      });
+    }
   }
+
 
   @override
   void dispose() {

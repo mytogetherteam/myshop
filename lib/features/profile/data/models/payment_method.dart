@@ -9,7 +9,7 @@ class PaymentMethod {
   final String accountName;
   final bool isActive;
   final int displayOrder;
-  final String status;
+  final String pendingStatus;
 
   PaymentMethod({
     required this.id,
@@ -22,7 +22,7 @@ class PaymentMethod {
     required this.accountName,
     required this.isActive,
     required this.displayOrder,
-    this.status = 'APPROVED',
+    this.pendingStatus = 'APPROVED',
   });
 
   factory PaymentMethod.fromJson(Map<String, dynamic> json) {
@@ -37,7 +37,7 @@ class PaymentMethod {
       accountName: json['accountName'] ?? '',
       isActive: json['isActive'] ?? false,
       displayOrder: json['displayOrder'] ?? 0,
-      status: json['status'] ?? 'APPROVED',
+      pendingStatus: json['pendingStatus'] ?? json['status'] ?? 'APPROVED',
     );
   }
 
@@ -52,6 +52,6 @@ class PaymentMethod {
     'accountName': accountName,
     'isActive': isActive,
     'displayOrder': displayOrder,
-    'status': status,
+    'pendingStatus': pendingStatus,
   };
 }

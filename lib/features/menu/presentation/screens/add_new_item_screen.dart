@@ -14,6 +14,8 @@ import '../../data/models/menu_category_model.dart';
 import '../../data/services/menu_service.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/core/data/models/master_data_model.dart';
+import 'package:my_shop/core/presentation/widgets/global_modal.dart';
+import 'package:my_shop/core/presentation/widgets/confirmation_sheet.dart';
 
 class AddNewItemScreen extends StatefulWidget {
   final MenuItemModel? item;
@@ -94,6 +96,13 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   final Map<int, String> _variantLangs = {};
   final Map<int, String> _addonLangs = {};
 
+  // Persistent controllers for dynamic forms
+  final Map<int, TextEditingController> _variantNameCtrls = {};
+  final Map<int, TextEditingController> _variantPriceCtrls = {};
+  final Map<int, TextEditingController> _addonGroupNameCtrls = {};
+  final Map<String, TextEditingController> _addonOptionNameCtrls = {};
+  final Map<String, TextEditingController> _addonOptionPriceCtrls = {};
+
   List<MenuComboComponentModel> _comboComponents = [];
   List<MenuItemModel> _availableItems = [];
 
@@ -118,19 +127,19 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     );
 
     _priceController = TextEditingController(
-      text: item?.price.toString() ?? '',
+      text: (item?.price == null || item?.price == 0.0) ? '' : item?.price.toString(),
     );
     _originalPriceController = TextEditingController(
-      text: item?.originalPrice?.toString() ?? '',
+      text: (item?.originalPrice == null || item?.originalPrice == 0.0) ? '' : item?.originalPrice.toString(),
     );
     _stockQuantityController = TextEditingController(
-      text: item?.stockQuantity?.toString() ?? '',
+      text: (item?.stockQuantity == null || item?.stockQuantity == 0) ? '' : item?.stockQuantity.toString(),
     );
     _displayOrderController = TextEditingController(
       text: item?.displayOrder?.toString() ?? '0',
     );
-    _discountAmountController = TextEditingController(text: '0.00');
-    _discountPercentController = TextEditingController(text: '0');
+    _discountAmountController = TextEditingController(text: '');
+    _discountPercentController = TextEditingController(text: '');
 
     if (item?.currency != null && item!.currency!.isNotEmpty) {
       if (_currencies.contains(item.currency)) {
@@ -187,7 +196,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             if (_categories.isNotEmpty) {
               try {
                 _selectedCategory = _categories.firstWhere(
-                  (c) => c.id == item.categoryId,
+                  (c) => c.id == item.menuCategoryId,
                 );
               } catch (_) {
                 _selectedCategory = _categories.first;
@@ -250,6 +259,11 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     _displayOrderController.dispose();
     _discountAmountController.dispose();
     _discountPercentController.dispose();
+    for (final c in _variantNameCtrls.values) { c.dispose(); }
+    for (final c in _variantPriceCtrls.values) { c.dispose(); }
+    for (final c in _addonGroupNameCtrls.values) { c.dispose(); }
+    for (final c in _addonOptionNameCtrls.values) { c.dispose(); }
+    for (final c in _addonOptionPriceCtrls.values) { c.dispose(); }
     super.dispose();
   }
 
@@ -336,6 +350,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       'stockQuantity': int.tryParse(_stockQuantityController.text) ?? 0,
       'displayOrder': int.tryParse(_displayOrderController.text) ?? 0,
       'categoryId': _selectedCategory?.id,
+      'menuCategoryId': _selectedCategory?.id,
       'masterCategoryId': _selectedMasterCategory?.id,
       'masterItemId': _selectedMasterItem?.id,
       'tagIds': _selectedTagIds,
@@ -387,6 +402,31 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Failed to save item'),
+            backgroundColor: Color(0xFFEF4444),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteItem() async {
+    if (widget.item == null) return;
+    setState(() => _isSaving = true);
+    final success = await _menuService.deleteMenuItem(widget.item!.id);
+    if (mounted) {
+      setState(() => _isSaving = false);
+      if (success) {
+        Navigator.pop(context, true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Item deleted successfully'),
+            backgroundColor: Color(0xFFED3A72),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to delete item'),
             backgroundColor: Color(0xFFEF4444),
           ),
         );
@@ -570,6 +610,38 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                         ),
                       ],
 
+                      if (widget.item != null) ...[
+                        const SizedBox(height: 24),
+                        Center(
+                          child: TextButton.icon(
+                            onPressed: () {
+                              GlobalModal.show(
+                                context: context,
+                                child: ConfirmationSheet(
+                                  title: 'Delete Item?',
+                                  message: 'Are you sure you want to delete "${widget.item!.displayName}"? This action cannot be undone.',
+                                  confirmLabel: 'Delete',
+                                  confirmColor: const Color(0xFFEF4444),
+                                  onConfirm: _deleteItem,
+                                ),
+                              );
+                            },
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: Color(0xFFEF4444),
+                            ),
+                            label: Text(
+                              'Delete menu item',
+                              style: GoogleFonts.poppins(
+                                color: const Color(0xFFEF4444),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+
                       const SizedBox(height: 100), // Padding for bottom button
                     ],
                   ),
@@ -656,6 +728,67 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         displayOrder: _optionGroups[groupIndex].displayOrder,
         options: opts,
       );
+    });
+  }
+
+  void _removeVariant(int index) {
+    setState(() {
+      _variants.removeAt(index);
+      _variantNameCtrls[index]?.dispose();
+      _variantPriceCtrls[index]?.dispose();
+      _variantNameCtrls.remove(index);
+      _variantPriceCtrls.remove(index);
+      
+      // Shift subsequent controllers up by 1
+      for (int i = index + 1; i <= _variants.length; i++) {
+        if (_variantNameCtrls.containsKey(i)) {
+          _variantNameCtrls[i - 1] = _variantNameCtrls.remove(i)!;
+        }
+        if (_variantPriceCtrls.containsKey(i)) {
+          _variantPriceCtrls[i - 1] = _variantPriceCtrls.remove(i)!;
+        }
+        if (_variantLangs.containsKey(i)) {
+          _variantLangs[i - 1] = _variantLangs.remove(i)!;
+        }
+      }
+    });
+  }
+
+  void _removeOptionGroup(int index) {
+    setState(() {
+      final group = _optionGroups.removeAt(index);
+      _addonGroupNameCtrls[index]?.dispose();
+      _addonGroupNameCtrls.remove(index);
+      
+      // Dispose all option controllers for this group
+      for (int oIndex = 0; oIndex < group.options.length; oIndex++) {
+        _addonOptionNameCtrls['$index-$oIndex']?.dispose();
+        _addonOptionPriceCtrls['$index-$oIndex']?.dispose();
+        _addonOptionNameCtrls.remove('$index-$oIndex');
+        _addonOptionPriceCtrls.remove('$index-$oIndex');
+      }
+
+      // Shift subsequent group controllers up by 1
+      for (int i = index + 1; i <= _optionGroups.length; i++) {
+        if (_addonGroupNameCtrls.containsKey(i)) {
+          _addonGroupNameCtrls[i - 1] = _addonGroupNameCtrls.remove(i)!;
+        }
+        if (_addonLangs.containsKey(i)) {
+          _addonLangs[i - 1] = _addonLangs.remove(i)!;
+        }
+        // Shift option controllers for this group
+        final nextGroup = i <= _optionGroups.length ? _optionGroups[i - 1] : null;
+        if (nextGroup != null) {
+          for (int oIndex = 0; oIndex < nextGroup.options.length; oIndex++) {
+            if (_addonOptionNameCtrls.containsKey('$i-$oIndex')) {
+              _addonOptionNameCtrls['${i - 1}-$oIndex'] = _addonOptionNameCtrls.remove('$i-$oIndex')!;
+            }
+            if (_addonOptionPriceCtrls.containsKey('$i-$oIndex')) {
+              _addonOptionPriceCtrls['${i - 1}-$oIndex'] = _addonOptionPriceCtrls.remove('$i-$oIndex')!;
+            }
+          }
+        }
+      }
     });
   }
 
@@ -842,12 +975,23 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   Widget _buildVariantCard(MenuItemVariantModel variant, int index) {
     final lang = _variantLangs[index] ?? 'EN';
 
-    final nameCtrl = TextEditingController(
-      text: lang == 'MM'
-          ? variant.nameMm
-          : (lang == 'TH' ? variant.nameTh : variant.nameEn),
+    final nameText = lang == 'MM'
+        ? variant.nameMm
+        : (lang == 'TH' ? variant.nameTh : variant.nameEn);
+    final nameCtrl = _variantNameCtrls.putIfAbsent(
+      index,
+      () => TextEditingController(text: nameText),
     );
-    final priceCtrl = TextEditingController(text: variant.price.toString());
+    // Sync text when language changes (only if user hasn't focused)
+    if (nameCtrl.text != nameText && nameText != null && nameText.isNotEmpty) {
+      nameCtrl.text = nameText;
+    }
+
+    final priceText = variant.price == 0.0 ? '' : variant.price.toString();
+    final priceCtrl = _variantPriceCtrls.putIfAbsent(
+      index,
+      () => TextEditingController(text: priceText),
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -878,7 +1022,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                     color: Color(0xFFEF4444),
                     size: 20,
                   ),
-                  onPressed: () => setState(() => _variants.removeAt(index)),
+                  onPressed: () => _removeVariant(index),
                 ),
               ],
             ),
@@ -1048,11 +1192,16 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   Widget _buildOptionGroupCard(MenuItemOptionGroupModel group, int index) {
     final lang = _addonLangs[index] ?? 'EN';
 
-    final groupNameCtrl = TextEditingController(
-      text: lang == 'MM'
-          ? group.nameMm
-          : (lang == 'TH' ? group.nameTh : group.nameEn),
+    final groupNameText = lang == 'MM'
+        ? group.nameMm
+        : (lang == 'TH' ? group.nameTh : group.nameEn);
+    final groupNameCtrl = _addonGroupNameCtrls.putIfAbsent(
+      index,
+      () => TextEditingController(text: groupNameText),
     );
+    if (groupNameCtrl.text != groupNameText && groupNameText != null && groupNameText.isNotEmpty) {
+      groupNameCtrl.text = groupNameText;
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -1083,8 +1232,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                     color: Color(0xFFEF4444),
                     size: 20,
                   ),
-                  onPressed: () =>
-                      setState(() => _optionGroups.removeAt(index)),
+                  onPressed: () => _removeOptionGroup(index),
                 ),
               ],
             ),
@@ -1186,13 +1334,21 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   final opt = optEntry.value;
                   final oIndex = optEntry.key;
 
-                  final optNameCtrl = TextEditingController(
-                    text: lang == 'MM'
-                        ? opt.nameMm
-                        : (lang == 'TH' ? opt.nameTh : opt.nameEn),
+                  final optNameText = lang == 'MM'
+                      ? opt.nameMm
+                      : (lang == 'TH' ? opt.nameTh : opt.nameEn);
+                  final optNameCtrl = _addonOptionNameCtrls.putIfAbsent(
+                    '$index-$oIndex',
+                    () => TextEditingController(text: optNameText),
                   );
-                  final optPriceCtrl = TextEditingController(
-                    text: opt.price.toString(),
+                  if (optNameCtrl.text != optNameText && optNameText != null && optNameText.isNotEmpty) {
+                    optNameCtrl.text = optNameText;
+                  }
+
+                  final optPriceText = opt.price == 0.0 ? '' : opt.price.toString();
+                  final optPriceCtrl = _addonOptionPriceCtrls.putIfAbsent(
+                    '$index-$oIndex',
+                    () => TextEditingController(text: optPriceText),
                   );
                   return Column(
                     children: [

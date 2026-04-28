@@ -12,8 +12,14 @@ class PaymentService {
   /// Get Shop Payment Types
   Future<List<PaymentMethod>> getShopPaymentMethods({bool forceRefresh = false}) async {
     try {
-      debugPrint('GET REQUEST: $_paymentsPath, forceRefresh: $forceRefresh');
-      final response = await ApiClient().dio.get(_paymentsPath);
+      final queryParams = forceRefresh 
+          ? {'_t': DateTime.now().millisecondsSinceEpoch} 
+          : null;
+      debugPrint('GET REQUEST: $_paymentsPath, Params: $queryParams');
+      final response = await ApiClient().dio.get(
+        _paymentsPath,
+        queryParameters: queryParams,
+      );
 
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&

@@ -37,8 +37,14 @@ class MenuService {
     }
 
     try {
-      debugPrint('GET REQUEST: $_categoriesPath');
-      final response = await ApiClient().dio.get(_categoriesPath);
+      final queryParams = forceRefresh 
+          ? {'_t': DateTime.now().millisecondsSinceEpoch} 
+          : null;
+      debugPrint('GET REQUEST: $_categoriesPath, Params: $queryParams');
+      final response = await ApiClient().dio.get(
+        _categoriesPath,
+        queryParameters: queryParams,
+      );
 
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
@@ -130,13 +136,18 @@ class MenuService {
     int? categoryId,
     int page = 1,
     int limit = 20,
+    bool forceRefresh = false,
   }) async {
     try {
       final queryParams = <String, dynamic>{'page': page, 'limit': limit};
       if (categoryId != null) {
         queryParams['categoryId'] = categoryId;
       }
+      if (forceRefresh) {
+        queryParams['_t'] = DateTime.now().millisecondsSinceEpoch;
+      }
       debugPrint('GET REQUEST: $_menuItemsPath, Params: $queryParams');
+      
       final response = await ApiClient().dio.get(
         _menuItemsPath,
         queryParameters: queryParams,
@@ -449,4 +460,51 @@ class MenuService {
     }
     return false;
   }
+
+  Future<bool> toggleMenuItemPublishStatus(int itemId, String status) async {
+    try {
+      final url = '$_menuItemsPath/$itemId/publish';
+      debugPrint('PATCH REQUEST: $url, Query: {status: $status}');
+      final response = await ApiClient().dio.patch(
+            url,
+            queryParameters: {'publishStatus': status},
+          );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        final Map<String, dynamic> data = response.data;
+        return data['success'] == true;
+      }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'MenuService.toggleMenuItemPublishStatus');
+    } catch (e) {
+      ApiHelper.handleError(e, context: 'MenuService.toggleMenuItemPublishStatus');
+    }
+    return false;
+  }
+
+  Future<List<String>?> getPublishStatuses() async {
+    try {
+      const url = '/api/shop/menu/publish-statuses';
+      debugPrint('GET REQUEST: $url');
+      final response = await ApiClient().dio.get(url);
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        final Map<String, dynamic> data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          final List list = data['data'] ?? [];
+          return list.map((e) => e.toString()).toList();
+        }
+      }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'MenuService.getPublishStatuses');
+    } catch (e) {
+      ApiHelper.handleError(e, context: 'MenuService.getPublishStatuses');
+    }
+    return null;
+  }
 }
+

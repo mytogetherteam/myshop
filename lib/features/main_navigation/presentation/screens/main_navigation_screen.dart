@@ -26,18 +26,31 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   late int _currentIndex;
+  late List<Widget> _pages;
   StreamSubscription? _socketSubscription;
+
   final GlobalKey<OrdersScreenState> _ordersKey =
       GlobalKey<OrdersScreenState>();
   final GlobalKey<MenuPageState> _menuKey = GlobalKey<MenuPageState>();
   final GlobalKey<ReportPageState> _reportKey = GlobalKey<ReportPageState>();
   final GlobalKey<ProfilePageState> _profileKey = GlobalKey<ProfilePageState>();
+  final List<bool> _visited = [false, false, false, false];
+
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    _visited[_currentIndex] = true;
+    _pages = [
+      OrdersScreen(key: _ordersKey),
+      MenuPage(key: _menuKey),
+      ReportPage(key: _reportKey),
+      ProfilePage(key: _profileKey),
+    ];
     _setupWebSocketListener();
+
+
   }
 
   @override
@@ -179,14 +192,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     }
   }
 
-  List<Widget> get _pages => [
-        OrdersScreen(key: _ordersKey),
-        MenuPage(key: _menuKey),
-        ReportPage(key: _reportKey),
-        ProfilePage(key: _profileKey),
-      ];
-
   final List<String> _titles = ['Order', 'Menu', 'Report', 'Profile'];
+
 
   @override
   Widget build(BuildContext context) {
@@ -200,7 +207,15 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         title: AppBarTitleWithLogo(title: _titles[_currentIndex]),
         actions: [const NotificationBadgeIcon(), const SizedBox(width: 8)],
       ),
-      body: _pages[_currentIndex],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _pages.asMap().entries.map((entry) {
+          final int idx = entry.key;
+          final Widget page = entry.value;
+          return _visited[idx] ? page : const SizedBox.shrink();
+        }).toList(),
+      ),
+
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -233,8 +248,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                     break;
                 }
               }
-              setState(() => _currentIndex = index);
+              setState(() {
+                _currentIndex = index;
+                _visited[index] = true;
+              });
             },
+
             backgroundColor: Colors.white,
             selectedItemColor: const Color(0xFFED3A72),
             unselectedItemColor: const Color(

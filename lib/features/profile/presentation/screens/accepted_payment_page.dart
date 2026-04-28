@@ -7,6 +7,7 @@ import '../../data/services/payment_service.dart';
 import '../../../../core/presentation/widgets/skeleton.dart';
 import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import '../../../../core/presentation/widgets/global_modal.dart';
+import '../../../../core/presentation/widgets/status_badge.dart';
 import '../widgets/password_confirmation_sheet.dart';
 import 'edit_payment_page.dart';
 
@@ -197,7 +198,8 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
   }
 
   Widget _buildPaymentItem(PaymentMethod pm) {
-    final bool isPending = pm.status == 'PENDING';
+    final bool isPending = pm.pendingStatus == 'PENDING_APPROVAL';
+    final bool isRejected = pm.pendingStatus == 'REJECTED';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -215,6 +217,10 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
               ),
             ),
             const Spacer(),
+            if (pm.pendingStatus != 'APPROVED') ...[
+              StatusBadge(status: pm.pendingStatus),
+              const SizedBox(width: 12),
+            ],
             if (!isPending) ...[
               GestureDetector(
                 onTap: () async {
@@ -224,7 +230,7 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
                       builder: (_) => EditPaymentPage(paymentMethod: pm),
                     ),
                   );
-                  if (result == true) _loadPaymentMethods();
+                  if (result == true) _loadPaymentMethods(forceRefresh: true);
                 },
                 child: Text(
                   'Edit',
@@ -260,7 +266,9 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFF1F5F9)),
+                  border: Border.all(
+                    color: isRejected ? const Color(0xFFEF4444).withValues(alpha: 0.2) : const Color(0xFFF1F5F9),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -373,7 +381,7 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: const Color(0xFFEF4444),
+                          color: const Color(0xFF64748B),
                           width: 1.5,
                         ),
                         boxShadow: [
@@ -391,17 +399,17 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
                             width: 32,
                             height: 2,
                             color: const Color(
-                              0xFFEF4444,
+                              0xFF64748B,
                             ).withValues(alpha: 0.3),
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Checking for security reasons, this payment method will be available shortly.',
+                            'Waiting for approval...',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.poppins(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFFEF4444),
+                              color: const Color(0xFF64748B),
                               height: 1.4,
                             ),
                           ),
@@ -410,10 +418,49 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
                             width: 32,
                             height: 2,
                             color: const Color(
-                              0xFFEF4444,
+                              0xFF64748B,
                             ).withValues(alpha: 0.3),
                           ),
                         ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            if (isRejected)
+              Positioned.fill(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFFEF4444),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        'Rejected. Please contact admin.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFFEF4444),
+                          height: 1.4,
+                        ),
                       ),
                     ),
                   ),

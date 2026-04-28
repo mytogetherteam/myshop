@@ -3,6 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/features/menu/data/models/menu_category_model.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
+import 'package:my_shop/core/presentation/widgets/status_badge.dart';
+import 'package:my_shop/core/presentation/widgets/global_modal.dart';
+import 'package:my_shop/core/presentation/widgets/confirmation_sheet.dart';
 import 'create_category_screen.dart';
 import 'edit_category_screen.dart';
 
@@ -21,9 +24,10 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchCategories();
+    _fetchCategories(forceRefresh: false);
     _prefetchCategoryData();
   }
+
 
   /// Pre-fetch master data and gallery icons for the category creation/edit screen
   Future<void> _prefetchCategoryData() async {
@@ -40,12 +44,14 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
 
 
   Future<void> refresh() async {
-    await _fetchCategories();
+    await _fetchCategories(forceRefresh: true);
   }
 
-  Future<void> _fetchCategories() async {
+
+  Future<void> _fetchCategories({bool forceRefresh = false}) async {
     setState(() => _isLoading = true);
-    final categories = await _categoryService.getCategories(forceRefresh: true);
+    final categories = await _categoryService.getCategories(forceRefresh: forceRefresh);
+
     if (mounted) {
       setState(() {
         _categories = categories ?? [];
@@ -103,8 +109,9 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
             context,
             MaterialPageRoute(builder: (context) => const CreateCategoryScreen()),
           );
-          if (result == true) _fetchCategories();
+          if (result == true) _fetchCategories(forceRefresh: true);
         },
+
         backgroundColor: const Color(0xFFED3A72),
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -162,13 +169,69 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
                   builder: (context) => EditCategoryScreen(category: category),
                 ),
               );
-              if (result == true) _fetchCategories();
+              if (result == true) _fetchCategories(forceRefresh: true);
+            },
+
+            onPublishStatusChanged: (isPublished) {
+              _toggleCategoryPublishStatus(category, isPublished);
             },
           ),
         );
       },
     );
   }
+
+  Future<void> _toggleCategoryPublishStatus(
+    MenuCategoryModel category,
+    bool isPublished,
+  ) async {
+    final index = _categories.indexWhere((c) => c.id == category.id);
+    if (index == -1) return;
+
+    final newStatus = isPublished ? 'PUBLISHED' : 'UNPUBLISHED';
+
+    // Optimistic Update
+    setState(() {
+      _categories[index] = category.copyWith(publishStatus: newStatus);
+    });
+
+    final success =
+        await _categoryService.toggleCategoryPublishStatus(category.id, newStatus);
+
+    if (!success && mounted) {
+      // Revert on failure
+      setState(() {
+        _categories[index] = category;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to update publish status'),
+          backgroundColor: Color(0xFFEF4444),
+        ),
+      );
+    }
+  }
+
+  Future<void> _deleteCategory(MenuCategoryModel category) async {
+    final success = await _categoryService.deleteCategory(category.id);
+    if (success && mounted) {
+      _fetchCategories(forceRefresh: true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Category deleted successfully'),
+          backgroundColor: Color(0xFFED3A72),
+        ),
+      );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to delete category'),
+          backgroundColor: Color(0xFFEF4444),
+        ),
+      );
+    }
+  }
+
 
   Widget _buildSkeletonList() {
     return ListView.builder(
@@ -215,16 +278,21 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
 class _CategoryCard extends StatelessWidget {
   final MenuCategoryModel category;
   final VoidCallback onEdit;
+  final ValueChanged<bool> onPublishStatusChanged;
   final int index;
 
   const _CategoryCard({
     required this.category,
     required this.onEdit,
+    required this.onPublishStatusChanged,
     required this.index,
   });
 
+
   @override
   Widget build(BuildContext context) {
+    final bool isPending = category.pendingStatus == 'PENDING_APPROVAL';
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -239,75 +307,127 @@ class _CategoryCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          ReorderableDragStartListener(
-            index: index,
-            child: Container(
-              color: Colors.transparent,
-              padding: const EdgeInsets.only(top: 8, bottom: 8, right: 8, left: 0),
-              child: const Icon(Icons.drag_indicator, color: Color(0xFF94A3B8), size: 24),
-            ),
-          ),
-          const SizedBox(width: 4),
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: _getCategoryColor(category.nameEn),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: category.imageUrl != null && category.imageUrl!.startsWith('assets/')
-                ? Image.asset(
-                    category.imageUrl!,
-                    width: 32,
-                    height: 32,
-                    fit: BoxFit.contain,
-                  )
-                : Image.network(
-                    category.imageUrl ?? '',
-                    width: 32,
-                    height: 32,
-                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.restaurant, size: 20, color: Color(0xFF94A3B8)),
-                  ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  category.displayName,
-                  style: GoogleFonts.poppins(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1E293B),
-                  ),
-                ),
-                Text(
-                  '${category.itemCount} items',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF94A3B8),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: onEdit,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+      child: Opacity(
+        opacity: isPending ? 0.6 : 1.0,
+        child: Row(
+          children: [
+            ReorderableDragStartListener(
+              index: index,
+              child: Container(
+                color: Colors.transparent,
+                padding: const EdgeInsets.only(top: 8, bottom: 8, right: 8, left: 0),
+                child: const Icon(Icons.drag_indicator, color: Color(0xFF94A3B8), size: 24),
               ),
-              child: const Icon(Icons.edit_note_rounded, color: Color(0xFF1E293B), size: 24),
+            ),
+            const SizedBox(width: 4),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: _getCategoryColor(category.nameEn),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: category.imageUrl != null && category.imageUrl!.startsWith('assets/')
+                  ? Image.asset(
+                      category.imageUrl!,
+                      width: 32,
+                      height: 32,
+                      fit: BoxFit.contain,
+                    )
+                  : Image.network(
+                      category.imageUrl ?? '',
+                      width: 32,
+                      height: 32,
+                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.restaurant, size: 20, color: Color(0xFF94A3B8)),
+                    ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      Text(
+                        category.displayName,
+                        style: GoogleFonts.poppins(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1E293B),
+                        ),
+                      ),
+                      if (category.pendingStatus != null && 
+                          category.pendingStatus != 'APPROVED')
+                        StatusBadge(status: category.pendingStatus),
+                    ],
+                  ),
+                  Text(
+                    '${category.itemCount} items',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF94A3B8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            if (!isPending) ...[
+              _buildPublishSwitch(),
+              const SizedBox(width: 8),
+            ],
+            GestureDetector(
+              onTap: isPending ? null : onEdit,
+
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: const Icon(Icons.edit_note_rounded, color: Color(0xFF1E293B), size: 24),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPublishSwitch() {
+    final bool isPublished = category.publishStatus == 'PUBLISHED';
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: 24,
+          child: Transform.scale(
+            scale: 0.7,
+            child: Switch(
+              value: isPublished,
+              onChanged: onPublishStatusChanged,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              activeThumbColor: Colors.white,
+              activeTrackColor: const Color(0xFFED3A72),
+              inactiveThumbColor: Colors.white,
+              inactiveTrackColor: const Color(0xFFE2E8F0),
+              trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
             ),
           ),
-        ],
-      ),
+        ),
+        Text(
+          isPublished ? 'Published' : 'Draft',
+          style: GoogleFonts.poppins(
+            fontSize: 8,
+            fontWeight: FontWeight.w600,
+            color: isPublished ? const Color(0xFFED3A72) : const Color(0xFF94A3B8),
+          ),
+        ),
+      ],
     );
   }
 

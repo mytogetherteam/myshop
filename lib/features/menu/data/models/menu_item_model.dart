@@ -1,6 +1,6 @@
 class MenuItemModel {
   final int id;
-  final int? categoryId;
+  final int? menuCategoryId;
   final String? nameEn;
   final String? nameMm;
   final String? nameTh;
@@ -22,6 +22,7 @@ class MenuItemModel {
   final bool isCombo;
   final int? displayOrder;
   final int? stockQuantity;
+  final String? pendingStatus;
   final String? description;
   final String? descriptionMm;
   final String? descriptionTh;
@@ -36,10 +37,12 @@ class MenuItemModel {
   final double? discountAmount;
   final double? discountPercentage;
   final List<MenuComboComponentModel> components;
+  final String? publishStatus;
+
 
   MenuItemModel({
     required this.id,
-    this.categoryId,
+    this.menuCategoryId,
     this.nameEn,
     this.nameMm,
     this.nameTh,
@@ -61,6 +64,7 @@ class MenuItemModel {
     this.isCombo = false,
     this.displayOrder,
     this.stockQuantity,
+    this.pendingStatus,
     this.description,
     this.descriptionMm,
     this.descriptionTh,
@@ -75,12 +79,14 @@ class MenuItemModel {
     this.discountAmount,
     this.discountPercentage,
     this.components = const [],
+    this.publishStatus,
   });
+
 
   factory MenuItemModel.fromJson(Map<String, dynamic> json) {
     return MenuItemModel(
       id: json['id'] ?? 0,
-      categoryId: json['categoryId'],
+      menuCategoryId: json['menuCategoryId'] ?? json['categoryId'],
       nameEn: json['nameEn'],
       nameMm: json['nameMm'],
       nameTh: json['nameTh'],
@@ -102,6 +108,7 @@ class MenuItemModel {
       isCombo: json['isCombo'] ?? false,
       displayOrder: json['displayOrder'],
       stockQuantity: json['stockQuantity'],
+      pendingStatus: json['pendingStatus'],
       description: json['description'],
       descriptionMm: json['descriptionMm'],
       descriptionTh: json['descriptionTh'],
@@ -125,13 +132,16 @@ class MenuItemModel {
               ?.map((c) => MenuComboComponentModel.fromJson(c))
               .toList() ??
           [],
+      publishStatus: json['publishStatus'],
     );
+
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'categoryId': categoryId,
+      'categoryId': menuCategoryId,
+      'menuCategoryId': menuCategoryId,
       'nameEn': nameEn,
       'nameMm': nameMm,
       'nameTh': nameTh,
@@ -148,6 +158,7 @@ class MenuItemModel {
       'isCombo': isCombo,
       'displayOrder': displayOrder,
       'stockQuantity': stockQuantity,
+      'pendingStatus': pendingStatus,
       'descriptionEn': descriptionEn,
       'descriptionMm': descriptionMm,
       'descriptionTh': descriptionTh,
@@ -160,12 +171,14 @@ class MenuItemModel {
       'discountAmount': discountAmount,
       'discountPercentage': discountPercentage,
       'components': components.map((c) => c.toJson()).toList(),
+      'publishStatus': publishStatus,
     };
+
   }
 
   MenuItemModel copyWith({
     int? id,
-    int? categoryId,
+    int? menuCategoryId,
     String? nameEn,
     String? nameMm,
     String? nameTh,
@@ -187,6 +200,7 @@ class MenuItemModel {
     bool? isCombo,
     int? displayOrder,
     int? stockQuantity,
+    String? pendingStatus,
     String? description,
     String? descriptionMm,
     String? descriptionTh,
@@ -201,10 +215,12 @@ class MenuItemModel {
     double? discountAmount,
     double? discountPercentage,
     List<MenuComboComponentModel>? components,
+    String? publishStatus,
   }) {
+
     return MenuItemModel(
       id: id ?? this.id,
-      categoryId: categoryId ?? this.categoryId,
+      menuCategoryId: menuCategoryId ?? this.menuCategoryId,
       nameEn: nameEn ?? this.nameEn,
       nameMm: nameMm ?? this.nameMm,
       nameTh: nameTh ?? this.nameTh,
@@ -226,6 +242,7 @@ class MenuItemModel {
       isCombo: isCombo ?? this.isCombo,
       displayOrder: displayOrder ?? this.displayOrder,
       stockQuantity: stockQuantity ?? this.stockQuantity,
+      pendingStatus: pendingStatus ?? this.pendingStatus,
       description: description ?? this.description,
       descriptionMm: descriptionMm ?? this.descriptionMm,
       descriptionTh: descriptionTh ?? this.descriptionTh,
@@ -240,7 +257,9 @@ class MenuItemModel {
       discountAmount: discountAmount ?? this.discountAmount,
       discountPercentage: discountPercentage ?? this.discountPercentage,
       components: components ?? this.components,
+      publishStatus: publishStatus ?? this.publishStatus,
     );
+
   }
 
   String get displayName => nameEn ?? nameMm ?? nameTh ?? '';

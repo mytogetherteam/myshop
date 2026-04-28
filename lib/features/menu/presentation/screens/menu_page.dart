@@ -55,12 +55,13 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
   }
 
   Future<void> refresh() async {
-    await _fetchCategories();
+    await _fetchCategories(forceRefresh: true);
   }
 
-  Future<void> _fetchCategories() async {
+  Future<void> _fetchCategories({bool forceRefresh = false}) async {
     setState(() => _isLoadingCategories = true);
-    final categories = await _menuService.getCategories(forceRefresh: true);
+    final categories = await _menuService.getCategories(forceRefresh: forceRefresh);
+
     if (mounted) {
       setState(() {
         _categories = [
@@ -95,6 +96,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
       categoryId: filterId,
       page: _currentPage,
       limit: 20,
+      forceRefresh: refresh,
     );
     
     if (mounted) {
@@ -136,6 +138,25 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to update availability'),
+          backgroundColor: Color(0xFFEF4444),
+        ),
+      );
+      // Revert if failed
+      _fetchItems(refresh: true);
+    }
+  }
+
+  Future<void> _toggleItemPublishStatus(
+    MenuItemModel item,
+    bool isPublished,
+  ) async {
+    final newStatus = isPublished ? 'PUBLISHED' : 'UNPUBLISHED';
+    final success =
+        await _menuService.toggleMenuItemPublishStatus(item.id, newStatus);
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to update publish status'),
           backgroundColor: Color(0xFFEF4444),
         ),
       );
@@ -219,8 +240,8 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
     
     for (var item in _items) {
       final categoryName = _categories.firstWhere(
-        (c) => c.id == item.categoryId,
-        orElse: () => MenuCategoryModel(id: item.categoryId ?? -1, nameEn: 'Other', nameMm: 'Other', nameTh: 'Other'),
+        (c) => c.id == item.menuCategoryId,
+        orElse: () => MenuCategoryModel(id: item.menuCategoryId ?? -1, nameEn: 'Other', nameMm: 'Other', nameTh: 'Other'),
       ).displayName;
       
       if (!groupedItems.containsKey(categoryName)) {
@@ -266,6 +287,10 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
                 onAvailabilityChanged: (available) {
                   _toggleItemAvailability(item, available);
                 },
+                onPublishStatusChanged: (isPublished) {
+                  _toggleItemPublishStatus(item, isPublished);
+                },
+
               );
             },
           ),
