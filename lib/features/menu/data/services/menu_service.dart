@@ -51,7 +51,15 @@ class MenuService {
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         if (data['success'] == true && data['data'] != null) {
-          final List list = data['data'] ?? [];
+          final dynamic rawData = data['data'];
+          List list;
+          if (rawData is List) {
+            list = rawData;
+          } else if (rawData is Map && rawData['content'] is List) {
+            list = rawData['content'];
+          } else {
+            list = [];
+          }
           _categoriesCache = list.map((json) => MenuCategoryModel.fromJson(json)).toList();
           return _categoriesCache;
         }
@@ -75,7 +83,15 @@ class MenuService {
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         if (data['success'] == true && data['data'] != null) {
-          final List list = data['data'] ?? [];
+          final dynamic rawData = data['data'];
+          List list;
+          if (rawData is List) {
+            list = rawData;
+          } else if (rawData is Map && rawData['content'] is List) {
+            list = rawData['content'];
+          } else {
+            list = [];
+          }
           return list.map((json) => MenuCategoryModel.fromJson(json)).toList();
         }
       }
@@ -98,7 +114,15 @@ class MenuService {
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         if (data['success'] == true && data['data'] != null) {
-          final List list = data['data'] ?? [];
+          final dynamic rawData = data['data'];
+          List list;
+          if (rawData is List) {
+            list = rawData;
+          } else if (rawData is Map && rawData['content'] is List) {
+            list = rawData['content'];
+          } else {
+            list = [];
+          }
           return list.map((e) => Map<String, dynamic>.from(e)).toList();
         }
       }
@@ -158,7 +182,15 @@ class MenuService {
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         if (data['success'] == true && data['data'] != null) {
-          final List list = data['data'] ?? [];
+          final dynamic rawData = data['data'];
+          List list;
+          if (rawData is List) {
+            list = rawData;
+          } else if (rawData is Map && rawData['content'] is List) {
+            list = rawData['content'];
+          } else {
+            list = [];
+          }
           return list.map((json) => MenuItemModel.fromJson(json)).toList();
         }
       }
@@ -181,7 +213,15 @@ class MenuService {
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         if (data['success'] == true && data['data'] != null) {
-          final List list = data['data'] ?? [];
+          final dynamic rawData = data['data'];
+          List list;
+          if (rawData is List) {
+            list = rawData;
+          } else if (rawData is Map && rawData['content'] is List) {
+            list = rawData['content'];
+          } else {
+            list = [];
+          }
           return list.map((json) => MenuItemModel.fromJson(json)).toList();
         }
       }
@@ -503,7 +543,15 @@ class MenuService {
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         if (data['success'] == true && data['data'] != null) {
-          final List list = data['data'] ?? [];
+          final dynamic rawData = data['data'];
+          List list;
+          if (rawData is List) {
+            list = rawData;
+          } else if (rawData is Map && rawData['content'] is List) {
+            list = rawData['content'];
+          } else {
+            list = [];
+          }
           return list.map((e) => e.toString()).toList();
         }
       }

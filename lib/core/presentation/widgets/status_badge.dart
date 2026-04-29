@@ -8,15 +8,14 @@ class StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (status == null || status == 'APPROVED') {
+    final String upperStatus = status?.toUpperCase() ?? '';
+    if (upperStatus == '' || upperStatus == 'APPROVED' || upperStatus == 'PUBLISHED') {
       return const SizedBox.shrink();
     }
-
+    
     Color bgColor;
     Color textColor;
     String label;
-
-    final String upperStatus = status?.toUpperCase() ?? '';
     
     switch (upperStatus) {
       case 'PENDING':
@@ -32,7 +31,11 @@ class StatusBadge extends StatelessWidget {
         label = 'Rejected';
         break;
       default:
-        return const SizedBox.shrink();
+        // Generic fallback for any other status
+        bgColor = const Color(0xFFF1F5F9); // Light gray
+        textColor = const Color(0xFF475569); // Dark gray
+        label = status ?? upperStatus;
+        break;
     }
 
     return Container(

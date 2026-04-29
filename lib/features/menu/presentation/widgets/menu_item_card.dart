@@ -54,9 +54,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
   @override
   Widget build(BuildContext context) {
     final String status = widget.item.pendingStatus?.toUpperCase() ?? '';
-    final bool isPending = status == 'PENDING_APPROVAL' || 
-                           status == 'PENDING' || 
-                           status == 'AWAITING_APPROVAL';
+    final bool isPending = status != '' && status != 'APPROVED' && status != 'PUBLISHED';
     final bool isRejected = status == 'REJECTED';
 
     return Padding(
@@ -142,6 +140,11 @@ class _MenuItemCardState extends State<MenuItemCard> {
                               ),
                               if (isPending || isRejected)
                                 StatusBadge(status: widget.item.pendingStatus),
+                              if (status != '' && status != 'APPROVED')
+                                Text(
+                                  '($status)',
+                                  style: const TextStyle(fontSize: 8, color: Colors.grey),
+                                ),
                             ],
                           ),
                           const SizedBox(height: 2),

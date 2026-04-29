@@ -101,6 +101,12 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
           }
           if (fetchedItems != null) {
             _items.addAll(fetchedItems);
+            
+            // Debug logging
+            for (var item in fetchedItems) {
+              debugPrint('DEBUG: ManageShop: Item: ${item.nameEn}, Status: ${item.pendingStatus}');
+            }
+
             _hasMore = fetchedItems.length == _limit;
             if (_hasMore) _page++;
           } else {

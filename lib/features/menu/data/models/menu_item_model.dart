@@ -120,7 +120,7 @@ class MenuItemModel {
       isCombo: json['isCombo'] ?? false,
       displayOrder: json['displayOrder'],
       stockQuantity: json['stockQuantity'],
-      pendingStatus: json['pendingStatus'],
+      pendingStatus: json['pendingStatus'] ?? json['pending_status'],
       rejectReason: json['rejectReason'],
       description: json['description'],
       descriptionMm: json['descriptionMm'],
@@ -150,7 +150,7 @@ class MenuItemModel {
               ?.map((c) => MenuComboComponentModel.fromJson(c))
               .toList() ??
           [],
-      publishStatus: json['publishStatus'],
+      publishStatus: json['publishStatus'] ?? json['publish_status'],
     );
 
   }

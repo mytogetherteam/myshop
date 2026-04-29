@@ -106,6 +106,12 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
         } else {
           _items.addAll(items ?? []);
         }
+        
+        // Debug logging
+        for (var item in _items) {
+          debugPrint('DEBUG: Item: ${item.nameEn}, Status: ${item.pendingStatus}');
+        }
+
         _hasMore = items != null && items.length == 20;
         _isLoadingItems = false;
       });
