@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
@@ -37,13 +38,12 @@ class MenuService {
     }
 
     try {
-      final queryParams = forceRefresh 
-          ? {'_t': DateTime.now().millisecondsSinceEpoch} 
-          : null;
-      debugPrint('GET REQUEST: $_categoriesPath, Params: $queryParams');
+      debugPrint('GET REQUEST: $_categoriesPath, forceRefresh: $forceRefresh');
       final response = await ApiClient().dio.get(
         _categoriesPath,
-        queryParameters: queryParams,
+        options: forceRefresh
+            ? CacheOptions(store: MemCacheStore(), policy: CachePolicy.refresh).toOptions()
+            : null,
       );
 
       if (response.statusCode != null &&
@@ -143,14 +143,14 @@ class MenuService {
       if (categoryId != null) {
         queryParams['categoryId'] = categoryId;
       }
-      if (forceRefresh) {
-        queryParams['_t'] = DateTime.now().millisecondsSinceEpoch;
-      }
-      debugPrint('GET REQUEST: $_menuItemsPath, Params: $queryParams');
+      debugPrint('GET REQUEST: $_menuItemsPath, Params: $queryParams, forceRefresh: $forceRefresh');
       
       final response = await ApiClient().dio.get(
         _menuItemsPath,
         queryParameters: queryParams,
+        options: forceRefresh
+            ? CacheOptions(store: MemCacheStore(), policy: CachePolicy.refresh).toOptions()
+            : null,
       );
 
       if (response.statusCode != null &&

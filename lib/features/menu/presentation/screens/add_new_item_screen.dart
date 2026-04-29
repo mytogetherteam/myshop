@@ -479,6 +479,43 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 10),
+                      if (widget.item?.pendingStatus == 'REJECTED' && widget.item?.rejectReason != null)
+                        Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(bottom: 24),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFEF2F2),
+                            border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 20),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Rejected',
+                                    style: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFFEF4444),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                widget.item!.rejectReason!,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: const Color(0xFFEF4444),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       _buildImageUploadSection(),
                       const SizedBox(height: 32),
 

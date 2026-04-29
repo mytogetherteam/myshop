@@ -55,6 +55,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
     final bool isPending = widget.item.id == 0 ||
         widget.item.pendingStatus == 'PENDING_APPROVAL' ||
         widget.item.pendingStatus == 'PENDING';
+    final bool isRejected = widget.item.pendingStatus == 'REJECTED';
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -67,8 +68,16 @@ class _MenuItemCardState extends State<MenuItemCard> {
               splashColor: Colors.black.withValues(alpha: 0.02),
               highlightColor: Colors.black.withValues(alpha: 0.01),
               borderRadius: BorderRadius.circular(16),
-              child: Opacity(
-                opacity: isPending ? 0.6 : 1.0,
+              child: Container(
+                padding: isPending || isRejected ? const EdgeInsets.all(8) : EdgeInsets.zero,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: isRejected ? const Color(0xFFFEF2F2).withValues(alpha: 0.5) : (isPending ? const Color(0xFFF8FAFC) : Colors.transparent),
+                  border: Border.all(
+                    color: isRejected ? const Color(0xFFEF4444).withValues(alpha: 0.3) : (isPending ? const Color(0xFFE2E8F0) : Colors.transparent),
+                    width: (isRejected || isPending) ? 1 : 0,
+                  ),
+                ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -129,9 +138,10 @@ class _MenuItemCardState extends State<MenuItemCard> {
                                   color: const Color(0xFF1E293B),
                                 ),
                               ),
-                              if (widget.item.pendingStatus != null && 
-                                  widget.item.pendingStatus != 'APPROVED')
-                                _buildStatusBadge(widget.item.pendingStatus!),
+                              if (isPending)
+                                const StatusBadge(status: 'PENDING_APPROVAL')
+                              else if (isRejected)
+                                const StatusBadge(status: 'REJECTED'),
                             ],
                           ),
                           const SizedBox(height: 2),
@@ -180,7 +190,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
               ),
             ),
           ),
-          if (!isPending) ...[
+          if (!isPending && !isRejected) ...[
             const SizedBox(width: 16),
             _buildActionSwitches(),
           ],
@@ -199,9 +209,6 @@ class _MenuItemCardState extends State<MenuItemCard> {
     );
   }
 
-  Widget _buildStatusBadge(String status) {
-    return StatusBadge(status: status);
-  }
 
   Widget _buildActionSwitches() {
     return Column(

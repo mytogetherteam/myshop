@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
@@ -12,13 +13,12 @@ class PaymentService {
   /// Get Shop Payment Types
   Future<List<PaymentMethod>> getShopPaymentMethods({bool forceRefresh = false}) async {
     try {
-      final queryParams = forceRefresh 
-          ? {'_t': DateTime.now().millisecondsSinceEpoch} 
-          : null;
-      debugPrint('GET REQUEST: $_paymentsPath, Params: $queryParams');
+      debugPrint('GET REQUEST: $_paymentsPath, forceRefresh: $forceRefresh');
       final response = await ApiClient().dio.get(
         _paymentsPath,
-        queryParameters: queryParams,
+        options: forceRefresh
+            ? CacheOptions(store: MemCacheStore(), policy: CachePolicy.refresh).toOptions()
+            : null,
       );
 
       if (response.statusCode != null &&

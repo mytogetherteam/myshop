@@ -23,6 +23,7 @@ class MenuItemModel {
   final int? displayOrder;
   final int? stockQuantity;
   final String? pendingStatus;
+  final String? rejectReason;
   final String? description;
   final String? descriptionMm;
   final String? descriptionTh;
@@ -65,6 +66,7 @@ class MenuItemModel {
     this.displayOrder,
     this.stockQuantity,
     this.pendingStatus,
+    this.rejectReason,
     this.description,
     this.descriptionMm,
     this.descriptionTh,
@@ -109,6 +111,7 @@ class MenuItemModel {
       displayOrder: json['displayOrder'],
       stockQuantity: json['stockQuantity'],
       pendingStatus: json['pendingStatus'],
+      rejectReason: json['rejectReason'],
       description: json['description'],
       descriptionMm: json['descriptionMm'],
       descriptionTh: json['descriptionTh'],
@@ -159,6 +162,7 @@ class MenuItemModel {
       'displayOrder': displayOrder,
       'stockQuantity': stockQuantity,
       'pendingStatus': pendingStatus,
+      'rejectReason': rejectReason,
       'descriptionEn': descriptionEn,
       'descriptionMm': descriptionMm,
       'descriptionTh': descriptionTh,
@@ -201,6 +205,7 @@ class MenuItemModel {
     int? displayOrder,
     int? stockQuantity,
     String? pendingStatus,
+    String? rejectReason,
     String? description,
     String? descriptionMm,
     String? descriptionTh,
@@ -243,6 +248,7 @@ class MenuItemModel {
       displayOrder: displayOrder ?? this.displayOrder,
       stockQuantity: stockQuantity ?? this.stockQuantity,
       pendingStatus: pendingStatus ?? this.pendingStatus,
+      rejectReason: rejectReason ?? this.rejectReason,
       description: description ?? this.description,
       descriptionMm: descriptionMm ?? this.descriptionMm,
       descriptionTh: descriptionTh ?? this.descriptionTh,

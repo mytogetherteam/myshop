@@ -19,8 +19,8 @@ class StatusBadge extends StatelessWidget {
     switch (status) {
       case 'PENDING':
       case 'PENDING_APPROVAL':
-        bgColor = const Color(0xFFF1F5F9); // Light gray
-        textColor = const Color(0xFF64748B); // Slate gray
+        bgColor = const Color(0xFFFEF9C3); // Light yellow
+        textColor = const Color(0xFFCA8A04); // Dark yellow
         label = 'Waiting for approval';
         break;
       case 'REJECTED':

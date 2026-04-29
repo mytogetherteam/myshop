@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
@@ -28,13 +29,12 @@ class CategoryService {
     }
 
     try {
-      final queryParams = forceRefresh 
-          ? {'_t': DateTime.now().millisecondsSinceEpoch} 
-          : null;
-      debugPrint('GET REQUEST: $_categoriesPath, Params: $queryParams');
+      debugPrint('GET REQUEST: $_categoriesPath, forceRefresh: $forceRefresh');
       final response = await ApiClient().dio.get(
         _categoriesPath,
-        queryParameters: queryParams,
+        options: forceRefresh
+            ? CacheOptions(store: MemCacheStore(), policy: CachePolicy.refresh).toOptions()
+            : null,
       );
 
       if (response.statusCode != null &&

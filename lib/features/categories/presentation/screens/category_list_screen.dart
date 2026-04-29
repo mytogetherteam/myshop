@@ -4,8 +4,7 @@ import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/features/menu/data/models/menu_category_model.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
 import 'package:my_shop/core/presentation/widgets/status_badge.dart';
-import 'package:my_shop/core/presentation/widgets/global_modal.dart';
-import 'package:my_shop/core/presentation/widgets/confirmation_sheet.dart';
+
 import 'create_category_screen.dart';
 import 'edit_category_screen.dart';
 
@@ -212,25 +211,6 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
     }
   }
 
-  Future<void> _deleteCategory(MenuCategoryModel category) async {
-    final success = await _categoryService.deleteCategory(category.id);
-    if (success && mounted) {
-      _fetchCategories(forceRefresh: true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Category deleted successfully'),
-          backgroundColor: Color(0xFFED3A72),
-        ),
-      );
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to delete category'),
-          backgroundColor: Color(0xFFEF4444),
-        ),
-      );
-    }
-  }
 
 
   Widget _buildSkeletonList() {
@@ -292,12 +272,15 @@ class _CategoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isPending = category.pendingStatus == 'PENDING_APPROVAL';
+    final bool isRejected = category.pendingStatus == 'REJECTED';
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+        color: isRejected ? const Color(0xFFFEF2F2).withValues(alpha: 0.5) : (isPending ? const Color(0xFFF8FAFC) : Colors.white),
+        border: Border.all(
+          color: isRejected ? const Color(0xFFEF4444).withValues(alpha: 0.3) : (isPending ? const Color(0xFFE2E8F0) : const Color(0xFFF1F5F9))
+        ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -307,10 +290,8 @@ class _CategoryCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Opacity(
-        opacity: isPending ? 0.6 : 1.0,
-        child: Row(
-          children: [
+      child: Row(
+        children: [
             ReorderableDragStartListener(
               index: index,
               child: Container(
@@ -358,9 +339,10 @@ class _CategoryCard extends StatelessWidget {
                           color: const Color(0xFF1E293B),
                         ),
                       ),
-                      if (category.pendingStatus != null && 
-                          category.pendingStatus != 'APPROVED')
-                        StatusBadge(status: category.pendingStatus),
+                      if (isPending)
+                        const StatusBadge(status: 'PENDING_APPROVAL')
+                      else if (isRejected)
+                        const StatusBadge(status: 'REJECTED'),
                     ],
                   ),
                   Text(
@@ -375,7 +357,7 @@ class _CategoryCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            if (!isPending) ...[
+            if (!isPending && !isRejected) ...[
               _buildPublishSwitch(),
               const SizedBox(width: 8),
             ],
@@ -394,7 +376,6 @@ class _CategoryCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 

@@ -10,7 +10,7 @@ class MenuCategoryModel {
   final int? masterCategoryId;
   final String? pendingStatus;
   final String? publishStatus;
-
+  final String? rejectReason;
 
   MenuCategoryModel({
     required this.id,
@@ -24,8 +24,8 @@ class MenuCategoryModel {
     this.masterCategoryId,
     this.pendingStatus,
     this.publishStatus,
+    this.rejectReason,
   });
-
 
   factory MenuCategoryModel.fromJson(Map<String, dynamic> json) {
     return MenuCategoryModel(
@@ -40,8 +40,8 @@ class MenuCategoryModel {
       masterCategoryId: json['masterCategoryId'],
       pendingStatus: json['pendingStatus'],
       publishStatus: json['publishStatus'],
+      rejectReason: json['rejectReason'],
     );
-
   }
 
   Map<String, dynamic> toJson() {
@@ -56,6 +56,7 @@ class MenuCategoryModel {
       'masterCategoryId': masterCategoryId,
       'pendingStatus': pendingStatus,
       'publishStatus': publishStatus,
+      'rejectReason': rejectReason,
     };
   }
 
@@ -71,6 +72,7 @@ class MenuCategoryModel {
     int? masterCategoryId,
     String? pendingStatus,
     String? publishStatus,
+    String? rejectReason,
   }) {
     return MenuCategoryModel(
       id: id ?? this.id,
@@ -84,6 +86,7 @@ class MenuCategoryModel {
       masterCategoryId: masterCategoryId ?? this.masterCategoryId,
       pendingStatus: pendingStatus ?? this.pendingStatus,
       publishStatus: publishStatus ?? this.publishStatus,
+      rejectReason: rejectReason ?? this.rejectReason,
     );
   }
 
