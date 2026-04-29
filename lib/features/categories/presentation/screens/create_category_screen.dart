@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:my_shop/core/presentation/widgets/custom_search_dropdown.dart';
+
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
@@ -19,8 +19,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
   final TextEditingController _nameThController = TextEditingController();
   String _nameLang = 'EN';
 
-  List<Map<String, dynamic>> _masterCategories = [];
-  int? _selectedMasterCategoryId;
+
 
   List<Map<String, dynamic>> _gallery = [];
   int _selectedGalleryIndex = 0;
@@ -37,14 +36,12 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
   Future<void> _fetchInitialData() async {
     setState(() => _isLoadingData = true);
     final results = await Future.wait([
-      _categoryService.getMasterCategories(forceRefresh: true),
       _categoryService.getCategoryGallery(),
     ]);
 
     if (mounted) {
       setState(() {
-        _masterCategories = results[0] ?? [];
-        _gallery = results[1] ?? [];
+        _gallery = results[0] ?? [];
         _isLoadingData = false;
       });
     }
@@ -79,7 +76,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
       'imageUrl': _gallery.isNotEmpty
           ? _gallery[_selectedGalleryIndex]['imageUrl']
           : null,
-      'masterCategoryId': _selectedMasterCategoryId,
+
       'isActive': true,
       'displayOrder': 1,
     };
@@ -156,18 +153,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Master Category Dropdown
-                      Text(
-                        'Master Category',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF1E293B),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildMasterCategoryDropdown(),
-                      const SizedBox(height: 24),
+
 
                       // Icon Gallery
                       Text(
@@ -250,20 +236,6 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
     );
   }
 
-  Widget _buildMasterCategoryDropdown() {
-    return CustomSearchDropdown<Map<String, dynamic>>(
-      items: _masterCategories,
-      value: _selectedMasterCategoryId != null
-          ? _masterCategories.firstWhere(
-              (c) => c['id'] == _selectedMasterCategoryId,
-              orElse: () => {},
-            )
-          : null,
-      hintText: 'Choose master category',
-      itemLabelBuilder: (c) => c['nameEn'] ?? 'Null',
-      onChanged: (v) => setState(() => _selectedMasterCategoryId = v?['id']),
-    );
-  }
 
   Widget _buildIconGallery() {
     if (_gallery.isEmpty) {

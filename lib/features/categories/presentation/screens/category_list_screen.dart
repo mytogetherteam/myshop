@@ -5,6 +5,7 @@ import 'package:my_shop/features/menu/data/models/menu_category_model.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
 import 'package:my_shop/core/presentation/widgets/status_badge.dart';
 
+
 import 'create_category_screen.dart';
 import 'edit_category_screen.dart';
 
@@ -315,7 +316,7 @@ class _CategoryCard extends StatelessWidget {
                       fit: BoxFit.contain,
                     )
                   : Image.network(
-                      category.imageUrl ?? '',
+                      (category.imageUrl ?? ''),
                       width: 32,
                       height: 32,
                       errorBuilder: (context, error, stackTrace) => const Icon(Icons.restaurant, size: 20, color: Color(0xFF94A3B8)),

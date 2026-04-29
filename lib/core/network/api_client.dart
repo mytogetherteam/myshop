@@ -13,6 +13,16 @@ class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
   factory ApiClient() => _instance;
 
+  static final MemCacheStore cacheStore = MemCacheStore();
+  static final CacheOptions cacheOptions = CacheOptions(
+    store: cacheStore,
+    policy: CachePolicy.request,
+    maxStale: const Duration(hours: 1),
+    priority: CachePriority.normal,
+    keyBuilder: CacheOptions.defaultCacheKeyBuilder,
+    allowPostMethod: false,
+  );
+
   late final Dio _dio;
   int _retryCount = 0;
   static const int _maxRetries = 3;
@@ -34,16 +44,7 @@ class ApiClient {
     _dio.interceptors.add(ShopInterceptor());
 
     _dio.interceptors.add(
-      DioCacheInterceptor(
-        options: CacheOptions(
-          store: MemCacheStore(),
-          policy: CachePolicy.request,
-          maxStale: const Duration(hours: 1),
-          priority: CachePriority.normal,
-          keyBuilder: CacheOptions.defaultCacheKeyBuilder,
-          allowPostMethod: false,
-        ),
-      ),
+      DioCacheInterceptor(options: cacheOptions),
     );
 
     _dio.interceptors.add(

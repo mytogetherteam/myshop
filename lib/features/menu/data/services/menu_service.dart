@@ -42,7 +42,7 @@ class MenuService {
       final response = await ApiClient().dio.get(
         _categoriesPath,
         options: forceRefresh
-            ? CacheOptions(store: MemCacheStore(), policy: CachePolicy.refresh).toOptions()
+            ? ApiClient.cacheOptions.copyWith(policy: CachePolicy.refresh).toOptions()
             : null,
       );
 
@@ -149,7 +149,7 @@ class MenuService {
         _menuItemsPath,
         queryParameters: queryParams,
         options: forceRefresh
-            ? CacheOptions(store: MemCacheStore(), policy: CachePolicy.refresh).toOptions()
+            ? ApiClient.cacheOptions.copyWith(policy: CachePolicy.refresh).toOptions()
             : null,
       );
 
@@ -335,7 +335,15 @@ class MenuService {
         response.statusCode! < 300) {
       final Map<String, dynamic> data = response.data;
       if (data['success'] == true && data['data'] != null) {
-        final List list = data['data'] ?? [];
+        final dynamic rawData = data['data'];
+        List list;
+        if (rawData is List) {
+          list = rawData;
+        } else if (rawData is Map && rawData['content'] is List) {
+          list = rawData['content'];
+        } else {
+          list = [];
+        }
         return list.map((json) => MasterDataModel.fromJson(json)).toList();
       }
     }

@@ -5,6 +5,7 @@ import '../../../../core/presentation/widgets/global_modal.dart';
 import '../../../../core/presentation/widgets/confirmation_sheet.dart';
 import '../../../../core/presentation/widgets/status_badge.dart';
 
+
 class MenuItemCard extends StatefulWidget {
   final MenuItemModel item;
   final ValueChanged<bool>? onAvailabilityChanged;
@@ -52,10 +53,11 @@ class _MenuItemCardState extends State<MenuItemCard> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isPending = widget.item.id == 0 ||
-        widget.item.pendingStatus == 'PENDING_APPROVAL' ||
-        widget.item.pendingStatus == 'PENDING';
-    final bool isRejected = widget.item.pendingStatus == 'REJECTED';
+    final String status = widget.item.pendingStatus?.toUpperCase() ?? '';
+    final bool isPending = status == 'PENDING_APPROVAL' || 
+                           status == 'PENDING' || 
+                           status == 'AWAITING_APPROVAL';
+    final bool isRejected = status == 'REJECTED';
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -138,10 +140,8 @@ class _MenuItemCardState extends State<MenuItemCard> {
                                   color: const Color(0xFF1E293B),
                                 ),
                               ),
-                              if (isPending)
-                                const StatusBadge(status: 'PENDING_APPROVAL')
-                              else if (isRejected)
-                                const StatusBadge(status: 'REJECTED'),
+                              if (isPending || isRejected)
+                                StatusBadge(status: widget.item.pendingStatus),
                             ],
                           ),
                           const SizedBox(height: 2),
@@ -162,7 +162,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                                   widget.item.originalPrice! >
                                       widget.item.price) ...[
                                 Text(
-                                  '${widget.item.originalPrice!.toInt()} THB',
+                                  '${widget.item.originalPrice!.toInt()} ${widget.item.currency ?? 'THB'}',
                                   style: GoogleFonts.poppins(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w500,
@@ -173,7 +173,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                                 const SizedBox(width: 8),
                               ],
                               Text(
-                                '${widget.item.price.toInt()} THB',
+                                '${widget.item.price.toInt()} ${widget.item.currency ?? 'THB'}',
                                 style: GoogleFonts.poppins(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,

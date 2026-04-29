@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -106,7 +108,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   List<MenuComboComponentModel> _comboComponents = [];
   List<MenuItemModel> _availableItems = [];
 
-  final List<String> _currencies = ['THB', 'USD', 'MMK'];
+  final List<String> _currencies = ['THB', 'MMK'];
 
   @override
   void initState() {
@@ -138,8 +140,12 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     _displayOrderController = TextEditingController(
       text: item?.displayOrder?.toString() ?? '0',
     );
-    _discountAmountController = TextEditingController(text: '');
-    _discountPercentController = TextEditingController(text: '');
+    _discountAmountController = TextEditingController(
+      text: (item?.discountAmount == null || item?.discountAmount == 0.0) ? '' : item?.discountAmount.toString(),
+    );
+    _discountPercentController = TextEditingController(
+      text: (item?.discountPercentage == null || item?.discountPercentage == 0.0) ? '' : item?.discountPercentage.toString(),
+    );
 
     if (item?.currency != null && item!.currency!.isNotEmpty) {
       if (_currencies.contains(item.currency)) {
@@ -327,6 +333,17 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       return;
     }
 
+    // Final price check
+    final priceVal = double.tryParse(_priceController.text.replaceAll(',', '')) ?? 0;
+    final originalPriceVal = double.tryParse(_originalPriceController.text.replaceAll(',', '')) ?? 0;
+    final discountAmountVal = double.tryParse(_discountAmountController.text.replaceAll(',', '')) ?? 0;
+
+    if (priceVal > 999999.9 || originalPriceVal > 999999.9 || discountAmountVal > 999999.9) {
+      _scrollToKey(_priceKey);
+      _showError('Price too large');
+      return;
+    }
+
     setState(() => _isSaving = true);
 
     final payload = {
@@ -441,6 +458,16 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         backgroundColor: const Color(0xFFEF4444),
       ),
     );
+  }
+
+  String? _priceValidator(String? value) {
+    if (value == null || value.isEmpty) return null;
+    final cleanValue = value.replaceAll(',', '');
+    final price = double.tryParse(cleanValue);
+    if (price != null && price > 999999.9) {
+      return 'Price too large';
+    }
+    return null;
   }
 
   @override
@@ -568,6 +595,14 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                       // Pricing Section
                       SizedBox(key: _priceKey, child: _buildSectionTitle('PRICING')),
                       const SizedBox(height: 16),
+                      _buildDropdownFieldStr(
+                        label: 'Currency',
+                        value: _currency,
+                        items: _currencies,
+                        onChanged: (val) => setState(() => _currency = val ?? 'THB'),
+                        isRequired: true,
+                      ),
+                      const SizedBox(height: 16),
                       Row(
                         children: [
                           Expanded(
@@ -577,9 +612,10 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                               hint: '0.00',
                               keyboardType: TextInputType.number,
                               isRequired: true,
-                              prefixText: '฿ ',
+                              prefixText: _currency == 'THB' ? '฿ ' : 'K ',
                               textAlign: TextAlign.right,
                               onChanged: (_) => _validatePrices(),
+                              validator: _priceValidator,
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -589,9 +625,10 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                               _priceController,
                               hint: '0.00',
                               keyboardType: TextInputType.number,
-                              prefixText: '฿ ',
+                              prefixText: _currency == 'THB' ? '฿ ' : 'K ',
                               textAlign: TextAlign.right,
                               onChanged: (_) => _validatePrices(),
+                              validator: _priceValidator,
                             ),
                           ),
                         ],
@@ -1095,6 +1132,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   'Price',
                   priceCtrl,
                   keyboardType: TextInputType.number,
+                  validator: _priceValidator,
                   onChanged: (v) {
                     _variants[index] = MenuItemVariantModel(
                       id: variant.id,
@@ -1191,7 +1229,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                 includedItemId: component.includedItemId,
                 quantity: int.tryParse(v) ?? 1,
                 displayOrder: component.displayOrder,
-                itemNameEn: component.itemNameEn,
+                includedItemNameEn: component.includedItemNameEn,
               );
             },
           ),
@@ -1216,7 +1254,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   includedItemId: val?.id ?? 0,
                   quantity: component.quantity,
                   displayOrder: component.displayOrder,
-                  itemNameEn: val?.nameEn ?? '',
+                  includedItemNameEn: val?.nameEn ?? '',
                 );
               });
             },
@@ -1424,6 +1462,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                         'Price',
                         optPriceCtrl,
                         keyboardType: TextInputType.number,
+                        validator: _priceValidator,
                         onChanged: (v) {
                           final newOpts = List<MenuItemOptionModel>.from(
                             group.options,
@@ -1611,11 +1650,12 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     TextEditingController controller, {
     String? hint,
     bool isMultiline = false,
-    TextInputType? keyboardType,
     ValueChanged<String>? onChanged,
     bool isRequired = false,
+    String? Function(String?)? validator,
     String? prefixText,
     TextAlign textAlign = TextAlign.start,
+    TextInputType? keyboardType,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1647,6 +1687,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           maxLines: isMultiline ? 4 : 1,
           keyboardType: keyboardType,
           onChanged: onChanged,
+          validator: validator,
           textAlign: textAlign,
           style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500),
           inputFormatters:
@@ -1684,9 +1725,6 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             ),
             contentPadding: const EdgeInsets.all(16),
           ),
-          validator: (value) {
-            return null;
-          },
         ),
       ],
     );

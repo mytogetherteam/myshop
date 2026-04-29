@@ -33,7 +33,7 @@ class CategoryService {
       final response = await ApiClient().dio.get(
         _categoriesPath,
         options: forceRefresh
-            ? CacheOptions(store: MemCacheStore(), policy: CachePolicy.refresh).toOptions()
+            ? ApiClient.cacheOptions.copyWith(policy: CachePolicy.refresh).toOptions()
             : null,
       );
 

@@ -104,9 +104,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
         if (refresh) {
           _items = items ?? [];
         } else {
-          if (items != null) {
-            _items.addAll(items);
-          }
+          _items.addAll(items ?? []);
         }
         _hasMore = items != null && items.length == 20;
         _isLoadingItems = false;

@@ -9,6 +9,7 @@ import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import '../../../../core/presentation/widgets/global_modal.dart';
 import '../../../../core/presentation/widgets/status_badge.dart';
 import '../widgets/password_confirmation_sheet.dart';
+
 import 'edit_payment_page.dart';
 
 class AcceptedPaymentPage extends StatefulWidget {

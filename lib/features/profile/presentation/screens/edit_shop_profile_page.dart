@@ -17,6 +17,7 @@ import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import 'package:my_shop/core/data/models/master_data_model.dart';
 import 'package:my_shop/core/data/services/master_data_service.dart';
 
+
 class EditShopProfilePage extends StatefulWidget {
   final ShopProfileModel? shopProfile;
   const EditShopProfilePage({super.key, this.shopProfile});
@@ -454,6 +455,17 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     if (baseFee == null || baseFee < 0) {
       _scrollToKey(_baseFeeKey);
       _showError('Base Delivery Fee must be a valid non-negative number');
+      return false;
+    }
+    if (baseFee > 999999.9) {
+      _scrollToKey(_baseFeeKey);
+      _showError('Price too large');
+      return false;
+    }
+
+    final minAmount = double.tryParse(_minAmountCtrl.text.trim());
+    if (minAmount != null && minAmount > 999999.9) {
+      _showError('Minimum Order Amount is too large');
       return false;
     }
     return true;

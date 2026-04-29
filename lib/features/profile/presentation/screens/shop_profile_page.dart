@@ -9,6 +9,7 @@ import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
+
 // ---------------------------------------------------------------------------
 // Demo data models
 // ---------------------------------------------------------------------------
@@ -348,7 +349,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                             borderRadius: BorderRadius.circular(14),
                             child: (_shopProfile?.logoUrl ?? '').isNotEmpty
                                 ? CachedNetworkImage(
-                                    imageUrl: _shopProfile?.logoUrl ?? '',
+                                    imageUrl: (_shopProfile?.logoUrl ?? ''),
                                     fit: BoxFit.cover,
                                     placeholder: (context, url) =>
                                         const ImageSkeletonLoader(),

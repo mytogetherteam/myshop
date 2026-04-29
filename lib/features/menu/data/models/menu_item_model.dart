@@ -33,6 +33,11 @@ class MenuItemModel {
   final bool hasVariants;
   final int? masterItemId;
   final int? masterCategoryId;
+  final String? masterItemNameEn;
+  final String? masterItemNameMm;
+  final String? masterCategoryNameEn;
+  final String? masterCategoryNameMm;
+  final String? masterCategoryImageUrl;
   final List<int> tagIds;
   final List<String> mealTypes;
   final double? discountAmount;
@@ -76,6 +81,11 @@ class MenuItemModel {
     this.hasVariants = false,
     this.masterItemId,
     this.masterCategoryId,
+    this.masterItemNameEn,
+    this.masterItemNameMm,
+    this.masterCategoryNameEn,
+    this.masterCategoryNameMm,
+    this.masterCategoryImageUrl,
     this.tagIds = const [],
     this.mealTypes = const [],
     this.discountAmount,
@@ -127,6 +137,11 @@ class MenuItemModel {
       hasVariants: json['hasVariants'] ?? false,
       masterItemId: json['masterItemId'],
       masterCategoryId: json['masterCategoryId'],
+      masterItemNameEn: json['masterItemNameEn'],
+      masterItemNameMm: json['masterItemNameMm'],
+      masterCategoryNameEn: json['masterCategoryNameEn'],
+      masterCategoryNameMm: json['masterCategoryNameMm'],
+      masterCategoryImageUrl: json['masterCategoryImageUrl'],
       tagIds: (json['tagIds'] as List?)?.cast<int>() ?? [],
       mealTypes: (json['mealTypes'] as List?)?.cast<String>() ?? [],
       discountAmount: (json['discountAmount'] as num?)?.toDouble(),
@@ -170,6 +185,11 @@ class MenuItemModel {
       'variants': variants.map((v) => v.toJson()).toList(),
       'masterItemId': masterItemId,
       'masterCategoryId': masterCategoryId,
+      'masterItemNameEn': masterItemNameEn,
+      'masterItemNameMm': masterItemNameMm,
+      'masterCategoryNameEn': masterCategoryNameEn,
+      'masterCategoryNameMm': masterCategoryNameMm,
+      'masterCategoryImageUrl': masterCategoryImageUrl,
       'tagIds': tagIds,
       'mealTypes': mealTypes,
       'discountAmount': discountAmount,
@@ -215,6 +235,11 @@ class MenuItemModel {
     bool? hasVariants,
     int? masterItemId,
     int? masterCategoryId,
+    String? masterItemNameEn,
+    String? masterItemNameMm,
+    String? masterCategoryNameEn,
+    String? masterCategoryNameMm,
+    String? masterCategoryImageUrl,
     List<int>? tagIds,
     List<String>? mealTypes,
     double? discountAmount,
@@ -258,6 +283,11 @@ class MenuItemModel {
       hasVariants: hasVariants ?? this.hasVariants,
       masterItemId: masterItemId ?? this.masterItemId,
       masterCategoryId: masterCategoryId ?? this.masterCategoryId,
+      masterItemNameEn: masterItemNameEn ?? this.masterItemNameEn,
+      masterItemNameMm: masterItemNameMm ?? this.masterItemNameMm,
+      masterCategoryNameEn: masterCategoryNameEn ?? this.masterCategoryNameEn,
+      masterCategoryNameMm: masterCategoryNameMm ?? this.masterCategoryNameMm,
+      masterCategoryImageUrl: masterCategoryImageUrl ?? this.masterCategoryImageUrl,
       tagIds: tagIds ?? this.tagIds,
       mealTypes: mealTypes ?? this.mealTypes,
       discountAmount: discountAmount ?? this.discountAmount,
@@ -434,32 +464,37 @@ class MenuItemOptionModel {
 }
 
 class MenuComboComponentModel {
+  final int? id;
   final int? includedItemId;
   final int quantity;
   final int? displayOrder;
-  final String? itemNameEn;
+  final String? includedItemNameEn;
 
   MenuComboComponentModel({
+    this.id,
     this.includedItemId,
     this.quantity = 1,
     this.displayOrder,
-    this.itemNameEn,
+    this.includedItemNameEn,
   });
 
   factory MenuComboComponentModel.fromJson(Map<String, dynamic> json) {
     return MenuComboComponentModel(
+      id: json['id'],
       includedItemId: json['includedItemId'],
       quantity: json['quantity'] ?? 1,
       displayOrder: json['displayOrder'],
-      itemNameEn: json['itemNameEn'],
+      includedItemNameEn: json['includedItemNameEn'] ?? json['itemNameEn'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'includedItemId': includedItemId,
       'quantity': quantity,
       'displayOrder': displayOrder,
+      'includedItemNameEn': includedItemNameEn,
     };
   }
 }

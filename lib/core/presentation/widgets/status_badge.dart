@@ -16,9 +16,12 @@ class StatusBadge extends StatelessWidget {
     Color textColor;
     String label;
 
-    switch (status) {
+    final String upperStatus = status?.toUpperCase() ?? '';
+    
+    switch (upperStatus) {
       case 'PENDING':
       case 'PENDING_APPROVAL':
+      case 'AWAITING_APPROVAL':
         bgColor = const Color(0xFFFEF9C3); // Light yellow
         textColor = const Color(0xFFCA8A04); // Dark yellow
         label = 'Waiting for approval';
