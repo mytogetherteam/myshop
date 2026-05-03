@@ -209,15 +209,33 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
           children: [
             _buildPaymentIcon(pm),
             const SizedBox(width: 12),
-            Text(
-              pm.paymentMethodName,
-              style: GoogleFonts.poppins(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF1E293B),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    pm.paymentMethodName,
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF1E293B),
+                    ),
+                  ),
+                  if (isRejected && pm.rejectReason != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        pm.rejectReason!,
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFFEF4444),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
-            const Spacer(),
             if (pm.pendingStatus != 'APPROVED') ...[
               StatusBadge(status: pm.pendingStatus),
               const SizedBox(width: 12),

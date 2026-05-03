@@ -121,7 +121,7 @@ class MenuItemModel {
       displayOrder: json['displayOrder'],
       stockQuantity: json['stockQuantity'],
       pendingStatus: json['pendingStatus'] ?? json['pending_status'],
-      rejectReason: json['rejectReason'],
+      rejectReason: json['rejectReason'] ?? json['reject_reason'] ?? json['rejectionReason'] ?? json['rejection_reason'] ?? json['reason'],
       description: json['description'],
       descriptionMm: json['descriptionMm'],
       descriptionTh: json['descriptionTh'],

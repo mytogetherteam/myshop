@@ -418,7 +418,11 @@ class MenuService {
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
-        return data['success'] == true;
+        if (data['success'] == true) {
+          clearCache();
+          ApiClient.clearCache();
+          return true;
+        }
       }
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.createMenuItem');
@@ -456,7 +460,11 @@ class MenuService {
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
-        return data['success'] == true;
+        if (data != null && data['success'] == true) {
+          clearCache();
+          ApiClient.clearCache();
+          return true;
+        }
       }
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.updateMenuItem');
@@ -476,9 +484,19 @@ class MenuService {
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
-        return data['success'] == true;
+        if (data != null && data['success'] == true) {
+          clearCache();
+          ApiClient.clearCache();
+          return true;
+        }
       }
     } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        debugPrint('Item already deleted on server (404), treating as success.');
+        clearCache();
+        ApiClient.clearCache();
+        return true;
+      }
       ApiHelper.handleError(e, context: 'MenuService.deleteMenuItem');
     } catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.deleteMenuItem');
@@ -499,7 +517,11 @@ class MenuService {
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
-        return data['success'] == true;
+        if (data != null && data['success'] == true) {
+          clearCache();
+          ApiClient.clearCache();
+          return true;
+        }
       }
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.toggleAvailability');
@@ -522,7 +544,11 @@ class MenuService {
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
-        return data['success'] == true;
+        if (data != null && data['success'] == true) {
+          clearCache();
+          ApiClient.clearCache();
+          return true;
+        }
       }
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.toggleMenuItemPublishStatus');
@@ -563,4 +589,3 @@ class MenuService {
     return null;
   }
 }
-

@@ -39,8 +39,8 @@ class PaymentMethod {
       accountName: json['accountName'] ?? '',
       isActive: json['isActive'] ?? false,
       displayOrder: json['displayOrder'] ?? 0,
-      pendingStatus: json['pendingStatus'] ?? json['status'] ?? 'APPROVED',
-      rejectReason: json['rejectReason'],
+      pendingStatus: json['pendingStatus'] ?? json['pending_status'] ?? json['status'] ?? 'APPROVED',
+      rejectReason: json['rejectReason'] ?? json['reject_reason'] ?? json['rejectionReason'] ?? json['rejection_reason'] ?? json['reason'],
     );
   }
 

@@ -4,24 +4,22 @@ import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
 import 'package:my_shop/features/menu/data/models/menu_category_model.dart';
+import 'package:my_shop/features/menu/data/services/menu_service.dart';
 
 class CategoryService {
   static const String _categoriesPath = '/api/shop/menu/categories';
-  static const String _masterCategoriesPath =
-      '/api/shop/menu/master/categories';
 
-  // Static cache variables
   static List<MenuCategoryModel>? _categoriesCache;
   static List<Map<String, dynamic>>? _masterCategoriesCache;
   static List<Map<String, dynamic>>? _galleryCache;
 
-  /// Clears all cached category data
   static void clearCache() {
     _categoriesCache = null;
     _masterCategoriesCache = null;
     _galleryCache = null;
   }
 
+  /// GET /api/shop/menu/categories
   Future<List<MenuCategoryModel>?> getCategories({bool forceRefresh = false}) async {
     if (!forceRefresh && _categoriesCache != null) {
       debugPrint('CACHE HIT: $_categoriesPath');
@@ -42,8 +40,8 @@ class CategoryService {
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         if (data['success'] == true && data['data'] != null) {
-          final List list = data['data'] ?? [];
-          _categoriesCache = list.map((json) => MenuCategoryModel.fromJson(json)).toList();
+          final List<dynamic> list = data['data'];
+          _categoriesCache = list.map((e) => MenuCategoryModel.fromJson(e)).toList();
           return _categoriesCache;
         }
       }
@@ -52,48 +50,32 @@ class CategoryService {
     } catch (e) {
       ApiHelper.handleError(e, context: 'CategoryService.getCategories');
     }
-    return forceRefresh ? null : _categoriesCache;
-  }
-
-  Future<MenuCategoryModel?> getCategoryDetail(int categoryId) async {
-    try {
-      final url = '$_categoriesPath/$categoryId';
-      debugPrint('GET REQUEST: $url');
-      final response = await ApiClient().dio.get(url);
-
-      if (response.statusCode != null &&
-          response.statusCode! >= 200 &&
-          response.statusCode! < 300) {
-        final Map<String, dynamic> data = response.data;
-        if (data['success'] == true && data['data'] != null) {
-          return MenuCategoryModel.fromJson(data['data']);
-        }
-      }
-    } on DioException catch (e) {
-      ApiHelper.handleError(e, context: 'CategoryService.getCategoryDetail');
-    } catch (e) {
-      ApiHelper.handleError(e, context: 'CategoryService.getCategoryDetail');
-    }
     return null;
   }
 
+  /// GET /api/shop/menu/master/categories
   Future<List<Map<String, dynamic>>?> getMasterCategories({bool forceRefresh = false}) async {
+    const String path = '/api/shop/menu/master/categories';
     if (!forceRefresh && _masterCategoriesCache != null) {
-      debugPrint('CACHE HIT: $_masterCategoriesPath');
+      debugPrint('CACHE HIT: $path');
       return _masterCategoriesCache;
     }
 
     try {
-      debugPrint('GET REQUEST: $_masterCategoriesPath');
-      final response = await ApiClient().dio.get(_masterCategoriesPath);
+      debugPrint('GET REQUEST: $path, forceRefresh: $forceRefresh');
+      final response = await ApiClient().dio.get(
+        path,
+        options: forceRefresh
+            ? ApiClient.cacheOptions.copyWith(policy: CachePolicy.refresh).toOptions()
+            : null,
+      );
 
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         if (data['success'] == true && data['data'] != null) {
-          final List list = data['data'] ?? [];
-          _masterCategoriesCache = list.map((e) => e as Map<String, dynamic>).toList();
+          _masterCategoriesCache = List<Map<String, dynamic>>.from(data['data']);
           return _masterCategoriesCache;
         }
       }
@@ -102,27 +84,32 @@ class CategoryService {
     } catch (e) {
       ApiHelper.handleError(e, context: 'CategoryService.getMasterCategories');
     }
-    return forceRefresh ? null : _masterCategoriesCache;
+    return null;
   }
 
+  /// GET /api/shop/menu/categories/gallery
   Future<List<Map<String, dynamic>>?> getCategoryGallery({bool forceRefresh = false}) async {
+    const String path = '$_categoriesPath/gallery';
     if (!forceRefresh && _galleryCache != null) {
-      debugPrint('CACHE HIT: $_categoriesPath/gallery');
+      debugPrint('CACHE HIT: $path');
       return _galleryCache;
     }
 
     try {
-      final url = '$_categoriesPath/gallery';
-      debugPrint('GET REQUEST: $url');
-      final response = await ApiClient().dio.get(url);
+      debugPrint('GET REQUEST: $path, forceRefresh: $forceRefresh');
+      final response = await ApiClient().dio.get(
+        path,
+        options: forceRefresh
+            ? ApiClient.cacheOptions.copyWith(policy: CachePolicy.refresh).toOptions()
+            : null,
+      );
 
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         if (data['success'] == true && data['data'] != null) {
-          final List list = data['data'] ?? [];
-          _galleryCache = list.map((e) => e as Map<String, dynamic>).toList();
+          _galleryCache = List<Map<String, dynamic>>.from(data['data']);
           return _galleryCache;
         }
       }
@@ -131,10 +118,10 @@ class CategoryService {
     } catch (e) {
       ApiHelper.handleError(e, context: 'CategoryService.getCategoryGallery');
     }
-    return forceRefresh ? null : _galleryCache;
+    return null;
   }
 
-
+  /// POST /api/shop/menu/categories
   Future<bool> createCategory(Map<String, dynamic> payload) async {
     try {
       debugPrint('POST REQUEST: $_categoriesPath, Data: $payload');
@@ -146,8 +133,12 @@ class CategoryService {
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
-        final Map<String, dynamic> data = response.data;
-        return data['success'] == true;
+        final data = response.data;
+        if (data != null && data['success'] == true) {
+          clearCache();
+          MenuService.clearCache();
+          return true;
+        }
       }
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'CategoryService.createCategory');
@@ -157,10 +148,8 @@ class CategoryService {
     return false;
   }
 
-  Future<bool> updateCategory(
-    int categoryId,
-    Map<String, dynamic> payload,
-  ) async {
+  /// PUT /api/shop/menu/categories/{id}
+  Future<bool> updateCategory(int categoryId, Map<String, dynamic> payload) async {
     try {
       final url = '$_categoriesPath/$categoryId';
       debugPrint('PUT REQUEST: $url, Data: $payload');
@@ -169,8 +158,12 @@ class CategoryService {
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
-        final Map<String, dynamic> data = response.data;
-        return data['success'] == true;
+        final data = response.data;
+        if (data != null && data['success'] == true) {
+          clearCache();
+          MenuService.clearCache();
+          return true;
+        }
       }
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'CategoryService.updateCategory');
@@ -180,6 +173,7 @@ class CategoryService {
     return false;
   }
 
+  /// DELETE /api/shop/menu/categories/{id}
   Future<bool> deleteCategory(int categoryId) async {
     try {
       final url = '$_categoriesPath/$categoryId';
@@ -189,10 +183,21 @@ class CategoryService {
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
-        final Map<String, dynamic> data = response.data;
-        return data['success'] == true;
+        final data = response.data;
+        if (data != null && data['success'] == true) {
+          clearCache();
+          MenuService.clearCache();
+          return true;
+        }
       }
     } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        debugPrint('Category already deleted on server (404), treating as success.');
+        clearCache();
+        MenuService.clearCache();
+        ApiClient.clearCache();
+        return true;
+      }
       ApiHelper.handleError(e, context: 'CategoryService.deleteCategory');
     } catch (e) {
       ApiHelper.handleError(e, context: 'CategoryService.deleteCategory');
@@ -210,8 +215,12 @@ class CategoryService {
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
-        final Map<String, dynamic> data = response.data;
-        return data['success'] == true;
+        final data = response.data;
+        if (data != null && data['success'] == true) {
+          clearCache();
+          MenuService.clearCache();
+          return true;
+        }
       }
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'CategoryService.reorderCategories');
@@ -233,8 +242,12 @@ class CategoryService {
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
-        final Map<String, dynamic> data = response.data;
-        return data['success'] == true;
+        final data = response.data;
+        if (data != null && data['success'] == true) {
+          clearCache();
+          MenuService.clearCache();
+          return true;
+        }
       }
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'CategoryService.toggleCategoryPublishStatus');
@@ -244,4 +257,3 @@ class CategoryService {
     return false;
   }
 }
-

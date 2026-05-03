@@ -38,9 +38,9 @@ class MenuCategoryModel {
       imageUrl: json['imageUrl'],
       itemCount: json['itemCount'] ?? 0,
       masterCategoryId: json['masterCategoryId'],
-      pendingStatus: json['pendingStatus'],
-      publishStatus: json['publishStatus'],
-      rejectReason: json['rejectReason'],
+      pendingStatus: json['pendingStatus'] ?? json['pending_status'],
+      publishStatus: json['publishStatus'] ?? json['publish_status'],
+      rejectReason: json['rejectReason'] ?? json['reject_reason'] ?? json['rejectionReason'] ?? json['rejection_reason'] ?? json['reason'],
     );
   }
 

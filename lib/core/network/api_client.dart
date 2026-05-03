@@ -23,6 +23,11 @@ class ApiClient {
     allowPostMethod: false,
   );
 
+  /// Clears the global Dio cache store
+  static void clearCache() {
+    cacheStore.clean();
+  }
+
   late final Dio _dio;
   int _retryCount = 0;
   static const int _maxRetries = 3;
