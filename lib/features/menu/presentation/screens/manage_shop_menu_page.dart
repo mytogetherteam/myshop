@@ -218,25 +218,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
     }
   }
 
-  Future<void> _deleteMenuItem(MenuItemModel item) async {
-    final success = await _menuService.deleteMenuItem(item.id);
-    if (success && mounted) {
-      _fetchItems(isRefresh: true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Item deleted successfully'),
-          backgroundColor: Color(0xFFED3A72),
-        ),
-      );
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to delete item'),
-          backgroundColor: Color(0xFFEF4444),
-        ),
-      );
-    }
-  }
+
 
   @override
   Widget build(BuildContext context) {

@@ -14,7 +14,7 @@ import 'package:image_picker/image_picker.dart';
 
 
 import '../widgets/password_confirmation_sheet.dart';
-import '../widgets/payment_success_sheet.dart';
+import 'package:my_shop/core/presentation/widgets/success_sheet.dart';
 import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import '../../../../core/data/services/image_upload_service.dart';
 
@@ -153,7 +153,6 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
         message: 'Are you sure you want to update this payment method?',
         confirmLabel: 'Yes, Update',
         onConfirm: () async {
-          Navigator.pop(context);
           await _performUpdate();
         },
       ),
@@ -204,7 +203,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
         GlobalModal.show(
           context: context,
           barrierDismissible: false,
-          child: PaymentSuccessSheet(
+          child: SuccessSheet(
             onDone: () {
               // Close the bottom sheet first
               Navigator.of(context).pop();

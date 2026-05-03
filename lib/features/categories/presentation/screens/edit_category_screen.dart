@@ -5,6 +5,7 @@ import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart'
 import 'package:my_shop/features/menu/data/models/menu_category_model.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
 import 'package:my_shop/core/presentation/widgets/global_modal.dart';
+import 'package:my_shop/core/presentation/widgets/success_sheet.dart';
 import 'package:my_shop/core/presentation/widgets/confirmation_sheet.dart';
 
 
@@ -125,7 +126,19 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
 
     if (mounted) {
       if (success) {
-        Navigator.pop(context, true);
+        GlobalModal.show(
+          context: context,
+          barrierDismissible: false,
+          child: SuccessSheet(
+            onDone: () {
+              final nav = Navigator.of(context);
+              nav.pop(); // Close sheet
+              if (mounted) {
+                nav.pop(true); // Close EditCategoryScreen
+              }
+            },
+          ),
+        );
       } else {
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(

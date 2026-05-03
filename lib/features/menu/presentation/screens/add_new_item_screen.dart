@@ -2,8 +2,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -17,6 +15,7 @@ import '../../data/services/menu_service.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/core/data/models/master_data_model.dart';
 import 'package:my_shop/core/presentation/widgets/global_modal.dart';
+import 'package:my_shop/core/presentation/widgets/success_sheet.dart';
 import 'package:my_shop/core/presentation/widgets/confirmation_sheet.dart';
 
 class AddNewItemScreen extends StatefulWidget {
@@ -408,13 +407,19 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     if (mounted) {
       setState(() => _isSaving = false);
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Item stored successfully'),
-            backgroundColor: Color(0xFFED3A72),
+        GlobalModal.show(
+          context: context,
+          barrierDismissible: false,
+          child: SuccessSheet(
+            onDone: () {
+              final nav = Navigator.of(context);
+              nav.pop(); // Close sheet
+              if (mounted) {
+                nav.pop(true); // Close AddNewItemScreen
+              }
+            },
           ),
         );
-        Navigator.pop(context, true);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

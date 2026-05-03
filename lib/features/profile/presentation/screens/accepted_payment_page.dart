@@ -454,7 +454,7 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
                         ],
                       ),
                       child: Text(
-                        'Rejected. Please contact admin.',
+                        pm.rejectReason != null ? 'Rejected: ${pm.rejectReason}' : 'Rejected. Please contact admin.',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.poppins(
                           fontSize: 13,

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class PaymentSuccessSheet extends StatefulWidget {
+class SuccessSheet extends StatefulWidget {
   final VoidCallback? onDone;
-  const PaymentSuccessSheet({super.key, this.onDone});
+  const SuccessSheet({super.key, this.onDone});
 
   @override
-  State<PaymentSuccessSheet> createState() => _PaymentSuccessSheetState();
+  State<SuccessSheet> createState() => _SuccessSheetState();
 }
 
-class _PaymentSuccessSheetState extends State<PaymentSuccessSheet> {
+class _SuccessSheetState extends State<SuccessSheet> {
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -57,7 +57,7 @@ class _PaymentSuccessSheetState extends State<PaymentSuccessSheet> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Text(
-            'Your payment method has been successfully requested. We\u2019ll notify you once it\u2019s approved.',
+            'Your request has been submitted successfully. We\u2019ll notify you once it\u2019s approved by the admin.',
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 14,
@@ -77,8 +77,9 @@ class _PaymentSuccessSheetState extends State<PaymentSuccessSheet> {
               } else {
                 // Default behavior: close this sheet AND the parent screen
                 // Important: pass true to signal that a refresh is needed
-                Navigator.pop(context); // Close sheet
-                Navigator.pop(context, true); // Go back with refresh signal
+                final nav = Navigator.of(context);
+                nav.pop(); // Close sheet
+                nav.pop(true); // Go back with refresh signal
               }
             },
             style: ElevatedButton.styleFrom(

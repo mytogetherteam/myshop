@@ -5,7 +5,6 @@ import 'package:my_shop/features/menu/data/models/menu_category_model.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
 import 'package:my_shop/core/presentation/widgets/status_badge.dart';
 
-
 import 'create_category_screen.dart';
 import 'edit_category_screen.dart';
 
@@ -28,7 +27,6 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
     _prefetchCategoryData();
   }
 
-
   /// Pre-fetch master data and gallery icons for the category creation/edit screen
   Future<void> _prefetchCategoryData() async {
     try {
@@ -42,15 +40,15 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
     }
   }
 
-
   Future<void> refresh() async {
     await _fetchCategories(forceRefresh: true);
   }
 
-
   Future<void> _fetchCategories({bool forceRefresh = false}) async {
     setState(() => _isLoading = true);
-    final categories = await _categoryService.getCategories(forceRefresh: forceRefresh);
+    final categories = await _categoryService.getCategories(
+      forceRefresh: forceRefresh,
+    );
 
     if (mounted) {
       setState(() {
@@ -68,7 +66,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
       final item = _categories.removeAt(oldIndex);
       _categories.insert(newIndex, item);
     });
-    
+
     // Proactively send reorder request to backend
     _categoryService.reorderCategories(_categories.map((c) => c.id).toList());
   }
@@ -94,9 +92,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
           ),
         ),
         centerTitle: false,
-        actions: const [
-          SizedBox(width: 8),
-        ],
+        actions: const [SizedBox(width: 8)],
       ),
       body: RefreshIndicator(
         onRefresh: _fetchCategories,
@@ -107,7 +103,9 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
         onPressed: () async {
           final result = await Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const CreateCategoryScreen()),
+            MaterialPageRoute(
+              builder: (context) => const CreateCategoryScreen(),
+            ),
           );
           if (result == true) _fetchCategories(forceRefresh: true);
         },
@@ -195,8 +193,10 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
       _categories[index] = category.copyWith(publishStatus: newStatus);
     });
 
-    final success =
-        await _categoryService.toggleCategoryPublishStatus(category.id, newStatus);
+    final success = await _categoryService.toggleCategoryPublishStatus(
+      category.id,
+      newStatus,
+    );
 
     if (!success && mounted) {
       // Revert on failure
@@ -211,8 +211,6 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
       );
     }
   }
-
-
 
   Widget _buildSkeletonList() {
     return ListView.builder(
@@ -230,9 +228,16 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
             ),
             child: Row(
               children: [
-                const Skeleton(width: 24, height: 24), // Drag handle placeholder
+                const Skeleton(
+                  width: 24,
+                  height: 24,
+                ), // Drag handle placeholder
                 const SizedBox(width: 12),
-                const Skeleton(width: 50, height: 50, borderRadius: 12), // Icon placeholder
+                const Skeleton(
+                  width: 50,
+                  height: 50,
+                  borderRadius: 12,
+                ), // Icon placeholder
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -244,7 +249,11 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
                     ],
                   ),
                 ),
-                const Skeleton(width: 32, height: 32, borderRadius: 8), // Edit icon placeholder
+                const Skeleton(
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                ), // Edit icon placeholder
               ],
             ),
           ),
@@ -269,36 +278,53 @@ class _CategoryCard extends StatelessWidget {
     required this.index,
   });
 
-
   @override
   Widget build(BuildContext context) {
     final bool isPending = category.pendingStatus == 'PENDING_APPROVAL';
     final bool isRejected = category.pendingStatus == 'REJECTED';
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isRejected ? const Color(0xFFFEF2F2).withValues(alpha: 0.5) : (isPending ? const Color(0xFFF8FAFC) : Colors.white),
-        border: Border.all(
-          color: isRejected ? const Color(0xFFEF4444).withValues(alpha: 0.3) : (isPending ? const Color(0xFFE2E8F0) : const Color(0xFFF1F5F9))
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+    return InkWell(
+      onTap: isPending ? null : onEdit,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isRejected
+              ? const Color(0xFFFEF2F2).withValues(alpha: 0.5)
+              : (isPending ? const Color(0xFFF8FAFC) : Colors.white),
+          border: Border.all(
+            color: isRejected
+                ? const Color(0xFFEF4444).withValues(alpha: 0.3)
+                : (isPending
+                      ? const Color(0xFFE2E8F0)
+                      : const Color(0xFFF1F5F9)),
           ),
-        ],
-      ),
-      child: Row(
-        children: [
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
             ReorderableDragStartListener(
               index: index,
               child: Container(
                 color: Colors.transparent,
-                padding: const EdgeInsets.only(top: 8, bottom: 8, right: 8, left: 0),
-                child: const Icon(Icons.drag_indicator, color: Color(0xFF94A3B8), size: 24),
+                padding: const EdgeInsets.only(
+                  top: 8,
+                  bottom: 8,
+                  right: 8,
+                  left: 0,
+                ),
+                child: const Icon(
+                  Icons.drag_indicator,
+                  color: Color(0xFF94A3B8),
+                  size: 24,
+                ),
               ),
             ),
             const SizedBox(width: 4),
@@ -308,7 +334,9 @@ class _CategoryCard extends StatelessWidget {
                 color: _getCategoryColor(category.nameEn),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: category.imageUrl != null && category.imageUrl!.startsWith('assets/')
+              child:
+                  category.imageUrl != null &&
+                      category.imageUrl!.startsWith('assets/')
                   ? Image.asset(
                       category.imageUrl!,
                       width: 32,
@@ -319,7 +347,11 @@ class _CategoryCard extends StatelessWidget {
                       (category.imageUrl ?? ''),
                       width: 32,
                       height: 32,
-                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.restaurant, size: 20, color: Color(0xFF94A3B8)),
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.restaurant,
+                        size: 20,
+                        color: Color(0xFF94A3B8),
+                      ),
                     ),
             ),
             const SizedBox(width: 16),
@@ -354,6 +386,20 @@ class _CategoryCard extends StatelessWidget {
                       color: const Color(0xFF94A3B8),
                     ),
                   ),
+                  if (isRejected && category.rejectReason != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        category.rejectReason!,
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFFEF4444),
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -362,21 +408,22 @@ class _CategoryCard extends StatelessWidget {
               _buildPublishSwitch(),
               const SizedBox(width: 8),
             ],
-            GestureDetector(
-              onTap: isPending ? null : onEdit,
-
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: const Icon(Icons.edit_note_rounded, color: Color(0xFF1E293B), size: 24),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: const Icon(
+                Icons.edit_note_rounded,
+                color: Color(0xFF1E293B),
+                size: 24,
               ),
             ),
           ],
         ),
+      ),
     );
   }
 
@@ -406,7 +453,9 @@ class _CategoryCard extends StatelessWidget {
           style: GoogleFonts.poppins(
             fontSize: 8,
             fontWeight: FontWeight.w600,
-            color: isPublished ? const Color(0xFFED3A72) : const Color(0xFF94A3B8),
+            color: isPublished
+                ? const Color(0xFFED3A72)
+                : const Color(0xFF94A3B8),
           ),
         ),
       ],

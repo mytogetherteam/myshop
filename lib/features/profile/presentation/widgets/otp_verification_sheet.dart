@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
 import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import '../../../../core/presentation/widgets/global_modal.dart';
-import 'payment_success_sheet.dart';
+import 'package:my_shop/core/presentation/widgets/success_sheet.dart';
 
 class OtpVerificationSheet extends StatefulWidget {
   const OtpVerificationSheet({super.key});
@@ -108,7 +108,7 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
     // Show success sheet
     GlobalModal.show(
       context: context,
-      child: const PaymentSuccessSheet(),
+      child: const SuccessSheet(),
     );
   }
 

@@ -5,13 +5,11 @@ import '../../../../core/presentation/widgets/global_modal.dart';
 import '../../../../core/presentation/widgets/confirmation_sheet.dart';
 import '../../../../core/presentation/widgets/status_badge.dart';
 
-
 class MenuItemCard extends StatefulWidget {
   final MenuItemModel item;
   final ValueChanged<bool>? onAvailabilityChanged;
   final ValueChanged<bool>? onPublishStatusChanged;
   final VoidCallback? onTap;
-
 
   const MenuItemCard({
     super.key,
@@ -19,7 +17,6 @@ class MenuItemCard extends StatefulWidget {
     this.onAvailabilityChanged,
     this.onPublishStatusChanged,
     this.onTap,
-
   });
 
   @override
@@ -30,14 +27,12 @@ class _MenuItemCardState extends State<MenuItemCard> {
   late bool _inStock;
   late bool _isPublished;
 
-
   @override
   void initState() {
     super.initState();
     _inStock = widget.item.isAvailable;
     _isPublished = widget.item.publishStatus == 'PUBLISHED';
   }
-
 
   @override
   void didUpdateWidget(MenuItemCard oldWidget) {
@@ -50,12 +45,15 @@ class _MenuItemCardState extends State<MenuItemCard> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final String status = widget.item.pendingStatus?.toUpperCase() ?? '';
-    final bool isPending = status != '' && status != 'APPROVED' && status != 'PUBLISHED';
     final bool isRejected = status == 'REJECTED';
+    final bool isPending =
+        status != '' &&
+        status != 'APPROVED' &&
+        status != 'PUBLISHED' &&
+        !isRejected;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -69,12 +67,22 @@ class _MenuItemCardState extends State<MenuItemCard> {
               highlightColor: Colors.black.withValues(alpha: 0.01),
               borderRadius: BorderRadius.circular(16),
               child: Container(
-                padding: isPending || isRejected ? const EdgeInsets.all(8) : EdgeInsets.zero,
+                padding: isPending || isRejected
+                    ? const EdgeInsets.all(8)
+                    : EdgeInsets.zero,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
-                  color: isRejected ? const Color(0xFFFEF2F2).withValues(alpha: 0.5) : (isPending ? const Color(0xFFF8FAFC) : Colors.transparent),
+                  color: isRejected
+                      ? const Color(0xFFFEF2F2).withValues(alpha: 0.5)
+                      : (isPending
+                            ? const Color(0xFFF8FAFC)
+                            : Colors.transparent),
                   border: Border.all(
-                    color: isRejected ? const Color(0xFFEF4444).withValues(alpha: 0.3) : (isPending ? const Color(0xFFE2E8F0) : Colors.transparent),
+                    color: isRejected
+                        ? const Color(0xFFEF4444).withValues(alpha: 0.3)
+                        : (isPending
+                              ? const Color(0xFFE2E8F0)
+                              : Colors.transparent),
                     width: (isRejected || isPending) ? 1 : 0,
                   ),
                 ),
@@ -107,7 +115,10 @@ class _MenuItemCardState extends State<MenuItemCard> {
                                 color: Colors.white,
                                 shape: BoxShape.circle,
                                 boxShadow: [
-                                  BoxShadow(color: Colors.black12, blurRadius: 4),
+                                  BoxShadow(
+                                    color: Colors.black12,
+                                    blurRadius: 4,
+                                  ),
                                 ],
                               ),
                               child: const Icon(
@@ -143,10 +154,27 @@ class _MenuItemCardState extends State<MenuItemCard> {
                               if (status != '' && status != 'APPROVED')
                                 Text(
                                   '($status)',
-                                  style: const TextStyle(fontSize: 8, color: Colors.grey),
+                                  style: const TextStyle(
+                                    fontSize: 8,
+                                    color: Colors.grey,
+                                  ),
                                 ),
                             ],
                           ),
+                          if (isRejected && widget.item.rejectReason != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                widget.item.rejectReason!,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFFEF4444),
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
                           const SizedBox(height: 2),
                           Text(
                             widget.item.displayDescription,
@@ -200,7 +228,6 @@ class _MenuItemCardState extends State<MenuItemCard> {
         ],
       ),
     );
-
   }
 
   Widget _buildPlaceholderImage() {
@@ -211,7 +238,6 @@ class _MenuItemCardState extends State<MenuItemCard> {
       child: const Icon(Icons.fastfood, color: Color(0xFFCBD5E1), size: 28),
     );
   }
-
 
   Widget _buildActionSwitches() {
     return Column(
@@ -230,8 +256,9 @@ class _MenuItemCardState extends State<MenuItemCard> {
                     ? 'This item will be visible to customers on the app.'
                     : 'This item will be hidden from customers and saved as a draft.',
                 confirmLabel: value ? 'Publish' : 'Un-publish',
-                confirmColor:
-                    value ? const Color(0xFFED3A72) : const Color(0xFF64748B),
+                confirmColor: value
+                    ? const Color(0xFFED3A72)
+                    : const Color(0xFF64748B),
                 onConfirm: () {
                   setState(() => _isPublished = value);
                   widget.onPublishStatusChanged?.call(value);
@@ -254,8 +281,9 @@ class _MenuItemCardState extends State<MenuItemCard> {
                     ? 'This item will be available for customers to order.'
                     : 'This item will be hidden or marked as unavailable for customers.',
                 confirmLabel: value ? 'Mark In Stock' : 'Mark Out of Stock',
-                confirmColor:
-                    value ? const Color(0xFFED3A72) : const Color(0xFFEF4444),
+                confirmColor: value
+                    ? const Color(0xFFED3A72)
+                    : const Color(0xFFEF4444),
                 onConfirm: () {
                   setState(() => _inStock = value);
                   widget.onAvailabilityChanged?.call(value);
@@ -268,8 +296,6 @@ class _MenuItemCardState extends State<MenuItemCard> {
       ],
     );
   }
-
-
 
   Widget _buildSwitch({
     required bool value,
@@ -308,5 +334,4 @@ class _MenuItemCardState extends State<MenuItemCard> {
       ],
     );
   }
-
 }

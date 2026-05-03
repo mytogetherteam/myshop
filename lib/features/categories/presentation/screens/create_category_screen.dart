@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
+import 'package:my_shop/core/presentation/widgets/global_modal.dart';
+import 'package:my_shop/core/presentation/widgets/success_sheet.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
 
 class CreateCategoryScreen extends StatefulWidget {
@@ -85,7 +87,19 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
 
     if (mounted) {
       if (success) {
-        Navigator.pop(context, true);
+        GlobalModal.show(
+          context: context,
+          barrierDismissible: false,
+          child: SuccessSheet(
+            onDone: () {
+              final nav = Navigator.of(context);
+              nav.pop(); // Close sheet
+              if (mounted) {
+                nav.pop(true); // Close CreateCategoryScreen
+              }
+            },
+          ),
+        );
       } else {
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
