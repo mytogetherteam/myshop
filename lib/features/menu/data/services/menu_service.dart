@@ -32,10 +32,10 @@ class MenuService {
   }
 
   Future<List<MenuCategoryModel>?> getCategories({bool forceRefresh = false}) async {
-    if (!forceRefresh && _categoriesCache != null) {
-      debugPrint('CACHE HIT: $_categoriesPath');
-      return _categoriesCache;
-    }
+    // if (!forceRefresh && _categoriesCache != null) {
+    //   debugPrint('CACHE HIT: $_categoriesPath');
+    //   return _categoriesCache;
+    // }
 
     try {
       debugPrint('GET REQUEST: $_categoriesPath, forceRefresh: $forceRefresh');
@@ -60,8 +60,9 @@ class MenuService {
           } else {
             list = [];
           }
-          _categoriesCache = list.map((json) => MenuCategoryModel.fromJson(json)).toList();
-          return _categoriesCache;
+          // _categoriesCache = list.map((json) => MenuCategoryModel.fromJson(json)).toList();
+          // return _categoriesCache;
+          return list.map((json) => MenuCategoryModel.fromJson(json)).toList();
         }
       }
     } on DioException catch (e) {
@@ -256,16 +257,17 @@ class MenuService {
   }
 
   Future<List<MasterDataModel>?> getMasterMenuItems({bool forceRefresh = false}) async {
-    if (!forceRefresh && _masterItemsCache != null) {
-      debugPrint('CACHE HIT: $_masterItemsPath');
-      return _masterItemsCache;
-    }
+    // if (!forceRefresh && _masterItemsCache != null) {
+    //   debugPrint('CACHE HIT: $_masterItemsPath');
+    //   return _masterItemsCache;
+    // }
 
     try {
       debugPrint('GET REQUEST: $_masterItemsPath');
       final response = await ApiClient().dio.get(_masterItemsPath);
-      _masterItemsCache = _parseMasterDataList(response);
-      return _masterItemsCache;
+      // _masterItemsCache = _parseMasterDataList(response);
+      // return _masterItemsCache;
+      return _parseMasterDataList(response);
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.getMasterMenuItems');
     } catch (e) {
@@ -294,16 +296,17 @@ class MenuService {
   }
 
   Future<List<MasterDataModel>?> getMasterCategories({bool forceRefresh = false}) async {
-    if (!forceRefresh && _masterCategoriesCache != null) {
-      debugPrint('CACHE HIT: $_masterCategoriesPath');
-      return _masterCategoriesCache;
-    }
+    // if (!forceRefresh && _masterCategoriesCache != null) {
+    //   debugPrint('CACHE HIT: $_masterCategoriesPath');
+    //   return _masterCategoriesCache;
+    // }
 
     try {
       debugPrint('GET REQUEST: $_masterCategoriesPath');
       final response = await ApiClient().dio.get(_masterCategoriesPath);
-      _masterCategoriesCache = _parseMasterDataList(response);
-      return _masterCategoriesCache;
+      // _masterCategoriesCache = _parseMasterDataList(response);
+      // return _masterCategoriesCache;
+      return _parseMasterDataList(response);
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.getMasterCategories');
     } catch (e) {
@@ -332,16 +335,17 @@ class MenuService {
   }
 
   Future<List<MasterDataModel>?> getMenuTags({bool forceRefresh = false}) async {
-    if (!forceRefresh && _menuTagsCache != null) {
-      debugPrint('CACHE HIT: $_masterTagsPath');
-      return _menuTagsCache;
-    }
+    // if (!forceRefresh && _menuTagsCache != null) {
+    //   debugPrint('CACHE HIT: $_masterTagsPath');
+    //   return _menuTagsCache;
+    // }
 
     try {
       debugPrint('GET REQUEST: $_masterTagsPath');
       final response = await ApiClient().dio.get(_masterTagsPath);
-      _menuTagsCache = _parseMasterDataList(response);
-      return _menuTagsCache;
+      // _menuTagsCache = _parseMasterDataList(response);
+      // return _menuTagsCache;
+      return _parseMasterDataList(response);
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.getMenuTags');
     } catch (e) {

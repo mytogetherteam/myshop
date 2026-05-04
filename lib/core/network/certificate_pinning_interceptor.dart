@@ -9,11 +9,11 @@ class CertificatePinningInterceptor extends Interceptor {
   }
 
   void _initPins() {
-    _hostPins['mytogetherapi-production.up.railway.app'] = [
+    _hostPins['myshopdemoapi-production.up.railway.app'] = [
       'sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
     ];
 
-    _hostPins['mytogetherapi-staging.up.railway.app'] = [
+    _hostPins['myshopdemoapi-staging.up.railway.app'] = [
       'sha256/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC=',
     ];
   }

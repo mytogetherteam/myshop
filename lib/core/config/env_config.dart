@@ -5,14 +5,14 @@ class EnvConfig {
   );
 
   static const String _baseUrlStaging =
-      'https://mytogetherapi-staging.up.railway.app';
+      'https://myshopdemoapi-production.up.railway.app';
   static const String _baseUrlProduction =
-      'https://mytogetherapi-production.up.railway.app';
+      'https://myshopdemoapi-production.up.railway.app';
 
   static const String _wsUrlStaging =
-      'wss://mytogetherapi-staging.up.railway.app/ws/websocket';
+      'wss://myshopdemoapi-production.up.railway.app/ws/websocket';
   static const String _wsUrlProduction =
-      'wss://mytogetherapi-production.up.railway.app/ws/websocket';
+      'wss://myshopdemoapi-production.up.railway.app/ws/websocket';
 
   static String get apiBaseUrl {
     if (appEnv == 'staging') return _baseUrlStaging;

@@ -43,9 +43,9 @@ class ApiClient {
 
     _dio.interceptors.add(ShopInterceptor());
 
-    _dio.interceptors.add(
-      DioCacheInterceptor(options: cacheOptions),
-    );
+    // _dio.interceptors.add(
+    //   DioCacheInterceptor(options: cacheOptions),
+    // );
 
     _dio.interceptors.add(
       InterceptorsWrapper(
