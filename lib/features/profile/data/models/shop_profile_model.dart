@@ -51,6 +51,7 @@ class ShopProfileModel {
 
   // Price Preference
   final String? pricePreference;
+  final String currency;
 
   // Operating Hours
   final List<OperatingHoursModel> operatingHours;
@@ -125,6 +126,7 @@ class ShopProfileModel {
     this.viewCount = 0,
     this.deliveryEnabled = false,
     this.slug,
+    this.currency = 'THB',
     this.cuisineTypeIds = const [],
     required this.operatingHours,
   });
@@ -192,6 +194,7 @@ class ShopProfileModel {
       viewCount: json['viewCount'] ?? 0,
       deliveryEnabled: json['deliveryEnabled'] ?? false,
       slug: json['slug'],
+      currency: json['currency'] ?? 'THB',
       cuisineTypeIds: json['cuisineTypeIds'] != null
           ? List<int>.from(json['cuisineTypeIds'])
           : [],

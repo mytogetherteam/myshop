@@ -107,7 +107,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   List<MenuComboComponentModel> _comboComponents = [];
   List<MenuItemModel> _availableItems = [];
 
-  final List<String> _currencies = ['THB', 'MMK'];
+
 
   @override
   void initState() {
@@ -147,9 +147,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     );
 
     if (item?.currency != null && item!.currency!.isNotEmpty) {
-      if (_currencies.contains(item.currency)) {
-        _currency = item.currency!;
-      }
+      _currency = item.currency!;
     }
 
     if (item != null) {
@@ -407,19 +405,14 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     if (mounted) {
       setState(() => _isSaving = false);
       if (success) {
-        GlobalModal.show(
-          context: context,
-          barrierDismissible: false,
-          child: SuccessSheet(
-            onDone: () {
-              final nav = Navigator.of(context);
-              nav.pop(); // Close sheet
-              if (mounted) {
-                nav.pop(true); // Close AddNewItemScreen
-              }
-            },
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Successfully requested'),
+            backgroundColor: Color(0xFFED3A72),
+            behavior: SnackBarBehavior.floating,
           ),
         );
+        Navigator.of(context).pop(true);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -431,29 +424,14 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     }
   }
 
-  Future<void> _deleteItem() async {
-    if (widget.item == null) return;
+  Future<bool> _deleteItem() async {
+    if (widget.item == null) return false;
     setState(() => _isSaving = true);
     final success = await _menuService.deleteMenuItem(widget.item!.id);
     if (mounted) {
       setState(() => _isSaving = false);
-      if (success) {
-        Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Item deleted successfully'),
-            backgroundColor: Color(0xFFED3A72),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to delete item'),
-            backgroundColor: Color(0xFFEF4444),
-          ),
-        );
-      }
     }
+    return success;
   }
 
   void _showError(String message) {
@@ -562,7 +540,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                       const SizedBox(height: 16),
                       SizedBox(key: _nameKey, child: _buildItemInfoFields()),
                       const SizedBox(height: 16),
-                      _buildMasterItemSelection(),
+                      const SizedBox(height: 16),
                       const SizedBox(height: 16),
                       _buildDropdownField<MasterDataModel>(
                         key: _masterCategoryKey,
@@ -600,14 +578,6 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                       // Pricing Section
                       SizedBox(key: _priceKey, child: _buildSectionTitle('PRICING')),
                       const SizedBox(height: 16),
-                      _buildDropdownFieldStr(
-                        label: 'Currency',
-                        value: _currency,
-                        items: _currencies,
-                        onChanged: (val) => setState(() => _currency = val ?? 'THB'),
-                        isRequired: true,
-                      ),
-                      const SizedBox(height: 16),
                       Row(
                         children: [
                           Expanded(
@@ -617,7 +587,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                               hint: '0.00',
                               keyboardType: TextInputType.number,
                               isRequired: true,
-                              prefixText: _currency == 'THB' ? '฿ ' : 'K ',
+                              prefixText: '฿ ',
                               textAlign: TextAlign.right,
                               onChanged: (_) => _validatePrices(),
                               validator: _priceValidator,
@@ -630,7 +600,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                               _priceController,
                               hint: '0.00',
                               keyboardType: TextInputType.number,
-                              prefixText: _currency == 'THB' ? '฿ ' : 'K ',
+                              prefixText: '฿ ',
                               textAlign: TextAlign.right,
                               onChanged: (_) => _validatePrices(),
                               validator: _priceValidator,
@@ -701,7 +671,20 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                                   message: 'Are you sure you want to delete "${widget.item!.displayName}"? This action cannot be undone.',
                                   confirmLabel: 'Delete',
                                   confirmColor: const Color(0xFFEF4444),
-                                  onConfirm: _deleteItem,
+                                  onConfirm: () async {
+                                    bool success = await _deleteItem();
+                                    if (!context.mounted) return;
+                                    if (success) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Successfully deleted'),
+                                          backgroundColor: Color(0xFFED3A72),
+                                          behavior: SnackBarBehavior.floating,
+                                        ),
+                                      );
+                                      Navigator.of(context).pop(true);
+                                    }
+                                  },
                                 ),
                               );
                             },
@@ -764,7 +747,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         MenuItemOptionGroupModel(
           id: 0,
           nameEn: '',
-          isRequired: false,
+          isAvailable: true,
           minSelection: 0,
           maxSelection: 0,
           displayOrder: 0,
@@ -796,15 +779,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       opts.add(
         MenuItemOptionModel(id: 0, nameEn: '', price: 0.0, displayOrder: 0),
       );
-      _optionGroups[groupIndex] = MenuItemOptionGroupModel(
-        id: _optionGroups[groupIndex].id,
-        nameEn: _optionGroups[groupIndex].nameEn,
-        nameMm: _optionGroups[groupIndex].nameMm,
-        nameTh: _optionGroups[groupIndex].nameTh,
-        isRequired: _optionGroups[groupIndex].isRequired,
-        minSelection: _optionGroups[groupIndex].minSelection,
-        maxSelection: _optionGroups[groupIndex].maxSelection,
-        displayOrder: _optionGroups[groupIndex].displayOrder,
+      _optionGroups[groupIndex] = _optionGroups[groupIndex].copyWith(
         options: opts,
       );
     });
@@ -883,6 +858,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     );
   }
 
+  /*
   Widget _buildMasterItemSelection() {
     return _buildDropdownField<MasterDataModel>(
       label: 'Master Item',
@@ -894,6 +870,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       },
     );
   }
+  */
 
   Widget _buildPropertiesSection() {
     return Container(
@@ -1000,6 +977,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           nameCtrl,
           hint: 'Enter item name',
           isRequired: _selectedItemInfoLang == 'EN',
+          maxLength: 100,
         ),
         const SizedBox(height: 16),
         _buildTextField(
@@ -1007,6 +985,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           descCtrl,
           hint: 'Enter description',
           isMultiline: true,
+          maxLength: 500,
         ),
       ],
     );
@@ -1120,6 +1099,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                 _buildTextField(
                   'Variant Name ($lang)',
                   nameCtrl,
+                  maxLength: 100,
                   onChanged: (v) {
                     _variants[index] = MenuItemVariantModel(
                       id: variant.id,
@@ -1330,43 +1310,32 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                 _buildTextField(
                   'Add-on Name ($lang)',
                   groupNameCtrl,
+                  maxLength: 100,
                   onChanged: (v) {
-                    _optionGroups[index] = MenuItemOptionGroupModel(
-                      id: group.id,
-                      nameEn: lang == 'EN' ? v : group.nameEn,
-                      nameMm: lang == 'MM' ? v : group.nameMm,
-                      nameTh: lang == 'TH' ? v : group.nameTh,
-                      isRequired: group.isRequired,
-                      minSelection: group.minSelection,
-                      maxSelection: group.maxSelection,
-                      displayOrder: group.displayOrder,
-                      groupType: group.groupType,
-                      options: group.options,
+                    final newNameEn = lang == 'EN' ? v : group.nameEn;
+                    final newNameMm = lang == 'MM' ? v : group.nameMm;
+                    final newNameTh = lang == 'TH' ? v : group.nameTh;
+
+                    List<MenuItemOptionModel> newOptions = group.options;
+                    if (group.options.length == 1) {
+                      newOptions = [
+                        group.options[0].copyWith(
+                          nameEn: newNameEn,
+                          nameMm: newNameMm,
+                          nameTh: newNameTh,
+                        )
+                      ];
+                    }
+
+                    _optionGroups[index] = group.copyWith(
+                      nameEn: newNameEn,
+                      nameMm: newNameMm,
+                      nameTh: newNameTh,
+                      options: newOptions,
                     );
                   },
                 ),
                 const SizedBox(height: 16),
-                _buildDropdownFieldStr(
-                  label: 'Group Type',
-                  value: group.groupType ?? 'RADIO',
-                  items: ['RADIO', 'CHECKBOX'],
-                  onChanged: (v) {
-                    setState(() {
-                      _optionGroups[index] = MenuItemOptionGroupModel(
-                        id: group.id,
-                        nameEn: group.nameEn,
-                        nameMm: group.nameMm,
-                        nameTh: group.nameTh,
-                        isRequired: group.isRequired,
-                        minSelection: group.minSelection,
-                        maxSelection: group.maxSelection,
-                        displayOrder: group.displayOrder,
-                        groupType: v,
-                        options: group.options,
-                      );
-                    });
-                  },
-                ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -1375,7 +1344,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Required',
+                            'Available',
                             style: GoogleFonts.poppins(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -1384,24 +1353,15 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                           ),
                           const SizedBox(height: 4),
                           Switch(
-                            value: group.isRequired,
+                            value: group.isAvailable,
                             onChanged: (v) {
                               setState(() {
-                                _optionGroups[index] = MenuItemOptionGroupModel(
-                                  id: group.id,
-                                  nameEn: group.nameEn,
-                                  nameMm: group.nameMm,
-                                  nameTh: group.nameTh,
-                                  isRequired: v,
-                                  minSelection: group.minSelection,
-                                  maxSelection: group.maxSelection,
-                                  displayOrder: group.displayOrder,
-                                  groupType: group.groupType,
-                                  options: group.options,
+                                _optionGroups[index] = group.copyWith(
+                                  isAvailable: v,
                                 );
                               });
                             },
-                            activeThumbColor: const Color(0xFFED3A72),
+                            activeColor: const Color(0xFFED3A72),
                           ),
                         ],
                       ),
@@ -1432,37 +1392,26 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   );
                   return Column(
                     children: [
-                      if (oIndex > 0)
-                        const Divider(height: 24, color: Color(0xFFE2E8F0)),
                       if (group.options.length > 1)
                         _buildTextField(
                           'Option Name ($lang)',
                           optNameCtrl,
+                          maxLength: 100,
                           onChanged: (v) {
                             final newOpts = List<MenuItemOptionModel>.from(
                               group.options,
                             );
-                            newOpts[oIndex] = MenuItemOptionModel(
-                              id: opt.id,
-                              price: opt.price,
+                            newOpts[oIndex] = opt.copyWith(
                               nameEn: lang == 'EN' ? v : opt.nameEn,
                               nameMm: lang == 'MM' ? v : opt.nameMm,
                               nameTh: lang == 'TH' ? v : opt.nameTh,
                             );
-                            _optionGroups[index] = MenuItemOptionGroupModel(
-                              id: group.id,
-                              nameEn: group.nameEn,
-                              nameMm: group.nameMm,
-                              nameTh: group.nameTh,
-                              isRequired: group.isRequired,
-                              minSelection: group.minSelection,
-                              maxSelection: group.maxSelection,
-                              displayOrder: group.displayOrder,
+                            _optionGroups[index] = group.copyWith(
                               options: newOpts,
                             );
                           },
                         ),
-                      if (group.options.length > 1) const SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       _buildTextField(
                         'Price',
                         optPriceCtrl,
@@ -1472,24 +1421,10 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                           final newOpts = List<MenuItemOptionModel>.from(
                             group.options,
                           );
-                          newOpts[oIndex] = MenuItemOptionModel(
-                            id: opt.id,
+                          newOpts[oIndex] = opt.copyWith(
                             price: double.tryParse(v) ?? 0.0,
-                            nameEn: opt.nameEn,
-                            nameMm: opt.nameMm,
-                            nameTh: opt.nameTh,
-                            displayOrder: opt.displayOrder,
-                            linkedMenuItemId: opt.linkedMenuItemId,
                           );
-                          _optionGroups[index] = MenuItemOptionGroupModel(
-                            id: group.id,
-                            nameEn: group.nameEn,
-                            nameMm: group.nameMm,
-                            nameTh: group.nameTh,
-                            isRequired: group.isRequired,
-                            minSelection: group.minSelection,
-                            maxSelection: group.maxSelection,
-                            displayOrder: group.displayOrder,
+                          _optionGroups[index] = group.copyWith(
                             options: newOpts,
                           );
                         },
@@ -1513,6 +1448,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     );
   }
 
+  /*
   Widget _buildDropdownFieldStr({
     required String label,
     required String value,
@@ -1574,6 +1510,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       ],
     );
   }
+  */
 
   Widget _buildDropdownField<T>({
     Key? key,
@@ -1661,6 +1598,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     String? prefixText,
     TextAlign textAlign = TextAlign.start,
     TextInputType? keyboardType,
+    int? maxLength,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1690,6 +1628,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         TextFormField(
           controller: controller,
           maxLines: isMultiline ? 4 : 1,
+          maxLength: maxLength,
           keyboardType: keyboardType,
           onChanged: onChanged,
           validator: validator,
@@ -1716,6 +1655,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             ),
             filled: true,
             fillColor: Colors.white,
+            counterText: '', // Hide the counter for a cleaner look
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
@@ -2036,6 +1976,18 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
 
   Future<void> _pickImage() async {
     final result = await ImageUploadService().pickFromGallery();
+    
+    if (result.isTooLarge) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Image size must be less than 1MB'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     if (result.file != null) {
       setState(() => _pickedImage = result.file);
     }

@@ -200,20 +200,14 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
     if (mounted) {
       setState(() => _isSaving = false);
       if (result['success'] == true) {
-        GlobalModal.show(
-          context: context,
-          barrierDismissible: false,
-          child: SuccessSheet(
-            onDone: () {
-              // Close the bottom sheet first
-              Navigator.of(context).pop();
-              // Then pop EditPaymentPage with refresh signal
-              if (mounted) {
-                Navigator.of(context).pop(true);
-              }
-            },
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Successfully requested'),
+            backgroundColor: Color(0xFFED3A72),
+            behavior: SnackBarBehavior.floating,
           ),
         );
+        Navigator.of(context).pop(true);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -270,6 +264,17 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
               onTap: () async {
                 Navigator.pop(context);
                 final result = await ImageUploadService().pickFromGallery();
+                if (result.isTooLarge) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Image size must be less than 1MB'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                  return;
+                }
                 if (result.file != null) {
                   setState(() => _pickedImages[paymentId] = result.file);
                 }
@@ -285,6 +290,17 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
               onTap: () async {
                 Navigator.pop(context);
                 final result = await ImageUploadService().pickFromCamera();
+                if (result.isTooLarge) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Image size must be less than 1MB'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                  return;
+                }
                 if (result.file != null) {
                   setState(() => _pickedImages[paymentId] = result.file);
                 }
@@ -474,6 +490,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
           controller: _accountNameCtrl,
           hint: 'e.g. John Doe',
           icon: PhosphorIconsRegular.user,
+          maxLength: 100,
         ),
         const SizedBox(height: 20),
         _buildInputField(
@@ -482,6 +499,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
           controller: _accountNumberCtrl,
           hint: 'e.g. 123456789',
           icon: PhosphorIconsRegular.hash,
+          maxLength: 50,
         ),
         const SizedBox(height: 20),
         _buildStatusToggle(),
@@ -571,7 +589,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                           ))
                   : (_currentPayment?.qrImageUrl.isNotEmpty ?? false
                         ? Image.network(
-                            _currentPayment!.qrImageUrl,
+                            _currentPayment!.fullQrImageUrl,
                             width: double.infinity,
                             height: 250,
                             fit: BoxFit.cover,
@@ -655,6 +673,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
     required String hint,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
+    int? maxLength,
   }) {
     return Column(
       key: key,
@@ -672,8 +691,10 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
         TextField(
           controller: controller,
           keyboardType: keyboardType,
+          maxLength: maxLength,
           style: GoogleFonts.poppins(fontSize: 15),
           decoration: InputDecoration(
+            counterText: '',
             hintText: hint,
             prefixIcon: Icon(icon, size: 20, color: const Color(0xFF94A3B8)),
             filled: true,

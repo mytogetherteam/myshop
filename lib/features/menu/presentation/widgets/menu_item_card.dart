@@ -4,6 +4,7 @@ import '../../data/models/menu_item_model.dart';
 import '../../../../core/presentation/widgets/global_modal.dart';
 import '../../../../core/presentation/widgets/confirmation_sheet.dart';
 import '../../../../core/presentation/widgets/status_badge.dart';
+import '../../../../core/utils/price_formatter.dart';
 
 class MenuItemCard extends StatefulWidget {
   final MenuItemModel item;
@@ -193,24 +194,28 @@ class _MenuItemCardState extends State<MenuItemCard> {
                                   widget.item.originalPrice! >
                                       widget.item.price) ...[
                                 Text(
-                                  '${widget.item.originalPrice!.toInt()} ${widget.item.currency ?? 'THB'}',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                    color: const Color(0xFF94A3B8),
-                                    decoration: TextDecoration.lineThrough,
-                                  ),
+                                widget.item.originalPrice!.toFormattedPrice(
+                                  currency: widget.item.currency ?? 'THB',
                                 ),
-                                const SizedBox(width: 8),
-                              ],
-                              Text(
-                                '${widget.item.price.toInt()} ${widget.item.currency ?? 'THB'}',
                                 style: GoogleFonts.poppins(
                                   fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFFED3A72),
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFF94A3B8),
+                                  decoration: TextDecoration.lineThrough,
                                 ),
                               ),
+                              const SizedBox(width: 8),
+                            ],
+                            Text(
+                              widget.item.price.toFormattedPrice(
+                                currency: widget.item.currency ?? 'THB',
+                              ),
+                              style: GoogleFonts.poppins(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFFED3A72),
+                              ),
+                            ),
                             ],
                           ),
                         ],

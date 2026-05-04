@@ -161,6 +161,17 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
       return;
     }
 
+    if (result.isTooLarge) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Image size must be less than 1MB'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     if (result.file != null) {
       setState(() => _localFile = result.file);
       widget.onImageSelected(result.file!);

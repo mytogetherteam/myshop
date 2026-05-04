@@ -278,7 +278,7 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
                       borderRadius: BorderRadius.circular(12),
                       child: pm.qrImageUrl.isNotEmpty
                           ? Image.network(
-                              pm.qrImageUrl,
+                              pm.fullQrImageUrl,
                               width: double.infinity,
                               height: 250,
                               fit: BoxFit.cover,

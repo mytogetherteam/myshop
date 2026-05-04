@@ -19,13 +19,13 @@ class ReviewModel {
 
   factory ReviewModel.fromJson(Map<String, dynamic> json) {
     return ReviewModel(
-      id: json['id'] as String,
-      userName: json['user_name'] as String,
-      userProfileUrl: json['user_profile_url'] as String?,
+      id: json['id'].toString(),
+      userName: json['user']?['name'] ?? json['userName'] ?? 'Anonymous',
+      userProfileUrl: json['userProfileUrl'] as String?,
       rating: (json['rating'] as num).toDouble(),
       comment: json['comment'] as String,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      isVerified: json['is_verified'] as bool? ?? false,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      isVerified: json['isVerified'] as bool? ?? false,
     );
   }
 }
@@ -42,10 +42,11 @@ class ReviewSummaryModel {
   });
 
   factory ReviewSummaryModel.fromJson(Map<String, dynamic> json) {
+    final dist = json['ratingDistribution'] as Map<String, dynamic>;
     return ReviewSummaryModel(
-      averageRating: (json['average_rating'] as num).toDouble(),
-      totalRatings: json['total_ratings'] as int,
-      ratingDistribution: (json['rating_distribution'] as Map<String, dynamic>).map(
+      averageRating: (json['averageRating'] as num).toDouble(),
+      totalRatings: json['totalRatings'] as int,
+      ratingDistribution: dist.map(
         (key, value) => MapEntry(int.parse(key), value as int),
       ),
     );

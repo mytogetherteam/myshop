@@ -37,6 +37,8 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   // GlobalKeys for scroll-to-error
   final _nameKey = GlobalKey();
   final _categoryKey = GlobalKey();
+  final _subCategoryKey = GlobalKey();
+  final _cuisineTypeKey = GlobalKey();
   final _phoneKey = GlobalKey();
   final _addressKey = GlobalKey();
   final _baseFeeKey = GlobalKey();
@@ -438,6 +440,16 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       _showError('Category is required');
       return false;
     }
+    if (_selectedSubcategory == null) {
+      _scrollToKey(_subCategoryKey);
+      _showError('Sub-category is required');
+      return false;
+    }
+    if (_selectedCuisineTypes.isEmpty) {
+      _scrollToKey(_cuisineTypeKey);
+      _showError('At least one Cuisine Type is required');
+      return false;
+    }
     final validPhones = _phoneControllers.where((c) => c.text.trim().isNotEmpty).toList();
     if (validPhones.isEmpty) {
       _scrollToKey(_phoneKey);
@@ -712,13 +724,15 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                     ? _nameMmCtrl
                     : _nameThCtrl,
                 hint: 'Enter shop name',
-                enabled: false,
+                enabled: true,
+                maxLength: 100,
               ),
             ),
             const SizedBox(height: 32),
             _buildSection(
               key: _categoryKey,
               label: 'Category',
+              required: true,
               child: _buildDropdown(
                 'Select Category',
                 _selectedCategory,
@@ -732,7 +746,9 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             ),
             const SizedBox(height: 32),
             _buildSection(
+              key: _subCategoryKey,
               label: 'Sub-category',
+              required: true,
               child: _buildDropdown(
                 'Select Sub-category',
                 _selectedSubcategory,
@@ -746,7 +762,9 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             ),
             const SizedBox(height: 32),
             _buildSection(
+              key: _cuisineTypeKey,
               label: 'Cuisine Types',
+              required: true,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Wrap(
@@ -805,6 +823,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                     : _descThCtrl,
                 hint: 'Enter description',
                 maxLines: 3,
+                maxLength: 500,
               ),
             ),
             const SizedBox(height: 32),
@@ -825,6 +844,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                               _phoneControllers[i],
                               '+95 9 XXX XXX XXX',
                               icon: PhosphorIconsRegular.phone,
+                              maxLength: 20,
                             ),
                           ),
                           if (_phoneControllers.length > 1 || i == _phoneControllers.length - 1)
@@ -871,6 +891,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 'shop@example.com',
                 icon: PhosphorIconsRegular.envelope,
                 enabled: false,
+                maxLength: 100,
               ),
             ),
             const SizedBox(height: 32),
@@ -889,6 +910,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                     : _addressThCtrl,
                 hint: 'Enter street address',
                 requiredLang: 'EN',
+                maxLength: 255,
               ),
             ),
             const SizedBox(height: 32),
@@ -1422,6 +1444,16 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       _showSettingsDialog();
       return;
     }
+    if (result.isTooLarge) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Image size must be less than 1MB'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
     if (result.file != null) {
       setState(() {
         _pickedCover = result.file;
@@ -1455,6 +1487,16 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         onGallery: () async {
           Navigator.pop(context);
           final r = await ImageUploadService().pickFromGallery();
+          if (r.isTooLarge) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Image size must be less than 1MB'),
+                backgroundColor: Colors.red,
+              ),
+            );
+            return;
+          }
           if (r.file != null && mounted) {
             setState(() {
               _pickedLogo = r.file;
@@ -1465,6 +1507,16 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         onCamera: () async {
           Navigator.pop(context);
           final r = await ImageUploadService().pickFromCamera();
+          if (r.isTooLarge) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Image size must be less than 1MB'),
+                backgroundColor: Colors.red,
+              ),
+            );
+            return;
+          }
           if (r.file != null && mounted) {
             setState(() {
               _pickedLogo = r.file;
@@ -1568,6 +1620,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     int maxLines = 1,
     String? requiredLang,
     bool enabled = true,
+    int? maxLength,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1634,9 +1687,11 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         TextField(
           controller: controller,
           maxLines: maxLines,
+          maxLength: maxLength,
           enabled: enabled,
           onChanged: (_) => _markChanged(),
           decoration: InputDecoration(
+            counterText: '',
             hintText: hint,
             hintStyle: GoogleFonts.poppins(
               color: const Color(0xFFCBD5E1),
@@ -1678,12 +1733,15 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     String hint, {
     IconData? icon,
     bool enabled = true,
+    int? maxLength,
   }) {
     return TextField(
       controller: ctrl,
       enabled: enabled,
+      maxLength: maxLength,
       onChanged: (_) => _markChanged(),
       decoration: InputDecoration(
+        counterText: '',
         hintText: hint,
         hintStyle: GoogleFonts.poppins(
           color: const Color(0xFFCBD5E1),
@@ -1804,6 +1862,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     required String hint,
     TextInputType keyboardType = TextInputType.text,
     bool required = false,
+    int? maxLength,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1832,7 +1891,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
           ),
         ),
         const SizedBox(height: 6),
-        _buildTextFieldWithKeyboard(controller, hint, keyboardType),
+        _buildTextFieldWithKeyboard(controller, hint, keyboardType, maxLength: maxLength),
       ],
     );
   }
@@ -1840,13 +1899,16 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   Widget _buildTextFieldWithKeyboard(
     TextEditingController ctrl,
     String hint,
-    TextInputType keyboardType,
-  ) {
+    TextInputType keyboardType, {
+    int? maxLength,
+  }) {
     return TextField(
       controller: ctrl,
       keyboardType: keyboardType,
+      maxLength: maxLength,
       onChanged: (_) => _markChanged(),
       decoration: InputDecoration(
+        counterText: '',
         hintText: hint,
         hintStyle: GoogleFonts.poppins(
           color: const Color(0xFFCBD5E1),

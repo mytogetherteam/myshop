@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -14,11 +15,30 @@ class ImagePickResult {
   /// True when the user permanently denied permission (needs Settings).
   final bool permanentlyDenied;
 
+  /// True when the picked file is too large (e.g. > 1MB).
+  final bool isTooLarge;
+
   const ImagePickResult({
     this.file,
     this.permissionDenied = false,
     this.permanentlyDenied = false,
+    this.isTooLarge = false,
   });
+
+  /// Helper to show a SnackBar if the file is too large.
+  /// Returns true if an error was shown, false otherwise.
+  bool handleSizeError(BuildContext context) {
+    if (isTooLarge) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Image size must be less than 1MB'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return true;
+    }
+    return false;
+  }
 }
 
 /// Global service for picking images from gallery or camera.
@@ -84,6 +104,13 @@ class ImageUploadService {
   /// Returns the [File] for a given [XFile].
   File toFile(XFile xFile) => File(xFile.path);
 
+  /// Validates if the file size is within the allowed limit (default 1MB).
+  /// Returns true if valid, false if too large.
+  static Future<bool> isSizeValid(XFile file, {int maxMB = 1}) async {
+    final bytes = await file.length();
+    return bytes <= maxMB * 1024 * 1024;
+  }
+
   // ── Internals ─────────────────────────────────────────────────────────────
 
   Future<PermissionStatus> _requestGalleryPermission() async {
@@ -140,6 +167,13 @@ class ImageUploadService {
         maxHeight: maxHeight,
         imageQuality: imageQuality,
       );
+      
+      if (xFile != null) {
+        final isValid = await isSizeValid(xFile);
+        if (!isValid) {
+          return const ImagePickResult(isTooLarge: true);
+        }
+      }
       return ImagePickResult(file: xFile);
     } catch (e) {
       debugPrint('ImageUploadService._pick error: $e');

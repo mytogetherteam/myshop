@@ -4,7 +4,7 @@ extension PriceFormatting on num {
   String toFormattedPrice({String currency = '฿'}) {
     final displayCurrency = currency == 'THB' ? '฿' : currency;
     final formatter = NumberFormat('#,###');
-    return '$displayCurrency ${formatter.format(this)}';
+    return '$displayCurrency${formatter.format(this)}';
   }
 }
 
@@ -16,7 +16,7 @@ extension StringPriceFormatting on String {
     final doubleValue = double.tryParse(this);
     if (doubleValue != null) {
       final formatter = NumberFormat(doubleValue == doubleValue.toInt() ? '#,###' : '#,###.##');
-      return '$displayCurrency ${formatter.format(doubleValue)}';
+      return '$displayCurrency${formatter.format(doubleValue)}';
     }
 
     // Fallback: strip everything except digits and the decimal point
@@ -26,6 +26,6 @@ extension StringPriceFormatting on String {
     if (value == null) return this;
     
     final formatter = NumberFormat(value == value.toInt() ? '#,###' : '#,###.##');
-    return '$displayCurrency ${formatter.format(value)}';
+    return '$displayCurrency${formatter.format(value)}';
   }
 }

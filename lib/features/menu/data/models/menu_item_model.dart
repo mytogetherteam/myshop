@@ -357,11 +357,12 @@ class MenuItemOptionGroupModel {
   final String? nameEn;
   final String? nameMm;
   final String? nameTh;
-  final bool isRequired;
+  final bool isAvailable;
   final int? minSelection;
   final int? maxSelection;
   final int? displayOrder;
   final String? groupType;
+  final double price;
   final List<MenuItemOptionModel> options;
 
   MenuItemOptionGroupModel({
@@ -369,13 +370,42 @@ class MenuItemOptionGroupModel {
     this.nameEn,
     this.nameMm,
     this.nameTh,
-    this.isRequired = false,
+    this.isAvailable = true,
     this.minSelection,
     this.maxSelection,
     this.displayOrder,
     this.groupType,
+    this.price = 0.0,
     this.options = const [],
   });
+
+  MenuItemOptionGroupModel copyWith({
+    int? id,
+    String? nameEn,
+    String? nameMm,
+    String? nameTh,
+    bool? isAvailable,
+    int? minSelection,
+    int? maxSelection,
+    int? displayOrder,
+    String? groupType,
+    double? price,
+    List<MenuItemOptionModel>? options,
+  }) {
+    return MenuItemOptionGroupModel(
+      id: id ?? this.id,
+      nameEn: nameEn ?? this.nameEn,
+      nameMm: nameMm ?? this.nameMm,
+      nameTh: nameTh ?? this.nameTh,
+      isAvailable: isAvailable ?? this.isAvailable,
+      minSelection: minSelection ?? this.minSelection,
+      maxSelection: maxSelection ?? this.maxSelection,
+      displayOrder: displayOrder ?? this.displayOrder,
+      groupType: groupType ?? this.groupType,
+      price: price ?? this.price,
+      options: options ?? this.options,
+    );
+  }
 
   factory MenuItemOptionGroupModel.fromJson(Map<String, dynamic> json) {
     return MenuItemOptionGroupModel(
@@ -383,11 +413,12 @@ class MenuItemOptionGroupModel {
       nameEn: json['nameEn'],
       nameMm: json['nameMm'],
       nameTh: json['nameTh'],
-      isRequired: json['isRequired'] ?? false,
+      isAvailable: json['isAvailable'] ?? json['isRequired'] ?? true,
       minSelection: json['minSelection'],
       maxSelection: json['maxSelection'],
       displayOrder: json['displayOrder'],
       groupType: json['groupType'],
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
       options: (json['options'] as List?)
               ?.map((o) => MenuItemOptionModel.fromJson(o))
               .toList() ??
@@ -401,11 +432,12 @@ class MenuItemOptionGroupModel {
       'nameEn': nameEn,
       'nameMm': nameMm,
       'nameTh': nameTh,
-      'isRequired': isRequired,
+      'isAvailable': isAvailable,
       'minSelection': minSelection,
       'maxSelection': maxSelection,
       'displayOrder': displayOrder,
       'groupType': groupType,
+      'price': price,
       'options': options.map((o) => o.toJson()).toList(),
     };
   }
@@ -433,6 +465,28 @@ class MenuItemOptionModel {
     this.displayOrder,
     this.linkedMenuItemId,
   });
+
+  MenuItemOptionModel copyWith({
+    int? id,
+    String? nameEn,
+    String? nameMm,
+    String? nameTh,
+    double? price,
+    String? displayPrice,
+    int? displayOrder,
+    int? linkedMenuItemId,
+  }) {
+    return MenuItemOptionModel(
+      id: id ?? this.id,
+      nameEn: nameEn ?? this.nameEn,
+      nameMm: nameMm ?? this.nameMm,
+      nameTh: nameTh ?? this.nameTh,
+      price: price ?? this.price,
+      displayPrice: displayPrice ?? this.displayPrice,
+      displayOrder: displayOrder ?? this.displayOrder,
+      linkedMenuItemId: linkedMenuItemId ?? this.linkedMenuItemId,
+    );
+  }
 
   factory MenuItemOptionModel.fromJson(Map<String, dynamic> json) {
     return MenuItemOptionModel(

@@ -1,3 +1,5 @@
+import '../../../../core/config/env_config.dart';
+
 class PaymentMethod {
   final int id;
   final int? shopId;
@@ -11,6 +13,12 @@ class PaymentMethod {
   final int displayOrder;
   final String pendingStatus;
   final String? rejectReason;
+
+  String get fullQrImageUrl {
+    if (qrImageUrl.isEmpty) return '';
+    if (qrImageUrl.startsWith('http')) return qrImageUrl;
+    return '${EnvConfig.apiBaseUrl}/$qrImageUrl';
+  }
 
   PaymentMethod({
     required this.id,

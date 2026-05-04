@@ -87,19 +87,14 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
 
     if (mounted) {
       if (success) {
-        GlobalModal.show(
-          context: context,
-          barrierDismissible: false,
-          child: SuccessSheet(
-            onDone: () {
-              final nav = Navigator.of(context);
-              nav.pop(); // Close sheet
-              if (mounted) {
-                nav.pop(true); // Close CreateCategoryScreen
-              }
-            },
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Successfully requested'),
+            backgroundColor: Color(0xFFED3A72),
+            behavior: SnackBarBehavior.floating,
           ),
         );
+        Navigator.of(context).pop(true);
       } else {
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -343,7 +338,9 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
         const SizedBox(height: 16),
         TextField(
           controller: controller,
+          maxLength: 100,
           decoration: InputDecoration(
+            counterText: '',
             hintText: hint,
             hintStyle: GoogleFonts.poppins(color: const Color(0xFFCBD5E1)),
             filled: true,
