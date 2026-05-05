@@ -15,7 +15,7 @@ import '../../data/services/menu_service.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/core/data/models/master_data_model.dart';
 import 'package:my_shop/core/presentation/widgets/global_modal.dart';
-import 'package:my_shop/core/presentation/widgets/success_sheet.dart';
+// import 'package:my_shop/core/presentation/widgets/success_sheet.dart';
 import 'package:my_shop/core/presentation/widgets/confirmation_sheet.dart';
 
 class AddNewItemScreen extends StatefulWidget {
@@ -103,6 +103,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   final Map<int, TextEditingController> _addonGroupNameCtrls = {};
   final Map<String, TextEditingController> _addonOptionNameCtrls = {};
   final Map<String, TextEditingController> _addonOptionPriceCtrls = {};
+  final Map<int, TextEditingController> _comboQtyCtrls = {};
 
   List<MenuComboComponentModel> _comboComponents = [];
   List<MenuItemModel> _availableItems = [];
@@ -267,6 +268,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     for (final c in _addonGroupNameCtrls.values) { c.dispose(); }
     for (final c in _addonOptionNameCtrls.values) { c.dispose(); }
     for (final c in _addonOptionPriceCtrls.values) { c.dispose(); }
+    for (final c in _comboQtyCtrls.values) { c.dispose(); }
     super.dispose();
   }
 
@@ -771,6 +773,22 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     });
   }
 
+  void _removeComboComponent(int index) {
+    setState(() {
+      _comboComponents.removeAt(index);
+      _comboQtyCtrls[index]?.dispose();
+      _comboQtyCtrls.remove(index);
+
+      // Shift subsequent controllers up by 1
+      for (int i = index + 1; i <= _comboComponents.length; i++) {
+        if (_comboQtyCtrls.containsKey(i)) {
+          _comboQtyCtrls[i - 1] = _comboQtyCtrls.remove(i)!;
+        }
+      }
+    });
+  }
+
+  /*
   void _addNewOptionToGroup(int groupIndex) {
     setState(() {
       final opts = List<MenuItemOptionModel>.from(
@@ -784,6 +802,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       );
     });
   }
+  */
 
   void _removeVariant(int index) {
     setState(() {
@@ -1040,9 +1059,9 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       index,
       () => TextEditingController(text: nameText),
     );
-    // Sync text when language changes (only if user hasn't focused)
-    if (nameCtrl.text != nameText && nameText != null && nameText.isNotEmpty) {
-      nameCtrl.text = nameText;
+    // Always sync from model — fixes stale text after deletion+index shift
+    if (nameCtrl.text != (nameText ?? '')) {
+      nameCtrl.text = nameText ?? '';
     }
 
     final priceText = variant.price == 0.0 ? '' : variant.price.toString();
@@ -1050,6 +1069,9 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       index,
       () => TextEditingController(text: priceText),
     );
+    if (priceCtrl.text != priceText) {
+      priceCtrl.text = priceText;
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -1101,14 +1123,15 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   nameCtrl,
                   maxLength: 100,
                   onChanged: (v) {
+                    final currentVariant = _variants[index];
                     _variants[index] = MenuItemVariantModel(
-                      id: variant.id,
-                      price: variant.price,
-                      nameEn: lang == 'EN' ? v : variant.nameEn,
-                      nameMm: lang == 'MM' ? v : variant.nameMm,
-                      nameTh: lang == 'TH' ? v : variant.nameTh,
-                      isAvailable: variant.isAvailable,
-                      displayOrder: variant.displayOrder,
+                      id: currentVariant.id,
+                      price: currentVariant.price,
+                      nameEn: lang == 'EN' ? v : currentVariant.nameEn,
+                      nameMm: lang == 'MM' ? v : currentVariant.nameMm,
+                      nameTh: lang == 'TH' ? v : currentVariant.nameTh,
+                      isAvailable: currentVariant.isAvailable,
+                      displayOrder: currentVariant.displayOrder,
                     );
                   },
                 ),
@@ -1119,14 +1142,15 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   keyboardType: TextInputType.number,
                   validator: _priceValidator,
                   onChanged: (v) {
+                    final currentVariant = _variants[index];
                     _variants[index] = MenuItemVariantModel(
-                      id: variant.id,
+                      id: currentVariant.id,
                       price: double.tryParse(v) ?? 0.0,
-                      nameEn: variant.nameEn,
-                      nameMm: variant.nameMm,
-                      nameTh: variant.nameTh,
-                      isAvailable: variant.isAvailable,
-                      displayOrder: variant.displayOrder,
+                      nameEn: currentVariant.nameEn,
+                      nameMm: currentVariant.nameMm,
+                      nameTh: currentVariant.nameTh,
+                      isAvailable: currentVariant.isAvailable,
+                      displayOrder: currentVariant.displayOrder,
                     );
                   },
                 ),
@@ -1147,14 +1171,15 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                       value: variant.isAvailable,
                       onChanged: (v) {
                         setState(() {
+                          final currentVariant = _variants[index];
                           _variants[index] = MenuItemVariantModel(
-                            id: variant.id,
-                            price: variant.price,
-                            nameEn: variant.nameEn,
-                            nameMm: variant.nameMm,
-                            nameTh: variant.nameTh,
+                            id: currentVariant.id,
+                            price: currentVariant.price,
+                            nameEn: currentVariant.nameEn,
+                            nameMm: currentVariant.nameMm,
+                            nameTh: currentVariant.nameTh,
                             isAvailable: v,
-                            displayOrder: variant.displayOrder,
+                            displayOrder: currentVariant.displayOrder,
                           );
                         });
                       },
@@ -1200,21 +1225,32 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   color: Color(0xFFEF4444),
                   size: 20,
                 ),
-                onPressed: () =>
-                    setState(() => _comboComponents.removeAt(index)),
+                onPressed: () => _removeComboComponent(index),
               ),
             ],
           ),
           _buildTextField(
             'Quantity',
-            TextEditingController(text: component.quantity.toString()),
+            () {
+              final qtyText = component.quantity.toString();
+              final qtyCtrl = _comboQtyCtrls.putIfAbsent(
+                index,
+                () => TextEditingController(text: qtyText),
+              );
+              // Always sync from model
+              if (qtyCtrl.text != qtyText) {
+                qtyCtrl.text = qtyText;
+              }
+              return qtyCtrl;
+            }(),
             keyboardType: TextInputType.number,
             onChanged: (v) {
+              final currentComp = _comboComponents[index];
               _comboComponents[index] = MenuComboComponentModel(
-                includedItemId: component.includedItemId,
+                includedItemId: currentComp.includedItemId,
                 quantity: int.tryParse(v) ?? 1,
-                displayOrder: component.displayOrder,
-                includedItemNameEn: component.includedItemNameEn,
+                displayOrder: currentComp.displayOrder,
+                includedItemNameEn: currentComp.includedItemNameEn,
               );
             },
           ),
@@ -1235,10 +1271,11 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             isRequired: true,
             onChanged: (val) {
               setState(() {
+                final currentComp = _comboComponents[index];
                 _comboComponents[index] = MenuComboComponentModel(
                   includedItemId: val?.id ?? 0,
-                  quantity: component.quantity,
-                  displayOrder: component.displayOrder,
+                  quantity: currentComp.quantity,
+                  displayOrder: currentComp.displayOrder,
                   includedItemNameEn: val?.nameEn ?? '',
                 );
               });
@@ -1312,14 +1349,15 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   groupNameCtrl,
                   maxLength: 100,
                   onChanged: (v) {
-                    final newNameEn = lang == 'EN' ? v : group.nameEn;
-                    final newNameMm = lang == 'MM' ? v : group.nameMm;
-                    final newNameTh = lang == 'TH' ? v : group.nameTh;
+                    final currentGroup = _optionGroups[index];
+                    final newNameEn = lang == 'EN' ? v : currentGroup.nameEn;
+                    final newNameMm = lang == 'MM' ? v : currentGroup.nameMm;
+                    final newNameTh = lang == 'TH' ? v : currentGroup.nameTh;
 
-                    List<MenuItemOptionModel> newOptions = group.options;
-                    if (group.options.length == 1) {
+                    List<MenuItemOptionModel> newOptions = currentGroup.options;
+                    if (currentGroup.options.length == 1) {
                       newOptions = [
-                        group.options[0].copyWith(
+                        currentGroup.options[0].copyWith(
                           nameEn: newNameEn,
                           nameMm: newNameMm,
                           nameTh: newNameTh,
@@ -1327,7 +1365,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                       ];
                     }
 
-                    _optionGroups[index] = group.copyWith(
+                    _optionGroups[index] = currentGroup.copyWith(
                       nameEn: newNameEn,
                       nameMm: newNameMm,
                       nameTh: newNameTh,
@@ -1356,12 +1394,13 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                             value: group.isAvailable,
                             onChanged: (v) {
                               setState(() {
-                                _optionGroups[index] = group.copyWith(
+                                final currentGroup = _optionGroups[index];
+                                _optionGroups[index] = currentGroup.copyWith(
                                   isAvailable: v,
                                 );
                               });
                             },
-                            activeColor: const Color(0xFFED3A72),
+                            activeThumbColor: const Color(0xFFED3A72),
                           ),
                         ],
                       ),
@@ -1381,8 +1420,9 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                     '$index-$oIndex',
                     () => TextEditingController(text: optNameText),
                   );
-                  if (optNameCtrl.text != optNameText && optNameText != null && optNameText.isNotEmpty) {
-                    optNameCtrl.text = optNameText;
+                  // Always sync from model — fixes stale text after deletion+index shift
+                  if (optNameCtrl.text != (optNameText ?? '')) {
+                    optNameCtrl.text = optNameText ?? '';
                   }
 
                   final optPriceText = opt.price == 0.0 ? '' : opt.price.toString();
@@ -1390,23 +1430,28 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                     '$index-$oIndex',
                     () => TextEditingController(text: optPriceText),
                   );
+                  if (optPriceCtrl.text != optPriceText) {
+                    optPriceCtrl.text = optPriceText;
+                  }
                   return Column(
                     children: [
                       if (group.options.length > 1)
                         _buildTextField(
-                          'Option Name ($lang)',
+                          'Add-on Name ($lang)',
                           optNameCtrl,
                           maxLength: 100,
                           onChanged: (v) {
+                            final currentGroup = _optionGroups[index];
+                            final currentOpt = currentGroup.options[oIndex];
                             final newOpts = List<MenuItemOptionModel>.from(
-                              group.options,
+                              currentGroup.options,
                             );
-                            newOpts[oIndex] = opt.copyWith(
-                              nameEn: lang == 'EN' ? v : opt.nameEn,
-                              nameMm: lang == 'MM' ? v : opt.nameMm,
-                              nameTh: lang == 'TH' ? v : opt.nameTh,
+                            newOpts[oIndex] = currentOpt.copyWith(
+                              nameEn: lang == 'EN' ? v : currentOpt.nameEn,
+                              nameMm: lang == 'MM' ? v : currentOpt.nameMm,
+                              nameTh: lang == 'TH' ? v : currentOpt.nameTh,
                             );
-                            _optionGroups[index] = group.copyWith(
+                            _optionGroups[index] = currentGroup.copyWith(
                               options: newOpts,
                             );
                           },
@@ -1418,13 +1463,15 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                         keyboardType: TextInputType.number,
                         validator: _priceValidator,
                         onChanged: (v) {
+                          final currentGroup = _optionGroups[index];
+                          final currentOpt = currentGroup.options[oIndex];
                           final newOpts = List<MenuItemOptionModel>.from(
-                            group.options,
+                            currentGroup.options,
                           );
-                          newOpts[oIndex] = opt.copyWith(
+                          newOpts[oIndex] = currentOpt.copyWith(
                             price: double.tryParse(v) ?? 0.0,
                           );
-                          _optionGroups[index] = group.copyWith(
+                          _optionGroups[index] = currentGroup.copyWith(
                             options: newOpts,
                           );
                         },
@@ -1434,12 +1481,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                     ],
                   );
                 }),
-                const SizedBox(height: 16),
-                const Divider(height: 24, color: Color(0xFFFEE2E2)),
-                _buildOutlinedButton(
-                  '+ Add Item',
-                  () => _addNewOptionToGroup(index),
-                ),
+
               ],
             ),
           ),

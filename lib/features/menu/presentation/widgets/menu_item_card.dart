@@ -191,31 +191,45 @@ class _MenuItemCardState extends State<MenuItemCard> {
                           Row(
                             children: [
                               if (widget.item.originalPrice != null &&
+                                  widget.item.price > 0 &&
                                   widget.item.originalPrice! >
                                       widget.item.price) ...[
                                 Text(
-                                widget.item.originalPrice!.toFormattedPrice(
-                                  currency: widget.item.currency ?? 'THB',
+                                  widget.item.originalPrice!.toFormattedPrice(
+                                    currency: widget.item.currency ?? 'THB',
+                                  ),
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF94A3B8),
+                                    decoration: TextDecoration.lineThrough,
+                                  ),
                                 ),
-                                style: GoogleFonts.poppins(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF94A3B8),
-                                  decoration: TextDecoration.lineThrough,
+                                const SizedBox(width: 8),
+                              ],
+                              if (widget.item.price > 0)
+                                Text(
+                                  widget.item.price.toFormattedPrice(
+                                    currency: widget.item.currency ?? 'THB',
+                                  ),
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFFED3A72),
+                                  ),
+                                )
+                              else if (widget.item.originalPrice != null &&
+                                  widget.item.originalPrice! > 0)
+                                Text(
+                                  widget.item.originalPrice!.toFormattedPrice(
+                                    currency: widget.item.currency ?? 'THB',
+                                  ),
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFFED3A72),
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                            ],
-                            Text(
-                              widget.item.price.toFormattedPrice(
-                                currency: widget.item.currency ?? 'THB',
-                              ),
-                              style: GoogleFonts.poppins(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFFED3A72),
-                              ),
-                            ),
                             ],
                           ),
                         ],
