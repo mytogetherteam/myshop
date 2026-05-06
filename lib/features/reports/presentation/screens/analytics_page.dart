@@ -46,7 +46,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
         "previous30Days": 2003,
       },
       "revenue": {
-        "total": "฿148,320",
+        "total": "฿ 148,320",
         "trend": "31%",
         "trendPositive": true,
         "chartData": [

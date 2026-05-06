@@ -2,7 +2,7 @@ import 'package:intl/intl.dart';
 
 extension PriceFormatting on num {
   String toFormattedPrice({String currency = '฿'}) {
-    final displayCurrency = currency == 'THB' ? '฿' : currency;
+    final displayCurrency = '฿';
     final formatter = NumberFormat('#,###');
     return '$displayCurrency${formatter.format(this)}';
   }
@@ -10,7 +10,7 @@ extension PriceFormatting on num {
 
 extension StringPriceFormatting on String {
   String toFormattedPrice({String currency = '฿'}) {
-    final displayCurrency = currency == 'THB' ? '฿' : currency;
+    final displayCurrency = '฿';
     
     // Try to parse the string directly first
     final doubleValue = double.tryParse(this);

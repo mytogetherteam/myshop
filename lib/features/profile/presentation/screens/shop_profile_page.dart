@@ -620,7 +620,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
               children: [
                 _infoStat(
                   PhosphorIconsRegular.tag,
-                  _shopProfile?.displayBaseDeliveryFee ?? '฿${_shopProfile?.baseDeliveryFee ?? 0}',
+                  _shopProfile?.displayBaseDeliveryFee ?? '฿ ${_shopProfile?.baseDeliveryFee ?? 0}',
                   'Delivery fee',
                 ),
                 _infoStatDivider(),
@@ -1013,7 +1013,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '฿${item.price.toStringAsFixed(0)}',
+                    '฿ ${item.price.toStringAsFixed(0)}',
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -1327,7 +1327,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
           _infoRow(
             PhosphorIconsRegular.lightning,
             'Express',
-            '฿50  •  15–20 min',
+            '฿ 50  •  15–20 min',
           ),
         ]),
         const SizedBox(height: 12),

@@ -126,7 +126,7 @@ class ShopProfileModel {
     this.viewCount = 0,
     this.deliveryEnabled = false,
     this.slug,
-    this.currency = 'THB',
+    this.currency = '฿',
     this.cuisineTypeIds = const [],
     required this.operatingHours,
   });
@@ -194,7 +194,7 @@ class ShopProfileModel {
       viewCount: json['viewCount'] ?? 0,
       deliveryEnabled: json['deliveryEnabled'] ?? false,
       slug: json['slug'],
-      currency: json['currency'] ?? 'THB',
+      currency: json['currency'] ?? '฿',
       cuisineTypeIds: json['cuisineTypeIds'] != null
           ? List<int>.from(json['cuisineTypeIds'])
           : [],

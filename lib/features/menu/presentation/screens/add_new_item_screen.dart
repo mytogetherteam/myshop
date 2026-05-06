@@ -55,7 +55,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   late final TextEditingController _discountAmountController;
   late final TextEditingController _discountPercentController;
 
-  String _currency = 'THB';
+  String _currency = '฿';
 
   List<MenuCategoryModel> _categories = [];
   MenuCategoryModel? _selectedCategory;

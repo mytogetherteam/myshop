@@ -137,27 +137,45 @@ class _MenuItemCardState extends State<MenuItemCard> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Wrap(
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            spacing: 8,
-                            runSpacing: 4,
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                widget.item.displayName,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF1E293B),
-                                ),
+                              Wrap(
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                spacing: 8,
+                                runSpacing: 4,
+                                children: [
+                                  Text(
+                                    widget.item.displayName,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xFF1E293B),
+                                    ),
+                                  ),
+                                  if (isPending || isRejected)
+                                    StatusBadge(status: widget.item.pendingStatus),
+                                  if (status != '' && status != 'APPROVED')
+                                    Text(
+                                      '($status)',
+                                      style: const TextStyle(
+                                        fontSize: 8,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                ],
                               ),
-                              if (isPending || isRejected)
-                                StatusBadge(status: widget.item.pendingStatus),
-                              if (status != '' && status != 'APPROVED')
+                              if (widget.item.nameEn != null &&
+                                  widget.item.nameEn!.isNotEmpty &&
+                                  widget.item.nameMm != null &&
+                                  widget.item.nameMm!.isNotEmpty &&
+                                  widget.item.nameMm != widget.item.nameEn)
                                 Text(
-                                  '($status)',
-                                  style: const TextStyle(
-                                    fontSize: 8,
-                                    color: Colors.grey,
+                                  widget.item.nameMm!,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF64748B),
                                   ),
                                 ),
                             ],
@@ -176,18 +194,19 @@ class _MenuItemCardState extends State<MenuItemCard> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                          const SizedBox(height: 2),
-                          Text(
-                            widget.item.displayDescription,
-                            style: GoogleFonts.poppins(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w400,
-                              color: const Color(0xFF94A3B8),
+                          const SizedBox(height: 0),
+                          if (widget.item.displayDescription.isNotEmpty)
+                            Text(
+                              widget.item.displayDescription,
+                              style: GoogleFonts.poppins(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w400,
+                                color: const Color(0xFF94A3B8),
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 0),
                           Row(
                             children: [
                               if (widget.item.originalPrice != null &&
@@ -196,7 +215,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                                       widget.item.price) ...[
                                 Text(
                                   widget.item.originalPrice!.toFormattedPrice(
-                                    currency: widget.item.currency ?? 'THB',
+                                    currency: widget.item.currency ?? '฿',
                                   ),
                                   style: GoogleFonts.poppins(
                                     fontSize: 11,
@@ -210,7 +229,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                               if (widget.item.price > 0)
                                 Text(
                                   widget.item.price.toFormattedPrice(
-                                    currency: widget.item.currency ?? 'THB',
+                                    currency: widget.item.currency ?? '฿',
                                   ),
                                   style: GoogleFonts.poppins(
                                     fontSize: 11,
@@ -222,7 +241,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                                   widget.item.originalPrice! > 0)
                                 Text(
                                   widget.item.originalPrice!.toFormattedPrice(
-                                    currency: widget.item.currency ?? 'THB',
+                                    currency: widget.item.currency ?? '฿',
                                   ),
                                   style: GoogleFonts.poppins(
                                     fontSize: 11,
