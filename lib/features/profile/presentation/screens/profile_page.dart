@@ -17,6 +17,9 @@ import 'accepted_payment_page.dart';
 
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
+import 'package:my_shop/features/profile/data/services/shop_service.dart';
+import 'package:my_shop/features/profile/data/models/shop_model.dart';
+import 'global_shop_selection_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -28,9 +31,11 @@ class ProfilePage extends StatefulWidget {
 class ProfilePageState extends State<ProfilePage>
     with AutomaticKeepAliveClientMixin {
   final ProfileService _profileService = ProfileService();
+  final ShopService _shopService = ShopService();
   UserInfo? _userInfo;
   bool _deliveryEnabled = false;
   bool _isTogglingDelivery = false;
+  List<Shop> _userShops = [];
 
   @override
   bool get wantKeepAlive => true;
@@ -53,15 +58,18 @@ class ProfilePageState extends State<ProfilePage>
     final results = await Future.wait([
       StorageService.instance.getUserInfo(),
       _profileService.getShopProfile(),
+      _shopService.getShops(),
     ]);
 
     final info = results[0] as UserInfo?;
     final profile = results[1] as ShopProfileModel?;
+    final shops = results[2] as List<Shop>;
 
     if (mounted) {
       setState(() {
         _userInfo = info;
         _deliveryEnabled = profile?.deliveryEnabled ?? false;
+        _userShops = shops;
       });
     }
   }
@@ -361,6 +369,17 @@ class ProfilePageState extends State<ProfilePage>
             CupertinoPageRoute(builder: (_) => const ChangePasswordPage()),
           ),
         ),
+        if (_userShops.length > 1)
+          _buildMenuOption(
+            icon: PhosphorIconsRegular.arrowsLeftRight,
+            title: 'Switch Shop',
+            onTap: () => Navigator.push(
+              context,
+              CupertinoPageRoute(
+                builder: (_) => const GlobalShopSelectionPage(),
+              ),
+            ).then((_) => _loadUserInfo()),
+          ),
         const SizedBox(height: 24),
         _buildMenuOption(
           icon: PhosphorIconsRegular.signOut,

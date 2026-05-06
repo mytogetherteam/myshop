@@ -29,18 +29,25 @@ class _AuthWrapperState extends State<AuthWrapper> {
     if (!hasToken) return const LoginPage();
 
     var shopId = await StorageService.instance.getSelectedShopId();
+    debugPrint('📍 [AuthWrapper] Current shopId in storage: $shopId');
+
     if (shopId == null) {
       try {
         final shops = await ShopService().getShops();
+        debugPrint('📍 [AuthWrapper] Found ${shops.length} shops for user');
+
         if (shops.isEmpty) {
-          // No shops available, continue to home (create shop flow usually)
-        } else if (shops.length == 1) {
-          await StorageService.instance.saveSelectedShopId(shops.first.id);
-          shopId = shops.first.id;
+          debugPrint('📍 [AuthWrapper] No shops found, proceeding to home');
+          // No shops available, continue to home
         } else {
-          return const GlobalShopSelectionPage(isInitialFlow: true);
+          // ALWAYS pick the first one to avoid asking user
+          final firstShop = shops.first;
+          debugPrint('📍 [AuthWrapper] Auto-selecting first shop: ${firstShop.name}');
+          await StorageService.instance.saveSelectedShopId(firstShop.id);
+          shopId = firstShop.id;
         }
       } catch (e) {
+        debugPrint('📍 [AuthWrapper] Error fetching shops: $e');
         return const GlobalShopSelectionPage(isInitialFlow: true);
       }
     }
