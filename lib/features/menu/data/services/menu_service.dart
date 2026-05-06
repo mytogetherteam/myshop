@@ -9,6 +9,18 @@ import '../models/menu_item_model.dart';
 import '../models/menu_category_model.dart';
 import 'package:my_shop/core/data/models/master_data_model.dart';
 
+List<MenuCategoryModel> _parseMenuCategories(List<dynamic> jsonList) {
+  return jsonList.map((json) => MenuCategoryModel.fromJson(json)).toList();
+}
+
+List<MenuItemModel> _parseMenuItems(List<dynamic> jsonList) {
+  return jsonList.map((json) => MenuItemModel.fromJson(json)).toList();
+}
+
+List<MasterDataModel> _parseMasterDataModels(List<dynamic> jsonList) {
+  return jsonList.map((json) => MasterDataModel.fromJson(json)).toList();
+}
+
 class MenuService {
   static const String _categoriesPath = '/api/shop/menu/categories';
   static const String _menuItemsPath = '/api/shop/menu/items';
@@ -62,7 +74,7 @@ class MenuService {
           }
           // _categoriesCache = list.map((json) => MenuCategoryModel.fromJson(json)).toList();
           // return _categoriesCache;
-          return list.map((json) => MenuCategoryModel.fromJson(json)).toList();
+          return await compute(_parseMenuCategories, list);
         }
       }
     } on DioException catch (e) {
@@ -93,7 +105,7 @@ class MenuService {
           } else {
             list = [];
           }
-          return list.map((json) => MenuCategoryModel.fromJson(json)).toList();
+          return await compute(_parseMenuCategories, list);
         }
       }
     } on DioException catch (e) {
@@ -192,7 +204,7 @@ class MenuService {
           } else {
             list = [];
           }
-          return list.map((json) => MenuItemModel.fromJson(json)).toList();
+          return await compute(_parseMenuItems, list);
         }
       }
     } on DioException catch (e) {
@@ -223,7 +235,7 @@ class MenuService {
           } else {
             list = [];
           }
-          return list.map((json) => MenuItemModel.fromJson(json)).toList();
+          return await compute(_parseMenuItems, list);
         }
       }
     } on DioException catch (e) {
@@ -267,7 +279,7 @@ class MenuService {
       final response = await ApiClient().dio.get(_masterItemsPath);
       // _masterItemsCache = _parseMasterDataList(response);
       // return _masterItemsCache;
-      return _parseMasterDataList(response);
+      return await _parseMasterDataList(response);
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.getMasterMenuItems');
     } catch (e) {
@@ -306,7 +318,7 @@ class MenuService {
       final response = await ApiClient().dio.get(_masterCategoriesPath);
       // _masterCategoriesCache = _parseMasterDataList(response);
       // return _masterCategoriesCache;
-      return _parseMasterDataList(response);
+      return await _parseMasterDataList(response);
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.getMasterCategories');
     } catch (e) {
@@ -345,7 +357,7 @@ class MenuService {
       final response = await ApiClient().dio.get(_masterTagsPath);
       // _menuTagsCache = _parseMasterDataList(response);
       // return _menuTagsCache;
-      return _parseMasterDataList(response);
+      return await _parseMasterDataList(response);
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.getMenuTags');
     } catch (e) {
@@ -373,7 +385,7 @@ class MenuService {
     return null;
   }
 
-  List<MasterDataModel>? _parseMasterDataList(dynamic response) {
+  Future<List<MasterDataModel>?> _parseMasterDataList(dynamic response) async {
     if (response.statusCode != null &&
         response.statusCode! >= 200 &&
         response.statusCode! < 300) {
@@ -388,7 +400,7 @@ class MenuService {
         } else {
           list = [];
         }
-        return list.map((json) => MasterDataModel.fromJson(json)).toList();
+        return await compute(_parseMasterDataModels, list);
       }
     }
     return null;

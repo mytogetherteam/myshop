@@ -194,19 +194,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                          const SizedBox(height: 0),
-                          if (widget.item.displayDescription.isNotEmpty)
-                            Text(
-                              widget.item.displayDescription,
-                              style: GoogleFonts.poppins(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w400,
-                                color: const Color(0xFF94A3B8),
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          const SizedBox(height: 0),
+                          const SizedBox(height: 4),
                           Row(
                             children: [
                               if (widget.item.originalPrice != null &&

@@ -22,7 +22,7 @@ class CategoryService {
     _galleryCache = null;
   }
 
-  Future<List<MenuCategoryModel>?> getCategories({bool forceRefresh = false}) async {
+  Future<List<MenuCategoryModel>?> getCategories({bool forceRefresh = true}) async {
     if (!forceRefresh && _categoriesCache != null) {
       debugPrint('CACHE HIT: $_categoriesPath');
       return _categoriesCache;

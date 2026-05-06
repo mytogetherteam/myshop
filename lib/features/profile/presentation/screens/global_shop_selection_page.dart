@@ -5,6 +5,8 @@ import 'package:my_shop/core/data/services/storage_service.dart';
 import '../../data/models/shop_model.dart';
 import '../../data/services/shop_service.dart';
 import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
+import 'package:my_shop/features/categories/data/services/category_service.dart';
+import 'package:my_shop/features/menu/data/services/menu_service.dart';
 
 class GlobalShopSelectionPage extends StatefulWidget {
   final bool isInitialFlow;
@@ -85,6 +87,8 @@ class _GlobalShopSelectionPageState extends State<GlobalShopSelectionPage> {
 
   Future<void> _selectShop(Shop shop) async {
     await StorageService.instance.saveSelectedShopId(shop.id);
+    CategoryService.clearCache();
+    MenuService.clearCache();
     if (!mounted) return;
 
     if (widget.isInitialFlow) {

@@ -23,7 +23,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchCategories(forceRefresh: false);
+    _fetchCategories(forceRefresh: true);
     _prefetchCategoryData();
   }
 

@@ -4,6 +4,10 @@ import 'package:my_shop/features/orders/data/models/order_model.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
 
+List<OrderModel> _parseOrders(List<dynamic> jsonList) {
+  return jsonList.map((json) => OrderModel.fromJson(json)).toList();
+}
+
 class OrderService {
   static const String _ordersPath = '/api/shop/orders';
 
@@ -34,7 +38,7 @@ class OrderService {
         debugPrint('FULL API RESPONSE (getOrders): $data');
         if (data['success'] == true && data['data'] != null) {
           final List content = data['data']['content'] ?? [];
-          return content.map((json) => OrderModel.fromJson(json)).toList();
+          return await compute(_parseOrders, content);
         } else {
           debugPrint(
             'API Error: success is false OR data is null. Message: ${data['message']}, Details: ${data['details']}',

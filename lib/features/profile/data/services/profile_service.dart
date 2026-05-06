@@ -107,10 +107,10 @@ class ProfileService {
   Future<bool> toggleDeliveryStatus(bool enabled) async {
     try {
       final url = '$_profilePath/delivery-status';
-      debugPrint('PUT REQUEST: $url, Query: {enabled: $enabled}');
+      debugPrint('PUT REQUEST: $url, Body: {enabled: $enabled}');
       final response = await ApiClient().dio.put(
         url,
-        queryParameters: {'enabled': enabled},
+        data: {'enabled': enabled},
       );
 
       if (response.statusCode != null &&

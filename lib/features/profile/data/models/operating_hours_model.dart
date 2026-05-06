@@ -74,12 +74,30 @@ class OperatingHoursModel {
   /// Parses from the dedicated GET /api/shop/operating-hours response
   /// where openTime/closeTime are strings and dayOfWeek is 1-based.
   factory OperatingHoursModel.fromActiveHoursJson(Map<String, dynamic> json) {
-    final openStr = json['openTime'] as String?;
-    final closeStr = json['closeTime'] as String?;
+    TimeModel openingTime;
+    if (json['openTimeHour'] != null) {
+      openingTime = TimeModel(
+        hour: json['openTimeHour'] as int,
+        minute: (json['openTimeMin'] ?? 0) as int,
+      );
+    } else {
+      openingTime = _parseTimeString(json['openTime'] as String?, defaultHour: 9);
+    }
+
+    TimeModel closingTime;
+    if (json['closeTimeHour'] != null) {
+      closingTime = TimeModel(
+        hour: json['closeTimeHour'] as int,
+        minute: (json['closeTimeMin'] ?? 0) as int,
+      );
+    } else {
+      closingTime = _parseTimeString(json['closeTime'] as String?, defaultHour: 21);
+    }
+
     return OperatingHoursModel(
       dayOfWeek: json['dayOfWeek'] ?? 1,
-      openingTime: _parseTimeString(openStr, defaultHour: 9),
-      closingTime: _parseTimeString(closeStr, defaultHour: 21),
+      openingTime: openingTime,
+      closingTime: closingTime,
       isClosed: json['isClosed'] ?? false,
     );
   }
@@ -91,10 +109,16 @@ class OperatingHoursModel {
       dayOfWeek: json['dayOfWeek'] ?? 0,
       openingTime: openVal != null
           ? TimeModel.fromJson(openVal)
-          : TimeModel(hour: 9, minute: 0),
+          : TimeModel(
+              hour: json['openTimeHour'] ?? 9,
+              minute: json['openTimeMin'] ?? 0,
+            ),
       closingTime: closeVal != null
           ? TimeModel.fromJson(closeVal)
-          : TimeModel(hour: 21, minute: 0),
+          : TimeModel(
+              hour: json['closeTimeHour'] ?? 21,
+              minute: json['closeTimeMin'] ?? 0,
+            ),
       isClosed: json['isClosed'] ?? false,
     );
   }
@@ -104,6 +128,10 @@ class OperatingHoursModel {
       'dayOfWeek': dayOfWeek,
       'openTime': openingTime.toJson(),
       'closeTime': closingTime.toJson(),
+      'openTimeHour': openingTime.hour,
+      'openTimeMin': openingTime.minute,
+      'closeTimeHour': closingTime.hour,
+      'closeTimeMin': closingTime.minute,
       'isClosed': isClosed,
     };
   }
