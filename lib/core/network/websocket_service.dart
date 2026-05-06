@@ -119,6 +119,11 @@ class WebSocketService {
         try {
           final Map<String, dynamic> raw = json.decode(frame.body!);
           final String type = raw['type'] ?? 'UNKNOWN';
+
+          if (type == 'MENU_ITEM_UPDATE') {
+            return; // Shop app currently doesn't need to react to its own menu updates from other instances
+          }
+
           final String orderId = raw['orderId']?.toString() ?? 'unknown';
           final String status =
               raw['order']?['status'] ?? raw['status'] ?? 'unknown';
@@ -127,6 +132,7 @@ class WebSocketService {
             '📥 [WS] Message: $type | Order: $orderId | Status: $status',
           );
           _orderUpdateController.add(raw);
+
         } catch (e) {
           debugPrint('⚠️ Error parsing socket message: $e');
         }
