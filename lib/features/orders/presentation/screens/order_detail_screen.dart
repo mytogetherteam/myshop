@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -597,8 +598,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           _buildPaymentSummary(),
                           const SizedBox(height: 24),
 
-                          // Calculate delivery fee box
-                          if (_currentOrder.status != 'CANCELLED') ...[
+                          // Calculate delivery fee box (hidden for DELIVERED & CANCELLED)
+                          if (_currentOrder.status != 'CANCELLED' && _currentOrder.status != 'DELIVERED') ...[
                             _buildDeliveryCalculator(),
                             const SizedBox(height: 40),
                           ],
@@ -1545,6 +1546,7 @@ Widget _buildAnimatedProgress() {
         isCancelable = false;
         break;
       case 'DELIVERED':
+        return _buildDeliveredBanner();
       case 'CANCELLED':
         return const SizedBox.shrink();
     }
@@ -1611,6 +1613,36 @@ Widget _buildAnimatedProgress() {
                             fontSize: 14,
                           ),
                         ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeliveredBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 36),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFFED3973), Color(0xFFEFA240)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.check_circle_rounded, color: Colors.white, size: 22),
+          const SizedBox(width: 10),
+          Text(
+            'Order successfully delivered',
+            style: GoogleFonts.poppins(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              letterSpacing: 0.2,
             ),
           ),
         ],
@@ -1755,7 +1787,52 @@ Widget _buildAnimatedProgress() {
     );
   }
 
+  /// Builds the payment slip / receipt section.
+  /// Handles two formats the customer app may upload:
+  ///  1. Base64 data URI  → `data:image/jpeg;base64,...`  (decoded via Image.memory)
+  ///  2. Absolute https URL                               (loaded via Image.network)
   Widget _buildPaymentSlipSection() {
+    final slipUrl = _currentOrder.paymentSlipUrl!;
+    final isBase64 = slipUrl.startsWith('data:image');
+
+    Widget imageWidget;
+    if (isBase64) {
+      // Strip the data URI prefix and decode the raw base64 bytes
+      try {
+        final base64Str = slipUrl.contains(',') ? slipUrl.split(',').last : slipUrl;
+        final bytes = base64Decode(base64Str);
+        imageWidget = ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.memory(
+            bytes,
+            width: double.infinity,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => _buildReceiptError(),
+          ),
+        );
+      } catch (_) {
+        imageWidget = _buildReceiptError();
+      }
+    } else {
+      imageWidget = ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.network(
+          slipUrl,
+          width: double.infinity,
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Container(
+              height: 200,
+              color: const Color(0xFFF1F5F9),
+              child: Center(child: CustomLoadingIndicator(size: 24)),
+            );
+          },
+          errorBuilder: (_, __, ___) => _buildReceiptError(),
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1808,36 +1885,29 @@ Widget _buildAnimatedProgress() {
           ],
         ),
         const SizedBox(height: 16),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Image.network(
-            _currentOrder.paymentSlipUrl!,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              return Container(
-                height: 200,
-                color: const Color(0xFFF1F5F9),
-                child: Center(child: CustomLoadingIndicator(size: 24)),
-              );
-            },
-            errorBuilder: (context, error, stackTrace) => Container(
-              height: 200,
-              color: const Color(0xFFF1F5F9),
-              child: const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                   Icon(PhosphorIconsRegular.warningCircle, color: Color(0xFF94A3B8), size: 32),
-
-                   SizedBox(height: 8),
-                   Text('Failed to load receipt', style: TextStyle(color: Color(0xFF64748B))),
-                ],
-              ),
-            ),
-          ),
-        ),
+        imageWidget,
       ],
+    );
+  }
+
+  Widget _buildReceiptError() {
+    return Container(
+      height: 200,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(PhosphorIconsRegular.warningCircle, color: Color(0xFF94A3B8), size: 32),
+          const SizedBox(height: 8),
+          Text(
+            'Failed to load receipt',
+            style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 13),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,3 +1,17 @@
+import 'package:my_shop/core/config/env_config.dart';
+
+String? _resolveUrl(dynamic value) {
+  if (value == null) return null;
+  final str = value.toString();
+  if (str.isEmpty) return null;
+  // Already an absolute URL — return as-is
+  if (str.startsWith('http://') || str.startsWith('https://')) return str;
+  // Base64 data URI (e.g. customer-uploaded receipt) — return as-is
+  if (str.startsWith('data:')) return str;
+  // Relative path — prepend the API base URL
+  return '${EnvConfig.apiBaseUrl}$str';
+}
+
 class OrderModel {
   final String id;
   final String lastOrderNo;
@@ -136,7 +150,7 @@ class OrderModel {
       deliveryAddress: json['deliveryAddress'] != null
           ? DeliveryAddressModel.fromJson(json['deliveryAddress'])
           : null,
-      paymentSlipUrl: json['paymentSlipUrl']?.toString(),
+      paymentSlipUrl: _resolveUrl(json['paymentSlipUrl']),
       riderName: json['deliveryRiderName']?.toString(),
       riderPhone: json['deliveryPhoneNo']?.toString(),
       modifications: (json['modifications'] as List?)
@@ -152,7 +166,7 @@ class OrderModel {
           : DateTime.now(),
       shopOwnerId: json['shopOwnerId'] ?? 0,
       shopName: json['shopName'] ?? '',
-      shopLogo: json['shopLogo'],
+      shopLogo: _resolveUrl(json['shopLogo']),
       shopAddress: json['shopAddress'],
       lat: (json['lat'] as num?)?.toDouble(),
       lon: (json['lon'] as num?)?.toDouble(),
@@ -160,14 +174,14 @@ class OrderModel {
       customerName: json['customerName'] ?? 'Customer',
       customerPhone: json['customerPhone'] ?? '-',
       customerEmail: json['customerEmail'],
-      customerAvatar: json['customerAvatar'],
+      customerAvatar: _resolveUrl(json['customerAvatar']),
       customerUsername: json['customerUsername'],
       shopOwnerEmail: json['shopOwnerEmail'],
       shopOwnerUsername: json['shopOwnerUsername'],
       estimatedDeliveryTime: json['estimatedDeliveryTime'],
       deliveryCycleNo: json['deliveryCycleNo'],
       deliveryTrackingUrl: json['deliveryTrackingUrl'],
-      proofPhotoUrl: json['proofPhotoUrl'],
+      proofPhotoUrl: _resolveUrl(json['proofPhotoUrl']),
       cancelReason: json['cancelReason'],
       shopPaymentQrUrl: json['shopPaymentQrUrl'],
       waitingTimeMinutes: json['waitingTimeMinutes'] ?? 0,
