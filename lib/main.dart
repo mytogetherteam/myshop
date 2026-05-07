@@ -19,11 +19,16 @@ void main() async {
   try {
     await Firebase.initializeApp();
   } catch (e) {
-    debugPrint('Firebase initialization failed: $e');
+    debugPrint('🔥 [Main] Firebase initialization failed: $e');
   }
   
-  // Initialize notification service
-  NotificationService().initialize();
+  // Initialize notification service - wrapped in try-catch to prevent app crash
+  try {
+    await NotificationService().initialize();
+  } catch (e) {
+    debugPrint('🔔 [Main] NotificationService initialization failed: $e');
+  }
+
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   SystemChrome.setSystemUIOverlayStyle(

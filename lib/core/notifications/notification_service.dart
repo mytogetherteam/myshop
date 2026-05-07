@@ -15,84 +15,104 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  FirebaseMessaging? _fcm;
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
 
   bool _isInitialized = false;
+  bool _firebaseAvailable = false;
 
   Future<void> initialize() async {
     if (_isInitialized) return;
 
-    // Initialize local notifications
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    const DarwinInitializationSettings initializationSettingsIOS = DarwinInitializationSettings();
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-      iOS: initializationSettingsIOS,
-    );
-    await _localNotifications.initialize(
-      initializationSettings,
-      onDidReceiveNotificationResponse: (details) {
-        _handleNotificationClick(null);
-      },
-    );
-
-    // Create high importance channel for Android
-    const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'shop_important_notifications',
-      'Shop Important Notifications',
-      description: 'This channel is used for shop orders and alerts.',
-      importance: Importance.high,
-    );
-    await _localNotifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(channel);
-
-    // Handle foreground messages
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (message.notification != null) {
-        NotificationRepository().incrementCount();
-        _showLocalNotification(message);
-      } else if (message.data.isNotEmpty) {
-        NotificationRepository().getUnreadCount();
-        _showLocalNotification(message);
-      }
-    });
-
-    // Handle background message clicks
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      _handleNotificationClick(message);
-    });
-
-    // Check if the app was opened from a terminated state via a notification
+    // Initialize Firebase Messaging if possible
     try {
-      RemoteMessage? initialMessage = await _fcm.getInitialMessage().timeout(
-        const Duration(seconds: 2),
-      );
-      if (initialMessage != null) {
-        _handleNotificationClick(initialMessage);
+      _fcm = FirebaseMessaging.instance;
+      _firebaseAvailable = true;
+    } catch (e) {
+      debugPrint('🔔 [NotificationService] Firebase Messaging not available: $e');
+      _firebaseAvailable = false;
+    }
+
+    // Initialize local notifications (mostly for Android/iOS)
+    if (!kIsWeb) {
+      try {
+        const AndroidInitializationSettings initializationSettingsAndroid =
+            AndroidInitializationSettings('@mipmap/ic_launcher');
+        const DarwinInitializationSettings initializationSettingsIOS = DarwinInitializationSettings();
+        const InitializationSettings initializationSettings = InitializationSettings(
+          android: initializationSettingsAndroid,
+          iOS: initializationSettingsIOS,
+        );
+        await _localNotifications.initialize(
+          initializationSettings,
+          onDidReceiveNotificationResponse: (details) {
+            _handleNotificationClick(null);
+          },
+        );
+
+        // Create high importance channel for Android
+        const AndroidNotificationChannel channel = AndroidNotificationChannel(
+          'shop_important_notifications',
+          'Shop Important Notifications',
+          description: 'This channel is used for shop orders and alerts.',
+          importance: Importance.high,
+        );
+        await _localNotifications
+            .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+            ?.createNotificationChannel(channel);
+      } catch (e) {
+        debugPrint('🔔 [NotificationService] Local notifications init failed: $e');
       }
-    } catch (_) {}
+    }
+
+    if (_firebaseAvailable && _fcm != null) {
+      // Handle foreground messages
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        if (message.notification != null) {
+          NotificationRepository().incrementCount();
+          _showLocalNotification(message);
+        } else if (message.data.isNotEmpty) {
+          NotificationRepository().getUnreadCount();
+          _showLocalNotification(message);
+        }
+      });
+
+      // Handle background message clicks
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        _handleNotificationClick(message);
+      });
+
+      // Check if the app was opened from a terminated state via a notification
+      try {
+        RemoteMessage? initialMessage = await _fcm!.getInitialMessage().timeout(
+          const Duration(seconds: 2),
+        );
+        if (initialMessage != null) {
+          _handleNotificationClick(initialMessage);
+        }
+      } catch (_) {}
+
+      // Listen for token refreshes
+      _fcm!.onTokenRefresh.listen((newToken) async {
+        if (await AuthService.instance.isLoggedIn) {
+          _sendTokenToServer(newToken);
+        }
+      });
+    }
 
     // Register token if already logged in
     if (await AuthService.instance.isLoggedIn) {
       await registerDevice();
     }
 
-    // Listen for token refreshes
-    _fcm.onTokenRefresh.listen((newToken) async {
-      if (await AuthService.instance.isLoggedIn) {
-        _sendTokenToServer(newToken);
-      }
-    });
-
     _isInitialized = true;
   }
 
   Future<void> requestSystemPermission() async {
-    await _fcm.requestPermission(
+    if (!_firebaseAvailable || _fcm == null) return;
+    
+    await _fcm!.requestPermission(
       alert: true,
       announcement: false,
       badge: true,
@@ -108,13 +128,15 @@ class NotificationService {
   }
 
   Future<void> registerDevice() async {
+    if (!_firebaseAvailable || _fcm == null) return;
+    
     try {
-      String? token = await _fcm.getToken().timeout(const Duration(seconds: 5));
+      String? token = await _fcm!.getToken().timeout(const Duration(seconds: 5));
       if (token != null) {
         await _sendTokenToServer(token);
       }
     } catch (e) {
-      debugPrint('Error getting FCM token: $e');
+      debugPrint('🔔 [NotificationService] Error getting FCM token: $e');
     }
   }
 
