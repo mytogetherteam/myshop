@@ -4,10 +4,26 @@
     "start_url": ".",
     "display": "standalone",
     "background_color": "#ffffff",
-    "theme_color": "#ffffff",
+    "theme_color": "#ED3A72",
     "description": "Manage your shop with My Shop.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
+    "shortcuts": [
+        {
+            "name": "Orders",
+            "short_name": "Orders",
+            "description": "View active orders",
+            "url": "/#/navigation",
+            "icons": [{ "src": "icons/Icon-192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Menu",
+            "short_name": "Menu",
+            "description": "Manage shop menu",
+            "url": "/#/navigation",
+            "icons": [{ "src": "icons/Icon-192.png", "sizes": "192x192" }]
+        }
+    ],
     "icons": [
         {
             "src": "icons/Icon-192.png",

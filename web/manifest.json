@@ -4,10 +4,19 @@
     "start_url": ".",
     "display": "standalone",
     "background_color": "#ffffff",
-    "theme_color": "#ffffff",
-    "description": "Manage your shop with My Shop.",
+    "theme_color": "#ED3A72",
+    "description": "The ultimate companion for shop owners to manage orders, products, and insights.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
+    "shortcuts": [
+        {
+            "name": "Orders",
+            "short_name": "Orders",
+            "description": "View active orders",
+            "url": "/#/navigation",
+            "icons": [{ "src": "icons/Icon-192.png", "sizes": "192x192" }]
+        }
+    ],
     "icons": [
         {
             "src": "icons/Icon-192.png",
