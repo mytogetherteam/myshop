@@ -10,7 +10,9 @@ import 'app.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
+  if (!kIsWeb) {
+    await Firebase.initializeApp();
+  }
 }
 
 void main() async {
@@ -24,7 +26,7 @@ void main() async {
       debugPrint('🔥 [Main] Firebase initialization failed: $e');
     }
   }
-  
+
   // Initialize notification service - wrapped in try-catch to prevent app crash
   try {
     await NotificationService().initialize();
@@ -43,8 +45,7 @@ void main() async {
     ),
   );
 
-  // Disable Google Fonts CDN — use locally bundled Poppins from assets/fonts/
-  GoogleFonts.config.allowRuntimeFetching = false;
+  GoogleFonts.config.allowRuntimeFetching = true;
 
   runApp(const App());
 

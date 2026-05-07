@@ -100,6 +100,32 @@ flutter:
         - asset: assets/fonts/Poppins-Bold.ttf
           weight: 700
 
+    # Phosphor icon fonts (package fonts must be declared in app pubspec for web builds)
+    - family: PhosphorBold
+      fonts:
+        - asset: packages/phosphor_flutter/lib/fonts/Phosphor-Bold.ttf
+          weight: 400
+    - family: PhosphorDuotone
+      fonts:
+        - asset: packages/phosphor_flutter/lib/fonts/Phosphor-Duotone.ttf
+          weight: 400
+    - family: PhosphorFill
+      fonts:
+        - asset: packages/phosphor_flutter/lib/fonts/Phosphor-Fill.ttf
+          weight: 400
+    - family: PhosphorLight
+      fonts:
+        - asset: packages/phosphor_flutter/lib/fonts/Phosphor-Light.ttf
+          weight: 400
+    - family: PhosphorThin
+      fonts:
+        - asset: packages/phosphor_flutter/lib/fonts/Phosphor-Thin.ttf
+          weight: 400
+    - family: PhosphorRegular
+      fonts:
+        - asset: packages/phosphor_flutter/lib/fonts/Phosphor.ttf
+          weight: 400
+
 
 flutter_launcher_icons:
   android: true
