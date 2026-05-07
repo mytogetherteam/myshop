@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:intl/intl.dart';
@@ -118,7 +119,7 @@ class ReviewSummaryWidget extends StatelessWidget {
                     value: percentage,
                     minHeight: 8,
                     backgroundColor: const Color(0xFFE2E8F0),
-                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFED3973)),
+                    valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
                   ),
                 ),
               ),

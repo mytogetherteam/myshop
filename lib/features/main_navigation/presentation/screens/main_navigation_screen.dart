@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/features/menu/presentation/screens/menu_page.dart';
 import 'package:my_shop/features/orders/presentation/screens/orders_screen.dart';
 
@@ -194,6 +195,48 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   final List<String> _titles = ['Order', 'Menu', 'Report', 'Profile'];
 
+  Widget _buildGradientItem(IconData icon, String label) {
+    return ShaderMask(
+      shaderCallback: (Rect bounds) {
+        return AppColors.primaryGradient.createShader(bounds);
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          PhosphorIcon(icon, size: 28, color: Colors.white),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInactiveItem(IconData icon, String label) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        PhosphorIcon(icon, size: 28, color: const Color(0xFF94A3B8)),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF94A3B8),
+          ),
+        ),
+      ],
+    );
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -216,89 +259,61 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         }).toList(),
       ),
 
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          child: BottomNavigationBar(
-            currentIndex: _currentIndex,
-            onTap: (index) {
-              if (_currentIndex == index) {
-                // If clicking the current tab, trigger a refresh
-                switch (index) {
-                  case 0:
-                    _ordersKey.currentState?.refresh();
-                    break;
-                  case 1:
-                    _menuKey.currentState?.refresh();
-                    break;
-                  case 2:
-                    _reportKey.currentState?.refresh();
-                    break;
-                  case 3:
-                    _profileKey.currentState?.refresh();
-                    break;
-                }
-              }
-              setState(() {
-                _currentIndex = index;
-                _visited[index] = true;
-              });
-            },
-
-            backgroundColor: Colors.white,
-            selectedItemColor: const Color(0xFFED3A72),
-            unselectedItemColor: const Color(
-              0xFF94A3B8,
-            ), // slate-400 equivalent for generic grey
-            selectedLabelStyle: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-            unselectedLabelStyle: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-            type: BottomNavigationBarType.fixed,
-            elevation: 0,
-            items: [
-              BottomNavigationBarItem(
-                icon: PhosphorIcon(PhosphorIconsRegular.cookingPot, size: 28),
-                activeIcon: PhosphorIcon(
-                  PhosphorIconsFill.cookingPot,
-                  size: 28,
-                ),
-                label: 'Order',
-              ),
-              BottomNavigationBarItem(
-                icon: PhosphorIcon(PhosphorIconsRegular.forkKnife, size: 28),
-                activeIcon: PhosphorIcon(PhosphorIconsFill.forkKnife, size: 28),
-                label: 'Menu',
-              ),
-              BottomNavigationBarItem(
-                icon: PhosphorIcon(PhosphorIconsRegular.listHeart, size: 28),
-                activeIcon: PhosphorIcon(PhosphorIconsFill.listHeart, size: 28),
-                label: 'Report',
-              ),
-              BottomNavigationBarItem(
-                icon: PhosphorIcon(PhosphorIconsRegular.storefront, size: 28),
-                activeIcon: PhosphorIcon(
-                  PhosphorIconsFill.storefront,
-                  size: 28,
-                ),
-                label: 'Profile',
-              ),
-            ],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          if (_currentIndex == index) {
+            switch (index) {
+              case 0:
+                _ordersKey.currentState?.refresh();
+                break;
+              case 1:
+                _menuKey.currentState?.refresh();
+                break;
+              case 2:
+                _reportKey.currentState?.refresh();
+                break;
+              case 3:
+                _profileKey.currentState?.refresh();
+                break;
+            }
+          }
+          setState(() {
+            _currentIndex = index;
+            _visited[index] = true;
+          });
+        },
+        backgroundColor: Colors.white,
+        selectedItemColor: const Color(0xFFED3973),
+        unselectedItemColor: const Color(0xFF94A3B8),
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        selectedFontSize: 0,
+        unselectedFontSize: 0,
+        type: BottomNavigationBarType.fixed,
+        elevation: 8,
+        items: [
+          BottomNavigationBarItem(
+            icon: _buildInactiveItem(PhosphorIconsRegular.cookingPot, 'Order'),
+            activeIcon: _buildGradientItem(PhosphorIconsFill.cookingPot, 'Order'),
+            label: 'Order',
           ),
-        ),
+          BottomNavigationBarItem(
+            icon: _buildInactiveItem(PhosphorIconsRegular.forkKnife, 'Menu'),
+            activeIcon: _buildGradientItem(PhosphorIconsFill.forkKnife, 'Menu'),
+            label: 'Menu',
+          ),
+          BottomNavigationBarItem(
+            icon: _buildInactiveItem(PhosphorIconsRegular.listHeart, 'Report'),
+            activeIcon: _buildGradientItem(PhosphorIconsFill.listHeart, 'Report'),
+            label: 'Report',
+          ),
+          BottomNavigationBarItem(
+            icon: _buildInactiveItem(PhosphorIconsRegular.storefront, 'Profile'),
+            activeIcon: _buildGradientItem(PhosphorIconsFill.storefront, 'Profile'),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }
@@ -314,11 +329,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       },
       child: Container(
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFED3A72), Color(0xFFFB923C)],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
+          gradient: AppColors.primaryGradient,
           borderRadius: BorderRadius.circular(8),
         ),
         padding: const EdgeInsets.all(1.2),
@@ -334,13 +345,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               const PhosphorIcon(
                 PhosphorIconsFill.chartPieSlice,
                 size: 14,
-                color: Color(0xFFED3A72),
+                color: Color(0xFFED3973),
               ),
               const SizedBox(width: 4),
               Text(
                 "Analytics",
                 style: GoogleFonts.poppins(
-                  color: const Color(0xFFED3A72),
+                  color: const Color(0xFFED3973),
                   fontWeight: FontWeight.w600,
                   fontSize: 11,
                 ),

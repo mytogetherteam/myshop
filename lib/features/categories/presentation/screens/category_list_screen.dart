@@ -4,6 +4,7 @@ import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/features/menu/data/models/menu_category_model.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
 import 'package:my_shop/core/presentation/widgets/status_badge.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_switch.dart';
 
 import 'create_category_screen.dart';
 import 'edit_category_screen.dart';
@@ -432,21 +433,9 @@ class _CategoryCard extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          height: 24,
-          child: Transform.scale(
-            scale: 0.7,
-            child: Switch(
-              value: isPublished,
-              onChanged: onPublishStatusChanged,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              activeThumbColor: Colors.white,
-              activeTrackColor: const Color(0xFFED3A72),
-              inactiveThumbColor: Colors.white,
-              inactiveTrackColor: const Color(0xFFE2E8F0),
-              trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
-            ),
-          ),
+        PrimaryGradientSwitch(
+          value: isPublished,
+          onChanged: onPublishStatusChanged,
         ),
         Text(
           isPublished ? 'Published' : 'Draft',

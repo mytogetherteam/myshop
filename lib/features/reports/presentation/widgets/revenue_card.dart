@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
@@ -25,11 +26,7 @@ class RevenueCard extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          colors: [Color(0xFFED3973), Color(0xFFEFA240)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
+        gradient: AppColors.primaryGradient,
         boxShadow: [
           BoxShadow(
             color: const Color(0xFFF0427A).withValues(alpha: 0.3),

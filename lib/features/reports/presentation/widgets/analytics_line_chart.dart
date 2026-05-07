@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 
 class AnalyticsLineChart extends StatefulWidget {
   final List<FlSpot> spots;
@@ -131,7 +132,7 @@ class _AnalyticsLineChartState extends State<AnalyticsLineChart> {
             LineChartBarData(
               spots: _displaySpots,
               isCurved: true,
-              color: const Color(0xFFED3A72),
+              color: AppColors.primary,
               barWidth: 3,
               isStrokeCapRound: true,
               dotData: const FlDotData(show: false),
@@ -139,8 +140,8 @@ class _AnalyticsLineChartState extends State<AnalyticsLineChart> {
                 show: true,
                 gradient: LinearGradient(
                   colors: [
-                    const Color(0xFFED3A72).withValues(alpha: 0.2),
-                    const Color(0xFFED3A72).withValues(alpha: 0.0),
+                    AppColors.primary.withValues(alpha: 0.2),
+                    AppColors.primary.withValues(alpha: 0.0),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,

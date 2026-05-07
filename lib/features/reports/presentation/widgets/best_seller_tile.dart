@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class BestSellerTile extends StatefulWidget {
@@ -119,7 +120,7 @@ class _BestSellerTileState extends State<BestSellerTile>
                       gradient: LinearGradient(
                         colors: widget.isTopThree
                             ? [
-                                const Color(0xFFED3A72),
+                                AppColors.primary,
                                 const Color(0xFFFBB042),
                               ]
                             : [

@@ -5,6 +5,7 @@ import 'package:my_shop/core/data/services/storage_service.dart';
 import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import '../../../../core/presentation/widgets/global_modal.dart';
 import 'package:my_shop/core/presentation/widgets/success_sheet.dart';
+import '../../../../core/presentation/widgets/primary_gradient_button.dart';
 
 class OtpVerificationSheet extends StatefulWidget {
   const OtpVerificationSheet({super.key});
@@ -185,24 +186,12 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
         SizedBox(
           width: double.infinity,
           height: 56,
-          child: ElevatedButton(
-            onPressed: _isLoading ? null : _handleVerify,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFED3973),
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: const Color(0xFFED3973).withValues(alpha: 0.6),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 0,
-            ),
-            child: _isLoading
-                ? const CustomLoadingIndicator(size: 24, color: Colors.white)
-                : Text(
-                    'Verify',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+          child: PrimaryGradientButton(
+            onPressed: _handleVerify,
+            isLoading: _isLoading,
+            text: 'Verify',
+            height: 56,
+            borderRadius: 16,
           ),
         ),
         const SizedBox(height: 24),

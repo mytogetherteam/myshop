@@ -8,6 +8,8 @@ import 'package:my_shop/features/reports/presentation/widgets/best_seller_tile.d
 import 'package:my_shop/features/reports/presentation/widgets/order_history_item.dart';
 import 'package:my_shop/features/reports/presentation/screens/all_order_history_screen.dart';
 import 'package:my_shop/features/reports/presentation/screens/top_selling_items_screen.dart';
+import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:intl/intl.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import '../../data/models/report_model.dart';
@@ -184,10 +186,8 @@ class ReportPageState extends State<ReportPage>
                   CalendarDatePicker2(
                     config: CalendarDatePicker2Config(
                       calendarType: CalendarDatePicker2Type.range,
-                      selectedDayHighlightColor: const Color(0xFFED3A72),
-                      selectedRangeHighlightColor: const Color(
-                        0xFFED3A72,
-                      ).withValues(alpha: 0.25),
+                      selectedDayHighlightColor: AppColors.primary,
+                      selectedRangeHighlightColor: AppColors.primary.withValues(alpha: 0.25),
                       dayBorderRadius: BorderRadius.circular(8),
                       centerAlignModePicker: true,
                       controlsHeight: 50,
@@ -214,7 +214,7 @@ class ReportPageState extends State<ReportPage>
                         fontWeight: FontWeight.w600,
                       ),
                       todayTextStyle: GoogleFonts.poppins(
-                        color: const Color(0xFFED3A72),
+                        color: AppColors.primary,
                         fontWeight: FontWeight.w600,
                       ),
                       firstDate: DateTime(2025, 1, 1),
@@ -250,10 +250,9 @@ class ReportPageState extends State<ReportPage>
                               Navigator.pop(context, tempValues);
                             }
                           },
-                          child: Text(
+                          child: const GradientText(
                             "OK",
-                            style: GoogleFonts.poppins(
-                              color: const Color(0xFFED3A72),
+                            style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 15,
                             ),
@@ -333,7 +332,7 @@ class ReportPageState extends State<ReportPage>
           Expanded(
             child: RefreshIndicator(
               onRefresh: _loadData,
-              color: const Color(0xFFED3A72),
+              color: AppColors.primary,
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: _isLoading ? _buildSkeletons() : _buildContent(),
@@ -349,16 +348,13 @@ class ReportPageState extends State<ReportPage>
     bool isSelected = _tabController.index == index;
     return Tab(
       child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? Colors.transparent : const Color(0xFFE2E8F0),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: isSelected ? AppColors.primaryGradient : null,
+            color: isSelected ? null : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: isSelected ? null : Border.all(color: const Color(0xFFE2E8F0)),
           ),
-        ),
-        child: Material(
-          color: isSelected ? const Color(0xFFED3A72) : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: () {
               if (index == 3) {
@@ -395,18 +391,18 @@ class ReportPageState extends State<ReportPage>
           padding: const EdgeInsets.only(bottom: 16),
           child: Row(
             children: [
-              const PhosphorIcon(
-                PhosphorIconsRegular.calendar,
-                size: 20,
-                color: Color(0xFFED3A72),
+              const GradientWidget(
+                child: PhosphorIcon(
+                  PhosphorIconsRegular.calendar,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 10),
-              Text(
+              GradientText(
                 "${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.start)} - ${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.end)}",
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFFED3A72),
                 ),
               ),
             ],
@@ -498,14 +494,14 @@ class ReportPageState extends State<ReportPage>
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFFED3A72),
+                      color: AppColors.primary,
                     ),
                   ),
                   const SizedBox(width: 4),
                   const PhosphorIcon(
                     PhosphorIconsRegular.arrowRight,
                     size: 16,
-                    color: Color(0xFFED3A72),
+                    color: AppColors.primary,
                   ),
                 ],
               ),
@@ -564,14 +560,14 @@ class ReportPageState extends State<ReportPage>
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFFED3A72),
+                      color: AppColors.primary,
                     ),
                   ),
                   const SizedBox(width: 4),
                   const PhosphorIcon(
                     PhosphorIconsRegular.arrowRight,
                     size: 16,
-                    color: Color(0xFFED3A72),
+                    color: AppColors.primary,
                   ),
                 ],
               ),

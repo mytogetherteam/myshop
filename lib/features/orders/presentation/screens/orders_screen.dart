@@ -6,6 +6,9 @@ import 'package:my_shop/features/orders/presentation/widgets/order_card.dart';
 import 'dart:async';
 import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
+import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -120,9 +123,9 @@ class OrdersScreenState extends State<OrdersScreen>
               isScrollable: true,
               tabAlignment: TabAlignment.start,
               labelPadding: const EdgeInsets.symmetric(horizontal: 16),
-              labelColor: const Color(0xFFED3A72),
+              labelColor: AppColors.primary,
               unselectedLabelColor: const Color(0xFF94A3B8),
-              indicatorColor: const Color(0xFFED3A72),
+              indicatorColor: AppColors.primary,
               indicatorSize: TabBarIndicatorSize.label,
               labelStyle: GoogleFonts.poppins(
                 fontSize: 14,
@@ -216,15 +219,19 @@ class OrdersScreenState extends State<OrdersScreen>
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(label),
+              isSelected
+                  ? GradientText(
+                      label,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    )
+                  : Text(label),
               if (count > 0) ...[
                 const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? const Color(0xFFED3A72)
-                        : const Color(0xFFE2E8F0),
+                    color: isSelected ? null : const Color(0xFFE2E8F0),
+                    gradient: isSelected ? AppColors.primaryGradient : null,
                     shape: BoxShape.circle,
                   ),
                   child: Text(
@@ -459,12 +466,11 @@ class _OrderListTabViewState extends State<OrderListTabView>
               ),
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
+            PrimaryGradientButton(
               onPressed: () => _fetchOrders(isRefresh: true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFED3A72),
-              ),
-              child: const Text('Retry', style: TextStyle(color: Colors.white)),
+              text: 'Retry',
+              height: 48,
+              borderRadius: 12,
             ),
           ],
         ),
@@ -508,7 +514,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
             return const Padding(
               padding: EdgeInsets.all(16.0),
               child: Center(
-                child: CircularProgressIndicator(color: Color(0xFFED3A72)),
+                child: CircularProgressIndicator(color: Color(0xFFED3973)),
               ),
             );
           }

@@ -65,10 +65,17 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Delete Payment Method',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 17),
+        title: Row(
+          children: [
+            Image.asset('assets/images/app_logo.png', width: 24, height: 24),
+            const SizedBox(width: 8),
+            Text(
+              'Delete Payment Method',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 16),
+            ),
+          ],
         ),
         content: Text(
           'Are you sure you want to delete "${pm.paymentMethodName}"? This action cannot be undone.',

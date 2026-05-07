@@ -5,6 +5,7 @@ import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart'
 import 'package:my_shop/core/presentation/widgets/global_modal.dart';
 import 'package:my_shop/core/presentation/widgets/success_sheet.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 
 class CreateCategoryScreen extends StatefulWidget {
   const CreateCategoryScreen({super.key});
@@ -90,7 +91,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Successfully requested'),
-            backgroundColor: Color(0xFFED3A72),
+            backgroundColor: Color(0xFFED3973),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -212,32 +213,12 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-            child: SizedBox(
-              width: double.infinity,
+            child: PrimaryGradientButton(
+              onPressed: _saveCategory,
+              isLoading: _isSaving,
+              text: 'Create Category',
               height: 56,
-              child: ElevatedButton(
-                onPressed: _isSaving ? null : _saveCategory,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFED3A72),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 0,
-                ),
-                child: _isSaving
-                    ? const CustomLoadingIndicator(
-                        size: 24,
-                        color: Colors.white,
-                      )
-                    : Text(
-                        'Create Category',
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-              ),
+              borderRadius: 16,
             ),
           ),
         ),
@@ -272,7 +253,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isSelected
-                      ? const Color(0xFFED3A72)
+                      ? const Color(0xFFED3973)
                       : const Color(0xFFE2E8F0),
                   width: 2,
                 ),

@@ -3,13 +3,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:my_shop/core/notifications/notification_service.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 
 class NotificationPermissionScreen extends StatelessWidget {
   const NotificationPermissionScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = Color(0xFFED3A72);
+    const primaryColor = Color(0xFFED3973);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -56,30 +57,17 @@ class NotificationPermissionScreen extends StatelessWidget {
               // Action Buttons
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    await NotificationService().requestSystemPermission();
-                    if (context.mounted) {
-                      Navigator.pushReplacementNamed(context, '/navigation');
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    'Allow Notifications',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+          child: PrimaryGradientButton(
+            onPressed: () async {
+              await NotificationService().requestSystemPermission();
+              if (context.mounted) {
+                Navigator.pushReplacementNamed(context, '/navigation');
+              }
+            },
+            text: 'Allow Notifications',
+            height: 56,
+            borderRadius: 16,
+          ),
               ),
               const SizedBox(height: 12),
               SizedBox(

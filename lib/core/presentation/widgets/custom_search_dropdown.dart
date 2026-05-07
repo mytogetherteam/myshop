@@ -214,7 +214,7 @@ class _SearchBottomSheetState<T> extends State<_SearchBottomSheet<T>> {
                     style: GoogleFonts.poppins(
                       fontSize: 15,
                       color: isSelected
-                          ? const Color(0xFFED3A72)
+                          ? const Color(0xFFED3973)
                           : const Color(0xFF1E293B),
                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                     ),

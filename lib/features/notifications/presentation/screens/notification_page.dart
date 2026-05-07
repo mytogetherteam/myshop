@@ -251,7 +251,7 @@ class _NotificationPageState extends State<NotificationPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
-          color: noti.isRead ? Colors.white : const Color(0xFFED3A72).withValues(alpha: 0.04),
+          color: noti.isRead ? Colors.white : const Color(0xFFED3973).withValues(alpha: 0.04),
           border: const Border(
             bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1),
           ),
@@ -319,7 +319,7 @@ class _NotificationPageState extends State<NotificationPage> {
                 width: 8,
                 height: 8,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFED3A72),
+                  color: Color(0xFFED3973),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -394,7 +394,7 @@ class _NotificationPageState extends State<NotificationPage> {
     if (_isCancelMessage(noti.title, noti.body)) {
       return const Color(0xFFEF4444);
     }
-    return const Color(0xFFED3A72); // Primary for all other status icons
+    return const Color(0xFFED3973); // Primary for all other status icons
   }
 
   Color _getIconBgColor(NotificationModel noti) {

@@ -13,6 +13,9 @@ import '../../data/services/order_service.dart';
 import '../widgets/status_progress_indicator.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
+import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 
 
 class OrderDetailScreen extends StatefulWidget {
@@ -147,6 +150,32 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     });
   }
 
+  void _showDemoDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: Row(
+          children: [
+            Image.asset('assets/images/app_logo.png', width: 24, height: 24),
+            const SizedBox(width: 8),
+            Text('MyTogether', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 16)),
+          ],
+        ),
+        content: Text(
+          'This feature is currently unavailable in demo app.',
+          style: GoogleFonts.poppins(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: AppColors.primary)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _runOrderAction({
     required Future<dynamic> Function() action,
     String? errorMessage,
@@ -225,7 +254,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final reason = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Revise Payment', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+        backgroundColor: Colors.white,
+        title: Row(
+          children: [
+            Image.asset('assets/images/app_logo.png', width: 24, height: 24),
+            const SizedBox(width: 8),
+            Text('Revise Payment', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 16)),
+          ],
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -251,7 +287,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Color(0xFFED3A72)),
+                  borderSide: BorderSide(color: AppColors.primary),
                 ),
               ),
             ),
@@ -268,7 +304,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 Navigator.pop(context, reasonController.text.trim());
               }
             },
-            child: Text('Submit', style: GoogleFonts.poppins(color: const Color(0xFFED3A72), fontWeight: FontWeight.w600)),
+            child: GradientText('Submit', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -439,7 +475,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   ButtonStyle _getPrimaryButtonStyle() {
     return ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xFFED3A72),
+      backgroundColor: AppColors.primary,
       foregroundColor: Colors.white,
       disabledBackgroundColor: const Color(0xFFF1F5F9),
       disabledForegroundColor: const Color(0xFF94A3B8),
@@ -453,7 +489,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   ButtonStyle _getSecondaryButtonStyle() {
     return ElevatedButton.styleFrom(
-      foregroundColor: const Color(0xFFED3A72),
+      foregroundColor: AppColors.primary,
       backgroundColor: const Color(0xFFFFF1F2),
       elevation: 0,
       minimumSize: const Size(0, 54),
@@ -507,24 +543,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 fontWeight: FontWeight.w500,
                 color: _currentOrder.status == 'CANCELLED' 
                     ? const Color(0xFFEF4444) 
-                    : const Color(0xFFED3A72),
+                    : AppColors.primary,
               ),
             ),
           ],
         ),
-        actions: [
-          TextButton.icon(
-            onPressed: () {},
-            icon: const Icon(PhosphorIconsRegular.printer, size: 20, color: Color(0xFF94A3B8)),
-            label: Text(
-              'Print',
-              style: GoogleFonts.poppins(
-                color: const Color(0xFF64748B),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
+        actions: const [
+          SizedBox(width: 8),
         ],
       ),
       body: _isFirstLoading 
@@ -780,23 +805,22 @@ Widget _buildAnimatedProgress() {
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF1F2),
+        color: AppColors.errorContainer,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFECDD3)),
+        border: Border.all(color: AppColors.errorLight),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(PhosphorIconsFill.smileySad, color: Color(0xFFEF4444), size: 24),
+              const Icon(PhosphorIconsFill.smileySad, color: AppColors.error, size: 24),
               const SizedBox(width: 10),
-              Text(
+              GradientText(
                 'Order Cancelled',
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFFBE123C),
                 ),
               ),
             ],
@@ -818,7 +842,7 @@ Widget _buildAnimatedProgress() {
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF9F1239),
+                    color: AppColors.error,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -828,7 +852,7 @@ Widget _buildAnimatedProgress() {
                       : 'Reason not specified',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
-                    color: const Color(0xFF9F1239),
+                    color: AppColors.error,
                     height: 1.5,
                   ),
                 ),
@@ -848,7 +872,7 @@ Widget _buildAnimatedProgress() {
           height: 56,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: const Color(0xFFF1F5F9),
+            color: AppColors.surfaceVariant,
             image: _currentOrder.customerAvatar != null
                 ? DecorationImage(
                     image: NetworkImage(_currentOrder.customerAvatar!),
@@ -857,7 +881,7 @@ Widget _buildAnimatedProgress() {
                 : null,
           ),
           child: _currentOrder.customerAvatar == null
-              ? const Icon(PhosphorIconsRegular.user, color: Color(0xFF94A3B8))
+              ? const Icon(PhosphorIconsRegular.user, color: AppColors.outline)
               : null,
         ),
         const SizedBox(width: 12),
@@ -870,7 +894,6 @@ Widget _buildAnimatedProgress() {
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF1E293B),
                 ),
               ),
               if (_currentOrder.queueNo > 0)
@@ -879,7 +902,7 @@ Widget _buildAnimatedProgress() {
                   style: GoogleFonts.poppins(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF64748B),
+                    color: AppColors.onSurfaceVariant,
                   ),
                 ),
             ],
@@ -893,14 +916,17 @@ Widget _buildAnimatedProgress() {
   }
 
   Widget _buildCircularIcon(IconData icon) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        color: Color(0xFFF1F5F9),
+    return GestureDetector(
+      onTap: _showDemoDialog,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.surfaceVariant,
+        ),
+        child: Icon(icon, color: AppColors.onSurface, size: 20),
       ),
-      child: Icon(icon, color: const Color(0xFF1E293B), size: 20),
     );
   }
 
@@ -916,7 +942,7 @@ Widget _buildAnimatedProgress() {
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF1E293B),
+                color: AppColors.onSurface,
               ),
             ),
             GestureDetector(
@@ -925,7 +951,7 @@ Widget _buildAnimatedProgress() {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Address copied to clipboard'),
-                    backgroundColor: Color(0xFFED3A72),
+                    backgroundColor: AppColors.primary,
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
@@ -933,21 +959,20 @@ Widget _buildAnimatedProgress() {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFF1F2),
+                  color: AppColors.errorContainer,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFFECDD3)),
+                  border: Border.all(color: AppColors.errorLight),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(PhosphorIconsRegular.copy, size: 14, color: Color(0xFFED3A72)),
+                    GradientWidget(child: const Icon(PhosphorIconsRegular.copy, size: 14)),
                     const SizedBox(width: 4),
-                    Text(
+                    GradientText(
                       'Copy',
                       style: GoogleFonts.poppins(
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFFED3A72),
                       ),
                     ),
                   ],
@@ -961,7 +986,7 @@ Widget _buildAnimatedProgress() {
           _currentOrder.deliveryAddressDetail,
           style: GoogleFonts.poppins(
             fontSize: 14,
-            color: const Color(0xFF1E293B),
+            color: AppColors.onSurface,
             height: 1.5,
           ),
         ),
@@ -972,7 +997,7 @@ Widget _buildAnimatedProgress() {
               '${_currentOrder.deliveryAddress?.buildingName ?? ''} ${_currentOrder.deliveryAddress?.floor != null ? "(Floor: ${_currentOrder.deliveryAddress!.floor})" : ""}',
               style: GoogleFonts.poppins(
                 fontSize: 13,
-                color: const Color(0xFF64748B),
+                color: AppColors.onSurfaceVariant,
               ),
             ),
           ),
@@ -981,20 +1006,20 @@ Widget _buildAnimatedProgress() {
             margin: const EdgeInsets.only(top: 8),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: AppColors.surfaceVariant,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: AppColors.outlineVariant),
             ),
             child: Row(
               children: [
-                const Icon(PhosphorIconsRegular.note, size: 16, color: Color(0xFF64748B)),
+                const Icon(PhosphorIconsRegular.note, size: 16, color: AppColors.onSurfaceVariant),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     _currentOrder.deliveryAddress!.note!,
                     style: GoogleFonts.poppins(
                       fontSize: 13,
-                      color: const Color(0xFF64748B),
+                      color: AppColors.onSurfaceVariant,
                     ),
                   ),
                 ),
@@ -1014,19 +1039,19 @@ Widget _buildAnimatedProgress() {
       margin: const EdgeInsets.only(bottom: 24),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFEF2F2),
+        color: AppColors.errorContainer,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFECDD3)),
+        border: Border.all(color: AppColors.errorLight),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: const BoxDecoration(
-              color: Color(0xFFFEE2E2),
+              color: AppColors.errorContainer,
               shape: BoxShape.circle,
             ),
-            child: const Icon(PhosphorIconsRegular.calendarCheck, color: Color(0xFFED3A72), size: 20),
+            child: const GradientWidget(child: Icon(PhosphorIconsRegular.calendarCheck, size: 20)),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1038,14 +1063,14 @@ Widget _buildAnimatedProgress() {
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF991B1B),
+                    color: AppColors.error,
                   ),
                 ),
                 Text(
                   timeStr,
                   style: GoogleFonts.poppins(
                     fontSize: 13,
-                    color: const Color(0xFFB91C1C),
+                    color: AppColors.error,
                   ),
                 ),
               ],
@@ -1061,7 +1086,7 @@ Widget _buildAnimatedProgress() {
       margin: const EdgeInsets.only(bottom: 24),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: AppColors.surfaceVariant,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -1072,13 +1097,13 @@ Widget _buildAnimatedProgress() {
             style: GoogleFonts.poppins(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF1E293B),
+              color: AppColors.onSurface,
             ),
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              const Icon(PhosphorIconsRegular.bicycle, color: Color(0xFF64748B), size: 24),
+              const Icon(PhosphorIconsRegular.bicycle, color: AppColors.onSurfaceVariant, size: 24),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -1089,7 +1114,7 @@ Widget _buildAnimatedProgress() {
                       style: GoogleFonts.poppins(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF1E293B),
+                        color: AppColors.onSurface,
                       ),
                     ),
                     if (_currentOrder.riderPhone != null)
@@ -1097,7 +1122,7 @@ Widget _buildAnimatedProgress() {
                         _currentOrder.riderPhone!,
                         style: GoogleFonts.poppins(
                           fontSize: 13,
-                          color: const Color(0xFF64748B),
+                          color: AppColors.onSurfaceVariant,
                         ),
                       ),
                   ],
@@ -1121,7 +1146,7 @@ Widget _buildAnimatedProgress() {
           style: GoogleFonts.poppins(
             fontSize: 16,
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF1E293B),
+            color: AppColors.onSurface,
           ),
         ),
         const SizedBox(height: 16),
@@ -1129,9 +1154,9 @@ Widget _buildAnimatedProgress() {
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: const Color(0xFFFFF7ED),
+            color: AppColors.warningContainer,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFFED7AA)),
+            border: Border.all(color: AppColors.warningLight),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1139,12 +1164,11 @@ Widget _buildAnimatedProgress() {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    mod.itemName,
+                  GradientText(
+                    'Update',
                     style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF9A3412),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   Text(
@@ -1199,16 +1223,19 @@ Widget _buildAnimatedProgress() {
                 color: const Color(0xFF1E293B),
               ),
             ),
-            if (_currentOrder.status != 'CANCELLED')
+            if (_currentOrder.status == 'PENDING' || 
+                _currentOrder.status == 'CONFIRMED' || 
+                _currentOrder.status == 'PAYMENT_SLIP_REQUESTED' ||
+                _currentOrder.status == 'PAYMENT_UPLOADED')
               TextButton.icon(
-                onPressed: () {},
-                icon: const Icon(PhosphorIconsRegular.pencilSimple, size: 16, color: Color(0xFFED3A72)),
+                onPressed: _showDemoDialog,
+                icon: const GradientWidget(child: Icon(PhosphorIconsRegular.pencilSimple, size: 16)),
                 label: Text(
                   'Edit order',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFFED3A72),
+                    color: const Color(0xFFED3973),
                   ),
                 ),
               ),
@@ -1342,7 +1369,7 @@ Widget _buildAnimatedProgress() {
         const SizedBox(height: 12),
         Row(
           children: [
-            const Icon(PhosphorIconsRegular.bicycle, color: Color(0xFFED3A72), size: 20),
+            const GradientWidget(child: Icon(PhosphorIconsRegular.bicycle, size: 20)),
             const SizedBox(width: 8),
             Text(
               _currentOrder.deliveryFee > 0 ? 'Delivery Fee' : 'Est. Amount',
@@ -1373,7 +1400,7 @@ Widget _buildAnimatedProgress() {
               style: GoogleFonts.poppins(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFFED3A72),
+                color: const Color(0xFFED3973),
               ),
             ),
             const Icon(Icons.chevron_right, color: Color(0xFF94A3B8), size: 20),
@@ -1473,30 +1500,34 @@ Widget _buildAnimatedProgress() {
   }
 
   Widget _buildLaunchButton(String name, String iconPath, Color color) {
-    return Column(
-      children: [
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(12),
+    return InkWell(
+      onTap: _showDemoDialog,
+      borderRadius: BorderRadius.circular(12),
+      child: Column(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: name == 'Bolt'
+                  ? const Text('Bolt', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18))
+                  : const Text('Grab', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+            ),
           ),
-          child: Center(
-            child: name == 'Bolt'
-                ? const Text('Bolt', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18))
-                : const Text('Grab', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+          const SizedBox(height: 8),
+          Text(
+            'Open $name',
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              color: const Color(0xFF64748B),
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Open $name',
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            color: const Color(0xFF64748B),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -1588,31 +1619,26 @@ Widget _buildAnimatedProgress() {
           ],
           Expanded(
             flex: 2,
-            child: ElevatedButton(
+            child: PrimaryGradientButton(
               onPressed: onPressed,
-              style: _getPrimaryButtonStyle(),
-              child: _isUpdating
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CustomLoadingIndicator(size: 20, color: Colors.white),
+              isLoading: _isUpdating,
+              child: (_currentOrder.status == 'CONFIRMED' || _currentOrder.status == 'PAYMENT_SLIP_REQUESTED')
+                  ? AnimatedEllipsisText(
+                      text: mainButtonText,
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
                     )
-                  : (_currentOrder.status == 'CONFIRMED' || _currentOrder.status == 'PAYMENT_SLIP_REQUESTED')
-                      ? AnimatedEllipsisText(
-                          text: mainButtonText,
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                            color: const Color(0xFF94A3B8),
-                          ),
-                        )
-                      : Text(
-                          mainButtonText,
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
+                  : Text(
+                      mainButtonText,
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                    ),
             ),
           ),
         ],
@@ -1624,12 +1650,8 @@ Widget _buildAnimatedProgress() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 36),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFED3973), Color(0xFFEFA240)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
+      decoration: BoxDecoration(
+        gradient: AppColors.primaryGradient,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1770,7 +1792,7 @@ Widget _buildAnimatedProgress() {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFED3A72)),
+              borderSide: BorderSide(color: AppColors.primary),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),

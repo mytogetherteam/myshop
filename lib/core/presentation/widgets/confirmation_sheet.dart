@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 
 class ConfirmationSheet extends StatelessWidget {
   final String title;
@@ -60,26 +61,14 @@ class ConfirmationSheet extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           height: 60,
-          child: ElevatedButton(
+          child: PrimaryGradientButton(
             onPressed: () {
               Navigator.pop(context);
               onConfirm();
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: confirmColor ?? const Color(0xFFED3973),
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-              ),
-            ),
-            child: Text(
-              confirmLabel,
-              style: GoogleFonts.poppins(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-            ),
+            text: confirmLabel,
+            height: 60,
+            borderRadius: 18,
           ),
         ),
         const SizedBox(height: 12),

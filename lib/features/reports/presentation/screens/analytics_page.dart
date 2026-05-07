@@ -8,6 +8,8 @@ import 'package:my_shop/features/reports/presentation/widgets/analytics_line_cha
 import 'package:my_shop/features/reports/presentation/widgets/progress_bar_item.dart';
 import 'package:intl/intl.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
+import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 
 class AnalyticsPage extends StatefulWidget {
   const AnalyticsPage({super.key});
@@ -203,10 +205,8 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                   CalendarDatePicker2(
                     config: CalendarDatePicker2Config(
                       calendarType: CalendarDatePicker2Type.range,
-                      selectedDayHighlightColor: const Color(0xFFED3A72),
-                      selectedRangeHighlightColor: const Color(
-                        0xFFED3A72,
-                      ).withValues(alpha: 0.25),
+                      selectedDayHighlightColor: AppColors.primary,
+                      selectedRangeHighlightColor: AppColors.primary.withValues(alpha: 0.25),
                       dayBorderRadius: BorderRadius.circular(8),
                       centerAlignModePicker: true,
                       controlsHeight: 50,
@@ -233,7 +233,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                         fontWeight: FontWeight.w600,
                       ),
                       todayTextStyle: GoogleFonts.poppins(
-                        color: const Color(0xFFED3A72),
+                        color: AppColors.primary,
                         fontWeight: FontWeight.w600,
                       ),
                       firstDate: DateTime(2026, 1, 1),
@@ -270,10 +270,9 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                               Navigator.pop(context, tempValues);
                             }
                           },
-                          child: Text(
+                          child: const GradientText(
                             "OK",
-                            style: GoogleFonts.poppins(
-                              color: const Color(0xFFED3A72),
+                            style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 15,
                             ),
@@ -397,7 +396,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
           Expanded(
             child: RefreshIndicator(
               onRefresh: _loadData,
-              color: const Color(0xFFED3A72),
+              color: AppColors.primary,
               backgroundColor: Colors.white,
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -414,16 +413,13 @@ class _AnalyticsPageState extends State<AnalyticsPage>
     bool isSelected = _tabController.index == index;
     return Tab(
       child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: isSelected ? Colors.transparent : const Color(0xFFE2E8F0),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: isSelected ? AppColors.primaryGradient : null,
+            color: isSelected ? null : Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: isSelected ? null : Border.all(color: const Color(0xFFE2E8F0)),
           ),
-        ),
-        child: Material(
-          color: isSelected ? const Color(0xFFED3A72) : Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: () {
               if (index == 3) {
@@ -533,18 +529,18 @@ class _AnalyticsPageState extends State<AnalyticsPage>
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Row(
             children: [
-              const PhosphorIcon(
-                PhosphorIconsRegular.calendar,
-                size: 20,
-                color: Color(0xFFED3A72),
+              const GradientWidget(
+                child: PhosphorIcon(
+                  PhosphorIconsRegular.calendar,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 10),
-              Text(
+              GradientText(
                 "${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.start)} - ${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.end)}",
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFFED3A72),
                 ),
               ),
             ],
@@ -565,18 +561,14 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               label: "Last 30days",
               value: "2,764",
               percentage: 0.9,
-              barGradient: const LinearGradient(
-                colors: [Color(0xFFED3A72), Color(0xFFFB923C)],
-              ),
+              barGradient: AppColors.primaryGradient,
             ),
             const SizedBox(height: 16),
             ProgressBarItem(
               label: "Previous 30 days",
               value: "2,003",
               percentage: 0.65,
-              barGradient: const LinearGradient(
-                colors: [Color(0xFFED3A72), Color(0xFFFB923C)],
-              ),
+              barGradient: AppColors.primaryGradient,
             ),
           ],
         ),
@@ -618,7 +610,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
             AnalyticsDonutChart(
               section1Value: newCustomers['organicPercentage'].toDouble(),
               section2Value: newCustomers['adsPercentage'].toDouble(),
-              section1Color: const Color(0xFFED3A72),
+              section1Gradient: AppColors.primaryGradient,
               section2Color: const Color(0xFFFBCFE8),
               section1Label: "Organic",
               section2Label: "Ads / Promotion",
@@ -638,9 +630,10 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                 const SizedBox(width: 32),
                 _buildLegendDot(
                   "Organic",
-                  const Color(0xFFED3A72),
+                  AppColors.primary,
                   "${newCustomers['organicPercentage']}%",
                   "${newCustomers['organic']}",
+                  useGradient: true,
                 ),
               ],
             ),
@@ -661,7 +654,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
             AnalyticsDonutChart(
               section1Value: orderStatus['completedPercentage'].toDouble(),
               section2Value: orderStatus['cancelledPercentage'].toDouble(),
-              section1Color: const Color(0xFFED3A72),
+              section1Gradient: AppColors.primaryGradient,
               section2Color: const Color(0xFFFBCFE8),
               section1Label: "Completed",
               section2Label: "Cancelled",
@@ -681,9 +674,10 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                 const SizedBox(width: 32),
                 _buildLegendDot(
                   "Completed",
-                  const Color(0xFFED3A72),
+                  AppColors.primary,
                   "${orderStatus['completedPercentage']}%",
                   "${orderStatus['completed']}",
+                  useGradient: true,
                 ),
               ],
             ),
@@ -709,9 +703,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                   label: item['label'],
                   value: item['value'],
                   percentage: item['percentage'],
-                  barGradient: const LinearGradient(
-                    colors: [Color(0xFFED3A72), Color(0xFFFB923C)],
-                  ),
+                  barGradient: AppColors.primaryGradient,
                 ),
               );
             }),
@@ -733,7 +725,8 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               children: [
                 _buildSimpleLegendDot(
                   "Returning customers",
-                  const Color(0xFFED3A72),
+                  AppColors.primary,
+                  useGradient: true,
                 ),
                 const SizedBox(width: 16),
                 _buildSimpleLegendDot("New customers", const Color(0xFF22C55E)),
@@ -748,9 +741,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                   label: item['label'],
                   value: item['value'],
                   percentage: item['percentage'],
-                  barGradient: const LinearGradient(
-                    colors: [Color(0xFFED3A72), Color(0xFFFB923C)],
-                  ),
+                  barGradient: AppColors.primaryGradient,
                 ),
               );
             }),
@@ -765,8 +756,9 @@ class _AnalyticsPageState extends State<AnalyticsPage>
     String label,
     Color color,
     String percent,
-    String count,
-  ) {
+    String count, {
+    bool useGradient = false,
+  }) {
     return Column(
       children: [
         Text(
@@ -798,7 +790,11 @@ class _AnalyticsPageState extends State<AnalyticsPage>
             Container(
               width: 8,
               height: 8,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: useGradient ? null : color,
+                gradient: useGradient ? AppColors.primaryGradient : null,
+                shape: BoxShape.circle,
+              ),
             ),
           ],
         ),
@@ -806,13 +802,21 @@ class _AnalyticsPageState extends State<AnalyticsPage>
     );
   }
 
-  Widget _buildSimpleLegendDot(String label, Color color) {
+  Widget _buildSimpleLegendDot(
+    String label,
+    Color color, {
+    bool useGradient = false,
+  }) {
     return Row(
       children: [
         Container(
           width: 8,
           height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          decoration: BoxDecoration(
+            color: useGradient ? null : color,
+            gradient: useGradient ? AppColors.primaryGradient : null,
+            shape: BoxShape.circle,
+          ),
         ),
         const SizedBox(width: 6),
         Text(

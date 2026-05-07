@@ -5,16 +5,19 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_switch.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/core/data/services/image_upload_service.dart';
 import 'package:my_shop/core/presentation/widgets/custom_search_dropdown.dart';
+import 'package:my_shop/core/presentation/widgets/global_modal.dart';
 import '../../data/models/menu_item_model.dart';
 import '../../data/models/menu_category_model.dart';
 import '../../data/services/menu_service.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/core/data/models/master_data_model.dart';
-import 'package:my_shop/core/presentation/widgets/global_modal.dart';
+import 'package:my_shop/core/presentation/widgets/status_badge.dart';
 // import 'package:my_shop/core/presentation/widgets/success_sheet.dart';
 import 'package:my_shop/core/presentation/widgets/confirmation_sheet.dart';
 
@@ -901,12 +904,6 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       child: Column(
         children: [
           _buildPropertySwitch(
-            'Available',
-            _isAvailable,
-            (v) => setState(() => _isAvailable = v),
-          ),
-          const Divider(height: 1, color: Color(0xFFE2E8F0)),
-          _buildPropertySwitch(
             'Popular',
             _isPopular,
             (v) => setState(() => _isPopular = v),
@@ -964,11 +961,9 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               color: const Color(0xFF1E293B),
             ),
           ),
-          Switch(
+          PrimaryGradientSwitch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: const Color(0xFFED3A72),
-            activeTrackColor: const Color(0xFFED3A72).withValues(alpha: 0.2),
           ),
         ],
       ),
@@ -1167,7 +1162,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                       ),
                     ),
                     const Spacer(),
-                    Switch(
+                    PrimaryGradientSwitch(
                       value: variant.isAvailable,
                       onChanged: (v) {
                         setState(() {
@@ -1183,7 +1178,6 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                           );
                         });
                       },
-                      activeThumbColor: const Color(0xFFED3A72),
                     ),
                   ],
                 ),
@@ -1390,7 +1384,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Switch(
+                          PrimaryGradientSwitch(
                             value: group.isAvailable,
                             onChanged: (v) {
                               setState(() {
@@ -1400,7 +1394,6 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                                 );
                               });
                             },
-                            activeThumbColor: const Color(0xFFED3A72),
                           ),
                         ],
                       ),
@@ -1908,29 +1901,12 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   }
 
   Widget _buildSaveButton() {
-    return SizedBox(
-      width: double.infinity,
+    return PrimaryGradientButton(
+      onPressed: _handleSave,
+      isLoading: _isSaving,
+      text: widget.item == null ? 'Create Item' : 'Update Item',
       height: 56,
-      child: ElevatedButton(
-        onPressed: _isSaving ? null : _handleSave,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFED3A72),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          elevation: 0,
-        ),
-        child: _isSaving
-            ? const CustomLoadingIndicator(size: 24, color: Colors.white)
-            : Text(
-                widget.item == null ? 'Create Item' : 'Update Item',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-      ),
+      borderRadius: 16,
     );
   }
 

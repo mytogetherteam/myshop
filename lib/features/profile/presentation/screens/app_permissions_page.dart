@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 
 class AppPermissionsPage extends StatefulWidget {
   const AppPermissionsPage({super.key});
@@ -164,7 +165,7 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
                 child: PhosphorIcon(
                   icon,
                   size: 24,
-                  color: isGranted ? const Color(0xFFED3A72) : const Color(0xFF94A3B8),
+                  color: isGranted ? const Color(0xFFED3973) : const Color(0xFF94A3B8),
                 ),
               ),
               const SizedBox(width: 16),
@@ -224,24 +225,11 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
           const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
+            child: PrimaryGradientButton(
               onPressed: onActionPressed,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF1F5F9),
-                foregroundColor: const Color(0xFF1E293B),
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                isGranted ? 'Open Settings' : 'Allow Access',
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              text: isGranted ? 'Open Settings' : 'Allow Access',
+              height: 48,
+              borderRadius: 12,
             ),
           ),
         ],

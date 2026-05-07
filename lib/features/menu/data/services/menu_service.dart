@@ -514,8 +514,7 @@ class MenuService {
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
-        final Map<String, dynamic> data = response.data;
-        return data['success'] == true;
+        return true;
       }
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.toggleAvailability');
@@ -528,17 +527,16 @@ class MenuService {
   Future<bool> toggleMenuItemPublishStatus(int itemId, String status) async {
     try {
       final url = '$_menuItemsPath/$itemId/publish';
-      debugPrint('PATCH REQUEST: $url, Query: {status: $status}');
+      debugPrint('PATCH REQUEST: $url, Data: {status: $status}');
       final response = await ApiClient().dio.patch(
             url,
-            queryParameters: {'publishStatus': status},
+            data: {'status': status},
           );
 
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
-        final Map<String, dynamic> data = response.data;
-        return data['success'] == true;
+        return true;
       }
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.toggleMenuItemPublishStatus');

@@ -65,7 +65,7 @@ class _CustomLoadingIndicatorState extends State<CustomLoadingIndicator>
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = widget.color ?? const Color(0xFFED3A72);
+    final primaryColor = widget.color ?? const Color(0xFFED3973);
     final dotSize = widget.size / 2.2;
     final spacing = widget.size * 0.1;
 

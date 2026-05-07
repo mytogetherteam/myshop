@@ -190,7 +190,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
     final globalIndex = _items.indexWhere((i) => i.id == item.id);
     if (index == -1 || globalIndex == -1) return;
 
-    final newStatus = isPublished ? 'PUBLISHED' : 'UNPUBLISHED';
+    final newStatus = isPublished ? 'PUBLISHED' : 'DRAFT';
 
     // Optimistic Update
     setState(() {
@@ -306,7 +306,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                   : RefreshIndicator(
                       key: const ValueKey('data'),
                       onRefresh: () => _fetchItems(isRefresh: true),
-                      color: const Color(0xFFED3A72),
+                      color: const Color(0xFFED3973),
                       child: ListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.only(bottom: 100),
@@ -318,7 +318,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                               padding: EdgeInsets.all(16.0),
                               child: Center(
                                 child: CircularProgressIndicator(
-                                  color: Color(0xFFED3A72),
+                                  color: Color(0xFFED3973),
                                 ),
                               ),
                             );
@@ -358,7 +358,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
           );
           if (result == true) _fetchItems(isRefresh: true);
         },
-        backgroundColor: const Color(0xFFED3A72),
+        backgroundColor: const Color(0xFFED3973),
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: const Icon(Icons.add, color: Colors.white, size: 28),

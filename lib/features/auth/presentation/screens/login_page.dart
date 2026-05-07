@@ -4,6 +4,8 @@ import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart'
 import 'package:my_shop/core/presentation/widgets/app_logo.dart';
 import 'package:my_shop/features/auth/data/services/auth_service.dart';
 import '../../../../core/network/websocket_service.dart';
+import '../../../../core/presentation/widgets/primary_gradient_button.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -204,9 +206,20 @@ class _LoginPageState extends State<LoginPage>
                     // Login Button
                     _buildLoginButton(),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 48),
 
-                    const SizedBox(height: 40),
+                    // Version Info
+                    Center(
+                      child: Text(
+                        'version demo 0.0.1',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: Colors.grey[400],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
@@ -262,7 +275,7 @@ class _LoginPageState extends State<LoginPage>
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFED3973), width: 1.5),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -277,39 +290,10 @@ class _LoginPageState extends State<LoginPage>
   }
 
   Widget _buildLoginButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 54,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _handleLogin,
-        style:
-            ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFED3973),
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: const Color(
-                0xFFED3973,
-              ).withValues(alpha: 0.6),
-              elevation: 0,
-              shadowColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ).copyWith(
-              overlayColor: WidgetStateProperty.all(
-                Colors.white.withValues(alpha: 0.1),
-              ),
-            ),
-        child: _isLoading
-            ? const CustomLoadingIndicator(size: 22, color: Colors.white)
-            : Text(
-                'Login',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.3,
-                ),
-              ),
-      ),
+    return PrimaryGradientButton(
+      text: 'Login',
+      isLoading: _isLoading,
+      onPressed: _handleLogin,
     );
   }
 }

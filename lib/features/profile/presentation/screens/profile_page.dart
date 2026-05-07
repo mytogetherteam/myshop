@@ -8,12 +8,16 @@ import 'package:my_shop/core/presentation/widgets/global_modal.dart';
 import 'package:my_shop/core/presentation/widgets/confirmation_sheet.dart';
 import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_switch.dart';
 import 'edit_shop_profile_page.dart';
 import 'operating_hours_page.dart';
 import 'app_permissions_page.dart';
 import 'change_password_page.dart';
 import 'reviews_page.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
+import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'accepted_payment_page.dart';
+import 'package:my_shop/features/orders/presentation/screens/orders_screen.dart';
 
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
@@ -126,7 +130,7 @@ class ProfilePageState extends State<ProfilePage>
       // AppBar removed, handled by global AppBar
       body: RefreshIndicator(
         onRefresh: _handleRefresh,
-        color: const Color(0xFFED3973),
+        color: AppColors.primary,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
@@ -137,6 +141,17 @@ class ProfilePageState extends State<ProfilePage>
               _buildShopSection(),
               const SizedBox(height: 8),
               _buildMenuItems(),
+              const SizedBox(height: 32),
+              Center(
+                child: Text(
+                  'version demo 0.0.1',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: const Color(0xFF94A3B8),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
               const SizedBox(height: 40),
             ],
           ),
@@ -184,15 +199,13 @@ class ProfilePageState extends State<ProfilePage>
               height: 24,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFED3973)),
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
             )
           else
-            CupertinoSwitch(
+            PrimaryGradientSwitch(
               value: value,
               onChanged: onChanged,
-              activeTrackColor: const Color(0xFFED3973),
-              inactiveTrackColor: const Color(0xFFE2E8F0),
             ),
         ],
       ),
@@ -215,18 +228,28 @@ class ProfilePageState extends State<ProfilePage>
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: const Color(0xFFED3973).withValues(alpha: 0.1),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.primary.withValues(alpha: 0.1),
+                  const Color(0xFFFB923C).withValues(alpha: 0.1),
+                ],
+              ),
               shape: BoxShape.circle,
             ),
             child: Center(
-              child: Text(
-                (_userInfo?.fullName.isNotEmpty == true)
-                    ? _userInfo!.fullName[0].toUpperCase()
-                    : 'A',
-                style: GoogleFonts.poppins(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFFED3973),
+              child: ShaderMask(
+                shaderCallback: (bounds) => AppColors.primaryGradient.createShader(bounds),
+                child: Text(
+                  (_userInfo?.fullName.isNotEmpty == true)
+                      ? _userInfo!.fullName[0].toUpperCase()
+                      : 'A',
+                  style: GoogleFonts.poppins(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -384,7 +407,7 @@ class ProfilePageState extends State<ProfilePage>
         _buildMenuOption(
           icon: PhosphorIconsRegular.signOut,
           title: 'Logout',
-          titleColor: const Color(0xFFED3973),
+          isDestructive: true,
           onTap: _handleLogout,
           showArrow: false,
         ),
@@ -398,6 +421,7 @@ class ProfilePageState extends State<ProfilePage>
     required VoidCallback onTap,
     Color? titleColor,
     bool showArrow = true,
+    bool isDestructive = false,
   }) {
     return InkWell(
       onTap: onTap,
@@ -411,21 +435,43 @@ class ProfilePageState extends State<ProfilePage>
         ),
         child: Row(
           children: [
-            PhosphorIcon(
-              icon,
-              size: 24,
-              color: titleColor ?? const Color(0xFF475569),
-            ),
+            if (isDestructive)
+              ShaderMask(
+                shaderCallback: (bounds) => AppColors.primaryGradient.createShader(bounds),
+                child: PhosphorIcon(
+                  icon,
+                  size: 24,
+                  color: Colors.white,
+                ),
+              )
+            else
+              PhosphorIcon(
+                icon,
+                size: 24,
+                color: titleColor ?? const Color(0xFF475569),
+              ),
             const SizedBox(width: 16),
             Expanded(
-              child: Text(
-                title,
-                style: GoogleFonts.poppins(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: titleColor ?? const Color(0xFF1E293B),
-                ),
-              ),
+              child: isDestructive
+                  ? ShaderMask(
+                      shaderCallback: (bounds) => AppColors.primaryGradient.createShader(bounds),
+                      child: Text(
+                        title,
+                        style: GoogleFonts.poppins(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                    )
+                  : Text(
+                      title,
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: titleColor ?? const Color(0xFF1E293B),
+                      ),
+                    ),
             ),
             if (showArrow)
               const PhosphorIcon(

@@ -6,8 +6,11 @@ import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import 'package:my_shop/features/profile/presentation/screens/edit_shop_profile_page.dart';
 import 'package:my_shop/features/profile/presentation/screens/operating_hours_page.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
+import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 
 
 // ---------------------------------------------------------------------------
@@ -217,12 +220,11 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                 style: GoogleFonts.poppins(color: const Color(0xFF475569)),
               ),
               const SizedBox(height: 16),
-              ElevatedButton(
+              PrimaryGradientButton(
                 onPressed: _loadProfile,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFED3973),
-                ),
-                child: const Text('Retry'),
+                text: 'Retry',
+                height: 48,
+                borderRadius: 12,
               ),
             ],
           ),
@@ -263,9 +265,9 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                 delegate: _TabHeaderDelegate(
                   TabBar(
                     controller: _tabController,
-                    labelColor: const Color(0xFFED3973),
+                    labelColor: AppColors.primary,
                     unselectedLabelColor: const Color(0xFF64748B),
-                    indicatorColor: const Color(0xFFED3973),
+                    indicatorColor: AppColors.primary,
                     indicatorWeight: 2,
                     labelStyle: GoogleFonts.poppins(
                       fontSize: 13,
@@ -638,7 +640,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
           Row(
             children: [
               Expanded(
-                child: FilledButton.icon(
+                child: PrimaryGradientButton(
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -647,27 +649,26 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                       ),
                     ).then((_) => _loadProfile());
                   },
-                  icon: const PhosphorIcon(
-                    PhosphorIconsRegular.clock,
-                    size: 18,
-                    color: Colors.white,
-                  ),
-                  label: Text(
-                    'Operating Hours',
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFED3973),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 8,
-                    ),
+                  height: 48,
+                  borderRadius: 10,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const PhosphorIcon(
+                        PhosphorIconsRegular.clock,
+                        size: 18,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Operating Hours',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -805,7 +806,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
     return Expanded(
       child: Column(
         children: [
-          PhosphorIcon(icon, size: 18, color: const Color(0xFFED3973)),
+          GradientWidget(child: PhosphorIcon(icon, size: 18)),
           const SizedBox(height: 4),
           Text(
             value,
@@ -840,7 +841,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
           style: GoogleFonts.poppins(
             fontSize: 28,
             fontWeight: FontWeight.bold,
-            color: const Color(0xFFED3973),
+            color: AppColors.primary,
           ),
         ),
       ),
@@ -1017,7 +1018,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFFED3973),
+                      color: AppColors.primary,
                     ),
                   ),
                 ],

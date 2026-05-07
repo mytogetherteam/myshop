@@ -4,6 +4,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../data/services/profile_service.dart';
 import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import '../../../../core/presentation/widgets/skeleton.dart';
+import '../../../../core/presentation/widgets/primary_gradient_button.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});
@@ -192,25 +193,12 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               child: SizedBox(
                 width: double.infinity,
                 height: 56,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _handleChangePassword,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFED3973),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: _isLoading
-                      ? const CustomLoadingIndicator(size: 24, color: Colors.white)
-                      : Text(
-                          'Change Password',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
+                child: PrimaryGradientButton(
+                  onPressed: _handleChangePassword,
+                  isLoading: _isLoading,
+                  text: 'Change Password',
+                  height: 56,
+                  borderRadius: 16,
                 ),
               ),
             ),

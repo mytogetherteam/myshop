@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:my_shop/features/orders/data/models/order_model.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 
 class OrderWarningDialog extends StatelessWidget {
   final String message;
@@ -20,8 +21,8 @@ class OrderWarningDialog extends StatelessWidget {
     final bool isPaymentUploaded = order.status == 'PAYMENT_UPLOADED';
 
     // Theme values
-    final Color primaryColor = isPaymentUploaded ? const Color(0xFFED3A72) : const Color(0xFFED3A72);
-    final Color gradientSecondary = isPaymentUploaded ? const Color(0xFFED3A72) : const Color(0xFFC2185B);
+    final Color primaryColor = isPaymentUploaded ? const Color(0xFFED3973) : const Color(0xFFED3973);
+    final Color gradientSecondary = isPaymentUploaded ? const Color(0xFFED3973) : const Color(0xFFC2185B);
     final Color backgroundColor = isPaymentUploaded ? const Color(0xFFF9EAEB) : Colors.white;
     final Color alertBoxColor = isPaymentUploaded ? const Color(0xFFF6D8DE) : primaryColor.withValues(alpha: 0.05);
     final Color alertBoxBorderColor = isPaymentUploaded ? const Color(0xFFE5BBC4) : primaryColor.withValues(alpha: 0.1);
@@ -158,24 +159,11 @@ class OrderWarningDialog extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       flex: 2,
-                      child: ElevatedButton(
+                      child: PrimaryGradientButton(
                         onPressed: onTakeAction,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          'VIEW ORDER',
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 15,
-                          ),
-                        ),
+                        text: 'VIEW ORDER',
+                        height: 56,
+                        borderRadius: 12,
                       ),
                     ),
                   ],

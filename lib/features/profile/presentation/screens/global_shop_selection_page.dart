@@ -5,6 +5,7 @@ import 'package:my_shop/core/data/services/storage_service.dart';
 import '../../data/models/shop_model.dart';
 import '../../data/services/shop_service.dart';
 import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
 import 'package:my_shop/features/menu/data/services/menu_service.dart';
 
@@ -294,18 +295,11 @@ class _GlobalShopSelectionPageState extends State<GlobalShopSelectionPage> {
               style: GoogleFonts.poppins(color: const Color(0xFF1E293B)),
             ),
             const SizedBox(height: 24),
-            ElevatedButton(
+            PrimaryGradientButton(
               onPressed: _loadShops,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFED3973),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                'Retry',
-                style: GoogleFonts.poppins(color: Colors.white),
-              ),
+              text: 'Retry',
+              height: 48,
+              borderRadius: 12,
             ),
           ],
         ),

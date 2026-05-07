@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_switch.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:my_shop/core/presentation/widgets/confirmation_sheet.dart';
 import 'package:my_shop/core/presentation/widgets/global_modal.dart';
@@ -13,10 +14,13 @@ import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:image_picker/image_picker.dart';
 
 
+import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import '../widgets/password_confirmation_sheet.dart';
 import 'package:my_shop/core/presentation/widgets/success_sheet.dart';
 import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import '../../../../core/data/services/image_upload_service.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
+import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 
 class EditPaymentPage extends StatefulWidget {
   final PaymentMethod paymentMethod;
@@ -203,7 +207,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Successfully requested'),
-            backgroundColor: Color(0xFFED3A72),
+            backgroundColor: AppColors.primary,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -256,9 +260,10 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
             ),
             const Divider(height: 1),
             ListTile(
-              leading: const Icon(
-                Icons.photo_library_outlined,
-                color: Color(0xFFED3973),
+              leading: const GradientWidget(
+                child: Icon(
+                  Icons.photo_library_outlined,
+                ),
               ),
               title: Text('Choose from Gallery', style: GoogleFonts.poppins()),
               onTap: () async {
@@ -282,9 +287,10 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
             ),
             const Divider(height: 1, indent: 56),
             ListTile(
-              leading: const Icon(
-                Icons.camera_alt_outlined,
-                color: Color(0xFFED3973),
+              leading: const GradientWidget(
+                child: Icon(
+                  Icons.camera_alt_outlined,
+                ),
               ),
               title: Text('Take a Photo', style: GoogleFonts.poppins()),
               onTap: () async {
@@ -412,60 +418,44 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
             child: SizedBox(
               width: double.infinity,
               height: 64,
-              child: ElevatedButton(
-                onPressed: _isSaving
-                    ? null
-                    : () {
-                        if (!_isFormValid()) return;
-
-                        GlobalModal.show(
-                          context: context,
-                          child: PasswordConfirmationSheet(
-                            onConfirm: (password) {
-                              Navigator.pop(context); // Close sheet
-                              _handleUpdate();
-                            },
-                          ),
-                        );
+              child: PrimaryGradientButton(
+                onPressed: () {
+                  if (!_isFormValid()) return;
+                  GlobalModal.show(
+                    context: context,
+                    child: PasswordConfirmationSheet(
+                      onConfirm: (password) {
+                        Navigator.pop(context);
+                        _handleUpdate();
                       },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFED3973),
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: const Color(
-                    0xFFED3973,
-                  ).withValues(alpha: 0.6),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                ),
-                child: _isSaving
-                    ? const CustomLoadingIndicator(
-                        size: 24,
+                    ),
+                  );
+                },
+                isLoading: _isSaving,
+                height: 64,
+                borderRadius: 18,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Update Payment Method',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
                         color: Colors.white,
-                      )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Update Payment Method',
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Changes will take effect after verified',
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.9),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
                       ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Changes will take effect after verified',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -616,7 +606,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                 child: const Icon(
                   Icons.refresh_rounded,
                   size: 20,
-                  color: Color(0xFFED3973),
+                  color: AppColors.primary,
                 ),
               ),
             ),
@@ -714,7 +704,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(
-                color: Color(0xFFED3973),
+                color: AppColors.primary,
                 width: 1.5,
               ),
             ),
@@ -755,9 +745,8 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                 ),
               ),
               const Spacer(),
-              CupertinoSwitch(
+              PrimaryGradientSwitch(
                 value: _isActive,
-                activeTrackColor: const Color(0xFFED3973),
                 onChanged: (v) => setState(() => _isActive = v),
               ),
             ],

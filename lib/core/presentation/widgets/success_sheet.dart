@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 
 class SuccessSheet extends StatefulWidget {
   final VoidCallback? onDone;
@@ -70,33 +71,19 @@ class _SuccessSheetState extends State<SuccessSheet> {
         SizedBox(
           width: double.infinity,
           height: 56,
-          child: ElevatedButton(
+          child: PrimaryGradientButton(
             onPressed: () {
               if (widget.onDone != null) {
                 widget.onDone!();
               } else {
-                // Default behavior: close this sheet AND the parent screen
-                // Important: pass true to signal that a refresh is needed
                 final nav = Navigator.of(context);
-                nav.pop(); // Close sheet
-                nav.pop(true); // Go back with refresh signal
+                nav.pop();
+                nav.pop(true);
               }
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFED3973),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 0,
-            ),
-            child: Text(
-              'Got it',
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
+            text: 'Got it',
+            height: 56,
+            borderRadius: 12,
           ),
         ),
       ],

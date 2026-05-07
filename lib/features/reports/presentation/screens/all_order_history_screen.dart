@@ -293,12 +293,12 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? const Color(0xFFED3A72)
+                            ? const Color(0xFFED3973)
                             : Colors.white,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: isSelected
-                              ? const Color(0xFFED3A72)
+                              ? const Color(0xFFED3973)
                               : const Color(0xFFE2E8F0),
                         ),
                       ),
@@ -324,7 +324,7 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: _loadInitialData,
-              color: const Color(0xFFED3A72),
+              color: const Color(0xFFED3973),
               child: _isLoading
                   ? const Center(
                       child: CustomLoadingIndicator(size: 40),

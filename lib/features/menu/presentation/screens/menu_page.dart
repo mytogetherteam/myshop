@@ -181,7 +181,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
             Expanded(
               child: RefreshIndicator(
                 onRefresh: refresh,
-                color: const Color(0xFFED3A72),
+                color: const Color(0xFFED3973),
 
                 child: SingleChildScrollView(
                   controller: _scrollController,
@@ -223,7 +223,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 24),
                           child: Center(
-                            child: CustomLoadingIndicator(size: 24, color: Color(0xFFED3A72)),
+                            child: CustomLoadingIndicator(size: 24, color: Color(0xFFED3973)),
                           ),
                         ),
                       const SizedBox(height: 20),

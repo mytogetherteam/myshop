@@ -69,7 +69,7 @@ class _NotificationBadgeIconState extends State<NotificationBadgeIcon> {
               child: Container(
                 padding: const EdgeInsets.all(4),
               decoration: const BoxDecoration(
-                color: Color(0xFFED3A72),
+                color: Color(0xFFED3973),
                 shape: BoxShape.circle,
               ),
               constraints: const BoxConstraints(

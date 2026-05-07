@@ -5,6 +5,9 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/features/main_navigation/presentation/screens/main_navigation_screen.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
+import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 
 class OperatingHoursPage extends StatefulWidget {
   const OperatingHoursPage({super.key});
@@ -137,7 +140,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(primary: Color(0xFFED3973)),
+            colorScheme: ColorScheme.light(primary: AppColors.primary),
           ),
           child: child!,
         );
@@ -174,7 +177,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
           '${_days[sourceIndex]}\'s hours copied to all days',
           style: GoogleFonts.poppins(fontSize: 13),
         ),
-        backgroundColor: const Color(0xFFED3A72),
+        backgroundColor: AppColors.primary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
@@ -186,8 +189,15 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Discard changes?', style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 16)),
+        title: Row(
+          children: [
+            Image.asset('assets/images/app_logo.png', width: 24, height: 24),
+            const SizedBox(width: 8),
+            Text('Discard changes?', style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 16)),
+          ],
+        ),
         content: Text(
           'You have unsaved changes. Do you want to discard them?',
           style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF475569)),
@@ -199,7 +209,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text('Discard', style: GoogleFonts.poppins(color: const Color(0xFFED3973), fontWeight: FontWeight.w600)),
+            child: GradientText('Discard', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -256,7 +266,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Operating hours saved successfully!'),
-          backgroundColor: Color(0xFFED3A72),
+          backgroundColor: AppColors.primary,
         ),
       );
       Navigator.pushAndRemoveUntil(
@@ -322,23 +332,12 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                   child: SizedBox(
                     width: double.infinity,
                     height: 56,
-                    child: ElevatedButton(
-                      onPressed: _isSaving ? null : _save,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFED3973),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        elevation: 0,
-                      ),
-                      child: _isSaving
-                          ? const CustomLoadingIndicator(size: 24, color: Colors.white)
-                          : Text(
-                              'Save',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
+                    child: PrimaryGradientButton(
+                      onPressed: _save,
+                      isLoading: _isSaving,
+                      text: 'Save',
+                      height: 56,
+                      borderRadius: 16,
                     ),
                   ),
                 ),
@@ -362,13 +361,11 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
               style: GoogleFonts.poppins(color: const Color(0xFF1E293B)),
             ),
             const SizedBox(height: 24),
-            ElevatedButton(
+            PrimaryGradientButton(
               onPressed: _fetchOperatingHours,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFED3973),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: Text('Retry', style: GoogleFonts.poppins(color: Colors.white)),
+              text: 'Retry',
+              height: 48,
+              borderRadius: 12,
             ),
           ],
         ),
@@ -421,7 +418,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                                   : '${_formatTime(h.openTime)} – ${_formatTime(h.closeTime)}',
                               style: GoogleFonts.poppins(
                                 fontSize: 13,
-                                color: h.isClosed ? const Color(0xFFED3973) : const Color(0xFF64748B),
+                                color: h.isClosed ? AppColors.primary : const Color(0xFF64748B),
                               ),
                             ),
                           ),
@@ -457,7 +454,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                                   Icon(
                                     h.isClosed ? Icons.add_circle_outline : Icons.remove_circle_outline,
                                     size: 18,
-                                    color: h.isClosed ? const Color(0xFF10B981) : const Color(0xFFED3973),
+                                    color: h.isClosed ? const Color(0xFF10B981) : AppColors.primary,
                                   ),
                                   const SizedBox(width: 8),
                                   GestureDetector(
@@ -470,7 +467,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                                       style: GoogleFonts.poppins(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w500,
-                                        color: h.isClosed ? const Color(0xFF10B981) : const Color(0xFFED3973),
+                                        color: h.isClosed ? const Color(0xFF10B981) : AppColors.primary,
                                       ),
                                     ),
                                   ),

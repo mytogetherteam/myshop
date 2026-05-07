@@ -140,12 +140,12 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                       ),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? const Color(0xFFED3A72)
+                            ? const Color(0xFFED3973)
                             : Colors.white,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: isSelected
-                              ? const Color(0xFFED3A72)
+                              ? const Color(0xFFED3973)
                               : const Color(0xFFE2E8F0),
                         ),
                       ),
@@ -171,7 +171,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: _loadInitialData,
-              color: const Color(0xFFED3A72),
+              color: const Color(0xFFED3973),
               child: _isLoading
                   ? _buildSkeletons()
                   : ListView.builder(
@@ -188,7 +188,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                             child: Center(
                               child: CustomLoadingIndicator(
                                 size: 24,
-                                color: Color(0xFFED3A72),
+                                color: Color(0xFFED3973),
                               ),
                             ),
                           );

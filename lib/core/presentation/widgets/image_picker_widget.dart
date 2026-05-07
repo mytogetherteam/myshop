@@ -182,7 +182,14 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Permission Required'),
+        backgroundColor: Colors.white,
+        title: Row(
+          children: [
+            Image.asset('assets/images/app_logo.png', width: 24, height: 24),
+            const SizedBox(width: 8),
+            Text('Permission Required', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
+          ],
+        ),
         content: const Text(
           'Camera and photo library access is required to upload images. '
           'Please enable it in your device Settings.',

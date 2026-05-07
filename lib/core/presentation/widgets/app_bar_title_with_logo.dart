@@ -52,7 +52,7 @@ class AppBarTitleWithLogo extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: subtitleColor ?? const Color(0xFFED3A72),
+                    color: subtitleColor ?? const Color(0xFFED3973),
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),

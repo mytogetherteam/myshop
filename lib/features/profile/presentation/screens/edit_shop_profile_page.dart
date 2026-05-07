@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_switch.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -12,6 +13,7 @@ import 'package:my_shop/core/data/services/image_upload_service.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/core/presentation/widgets/fullscreen_image_viewer.dart';
 import 'package:my_shop/core/presentation/widgets/custom_search_dropdown.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import 'package:my_shop/core/data/models/master_data_model.dart';
@@ -369,10 +371,17 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Discard changes?',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 16),
+        title: Row(
+          children: [
+            Image.asset('assets/images/app_logo.png', width: 24, height: 24),
+            const SizedBox(width: 8),
+            Text(
+              'Discard changes?',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 16),
+            ),
+          ],
         ),
         content: Text(
           'You have unsaved changes. Do you want to discard them?',
@@ -573,7 +582,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Profile saved successfully!'),
-          backgroundColor: Color(0xFFED3A72),
+          backgroundColor: Color(0xFFED3973),
         ),
       );
       Navigator.pop(context, true);
@@ -1117,28 +1126,12 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
               child: SizedBox(
                 width: double.infinity,
                 height: 64,
-                child: ElevatedButton(
-                  onPressed: _isSaving ? null : _save,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFED3973),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: _isSaving
-                      ? const CustomLoadingIndicator(
-                          size: 24,
-                          color: Colors.white,
-                        )
-                      : Text(
-                          'Save',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                child: PrimaryGradientButton(
+                  onPressed: _save,
+                  isLoading: _isSaving,
+                  text: 'Save',
+                  height: 64,
+                  borderRadius: 18,
                 ),
               ),
             ),
@@ -1814,29 +1807,9 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                           ),
                         ),
                       ),
-                      SizedBox(
-                        height: 24,
-                        child: Transform.scale(
-                          scale: 0.65,
-                          child: Switch(
-                            value: item.value,
-                            onChanged: item.onChanged,
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                            thumbColor: WidgetStateProperty.all(Colors.white),
-                            trackOutlineColor: WidgetStateProperty.all(
-                              Colors.transparent,
-                            ),
-                            trackColor: WidgetStateProperty.resolveWith((
-                              states,
-                            ) {
-                              if (states.contains(WidgetState.selected)) {
-                                return const Color(0xFFED3973);
-                              }
-                              return const Color(0xFFE2E8F0);
-                            }),
-                          ),
-                        ),
+                      PrimaryGradientSwitch(
+                        value: item.value,
+                        onChanged: item.onChanged,
                       ),
                     ],
                   ),

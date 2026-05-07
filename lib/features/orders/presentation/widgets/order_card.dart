@@ -8,6 +8,9 @@ import '../screens/orders_screen.dart';
 import '../screens/order_detail_screen.dart';
 import 'status_progress_indicator.dart';
 import 'package:my_shop/core/presentation/widgets/animated_ellipsis_text.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
+import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 
 class OrderCard extends StatelessWidget {
   final OrderModel order;
@@ -87,22 +90,20 @@ class OrderCard extends StatelessWidget {
                             color: const Color(0xFF1E293B),
                           ),
                         ),
-                        Text(
+                        GradientText(
                           order.statusName,
                           style: GoogleFonts.poppins(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFFED3A72),
                           ),
                         ),
                       ],
                     ),
-                    Text(
+                    GradientText(
                       order.displayTotalAmount,
                       style: GoogleFonts.poppins(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFFED3A72),
                       ),
                     ),
                   ],
@@ -244,7 +245,7 @@ class OrderCard extends StatelessWidget {
     }
 
     String mainButtonText = 'View order';
-    Color mainButtonColor = const Color(0xFFED3A72);
+    Color mainButtonColor = const Color(0xFFED3973);
     Color mainButtonTextColor = Colors.white;
     bool isMainButtonEnabled = true;
     IconData? mainButtonIcon;
@@ -256,7 +257,7 @@ class OrderCard extends StatelessWidget {
       case 'CONFIRMED':
       case 'PAYMENT_SLIP_REQUESTED':
         mainButtonText = 'Waiting for payment';
-        mainButtonColor = const Color(0xFFED3A72);
+        mainButtonColor = const Color(0xFFED3973);
         mainButtonTextColor = Colors.white;
         isMainButtonEnabled = false;
         mainButtonIcon = Icons.access_time_outlined;
@@ -286,7 +287,7 @@ class OrderCard extends StatelessWidget {
             child: OutlinedButton(
               onPressed: () => _showCancelDialog(context),
               style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFFED3A72),
+                foregroundColor: const Color(0xFFED3973),
                 side: const BorderSide(color: Color(0xFFFEE2E2)),
                 backgroundColor: const Color(0xFFFFF1F2),
                 minimumSize: const Size(0, 54),
@@ -294,9 +295,9 @@ class OrderCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: Text(
+              child: const GradientText(
                 'Cancel',
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),
@@ -307,7 +308,7 @@ class OrderCard extends StatelessWidget {
         ],
         Expanded(
           flex: isPaymentTab ? 1 : 2,
-          child: ElevatedButton(
+          child: PrimaryGradientButton(
             onPressed: isMainButtonEnabled ? () async {
               final result = await Navigator.push(
                 context,
@@ -328,22 +329,13 @@ class OrderCard extends StatelessWidget {
                 context.findAncestorStateOfType<OrdersScreenState>()?.switchToStatus(result);
               }
             } : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: mainButtonColor,
-              foregroundColor: mainButtonTextColor,
-              disabledBackgroundColor: mainButtonColor,
-              disabledForegroundColor: mainButtonTextColor,
-              minimumSize: const Size(0, 54),
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
+            height: 54,
+            borderRadius: 12,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (mainButtonIcon != null) ...[
-                  Icon(mainButtonIcon, size: 18),
+                  Icon(mainButtonIcon, size: 18, color: Colors.white),
                   const SizedBox(width: 8),
                 ],
                 if (isMainButtonEnabled)
@@ -352,6 +344,7 @@ class OrderCard extends StatelessWidget {
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
+                      color: Colors.white,
                     ),
                   )
                 else
@@ -360,7 +353,7 @@ class OrderCard extends StatelessWidget {
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.w600,
                       fontSize: 12,
-                      color: mainButtonTextColor,
+                      color: Colors.white,
                     ),
                   ),
               ],
@@ -483,7 +476,7 @@ class OrderCard extends StatelessWidget {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(success ? 'Order cancelled' : 'Failed to cancel order'),
-                              backgroundColor: success ? const Color(0xFFED3A72) : const Color(0xFFEF4444),
+                              backgroundColor: success ? AppColors.primary : const Color(0xFFEF4444),
                               behavior: SnackBarBehavior.fixed,
                             ),
                           );

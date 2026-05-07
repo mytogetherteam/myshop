@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../data/models/review_model.dart';
@@ -45,7 +46,7 @@ class _ReviewCardState extends State<ReviewCard> {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: const Color(0xFFED3973).withValues(alpha: 0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: widget.review.userProfileUrl != null
@@ -56,7 +57,7 @@ class _ReviewCardState extends State<ReviewCard> {
               : Center(
                   child: PhosphorIcon(
                     PhosphorIconsRegular.user,
-                    color: const Color(0xFFED3973),
+                    color: AppColors.primary,
                     size: 24,
                   ),
                 ),

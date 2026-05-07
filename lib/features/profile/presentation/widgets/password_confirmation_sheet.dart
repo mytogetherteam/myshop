@@ -4,6 +4,7 @@ import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/features/auth/data/services/auth_service.dart';
 import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import '../../../../core/presentation/widgets/global_modal.dart';
+import '../../../../core/presentation/widgets/primary_gradient_button.dart';
 import 'otp_verification_sheet.dart';
 
 class PasswordConfirmationSheet extends StatefulWidget {
@@ -169,25 +170,12 @@ class _PasswordConfirmationSheetState extends State<PasswordConfirmationSheet> {
         SizedBox(
           width: double.infinity,
           height: 56,
-          child: ElevatedButton(
-            onPressed: _isLoading ? null : _handleUpdate,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFED3973),
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: const Color(0xFFED3973).withValues(alpha: 0.6),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 0,
-            ),
-            child: _isLoading
-                ? const CustomLoadingIndicator(size: 24, color: Colors.white)
-                : Text(
-                    'Confirm',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
+          child: PrimaryGradientButton(
+            onPressed: _handleUpdate,
+            isLoading: _isLoading,
+            text: 'Confirm',
+            height: 56,
+            borderRadius: 16,
           ),
         ),
       ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/features/orders/data/models/order_model.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 
 class NewOrderDialog extends StatelessWidget {
   final OrderModel order;
@@ -73,7 +74,7 @@ class NewOrderDialog extends StatelessWidget {
                   child: const Center(
                     child: Icon(
                       PhosphorIconsFill.bell,
-                      color: Color(0xFFED3A72),
+                      color: Color(0xFFED3973),
                       size: 32,
                     ),
                   ),
@@ -212,30 +213,17 @@ class NewOrderDialog extends StatelessWidget {
                       style: GoogleFonts.poppins(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFFED3A72),
+                        color: const Color(0xFFED3973),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 24),
-                ElevatedButton(
+                PrimaryGradientButton(
                   onPressed: onViewOrder,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFED3A72),
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 56),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    'View Order',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  text: 'View Order',
+                  height: 56,
+                  borderRadius: 16,
                 ),
                 const SizedBox(height: 24),
               ],

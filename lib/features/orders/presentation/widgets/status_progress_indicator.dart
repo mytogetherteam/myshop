@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 
 class StatusProgressIndicator extends StatefulWidget {
   final String status;
@@ -83,27 +84,43 @@ class _StatusProgressIndicatorState extends State<StatusProgressIndicator> with 
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: isActive ? const Color(0xFFED3A72) : const Color(0xFFF1F5F9),
+            color: isActive ? null : const Color(0xFFF1F5F9),
+            gradient: isActive
+                ? LinearGradient(
+                    colors: AppColors.primaryGradient.colors
+                        .map((c) => c.withValues(alpha: 0.15))
+                        .toList(),
+                  )
+                : null,
             shape: BoxShape.circle,
             boxShadow: isCurrent
                 ? [
                     BoxShadow(
-                      color: const Color(0xFFED3A72).withValues(alpha: 0.3),
+                      color: AppColors.primary.withValues(alpha: 0.2),
                       blurRadius: 8,
                       spreadRadius: 2,
                     )
                   ]
                 : null,
             border: Border.all(
-              color: isActive ? const Color(0xFFED3A72) : const Color(0xFFE2E8F0),
+              color: isActive ? AppColors.primary.withValues(alpha: 0.2) : const Color(0xFFE2E8F0),
               width: 2,
             ),
           ),
-          child: Icon(
-            isActive ? activeIcon : icon,
-            size: 18,
-            color: isActive ? Colors.white : const Color(0xFF94A3B8),
-          ),
+          child: isActive
+              ? ShaderMask(
+                  shaderCallback: (bounds) => AppColors.primaryGradient.createShader(bounds),
+                  child: Icon(
+                    activeIcon,
+                    size: 18,
+                    color: Colors.white,
+                  ),
+                )
+              : Icon(
+                  icon,
+                  size: 18,
+                  color: const Color(0xFF94A3B8),
+                ),
         ),
         const SizedBox(height: 6),
         Text(
@@ -137,7 +154,9 @@ class _StatusProgressIndicatorState extends State<StatusProgressIndicator> with 
               if (isCompleted)
                 Container(
                   height: 3,
-                  color: const Color(0xFFED3A72),
+                  decoration: const BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                  ),
                 ),
               if (isProcessing)
                 AnimatedBuilder(
@@ -160,8 +179,8 @@ class _StatusProgressIndicatorState extends State<StatusProgressIndicator> with 
                                   borderRadius: BorderRadius.circular(2),
                                   gradient: LinearGradient(
                                     colors: [
-                                      const Color(0xFFED3A72).withValues(alpha: 0.1),
-                                      const Color(0xFFED3A72),
+                                      AppColors.primary.withValues(alpha: 0.1),
+                                      AppColors.primary,
                                     ],
                                   ),
                                 ),
