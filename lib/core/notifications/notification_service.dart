@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
@@ -125,7 +125,7 @@ class NotificationService {
         '/api/shop/notifications/register-device',
         data: {
           'token': token,
-          'deviceType': Platform.isAndroid ? 'ANDROID' : 'IOS',
+          'deviceType': kIsWeb ? 'WEB' : (defaultTargetPlatform == TargetPlatform.android ? 'ANDROID' : 'IOS'),
           'deviceId': deviceId,
         },
       );
@@ -155,10 +155,11 @@ class NotificationService {
   }
 
   Future<String> _getDeviceId() async {
-    if (Platform.isAndroid) {
+    if (kIsWeb) return 'web_device';
+    if (defaultTargetPlatform == TargetPlatform.android) {
       AndroidDeviceInfo androidInfo = await _deviceInfo.androidInfo;
       return androidInfo.id;
-    } else if (Platform.isIOS) {
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
       IosDeviceInfo iosInfo = await _deviceInfo.iosInfo;
       return iosInfo.identifierForVendor ?? 'unknown_ios_device';
     }

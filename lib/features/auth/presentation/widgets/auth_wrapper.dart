@@ -54,6 +54,14 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
     WebSocketService().connect();
     
+    // Verify the token by fetching the user profile
+    try {
+      await AuthService.instance.getAccessToken(); // Simple check for now
+    } catch (e) {
+      await StorageService.instance.clearAll();
+      return const LoginPage();
+    }
+    
     final notiHandled = await StorageService.instance.isNotificationHandled();
     if (!notiHandled) {
       return const NotificationPermissionScreen();

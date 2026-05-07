@@ -195,28 +195,25 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   final List<String> _titles = ['Order', 'Menu', 'Report', 'Profile'];
 
-  Widget _buildGradientItem(IconData icon, String label) {
-    return ShaderMask(
-      shaderCallback: (Rect bounds) {
-        return AppColors.primaryGradient.createShader(bounds);
-      },
-      child: Column(
+    return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          PhosphorIcon(icon, size: 28, color: Colors.white),
+          PhosphorIcon(
+            icon, 
+            size: 28, 
+            color: const Color(0xFFED3973), // Use primary color directly
+          ),
           const SizedBox(height: 2),
           Text(
             label,
             style: GoogleFonts.poppins(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: const Color(0xFFED3973),
             ),
           ),
         ],
-      ),
-    );
-  }
+      );
 
   Widget _buildInactiveItem(IconData icon, String label) {
     return Column(
