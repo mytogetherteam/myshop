@@ -26,6 +26,10 @@ class StorageService {
         iOptions: IOSOptions(
           accessibility: KeychainAccessibility.first_unlock_this_device,
         ),
+        webOptions: WebOptions(
+          dbName: 'myshop_secure_storage',
+          publicKey: 'myshop_key',
+        ),
       );
       _prefs = await SharedPreferences.getInstance();
       _initialized = true;

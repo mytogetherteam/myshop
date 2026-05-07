@@ -17,10 +17,12 @@ void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
-  try {
-    await Firebase.initializeApp();
-  } catch (e) {
-    debugPrint('🔥 [Main] Firebase initialization failed: $e');
+  if (!kIsWeb) {
+    try {
+      await Firebase.initializeApp();
+    } catch (e) {
+      debugPrint('🔥 [Main] Firebase initialization failed: $e');
+    }
   }
   
   // Initialize notification service - wrapped in try-catch to prevent app crash

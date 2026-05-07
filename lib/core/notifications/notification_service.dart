@@ -26,12 +26,14 @@ class NotificationService {
     if (_isInitialized) return;
 
     // Initialize Firebase Messaging if possible
-    try {
-      _fcm = FirebaseMessaging.instance;
-      _firebaseAvailable = true;
-    } catch (e) {
-      debugPrint('🔔 [NotificationService] Firebase Messaging not available: $e');
-      _firebaseAvailable = false;
+    if (!kIsWeb) {
+      try {
+        _fcm = FirebaseMessaging.instance;
+        _firebaseAvailable = true;
+      } catch (e) {
+        debugPrint('🔔 [NotificationService] Firebase Messaging not available: $e');
+        _firebaseAvailable = false;
+      }
     }
 
     // Initialize local notifications (mostly for Android/iOS)
@@ -128,6 +130,7 @@ class NotificationService {
   }
 
   Future<void> registerDevice() async {
+    if (kIsWeb) return;
     if (!_firebaseAvailable || _fcm == null) return;
     
     try {
