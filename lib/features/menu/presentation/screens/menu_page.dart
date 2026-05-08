@@ -9,6 +9,7 @@ import '../../data/services/menu_service.dart';
 import '../../data/models/menu_item_model.dart';
 import '../../data/models/menu_category_model.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 
 class MenuPage extends StatefulWidget {
   const MenuPage({super.key});
@@ -139,12 +140,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
   Future<void> _toggleItemAvailability(MenuItemModel item, bool available) async {
     final success = await _menuService.toggleAvailability(item.id, available);
     if (!success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to update availability'),
-          backgroundColor: Color(0xFFEF4444),
-        ),
-      );
+      AppDialog.showToast(context, 'Failed to update availability', isError: true);
       // Revert if failed
       _fetchItems(refresh: true);
     }
@@ -158,12 +154,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
     final success =
         await _menuService.toggleMenuItemPublishStatus(item.id, newStatus);
     if (!success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to update publish status'),
-          backgroundColor: Color(0xFFEF4444),
-        ),
-      );
+      AppDialog.showToast(context, 'Failed to update publish status', isError: true);
       // Revert if failed
       _fetchItems(refresh: true);
     }

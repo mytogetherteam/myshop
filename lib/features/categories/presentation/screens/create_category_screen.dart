@@ -6,6 +6,7 @@ import 'package:my_shop/core/presentation/widgets/global_modal.dart';
 import 'package:my_shop/core/presentation/widgets/success_sheet.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 
 class CreateCategoryScreen extends StatefulWidget {
   const CreateCategoryScreen({super.key});
@@ -62,11 +63,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
     if (_nameEnController.text.isEmpty &&
         _nameMmController.text.isEmpty &&
         _nameThController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter at least one category name'),
-        ),
-      );
+      AppDialog.showToast(context, 'Please enter at least one category name', isError: true);
       return;
     }
 
@@ -88,22 +85,11 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
 
     if (mounted) {
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Successfully requested'),
-            backgroundColor: Color(0xFFED3973),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        AppDialog.showToast(context, 'Successfully requested');
         Navigator.of(context).pop(true);
       } else {
         setState(() => _isSaving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to create category'),
-            backgroundColor: Color(0xFFEF4444),
-          ),
-        );
+        AppDialog.showToast(context, 'Failed to create category', isError: true);
       }
     }
   }

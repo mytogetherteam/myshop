@@ -9,6 +9,7 @@ class PrimaryGradientButton extends StatelessWidget {
   final Widget? child;
   final double height;
   final double borderRadius;
+  final LinearGradient? gradient;
 
   const PrimaryGradientButton({
     super.key,
@@ -18,6 +19,7 @@ class PrimaryGradientButton extends StatelessWidget {
     this.child,
     this.height = 54,
     this.borderRadius = 14,
+    this.gradient,
   });
 
   @override
@@ -30,9 +32,8 @@ class PrimaryGradientButton extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(borderRadius),
         gradient: isDisabled
-            ? null
-            : AppColors.primaryGradient,
-        color: isDisabled ? AppColors.primary.withValues(alpha: 0.6) : null,
+            ? AppColors.getFadedGradient(AppColors.primaryGradient, 0.4)
+            : (gradient ?? AppColors.primaryGradient),
       ),
       child: Material(
         color: Colors.transparent,

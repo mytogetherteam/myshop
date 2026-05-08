@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import '../widgets/menu_item_card.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import '../../data/services/menu_service.dart';
 import '../../data/models/menu_item_model.dart';
 import 'add_new_item_screen.dart';
@@ -173,12 +174,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
         _filteredItems[index] = revertedItem;
         _items[globalIndex] = revertedItem;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to update availability'),
-          backgroundColor: Color(0xFFEF4444),
-        ),
-      );
+      AppDialog.showToast(context, 'Failed to update availability', isError: true);
     }
   }
 
@@ -209,12 +205,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
         _filteredItems[index] = revertedItem;
         _items[globalIndex] = revertedItem;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to update publish status'),
-          backgroundColor: Color(0xFFEF4444),
-        ),
-      );
+      AppDialog.showToast(context, 'Failed to update publish status', isError: true);
     }
   }
 

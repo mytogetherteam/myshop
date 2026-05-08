@@ -18,6 +18,7 @@ import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import 'package:my_shop/core/data/models/master_data_model.dart';
 import 'package:my_shop/core/data/services/master_data_service.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 
 
 class EditShopProfilePage extends StatefulWidget {
@@ -430,12 +431,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: const Color(0xFFEF4444),
-      ),
-    );
+    AppDialog.showToast(context, message, isError: true);
   }
 
   bool _validate() {
@@ -579,21 +575,11 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         _pickedCover = null;
         _pickedLogo = null;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile saved successfully!'),
-          backgroundColor: Color(0xFFED3973),
-        ),
-      );
+      AppDialog.showToast(context, 'Profile saved successfully!');
       Navigator.pop(context, true);
     } else {
       setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to save profile. Please try again.'),
-          backgroundColor: Color(0xFFEF4444),
-        ),
-      );
+      AppDialog.showToast(context, 'Failed to save profile. Please try again.', isError: true);
     }
   }
 
@@ -1439,12 +1425,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     }
     if (result.isTooLarge) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Image size must be less than 1MB'),
-          backgroundColor: Colors.red,
-        ),
-      );
+            AppDialog.showToast(context, 'Image size must be less than 1MB', isError: true);
       return;
     }
     if (result.file != null) {
@@ -1482,12 +1463,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
           final r = await ImageUploadService().pickFromGallery();
           if (r.isTooLarge) {
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Image size must be less than 1MB'),
-                backgroundColor: Colors.red,
-              ),
-            );
+            AppDialog.showToast(context, 'Image size must be less than 1MB', isError: true);
             return;
           }
           if (r.file != null && mounted) {
@@ -1502,12 +1478,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
           final r = await ImageUploadService().pickFromCamera();
           if (r.isTooLarge) {
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Image size must be less than 1MB'),
-                backgroundColor: Colors.red,
-              ),
-            );
+            AppDialog.showToast(context, 'Image size must be less than 1MB', isError: true);
             return;
           }
           if (r.file != null && mounted) {

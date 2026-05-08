@@ -5,6 +5,7 @@ import 'package:my_shop/features/menu/data/models/menu_category_model.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
 import 'package:my_shop/core/presentation/widgets/status_badge.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_switch.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 
 import 'create_category_screen.dart';
 import 'edit_category_screen.dart';
@@ -204,12 +205,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
       setState(() {
         _categories[index] = category;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to update publish status'),
-          backgroundColor: Color(0xFFEF4444),
-        ),
-      );
+      AppDialog.showToast(context, 'Failed to update publish status', isError: true);
     }
   }
 

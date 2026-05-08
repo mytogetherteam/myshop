@@ -9,7 +9,8 @@ String? _resolveUrl(dynamic value) {
   // Base64 data URI (e.g. customer-uploaded receipt) — return as-is
   if (str.startsWith('data:')) return str;
   // Relative path — prepend the API base URL
-  return '${EnvConfig.apiBaseUrl}$str';
+  final path = str.startsWith('/') ? str : '/$str';
+  return '${EnvConfig.apiBaseUrl}$path';
 }
 
 class OrderModel {
@@ -228,7 +229,7 @@ class OrderItemModel {
       menuItemId: json['menuItemId'] ?? 0,
       menuItemName: json['menuItemName'] ?? '',
       menuItemNameMm: json['menuItemNameMm'],
-      menuItemImageUrl: json['imageUrl'] ?? json['menuItemImageUrl'],
+      menuItemImageUrl: _resolveUrl(json['imageUrl'] ?? json['menuItemImageUrl']),
       quantity: json['quantity'] ?? 0,
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
       displayPrice: json['displayPrice'] ?? '',

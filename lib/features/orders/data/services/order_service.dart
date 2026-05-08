@@ -223,11 +223,11 @@ class OrderService {
     return false;
   }
 
-  Future<bool> dispatchOrder(String orderId) async {
+  Future<bool> dispatchOrder(String orderId, [Map<String, dynamic>? payload]) async {
     try {
       final url = '$_ordersPath/$orderId/dispatch';
-      debugPrint('PUT REQUEST (dispatchOrder): $url');
-      final response = await ApiClient().dio.put(url);
+      debugPrint('PUT REQUEST (dispatchOrder): $url, Data: $payload');
+      final response = await ApiClient().dio.put(url, data: payload);
 
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
