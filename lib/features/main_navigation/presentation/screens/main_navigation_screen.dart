@@ -213,6 +213,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             color: const Color(0xFFED3973),
           ),
         ),
+        const SizedBox(height: 8),
       ],
     );
   }
@@ -231,6 +232,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             color: const Color(0xFF94A3B8),
           ),
         ),
+        const SizedBox(height: 8),
       ],
     );
   }

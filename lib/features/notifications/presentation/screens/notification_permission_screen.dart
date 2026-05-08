@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -59,9 +60,16 @@ class NotificationPermissionScreen extends StatelessWidget {
                 width: double.infinity,
           child: PrimaryGradientButton(
             onPressed: () async {
-              await NotificationService().requestSystemPermission();
-              if (context.mounted) {
-                Navigator.pushReplacementNamed(context, '/navigation');
+              if (kIsWeb) {
+                await StorageService.instance.setNotificationHandled(true);
+                if (context.mounted) {
+                  Navigator.pushReplacementNamed(context, '/navigation');
+                }
+              } else {
+                await NotificationService().requestSystemPermission();
+                if (context.mounted) {
+                  Navigator.pushReplacementNamed(context, '/navigation');
+                }
               }
             },
             text: 'Allow Notifications',

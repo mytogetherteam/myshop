@@ -22,48 +22,10 @@ class AppBarTitleWithLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Image.asset(
-          'assets/images/app_logo.png',
-          height: 28,
-          fit: BoxFit.contain,
-        ),
-        const SizedBox(width: 10),
-        Flexible(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: GoogleFonts.poppins(
-                  fontSize: fontSize,
-                  fontWeight: FontWeight.w600,
-                  color: titleColor,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-              if (subtitle != null)
-                Text(
-                  subtitle!,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: subtitleColor ?? const Color(0xFFED3973),
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-            ],
-          ),
-        ),
-        if (trailing != null) ...[
-          const SizedBox(width: 12),
-          trailing!,
-        ],
-      ],
+    return Image.asset(
+      'assets/images/app_logo.png',
+      height: 40,
+      fit: BoxFit.contain,
     );
   }
 }

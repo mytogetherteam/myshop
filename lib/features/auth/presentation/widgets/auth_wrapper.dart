@@ -86,10 +86,12 @@ class _AuthWrapperState extends State<AuthWrapper> {
       return const LoginPage();
     }
     
+    /*
     final notiHandled = await StorageService.instance.isNotificationHandled();
     if (!notiHandled) {
       return const NotificationPermissionScreen();
     }
+    */
     
     return const MainNavigationScreen();
   }
