@@ -34,7 +34,9 @@ class WebSocketService {
 
     if (_stompClient != null) {
       if (force) {
+        debugPrint('🔄 [WS] Force reconnecting...');
         _stompClient?.deactivate();
+        await Future.delayed(const Duration(milliseconds: 3000));
         _stompClient = null;
       } else {
         _stompClient?.activate();

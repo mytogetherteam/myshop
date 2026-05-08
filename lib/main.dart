@@ -21,6 +21,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 void main() async {
+  GoogleFonts.config.allowRuntimeFetching = true;
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
@@ -53,8 +54,6 @@ void main() async {
       statusBarIconBrightness: Brightness.dark,
     ),
   );
-
-  GoogleFonts.config.allowRuntimeFetching = true;
 
   runApp(const App());
 
