@@ -5,7 +5,7 @@
     "id": "/",
     "display": "standalone",
     "background_color": "#ffffff",
-    "theme_color": "#ED3A72",
+    "theme_color": "#ffffff",
     "description": "The ultimate companion for shop owners to manage orders, products, and insights.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
@@ -15,7 +15,12 @@
             "short_name": "Orders",
             "description": "View active orders",
             "url": "/#/navigation",
-            "icons": [{ "src": "icons/Icon-192.png", "sizes": "192x192" }]
+            "icons": [
+                {
+                    "src": "icons/Icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
         }
     ],
     "icons": [

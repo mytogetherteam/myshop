@@ -47,7 +47,6 @@
 		<true/>
 		<key>UIStatusBarHidden</key>
 		<false/>
-
 		<!-- Image Picker permissions -->
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>My Shop needs access to your photo library to let you upload shop and menu images.</string>
