@@ -11,6 +11,7 @@ import 'package:my_shop/core/presentation/widgets/animated_ellipsis_text.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 
 class OrderCard extends StatelessWidget {
   final OrderModel order;
@@ -473,13 +474,7 @@ class OrderCard extends StatelessWidget {
                           reason.isEmpty ? null : reason
                         );
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(success ? 'Order cancelled' : 'Failed to cancel order'),
-                              backgroundColor: success ? AppColors.primary : const Color(0xFFEF4444),
-                              behavior: SnackBarBehavior.fixed,
-                            ),
-                          );
+                          AppDialog.showToast(context, success ? 'Order cancelled' : 'Failed to cancel order', isError: !success);
                         }
                       },
                       style: ElevatedButton.styleFrom(

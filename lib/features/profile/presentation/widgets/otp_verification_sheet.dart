@@ -6,6 +6,7 @@ import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import '../../../../core/presentation/widgets/global_modal.dart';
 import 'package:my_shop/core/presentation/widgets/success_sheet.dart';
 import '../../../../core/presentation/widgets/primary_gradient_button.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 
 class OtpVerificationSheet extends StatefulWidget {
   const OtpVerificationSheet({super.key});
@@ -114,12 +115,7 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
   }
 
   Future<void> _handleResend() async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('OTP sent again!'),
-        backgroundColor: Color(0xFFED3973),
-      ),
-    );
+    AppDialog.showToast(context, 'OTP sent again!');
   }
 
   @override

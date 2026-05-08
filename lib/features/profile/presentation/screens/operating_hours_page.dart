@@ -8,6 +8,7 @@ import 'package:my_shop/features/main_navigation/presentation/screens/main_navig
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 
 class OperatingHoursPage extends StatefulWidget {
   const OperatingHoursPage({super.key});
@@ -171,17 +172,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
       }
     });
     _markChanged();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '${_days[sourceIndex]}\'s hours copied to all days',
-          style: GoogleFonts.poppins(fontSize: 13),
-        ),
-        backgroundColor: AppColors.primary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-    );
+    AppDialog.showToast(context, '${_days[sourceIndex]}\'s hours copied to all days');
   }
 
   Future<bool> _onWillPop() async {
@@ -263,12 +254,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
         _isSaving = false;
         _hasChanges = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Operating hours saved successfully!'),
-          backgroundColor: AppColors.primary,
-        ),
-      );
+      AppDialog.showToast(context, 'Operating hours saved successfully!');
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const MainNavigationScreen(initialIndex: 3)),
@@ -277,12 +263,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
     } else {
       setState(() => _isSaving = false);
       final errorMessage = response['message'] ?? 'Failed to save operating hours. Please try again.';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMessage),
-          backgroundColor: const Color(0xFFEF4444),
-        ),
-      );
+      AppDialog.showToast(context, errorMessage, isError: true);
     }
   }
 

@@ -8,6 +8,7 @@ import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
 import 'package:my_shop/features/menu/data/services/menu_service.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 
 class GlobalShopSelectionPage extends StatefulWidget {
   final bool isInitialFlow;
@@ -58,16 +59,7 @@ class _GlobalShopSelectionPageState extends State<GlobalShopSelectionPage> {
           Navigator.of(context).pushReplacementNamed('/home');
         } else {
           if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Only one shop available: ${shops[0].name}',
-                style: GoogleFonts.poppins(),
-              ),
-              backgroundColor: const Color(0xFF10B981),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          AppDialog.showToast(context, 'Only one shop available: ${shops[0].name}');
           Navigator.of(context).pop();
         }
       } else {
@@ -95,16 +87,7 @@ class _GlobalShopSelectionPageState extends State<GlobalShopSelectionPage> {
     if (widget.isInitialFlow) {
       Navigator.of(context).pushReplacementNamed('/home');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Switched to ${shop.name}',
-            style: GoogleFonts.poppins(),
-          ),
-          backgroundColor: const Color(0xFF10B981),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      AppDialog.showToast(context, 'Switched to ${shop.name}');
       Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
     }
   }

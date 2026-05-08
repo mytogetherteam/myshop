@@ -21,6 +21,7 @@ import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import '../../../../core/data/services/image_upload_service.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 
 class EditPaymentPage extends StatefulWidget {
   final PaymentMethod paymentMethod;
@@ -115,34 +116,19 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
 
     if (!hasImage) {
       _scrollToKey(_qrImageKey);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('QR Image is required'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppDialog.showToast(context, 'QR Image is required', isError: true);
       return false;
     }
 
     if (accountName.isEmpty) {
       _scrollToKey(_accountNameKey);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Account Name is required'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppDialog.showToast(context, 'Account Name is required', isError: true);
       return false;
     }
 
     if (accountNumber.isEmpty) {
       _scrollToKey(_accountNumberKey);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Account Number is required'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppDialog.showToast(context, 'Account Number is required', isError: true);
       return false;
     }
 
@@ -204,23 +190,10 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
     if (mounted) {
       setState(() => _isSaving = false);
       if (result['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Successfully requested'),
-            backgroundColor: AppColors.primary,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        AppDialog.showToast(context, 'Successfully requested');
         Navigator.of(context).pop(true);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              result['message'] ?? 'Failed to update payment method',
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppDialog.showToast(context, result['message'] ?? 'Failed to update payment method', isError: true);
       }
     }
   }
@@ -271,12 +244,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                 final result = await ImageUploadService().pickFromGallery();
                 if (result.isTooLarge) {
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Image size must be less than 1MB'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
+                    AppDialog.showToast(context, 'Image size must be less than 1MB', isError: true);
                   }
                   return;
                 }
@@ -298,12 +266,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                 final result = await ImageUploadService().pickFromCamera();
                 if (result.isTooLarge) {
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Image size must be less than 1MB'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
+                    AppDialog.showToast(context, 'Image size must be less than 1MB', isError: true);
                   }
                   return;
                 }

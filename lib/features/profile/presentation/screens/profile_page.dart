@@ -9,6 +9,7 @@ import 'package:my_shop/core/presentation/widgets/confirmation_sheet.dart';
 import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_switch.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'edit_shop_profile_page.dart';
 import 'operating_hours_page.dart';
 import 'app_permissions_page.dart';
@@ -40,6 +41,7 @@ class ProfilePageState extends State<ProfilePage>
   bool _deliveryEnabled = false;
   bool _isTogglingDelivery = false;
   List<Shop> _userShops = [];
+  ShopProfileModel? _shopProfile;
 
   @override
   bool get wantKeepAlive => true;
@@ -72,6 +74,7 @@ class ProfilePageState extends State<ProfilePage>
     if (mounted) {
       setState(() {
         _userInfo = info;
+        _shopProfile = profile;
         _deliveryEnabled = profile?.deliveryEnabled ?? false;
         _userShops = shops;
       });
@@ -91,9 +94,7 @@ class ProfilePageState extends State<ProfilePage>
         });
       } else if (mounted) {
         setState(() => _isTogglingDelivery = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to update delivery status')),
-        );
+        AppDialog.showToast(context, 'Failed to update delivery status', isError: true);
       }
     } catch (e) {
       if (mounted) {
@@ -238,20 +239,14 @@ class ProfilePageState extends State<ProfilePage>
               ),
               shape: BoxShape.circle,
             ),
-            child: Center(
-              child: ShaderMask(
-                shaderCallback: (bounds) => AppColors.primaryGradient.createShader(bounds),
-                child: Text(
-                  (_userInfo?.fullName.isNotEmpty == true)
-                      ? _userInfo!.fullName[0].toUpperCase()
-                      : 'A',
-                  style: GoogleFonts.poppins(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+            child: ClipOval(
+              child: (_shopProfile?.logoUrl != null && _shopProfile!.logoUrl!.isNotEmpty)
+                  ? Image.network(
+                      _shopProfile!.logoUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => _buildInitialPlaceholder(),
+                    )
+                  : _buildInitialPlaceholder(),
             ),
           ),
           const SizedBox(width: 16),
@@ -297,6 +292,25 @@ class ProfilePageState extends State<ProfilePage>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildInitialPlaceholder() {
+    return Center(
+      child: ShaderMask(
+        shaderCallback: (bounds) =>
+            AppColors.primaryGradient.createShader(bounds),
+        child: Text(
+          (_userInfo?.fullName.isNotEmpty == true)
+              ? _userInfo!.fullName[0].toUpperCase()
+              : 'A',
+          style: GoogleFonts.poppins(
+            fontSize: 28,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
       ),
     );
   }

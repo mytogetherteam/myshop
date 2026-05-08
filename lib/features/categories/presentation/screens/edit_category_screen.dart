@@ -8,6 +8,7 @@ import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/presentation/widgets/global_modal.dart';
 import 'package:my_shop/core/presentation/widgets/success_sheet.dart';
 import 'package:my_shop/core/presentation/widgets/confirmation_sheet.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 
 
 class EditCategoryScreen extends StatefulWidget {
@@ -86,11 +87,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
     if (_nameEnController.text.isEmpty &&
         _nameMmController.text.isEmpty &&
         _nameThController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter at least one category name'),
-        ),
-      );
+      AppDialog.showToast(context, 'Please enter at least one category name', isError: true);
       return;
     }
 
@@ -127,22 +124,11 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
 
     if (mounted) {
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Successfully requested'),
-            backgroundColor: Color(0xFFED3973),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        AppDialog.showToast(context, 'Successfully requested');
         Navigator.of(context).pop(true);
       } else {
         setState(() => _isSaving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to update category'),
-            backgroundColor: Color(0xFFEF4444),
-          ),
-        );
+        AppDialog.showToast(context, 'Failed to update category', isError: true);
       }
     }
   }
@@ -163,12 +149,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
             if (success) {
               Navigator.pop(context, true);
             } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Failed to delete category'),
-                  backgroundColor: Color(0xFFEF4444),
-                ),
-              );
+              AppDialog.showToast(context, 'Failed to delete category', isError: true);
             }
           }
         },
