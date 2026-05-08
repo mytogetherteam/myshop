@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -29,12 +30,7 @@ class ImagePickResult {
   /// Returns true if an error was shown, false otherwise.
   bool handleSizeError(BuildContext context) {
     if (isTooLarge) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Image size must be less than 1MB'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppDialog.showToast(context, 'Image size must be less than 1MB', isError: true);
       return true;
     }
     return false;

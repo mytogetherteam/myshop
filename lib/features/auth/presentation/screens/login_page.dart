@@ -6,6 +6,7 @@ import 'package:my_shop/features/auth/data/services/auth_service.dart';
 import '../../../../core/network/websocket_service.dart';
 import '../../../../core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -83,34 +84,7 @@ class _LoginPageState extends State<LoginPage>
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(
-              Icons.error_outline_rounded,
-              color: Colors.white,
-              size: 20,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: GoogleFonts.poppins(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: const Color(0xFFEF4444),
-        behavior: SnackBarBehavior.fixed,
-        duration: const Duration(seconds: 4),
-        elevation: 0,
-      ),
-    );
+    AppDialog.showToast(context, message, isError: true);
   }
 
   @override

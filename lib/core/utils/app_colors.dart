@@ -34,4 +34,15 @@ class AppColors {
   static Color getFadedColor(Color color, [double opacity = 0.1]) {
     return color.withValues(alpha: opacity);
   }
+
+  static LinearGradient getFadedGradient(LinearGradient gradient, [double opacity = 0.5]) {
+    return LinearGradient(
+      colors: gradient.colors.map((c) => c.withValues(alpha: opacity)).toList(),
+      begin: gradient.begin,
+      end: gradient.end,
+      stops: gradient.stops,
+      tileMode: gradient.tileMode,
+      transform: gradient.transform,
+    );
+  }
 }

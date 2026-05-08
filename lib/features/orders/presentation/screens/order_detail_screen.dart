@@ -16,6 +16,7 @@ import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 
 
 class OrderDetailScreen extends StatefulWidget {
@@ -43,6 +44,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   final _cancelReasonController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isFormValid = false;
+  String _deliveryOption = 'PREPAID'; // 'PREPAID' or 'NORMAL'
+  String _selectedWaitingTime = '1';
 
   @override
   void initState() {
@@ -62,6 +65,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _deliveryPhoneNoController.text = (_currentOrder.riderPhone == null || _currentOrder.riderPhone!.isEmpty) ? '+66' : _currentOrder.riderPhone!;
     _deliveryTrackingUrlController.text = _currentOrder.deliveryTrackingUrl ?? '';
     _waitingTimeMinutesController.text = _currentOrder.waitingTimeMinutes.toString();
+    _selectedWaitingTime = _currentOrder.waitingTimeMinutes.toString();
+    // Default to '1' if the current value is not in our 1-15 range
+    final wt = int.tryParse(_selectedWaitingTime) ?? 1;
+    if (wt < 1 || wt > 15) {
+      _selectedWaitingTime = '1';
+      _waitingTimeMinutesController.text = '1';
+    }
+    _deliveryOption = _currentOrder.deliveryType == 'NORMAL' ? 'NORMAL' : 'PREPAID';
     _validateFormState();
   }
 
@@ -106,15 +117,35 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final rider = _deliveryRiderNameController.text;
     final phone = _deliveryPhoneNoController.text;
     final cycle = _deliveryCycleNoController.text;
+    final waiting = _waitingTimeMinutesController.text;
 
     final thaiPhoneRegex = RegExp(r'^\+66[0-9]{9}$');
 
-    final isValid = fee.isNotEmpty &&
+    bool isValid = false;
+
+    if (_currentOrder.status == 'PENDING') {
+      isValid = _deliveryOption == 'NORMAL' || (
+        fee.isNotEmpty &&
         double.tryParse(fee) != null &&
         rider.isNotEmpty &&
         phone.isNotEmpty &&
         thaiPhoneRegex.hasMatch(phone) &&
-        cycle.isNotEmpty;
+        cycle.isNotEmpty &&
+        waiting.isNotEmpty &&
+        int.tryParse(waiting) != null
+      );
+    } else if (_currentOrder.status == 'PREPARING' && _currentOrder.deliveryType == 'NORMAL') {
+      isValid = fee.isNotEmpty &&
+        double.tryParse(fee) != null &&
+        rider.isNotEmpty &&
+        phone.isNotEmpty &&
+        thaiPhoneRegex.hasMatch(phone) &&
+        cycle.isNotEmpty &&
+        waiting.isNotEmpty &&
+        int.tryParse(waiting) != null;
+    } else {
+      isValid = true;
+    }
 
     if (isValid != _isFormValid) {
       setState(() {
@@ -179,6 +210,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Future<void> _runOrderAction({
     required Future<dynamic> Function() action,
     String? errorMessage,
+    VoidCallback? onSuccess,
   }) async {
     setState(() => _isUpdating = true);
     final result = await action();
@@ -195,14 +227,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     
     if (success) {
       await _fetchOrderDetails();
+      if (onSuccess != null) onSuccess();
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorDetails ?? errorMessage ?? 'Operation failed. Please try again.'),
-          backgroundColor: const Color(0xFFEF4444),
-          behavior: SnackBarBehavior.fixed,
-        ),
-      );
+      AppDialog.showToast(context, errorDetails ?? errorMessage ?? 'Operation failed. Please try again.', isError: true);
     }
     
     if (mounted) {
@@ -218,15 +245,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Future<void> _handleConfirmOrder() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_deliveryOption == 'PREPAID' && !_formKey.currentState!.validate()) return;
 
     final payload = {
-      "deliveryFee": double.tryParse(_deliveryFeeController.text.replaceAll(',', '')) ?? 0,
-      "deliveryCycleNo": _deliveryCycleNoController.text,
-      "deliveryRiderName": _deliveryRiderNameController.text,
-      "deliveryPhoneNo": _deliveryPhoneNoController.text,
-      "deliveryTrackingUrl": _deliveryTrackingUrlController.text,
-      "waitingTimeMinutes": int.tryParse(_waitingTimeMinutesController.text) ?? 0,
+      "deliveryType": _deliveryOption,
+      "deliveryFee": _deliveryOption == 'NORMAL' ? 0 : (double.tryParse(_deliveryFeeController.text.replaceAll(',', '')) ?? 0),
+      "deliveryCycleNo": _deliveryOption == 'NORMAL' ? '' : _deliveryCycleNoController.text,
+      "deliveryRiderName": _deliveryOption == 'NORMAL' ? '' : _deliveryRiderNameController.text,
+      "deliveryPhoneNo": _deliveryOption == 'NORMAL' ? '' : _deliveryPhoneNoController.text,
+      "deliveryTrackingUrl": _deliveryOption == 'NORMAL' ? '' : _deliveryTrackingUrlController.text,
+      "waitingTimeMinutes": _deliveryOption == 'NORMAL' ? 0 : (int.tryParse(_waitingTimeMinutesController.text) ?? 0),
     };
 
     await _runOrderAction(
@@ -395,48 +423,41 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               const SizedBox(height: 32),
               Row(
                 children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        side: const BorderSide(color: Color(0xFFE2E8F0)),
-                      ),
-                      child: Text(
-                        'No, Go Back',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF64748B),
-                        ),
+                Expanded(
+                  child: PrimaryGradientButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    height: 52,
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFF8FAFC), Color(0xFFF8FAFC)],
+                    ),
+                    child: Text(
+                      'No, Go Back',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF64748B),
                       ),
                     ),
                   ),
+                ),
                   const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFEF4444),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        'Yes, Cancel Order',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
+                Expanded(
+                  child: PrimaryGradientButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    height: 52,
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFEF4444), Color(0xFFEF4444)],
+                    ),
+                    child: Text(
+                      'Yes, Cancel Order',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
                       ),
                     ),
                   ),
+                ),
                 ],
               ),
             ],
@@ -457,8 +478,17 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Future<void> _handleDispatchOrder() async {
+    final payload = {
+      "deliveryFee": double.tryParse(_deliveryFeeController.text.replaceAll(',', '')) ?? 0,
+      "deliveryCycleNo": _deliveryCycleNoController.text,
+      "deliveryRiderName": _deliveryRiderNameController.text,
+      "deliveryPhoneNo": _deliveryPhoneNoController.text,
+      "deliveryTrackingUrl": _deliveryTrackingUrlController.text,
+      "waitingTimeMinutes": int.tryParse(_waitingTimeMinutesController.text) ?? 0,
+    };
+
     await _runOrderAction(
-      action: () => OrderService().dispatchOrder(_currentOrder.id.toString()),
+      action: () => OrderService().dispatchOrder(_currentOrder.id.toString(), payload),
       errorMessage: 'Failed to dispatch order. Please try again.',
     );
   }
@@ -470,6 +500,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         'test',
       ),
       errorMessage: 'Failed to complete delivery. Please try again.',
+      onSuccess: () {
+        AppDialog.showSuccessDialog(
+          context,
+          message: 'The order MT-${_currentOrder.lastOrderNo} has been successfully delivered and completed.',
+        );
+      },
     );
   }
 
@@ -536,16 +572,22 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 color: const Color(0xFF1E293B),
               ),
             ),
-            Text(
-              _currentOrder.statusName,
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: _currentOrder.status == 'CANCELLED' 
-                    ? const Color(0xFFEF4444) 
-                    : AppColors.primary,
-              ),
-            ),
+            _currentOrder.status == 'CANCELLED' 
+                ? Text(
+                    _currentOrder.statusName,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFFEF4444),
+                    ),
+                  )
+                : GradientText(
+                    _currentOrder.statusName,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
           ],
         ),
         actions: const [
@@ -559,69 +601,94 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               opacity: _isUpdating ? 0.6 : 1.0,
         child: Column(
           children: [
-            // Sticky Progress Bar
-            _buildStickyProgress(),
+            // Fixed Header Section (Info + Status)
+            Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildCustomerSection(),
+                        const SizedBox(height: 16),
+                        _buildAddressSection(context),
+                      ],
+                    ),
+                  ),
+                  _buildStickyProgress(),
+                ],
+              ),
+            ),
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const SizedBox(height: 16),
+                    // Items Ordered (Padded)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        children: [
+                          _buildItemsSection(),
+                          const SizedBox(height: 8),
+                          const Divider(color: Color(0xFFF1F5F9), thickness: 1.5),
+                        ],
+                      ),
+                    ),
+
+                    // Confirmation Form (Full Width - it has its own internal padding)
+                    if (_currentOrder.status == 'PENDING' || 
+                       (_currentOrder.status == 'PREPARING' && 
+                        (_currentOrder.deliveryType == 'NORMAL' || (_currentOrder.riderName == null || _currentOrder.riderName!.isEmpty)))) ...[
+                      _buildConfirmationForm(),
+                      const SizedBox(height: 8),
+                    ],
+                    
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 12),
                           // Scheduled Info if applicable
                           if (_currentOrder.isScheduled) _buildScheduledInfo(),
                           
-                          // Customer Section
-                          _buildCustomerSection(),
-                          const SizedBox(height: 24),
-                          
-                          // Address Section
-                          _buildAddressSection(context),
-                          const SizedBox(height: 24),
-                          
                           // Rider Section if applicable
-                          if (_currentOrder.riderName != null) _buildRiderSection(),
+                          if (_currentOrder.riderName != null && _currentOrder.riderName!.trim().isNotEmpty) _buildRiderSection(),
                           
                           if (_currentOrder.estimatedDeliveryTime != null && _currentOrder.status != 'CANCELLED')
                             _buildEstimatedTimeBox(),
                           if (_currentOrder.status == 'CANCELLED')
                             _buildCancelReasonBox(),
-                          const SizedBox(height: 32),
-                        ],
-                      ),
-                    ),
-                    
-                    // Confirmation Form for Pending Orders (Full Width)
-                    if (_currentOrder.status == 'PENDING') ...[
-                      _buildConfirmationForm(),
-                      const SizedBox(height: 32),
-                    ],
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Items Ordered
-                          _buildItemsSection(),
-                          const SizedBox(height: 32),
+                          
+                          if (_currentOrder.isScheduled || 
+                              (_currentOrder.riderName != null && _currentOrder.riderName!.trim().isNotEmpty) ||
+                              (_currentOrder.estimatedDeliveryTime != null && _currentOrder.status != 'CANCELLED') ||
+                              _currentOrder.status == 'CANCELLED')
+                            const SizedBox(height: 16),
 
                           // Payment Slip Section
                           if (_currentOrder.paymentSlipUrl != null) ...[
                             _buildPaymentSlipSection(),
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 24),
                           ],
                           
                           // Order Modifications
-                          if (_currentOrder.modifications.isNotEmpty) _buildModificationsSection(),
+                          if (_currentOrder.modifications.isNotEmpty) ...[
+                            _buildModificationsSection(),
+                            const SizedBox(height: 12),
+                          ],
                           
                           // Payment Summary
                           _buildPaymentSummary(),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 32),
 
                           // Calculate delivery fee box (hidden for DELIVERED & CANCELLED)
                           if (_currentOrder.status != 'CANCELLED' && _currentOrder.status != 'DELIVERED') ...[
@@ -704,13 +771,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
           color: const Color(0xFFFFF1F2),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
         child: Row(
           children: [
@@ -732,15 +792,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+          color: Colors.white,
+        ),
       child: _buildAnimatedProgress(),
     );
   }
@@ -892,7 +945,7 @@ Widget _buildAnimatedProgress() {
               Text(
                 _currentOrder.customerName,
                 style: GoogleFonts.poppins(
-                  fontSize: 18,
+                  fontSize: 15,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -940,7 +993,7 @@ Widget _buildAnimatedProgress() {
             Text(
               _currentOrder.deliveryAddressTitle,
               style: GoogleFonts.poppins(
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: AppColors.onSurface,
               ),
@@ -948,13 +1001,7 @@ Widget _buildAnimatedProgress() {
             GestureDetector(
               onTap: () {
                 Clipboard.setData(ClipboardData(text: _currentOrder.deliveryAddressDetail));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Address copied to clipboard'),
-                    backgroundColor: AppColors.primary,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
+                AppDialog.showToast(context, 'Address copied to clipboard');
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -985,8 +1032,8 @@ Widget _buildAnimatedProgress() {
         Text(
           _currentOrder.deliveryAddressDetail,
           style: GoogleFonts.poppins(
-            fontSize: 14,
-            color: AppColors.onSurface,
+            fontSize: 12,
+            color: AppColors.onSurfaceVariant,
             height: 1.5,
           ),
         ),
@@ -996,7 +1043,7 @@ Widget _buildAnimatedProgress() {
             child: Text(
               '${_currentOrder.deliveryAddress?.buildingName ?? ''} ${_currentOrder.deliveryAddress?.floor != null ? "(Floor: ${_currentOrder.deliveryAddress!.floor})" : ""}',
               style: GoogleFonts.poppins(
-                fontSize: 13,
+                fontSize: 11,
                 color: AppColors.onSurfaceVariant,
               ),
             ),
@@ -1036,7 +1083,7 @@ Widget _buildAnimatedProgress() {
         : '-';
     
     return Container(
-      margin: const EdgeInsets.only(bottom: 24),
+      margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.errorContainer,
@@ -1083,7 +1130,7 @@ Widget _buildAnimatedProgress() {
 
   Widget _buildRiderSection() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 24),
+      margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surfaceVariant,
@@ -1203,7 +1250,7 @@ Widget _buildAnimatedProgress() {
             ],
           ),
         )),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
       ],
     );
   }
@@ -1229,13 +1276,17 @@ Widget _buildAnimatedProgress() {
                 _currentOrder.status == 'PAYMENT_UPLOADED')
               TextButton.icon(
                 onPressed: _showDemoDialog,
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
                 icon: const GradientWidget(child: Icon(PhosphorIconsRegular.pencilSimple, size: 16)),
-                label: Text(
+                label: GradientText(
                   'Edit order',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFFED3973),
                   ),
                 ),
               ),
@@ -1299,13 +1350,6 @@ Widget _buildAnimatedProgress() {
                         ],
                       ),
                     ),
-                    Text(
-                      '×${item.quantity}',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: const Color(0xFF94A3B8),
-                      ),
-                    ),
                   ],
                 ),
                 if (item.optionsString != null && item.optionsString!.isNotEmpty)
@@ -1339,13 +1383,26 @@ Widget _buildAnimatedProgress() {
             ),
           ),
           const SizedBox(width: 8),
-          Text(
-            item.displayPrice,
-            style: GoogleFonts.poppins(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF1E293B),
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '×${item.quantity}',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  color: const Color(0xFF94A3B8),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                item.displayPrice,
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1395,12 +1452,11 @@ Widget _buildAnimatedProgress() {
               ),
             ),
             const Spacer(),
-            Text(
+            GradientText(
               _currentOrder.displayDeliveryFee.isNotEmpty ? _currentOrder.displayDeliveryFee : '+฿ 0',
               style: GoogleFonts.poppins(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFFED3973),
               ),
             ),
             const Icon(Icons.chevron_right, color: Color(0xFF94A3B8), size: 20),
@@ -1562,7 +1618,7 @@ Widget _buildAnimatedProgress() {
         break;
       case 'PREPARING':
         mainButtonText = 'Picked Up by Rider';
-        onPressed = _isUpdating ? null : _handleDispatchOrder;
+        onPressed = (_isUpdating || !_isFormValid) ? null : _handleDispatchOrder;
         isCancelable = false;
         break;
       case 'ON_THE_WAY':
@@ -1589,57 +1645,74 @@ Widget _buildAnimatedProgress() {
         border: Border(top: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
 
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          if (isCancelable) ...[
-            Expanded(
-              child: ElevatedButton(
-                onPressed: _isUpdating ? null : _handleCancelOrder,
-                style: _getSecondaryButtonStyle(),
-                child: Text(
-                  'Cancel',
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-          ],
-          if (_currentOrder.status == 'PAYMENT_VERIFIED' || _currentOrder.status == 'PAYMENT_UPLOADED') ...[
-            Expanded(
-              child: ElevatedButton(
-                onPressed: _isUpdating ? null : _handleRequestSlip,
-                style: _getSecondaryButtonStyle(),
-                child: Text(
-                  'Revise',
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-          ],
-          Expanded(
-            flex: 2,
-            child: PrimaryGradientButton(
-              onPressed: onPressed,
-              isLoading: _isUpdating,
-              child: (_currentOrder.status == 'CONFIRMED' || _currentOrder.status == 'PAYMENT_SLIP_REQUESTED')
-                  ? AnimatedEllipsisText(
-                      text: mainButtonText,
+          Row(
+            children: [
+              if (isCancelable) ...[
+                Expanded(
+                  child: PrimaryGradientButton(
+                    onPressed: _isUpdating ? null : _handleCancelOrder,
+                    height: 54,
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFFF1F2), Color(0xFFFFF1F2)],
+                    ),
+                    child: GradientText(
+                      'Cancel',
                       style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w600, 
                         fontSize: 14,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Text(
-                      mainButtonText,
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Colors.white,
                       ),
                     ),
-            ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+              if (_currentOrder.status == 'PAYMENT_VERIFIED' || _currentOrder.status == 'PAYMENT_UPLOADED') ...[
+                Expanded(
+                  child: PrimaryGradientButton(
+                    onPressed: _isUpdating ? null : _handleRequestSlip,
+                    height: 54,
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFFF1F2), Color(0xFFFFF1F2)],
+                    ),
+                    child: GradientText(
+                      'Revise',
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w600, 
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+              Expanded(
+                flex: 2,
+                child: PrimaryGradientButton(
+                  onPressed: onPressed,
+                  isLoading: _isUpdating,
+                  child: (_currentOrder.status == 'CONFIRMED' || _currentOrder.status == 'PAYMENT_SLIP_REQUESTED')
+                      ? AnimatedEllipsisText(
+                          text: mainButtonText,
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          mainButtonText,
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1682,77 +1755,199 @@ Widget _buildAnimatedProgress() {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-            'Prepare to confirm',
-            style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF1E293B),
+            if (_currentOrder.status == 'PENDING') ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _deliveryOption = 'PREPAID';
+                          _validateFormState();
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          gradient: _deliveryOption == 'PREPAID' ? AppColors.primaryGradient : null,
+                          color: _deliveryOption == 'PREPAID' ? null : const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          'Fast Delivery',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: _deliveryOption == 'PREPAID' ? Colors.white : const Color(0xFF64748B),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _deliveryOption = 'NORMAL';
+                          _validateFormState();
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          gradient: _deliveryOption == 'NORMAL' ? AppColors.primaryGradient : null,
+                          color: _deliveryOption == 'NORMAL' ? null : const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          'Flexible Delivery',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: _deliveryOption == 'NORMAL' ? Colors.white : const Color(0xFF64748B),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildInputField(
-                    'Delivery Fee', 
-                    _deliveryFeeController, 
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      ThousandsSeparatorInputFormatter()
-                    ],
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return 'Required';
-                      final numValue = value.replaceAll(',', '');
-                      if (double.tryParse(numValue) == null) return 'Invalid number';
-                      return null;
-                    },
-                  )
+              const SizedBox(height: 24),
+            ],
+            if (_deliveryOption == 'PREPAID' || (_currentOrder.status == 'PREPARING' && _currentOrder.deliveryType == 'NORMAL')) ...[
+              Text(
+                _currentOrder.status == 'PREPARING' ? 'Dispatch Information' : 'Prepare to confirm',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF1E293B),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildInputField(
-                    'Waiting Time (Min)', 
-                    _waitingTimeMinutesController, 
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly]
-                  )
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (_deliveryOption == 'NORMAL' && _currentOrder.status == 'PENDING') ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _buildInputField(
-              'Rider Name', 
-              _deliveryRiderNameController,
-              validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
-            ),
-            const SizedBox(height: 12),
-            _buildInputField(
-              'Rider Phone', 
-              _deliveryPhoneNoController, 
-              keyboardType: TextInputType.phone,
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9+]')),
-              ],
-              validator: (value) {
-                if (value == null || value.isEmpty || value == '+66') return 'Required';
-                // Thai Mobile: +66 + 9 digits (total 12 chars)
-                final thaiPhoneRegex = RegExp(r'^\+66[0-9]{9}$');
-                if (!thaiPhoneRegex.hasMatch(value)) {
-                  return 'Invalid Thai number (+66xxxxxxxxx)';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 12),
-            _buildInputField(
-              'Cycle No / License', 
-              _deliveryCycleNoController,
-              validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
-            ),
-            const SizedBox(height: 12),
-            _buildInputField('Tracking URL', _deliveryTrackingUrlController),
+                child: Row(
+                  children: [
+                    const GradientWidget(
+                      child: Icon(PhosphorIconsRegular.info, size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Flexible Delivery',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF1E293B),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Use this for orders that take a long time to cook. Customers pay for the food now and pay the delivery fee to the rider later.',
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              color: const Color(0xFF64748B),
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ] else ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildInputField(
+                      'Delivery Fee', 
+                      _deliveryFeeController, 
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        ThousandsSeparatorInputFormatter()
+                      ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) return 'Required';
+                        final numValue = value.replaceAll(',', '');
+                        if (double.tryParse(numValue) == null) return 'Invalid number';
+                        return null;
+                      },
+                    )
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _deliveryOption == 'NORMAL'
+                      ? _buildInputField(
+                          'Waiting Time', 
+                          _waitingTimeMinutesController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                          validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
+                        )
+                      : _buildDropdownField(
+                          'Waiting Time', 
+                          _selectedWaitingTime, 
+                          List.generate(15, (i) => (i + 1).toString()),
+                          (value) {
+                            if (value != null) {
+                              setState(() {
+                                _selectedWaitingTime = value;
+                                _waitingTimeMinutesController.text = value;
+                              });
+                            }
+                          },
+                        )
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _buildInputField(
+                'Rider Name', 
+                _deliveryRiderNameController,
+                validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
+              ),
+              const SizedBox(height: 12),
+              _buildInputField(
+                'Rider Phone', 
+                _deliveryPhoneNoController, 
+                keyboardType: TextInputType.phone,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9+]')),
+                ],
+                validator: (value) {
+                  if (value == null || value.isEmpty || value == '+66') return 'Required';
+                  // Thai Mobile: +66 + 9 digits (total 12 chars)
+                  final thaiPhoneRegex = RegExp(r'^\+66[0-9]{9}$');
+                  if (!thaiPhoneRegex.hasMatch(value)) {
+                    return 'Invalid Thai number (+66xxxxxxxxx)';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              _buildInputField(
+                'Cycle No / License', 
+                _deliveryCycleNoController,
+                validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
+              ),
+              const SizedBox(height: 12),
+              _buildInputField('Tracking URL', _deliveryTrackingUrlController),
+            ],
           ],
         ),
       ),
@@ -1809,6 +2004,50 @@ Widget _buildAnimatedProgress() {
     );
   }
 
+  Widget _buildDropdownField(String label, String value, List<String> items, Function(String?) onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF64748B),
+          ),
+        ),
+        const SizedBox(height: 6),
+        DropdownButtonFormField<String>(
+          value: value,
+          icon: const Icon(PhosphorIconsRegular.caretDown, size: 16),
+          items: items.map((i) => DropdownMenuItem(
+            value: i,
+            child: Text('$i mins', style: GoogleFonts.poppins(fontSize: 14)),
+          )).toList(),
+          onChanged: onChanged,
+          dropdownColor: Colors.white,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: AppColors.primary),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   /// Builds the payment slip / receipt section.
   /// Handles two formats the customer app may upload:
   ///  1. Base64 data URI  → `data:image/jpeg;base64,...`  (decoded via Image.memory)
@@ -1824,7 +2063,7 @@ Widget _buildAnimatedProgress() {
         final base64Str = slipUrl.contains(',') ? slipUrl.split(',').last : slipUrl;
         final bytes = base64Decode(base64Str);
         imageWidget = ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(20),
           child: Image.memory(
             bytes,
             width: double.infinity,
@@ -1837,7 +2076,7 @@ Widget _buildAnimatedProgress() {
       }
     } else {
       imageWidget = ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(20),
         child: Image.network(
           slipUrl,
           width: double.infinity,
@@ -1917,7 +2156,7 @@ Widget _buildAnimatedProgress() {
       height: 200,
       decoration: BoxDecoration(
         color: const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

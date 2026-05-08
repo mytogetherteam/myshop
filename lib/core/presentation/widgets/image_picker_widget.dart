@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:my_shop/core/data/services/image_upload_service.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 
 /// Shape of the image picker preview area.
 enum ImagePickerShape {
@@ -155,20 +156,12 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
     }
 
     if (result.permissionDenied) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Permission denied. Please allow access in Settings.')),
-      );
+      AppDialog.showToast(context, 'Permission denied. Please allow access in Settings.', isError: true);
       return;
     }
-
+    
     if (result.isTooLarge) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Image size must be less than 1MB'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppDialog.showToast(context, 'Image size must be less than 1MB', isError: true);
       return;
     }
 

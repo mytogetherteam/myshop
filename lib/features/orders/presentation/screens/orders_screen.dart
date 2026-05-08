@@ -9,6 +9,7 @@ import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -44,6 +45,30 @@ class OrdersScreenState extends State<OrdersScreen>
     super.initState();
     _tabController = TabController(length: 6, vsync: this);
     _setupWebSocketListener();
+    _fetchInitialData();
+  }
+
+  Future<void> _fetchInitialData() async {
+    final tabs = ['NEW', 'PAYMENT', 'PREPARING', 'DELIVERING', 'DELIVERED', 'CANCELLED'];
+    
+    // Fetch all in parallel
+    final results = await Future.wait(
+      tabs.map((tab) => _orderService.getOrders(tab: tab))
+    );
+
+    if (mounted) {
+      setState(() {
+        for (int i = 0; i < tabs.length; i++) {
+          final orders = results[i];
+          if (orders != null) {
+            _tabCounts[tabs[i]] = orders.length;
+          }
+        }
+      });
+      // After fetching, we can trigger refreshAll to notify any built tabs,
+      // but they will also load themselves if they were built during the fetch.
+      refreshAll();
+    }
   }
 
   void _setupWebSocketListener() {
@@ -163,6 +188,7 @@ class OrdersScreenState extends State<OrdersScreen>
                   updateStream: _orderUpdatesController.stream,
                   refreshStream: _refreshController.stream,
                   onCountUpdated: (count) => _updateTabCount('PAYMENT', count),
+                  loadImmediately: true,
                 ),
                 OrderListTabView(
                   tabStatus: 'PREPARING',
@@ -171,6 +197,7 @@ class OrdersScreenState extends State<OrdersScreen>
                   refreshStream: _refreshController.stream,
                   onCountUpdated: (count) =>
                       _updateTabCount('PREPARING', count),
+                  loadImmediately: true,
                 ),
                 OrderListTabView(
                   tabStatus: 'DELIVERING',
@@ -179,6 +206,7 @@ class OrdersScreenState extends State<OrdersScreen>
                   refreshStream: _refreshController.stream,
                   onCountUpdated: (count) =>
                       _updateTabCount('DELIVERING', count),
+                  loadImmediately: true,
                 ),
                 OrderListTabView(
                   tabStatus: 'DELIVERED',
@@ -187,6 +215,7 @@ class OrdersScreenState extends State<OrdersScreen>
                   refreshStream: _refreshController.stream,
                   onCountUpdated: (count) =>
                       _updateTabCount('DELIVERED', count),
+                  loadImmediately: true,
                 ),
                 OrderListTabView(
                   tabStatus: 'CANCELLED',
@@ -195,6 +224,7 @@ class OrdersScreenState extends State<OrdersScreen>
                   refreshStream: _refreshController.stream,
                   onCountUpdated: (count) =>
                       _updateTabCount('CANCELLED', count),
+                  loadImmediately: true,
                 ),
 
               ],
@@ -269,7 +299,7 @@ class OrderListTabView extends StatefulWidget {
     required this.updateStream,
     required this.refreshStream,
     required this.onCountUpdated,
-    this.loadImmediately = false,
+    this.loadImmediately = true,
   });
 
 
@@ -410,12 +440,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
         _isLoadingMore = false;
       });
       if (!isRefresh) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to load more orders.'),
-            backgroundColor: Color(0xFFEF4444),
-          ),
-        );
+        AppDialog.showToast(context, 'Failed to load more orders.', isError: true);
       }
       return;
     }

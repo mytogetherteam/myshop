@@ -5,6 +5,7 @@ import '../../data/services/profile_service.dart';
 import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import '../../../../core/presentation/widgets/skeleton.dart';
 import '../../../../core/presentation/widgets/primary_gradient_button.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});
@@ -67,29 +68,14 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       if (!mounted) return;
 
       if (result['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? 'Password changed successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        AppDialog.showToast(context, result['message'] ?? 'Password changed successfully');
         Navigator.pop(context);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? 'Failed to change password'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppDialog.showToast(context, result['message'] ?? 'Failed to change password', isError: true);
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('An error occurred. Please try again.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppDialog.showToast(context, 'An error occurred. Please try again.', isError: true);
     } finally {
       if (mounted) {
         setState(() {

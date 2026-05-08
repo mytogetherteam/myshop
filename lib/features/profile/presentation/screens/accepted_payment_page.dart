@@ -9,6 +9,7 @@ import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import '../../../../core/presentation/widgets/global_modal.dart';
 import '../../../../core/presentation/widgets/status_badge.dart';
 import '../widgets/password_confirmation_sheet.dart';
+import '../../../../core/presentation/widgets/app_dialog.dart';
 
 import 'edit_payment_page.dart';
 
@@ -133,22 +134,10 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
     Navigator.pop(context); // Remove loading overlay
 
     if (result['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            result['message'] ?? 'Payment method deleted successfully',
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
+      AppDialog.showToast(context, result['message'] ?? 'Payment method deleted successfully');
       _loadPaymentMethods();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message'] ?? 'Failed to delete payment method'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppDialog.showToast(context, result['message'] ?? 'Failed to delete payment method', isError: true);
     }
   }
 

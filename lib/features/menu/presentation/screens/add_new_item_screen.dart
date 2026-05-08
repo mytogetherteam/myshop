@@ -20,6 +20,7 @@ import 'package:my_shop/core/data/models/master_data_model.dart';
 import 'package:my_shop/core/presentation/widgets/status_badge.dart';
 // import 'package:my_shop/core/presentation/widgets/success_sheet.dart';
 import 'package:my_shop/core/presentation/widgets/confirmation_sheet.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 
 class AddNewItemScreen extends StatefulWidget {
   final MenuItemModel? item;
@@ -293,22 +294,22 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     // Additional validations — scroll to first error
     if (_nameController.text.trim().isEmpty) {
       _scrollToKey(_nameKey);
-      _showError('Item Name (EN) is required');
+      AppDialog.showToast(context, 'Item Name (EN) is required', isError: true);
       return;
     }
     if (_selectedMasterCategory == null) {
       _scrollToKey(_masterCategoryKey);
-      _showError('Master Category is required');
+      AppDialog.showToast(context, 'Master Category is required', isError: true);
       return;
     }
     if (_selectedCategory == null) {
       _scrollToKey(_categoryKey);
-      _showError('Category is required');
+      AppDialog.showToast(context, 'Category is required', isError: true);
       return;
     }
     if (_selectedMealTypes.isEmpty) {
       _scrollToKey(_mealTypesKey);
-      _showError('At least one Meal Type is required');
+      AppDialog.showToast(context, 'At least one Meal Type is required', isError: true);
       return;
     }
     if (_selectedTagIds.isEmpty &&
@@ -319,19 +320,19 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         !_isRecommended &&
         !_isHotDeal) {
       _scrollToKey(_tagsKey);
-      _showError('At least one Tag is required');
+      AppDialog.showToast(context, 'At least one Tag is required', isError: true);
       return;
     }
     final opText = _originalPriceController.text.replaceAll(',', '');
     if (opText.isEmpty || (double.tryParse(opText) ?? 0) <= 0) {
       _scrollToKey(_priceKey);
-      _showError('Original Price is required and must be greater than 0');
+      AppDialog.showToast(context, 'Original Price is required and must be greater than 0', isError: true);
       return;
     }
 
     if (_priceWarning != null) {
       _scrollToKey(_priceKey);
-      _showError(_priceWarning!);
+      AppDialog.showToast(context, _priceWarning!, isError: true);
       return;
     }
 
@@ -342,7 +343,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
 
     if (priceVal > 999999.9 || originalPriceVal > 999999.9 || discountAmountVal > 999999.9) {
       _scrollToKey(_priceKey);
-      _showError('Price too large');
+      AppDialog.showToast(context, 'Price too large', isError: true);
       return;
     }
 
@@ -410,21 +411,10 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     if (mounted) {
       setState(() => _isSaving = false);
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Successfully requested'),
-            backgroundColor: Color(0xFFED3A72),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        AppDialog.showToast(context, 'Successfully requested');
         Navigator.of(context).pop(true);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to save item'),
-            backgroundColor: Color(0xFFEF4444),
-          ),
-        );
+        AppDialog.showToast(context, 'Failed to save item', isError: true);
       }
     }
   }
@@ -440,12 +430,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: const Color(0xFFEF4444),
-      ),
-    );
+    AppDialog.showToast(context, message, isError: true);
   }
 
   String? _priceValidator(String? value) {
@@ -680,13 +665,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                                     bool success = await _deleteItem();
                                     if (!context.mounted) return;
                                     if (success) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Successfully deleted'),
-                                          backgroundColor: Color(0xFFED3A72),
-                                          behavior: SnackBarBehavior.floating,
-                                        ),
-                                      );
+                                      AppDialog.showToast(context, 'Successfully deleted');
                                       Navigator.of(context).pop(true);
                                     }
                                   },
@@ -1997,12 +1976,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     
     if (result.isTooLarge) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Image size must be less than 1MB'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppDialog.showToast(context, 'Image size must be less than 1MB', isError: true);
       return;
     }
 

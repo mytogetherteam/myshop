@@ -9,6 +9,7 @@ import 'package:my_shop/core/presentation/widgets/confirmation_sheet.dart';
 import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_switch.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'edit_shop_profile_page.dart';
 import 'operating_hours_page.dart';
 import 'app_permissions_page.dart';
@@ -91,9 +92,7 @@ class ProfilePageState extends State<ProfilePage>
         });
       } else if (mounted) {
         setState(() => _isTogglingDelivery = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to update delivery status')),
-        );
+        AppDialog.showToast(context, 'Failed to update delivery status', isError: true);
       }
     } catch (e) {
       if (mounted) {

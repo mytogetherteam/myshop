@@ -7,6 +7,7 @@ import 'package:my_shop/features/notifications/data/repositories/notification_re
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:my_shop/features/orders/data/services/order_service.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
@@ -159,12 +160,7 @@ class _NotificationPageState extends State<NotificationPage> {
         // We can't easily find MainNavigationScreen here without a GlobalKey or similar.
         // However, if the user returns to the list later, the status might have changed.
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not find order details.'),
-            backgroundColor: Color(0xFFEF4444),
-          ),
-        );
+        AppDialog.showToast(context, 'Could not find order details.', isError: true);
       }
     }
   }
