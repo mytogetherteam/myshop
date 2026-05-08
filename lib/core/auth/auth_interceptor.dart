@@ -88,9 +88,7 @@ class AuthInterceptor extends Interceptor {
     final path = err.requestOptions.path;
     final isAuthPath = path.contains('/auth/');
 
-    if ((statusCode == 401 || statusCode == 403) &&
-        !isAuthPath &&
-        !_refreshLock) {
+    if (statusCode == 401 && !isAuthPath && !_refreshLock) {
       _refreshLock = true;
       _isRefreshing = true;
       try {
@@ -116,7 +114,7 @@ class AuthInterceptor extends Interceptor {
         _isRefreshing = false;
         if (e is DioException) {
           final refreshStatus = e.response?.statusCode;
-          if (refreshStatus == 401 || refreshStatus == 403) {
+          if (refreshStatus == 401) {
             await AuthService.instance.logoutWithRedirect();
           }
         }
@@ -130,7 +128,7 @@ class AuthInterceptor extends Interceptor {
       return;
     }
 
-    if ((statusCode == 401 || statusCode == 403) && !isAuthPath) {
+    if (statusCode == 401 && !isAuthPath) {
       _refreshLock = false;
       await AuthService.instance.logoutWithRedirect();
       handler.next(err);

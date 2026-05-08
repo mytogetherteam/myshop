@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'dart:io' if (dart.library.html) 'dart:html';
+import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
@@ -407,7 +408,7 @@ class MenuService {
   }
 
 
-  Future<bool> createMenuItem(Map<String, dynamic> payload, {File? image}) async {
+  Future<bool> createMenuItem(Map<String, dynamic> payload, {XFile? image}) async {
     try {
       debugPrint('POST REQUEST: $_menuItemsPath, Data: $payload');
       
@@ -419,10 +420,17 @@ class MenuService {
       };
 
       if (image != null) {
-        formDataMap['image'] = await MultipartFile.fromFile(
-          image.path,
-          filename: image.path.split('/').last,
-        );
+        if (kIsWeb) {
+          formDataMap['image'] = MultipartFile.fromBytes(
+            await image.readAsBytes(),
+            filename: image.name,
+          );
+        } else {
+          formDataMap['image'] = await MultipartFile.fromFile(
+            image.path,
+            filename: image.path.split('/').last,
+          );
+        }
       }
 
       final response = await ApiClient().dio.post(
@@ -444,7 +452,7 @@ class MenuService {
     return false;
   }
 
-  Future<bool> updateMenuItem(int itemId, Map<String, dynamic> payload, {File? image}) async {
+  Future<bool> updateMenuItem(int itemId, Map<String, dynamic> payload, {XFile? image}) async {
     try {
       final url = '$_menuItemsPath/$itemId';
       debugPrint('PUT REQUEST: $url, Data: $payload');
@@ -457,10 +465,17 @@ class MenuService {
       };
 
       if (image != null) {
-        formDataMap['image'] = await MultipartFile.fromFile(
-          image.path,
-          filename: image.path.split('/').last,
-        );
+        if (kIsWeb) {
+          formDataMap['image'] = MultipartFile.fromBytes(
+            await image.readAsBytes(),
+            filename: image.name,
+          );
+        } else {
+          formDataMap['image'] = await MultipartFile.fromFile(
+            image.path,
+            filename: image.path.split('/').last,
+          );
+        }
       }
 
       final response = await ApiClient().dio.put(

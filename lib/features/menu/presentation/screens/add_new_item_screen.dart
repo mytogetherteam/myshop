@@ -1,5 +1,3 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -21,6 +19,7 @@ import 'package:my_shop/core/presentation/widgets/status_badge.dart';
 // import 'package:my_shop/core/presentation/widgets/success_sheet.dart';
 import 'package:my_shop/core/presentation/widgets/confirmation_sheet.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/presentation/widgets/picked_image_preview.dart';
 
 class AddNewItemScreen extends StatefulWidget {
   final MenuItemModel? item;
@@ -393,19 +392,15 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     };
 
     bool success;
-    File? imageFile;
-    if (_pickedImage != null) {
-      imageFile = File(_pickedImage!.path);
-    }
 
     if (widget.item != null) {
       success = await _menuService.updateMenuItem(
         widget.item!.id,
         payload,
-        image: imageFile,
+        image: _pickedImage,
       );
     } else {
-      success = await _menuService.createMenuItem(payload, image: imageFile);
+      success = await _menuService.createMenuItem(payload, image: _pickedImage);
     }
 
     if (mounted) {
@@ -1910,9 +1905,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             fit: StackFit.expand,
             children: [
               if (_pickedImage != null)
-                kIsWeb
-                    ? Image.network(_pickedImage!.path, fit: BoxFit.cover)
-                    : Image.file(File(_pickedImage!.path), fit: BoxFit.cover)
+                buildPickedImagePreview(_pickedImage!, fit: BoxFit.cover)
               else if (existingUrl != null && existingUrl.isNotEmpty)
                 CachedNetworkImage(
                   imageUrl: existingUrl,

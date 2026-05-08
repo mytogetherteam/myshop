@@ -1,7 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_switch.dart';
@@ -22,6 +20,7 @@ import '../../../../core/data/services/image_upload_service.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/presentation/widgets/picked_image_preview.dart';
 
 class EditPaymentPage extends StatefulWidget {
   final PaymentMethod paymentMethod;
@@ -175,16 +174,12 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
 
     debugPrint('PAYMENT UPDATE DATA: ${jsonEncode(requestData)}');
 
-    File? qrPhoto;
     final pickedFile = _pickedImages[_currentPayment?.id.toString()];
-    if (pickedFile != null) {
-      qrPhoto = File(pickedFile.path);
-    }
 
     final result = await _paymentService.updatePaymentMethod(
       paymentTypeId: widget.paymentMethod.id,
       requestData: requestData,
-      qrPhoto: qrPhoto,
+      qrPhoto: pickedFile,
     );
 
     if (mounted) {
@@ -527,19 +522,12 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: pickedImage != null
-                  ? (kIsWeb
-                        ? Image.network(
-                            pickedImage.path,
-                            width: double.infinity,
-                            height: 250,
-                            fit: BoxFit.cover,
-                          )
-                        : Image.file(
-                            File(pickedImage.path),
-                            width: double.infinity,
-                            height: 250,
-                            fit: BoxFit.cover,
-                          ))
+                  ? buildPickedImagePreview(
+                      pickedImage,
+                      width: double.infinity,
+                      height: 250,
+                      fit: BoxFit.cover,
+                    )
                   : (_currentPayment?.qrImageUrl.isNotEmpty ?? false
                         ? Image.network(
                             _currentPayment!.fullQrImageUrl,

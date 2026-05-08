@@ -3,7 +3,7 @@ import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'dart:io';
+import 'dart:io' show Platform, File, Process;
 
 /// Result returned after picking an image.
 class ImagePickResult {
@@ -59,12 +59,14 @@ class ImageUploadService {
     double? maxHeight = 1920,
     int imageQuality = 85,
   }) async {
-    final granted = await _requestGalleryPermission();
-    if (!granted.isGranted) {
-      return ImagePickResult(
-        permissionDenied: true,
-        permanentlyDenied: granted.isPermanentlyDenied,
-      );
+    if (!kIsWeb) {
+      final granted = await _requestGalleryPermission();
+      if (!granted.isGranted) {
+        return ImagePickResult(
+          permissionDenied: true,
+          permanentlyDenied: granted.isPermanentlyDenied,
+        );
+      }
     }
 
     return _pick(
@@ -81,12 +83,14 @@ class ImageUploadService {
     double? maxHeight = 1920,
     int imageQuality = 85,
   }) async {
-    final granted = await _requestCameraPermission();
-    if (!granted.isGranted) {
-      return ImagePickResult(
-        permissionDenied: true,
-        permanentlyDenied: granted.isPermanentlyDenied,
-      );
+    if (!kIsWeb) {
+      final granted = await _requestCameraPermission();
+      if (!granted.isGranted) {
+        return ImagePickResult(
+          permissionDenied: true,
+          permanentlyDenied: granted.isPermanentlyDenied,
+        );
+      }
     }
 
     return _pick(
@@ -98,7 +102,11 @@ class ImageUploadService {
   }
 
   /// Returns the [File] for a given [XFile].
-  File toFile(XFile xFile) => File(xFile.path);
+  /// Note: Returns null on web as dart:io File is not supported.
+  File? toFile(XFile xFile) {
+    if (kIsWeb) return null;
+    return File(xFile.path);
+  }
 
   /// Validates if the file size is within the allowed limit (default 1MB).
   /// Returns true if valid, false if too large.
@@ -141,7 +149,7 @@ class ImageUploadService {
   }
 
   Future<int> _getAndroidSdkVersion() async {
-    if (kIsWeb) return 0;
+    if (kIsWeb || !Platform.isAndroid) return 0;
     try {
       final result = await Process.run('getprop', ['ro.build.version.sdk']);
       return int.tryParse(result.stdout.toString().trim()) ?? 33;
@@ -177,3 +185,4 @@ class ImageUploadService {
     }
   }
 }
+

@@ -5,6 +5,7 @@ import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/core/network/api_helper.dart';
 import 'package:my_shop/features/auth/data/models/auth_models.dart';
 import 'package:my_shop/core/network/api_client.dart';
+import 'package:my_shop/features/profile/data/services/shop_service.dart';
 
 class AuthService {
   static const String _authPath = '/api/shop/auth';
@@ -41,6 +42,7 @@ class AuthService {
         if (authResponse.userInfo != null) {
           await StorageService.instance.saveUserInfo(authResponse.userInfo!);
         }
+        await _ensureSelectedShopId();
       }
 
       return authResponse;
@@ -80,6 +82,26 @@ class AuthService {
       '/login',
       (route) => false,
     );
+  }
+
+  Future<void> _ensureSelectedShopId() async {
+    try {
+      final shops = await ShopService().getShops();
+      if (shops.isEmpty) {
+        await StorageService.instance.removeSelectedShopId();
+        return;
+      }
+
+      final currentShopId = await StorageService.instance.getSelectedShopId();
+      final hasCurrentShop = currentShopId != null &&
+          shops.any((shop) => shop.id == currentShopId);
+
+      if (!hasCurrentShop) {
+        await StorageService.instance.saveSelectedShopId(shops.first.id);
+      }
+    } catch (e) {
+      debugPrint('[AuthService._ensureSelectedShopId] Error: $e');
+    }
   }
 
   Future<String?> performRefresh(Dio dio) async {

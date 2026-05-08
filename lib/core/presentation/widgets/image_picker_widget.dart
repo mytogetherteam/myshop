@@ -1,7 +1,9 @@
-import 'dart:io';
+import 'dart:io' show File;
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:my_shop/core/data/services/image_upload_service.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -185,20 +187,21 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
         ),
         content: const Text(
           'Camera and photo library access is required to upload images. '
-          'Please enable it in your device Settings.',
+          'Please enable it in your device settings.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             child: const Text('Cancel'),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              openAppSettings();
-            },
-            child: const Text('Open Settings'),
-          ),
+          if (!kIsWeb)
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                openAppSettings();
+              },
+              child: const Text('Open Settings'),
+            ),
         ],
       ),
     );
@@ -214,12 +217,21 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
     Widget image;
 
     if (_localFile != null) {
-      image = Image.file(
-        File(_localFile!.path),
-        fit: BoxFit.cover,
-        width: widget.width,
-        height: widget.height,
-      );
+      if (kIsWeb) {
+        image = Image.network(
+          _localFile!.path,
+          fit: BoxFit.cover,
+          width: widget.width,
+          height: widget.height,
+        );
+      } else {
+        image = Image.file(
+          File(_localFile!.path),
+          fit: BoxFit.cover,
+          width: widget.width,
+          height: widget.height,
+        );
+      }
     } else if (widget.imageUrl != null && widget.imageUrl!.isNotEmpty) {
       image = CachedNetworkImage(
         imageUrl: widget.imageUrl!,

@@ -32,18 +32,41 @@ class _AuthWrapperState extends State<AuthWrapper> {
     var shopId = await StorageService.instance.getSelectedShopId();
     debugPrint('📍 [AuthWrapper] Current shopId in storage: $shopId');
 
+    try {
+      final shops = await ShopService().getShops();
+      debugPrint('📍 [AuthWrapper] Found ${shops.length} shops for user');
+
+      if (shops.isNotEmpty) {
+        final hasMatchingShop = shopId != null &&
+            shops.any((shop) => shop.id == shopId);
+        if (!hasMatchingShop) {
+          final firstShop = shops.first;
+          await StorageService.instance.saveSelectedShopId(firstShop.id);
+          shopId = firstShop.id;
+          debugPrint(
+            '📍 [AuthWrapper] Stored selected shopId: ${firstShop.id}',
+          );
+        }
+      } else {
+        await StorageService.instance.removeSelectedShopId();
+        shopId = null;
+      }
+    } catch (e) {
+      debugPrint('📍 [AuthWrapper] Error validating shopId: $e');
+      return const GlobalShopSelectionPage(isInitialFlow: true);
+    }
+
     if (shopId == null) {
       try {
         final shops = await ShopService().getShops();
-        debugPrint('📍 [AuthWrapper] Found ${shops.length} shops for user');
-
         if (shops.isEmpty) {
           debugPrint('📍 [AuthWrapper] No shops found, proceeding to home');
           // No shops available, continue to home
         } else {
-          // ALWAYS pick the first one to avoid asking user
           final firstShop = shops.first;
-          debugPrint('📍 [AuthWrapper] Auto-selecting first shop: ${firstShop.name}');
+          debugPrint(
+            '📍 [AuthWrapper] Auto-selecting first shop: ${firstShop.name}',
+          );
           await StorageService.instance.saveSelectedShopId(firstShop.id);
           shopId = firstShop.id;
         }
