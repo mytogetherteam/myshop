@@ -255,7 +255,7 @@ class ProfilePageState extends State<ProfilePage>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _userInfo?.fullName ?? 'Shop Admin',
+                  _shopProfile?.nameEn ?? 'Shop Name',
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -302,9 +302,9 @@ class ProfilePageState extends State<ProfilePage>
         shaderCallback: (bounds) =>
             AppColors.primaryGradient.createShader(bounds),
         child: Text(
-          (_userInfo?.fullName.isNotEmpty == true)
-              ? _userInfo!.fullName[0].toUpperCase()
-              : 'A',
+          (_shopProfile?.nameEn != null && _shopProfile!.nameEn!.isNotEmpty)
+              ? _shopProfile!.nameEn![0].toUpperCase()
+              : 'S',
           style: GoogleFonts.poppins(
             fontSize: 28,
             fontWeight: FontWeight.w700,

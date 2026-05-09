@@ -253,7 +253,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                     ),
                     child: Column(
                       children: [
-                        const SizedBox(height: 100), // Space for floating card
+                        _buildProfileHeader(),
                         _buildInfoSection(),
                       ],
                     ),
@@ -298,123 +298,6 @@ class _ShopProfilePageState extends State<ShopProfilePage>
             ),
           ),
 
-          // ── CHANGE 2: Floating Info Card ─────────────────────────────────
-          AnimatedBuilder(
-            animation: _scrollController,
-            builder: (context, child) {
-              double scrollOffset = 0;
-              if (_scrollController.hasClients) {
-                scrollOffset = _scrollController.offset;
-              }
-
-              // Card sits just below the hero image bottom edge
-              double cardTop = _cardTopBase - scrollOffset;
-
-              // Fade out as user scrolls up
-              double opacity = 1.0;
-              if (scrollOffset > 50) {
-                opacity = (1.0 - (scrollOffset - 50) / 200).clamp(0.0, 1.0);
-              }
-
-              if (opacity <= 0) return const SizedBox.shrink();
-
-              return Positioned(
-                top: cardTop,
-                left: 16,
-                right: 16,
-                child: Opacity(
-                  opacity: opacity,
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.12),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        // Logo
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(14),
-                            child: (_shopProfile?.logoUrl ?? '').isNotEmpty
-                                ? CachedNetworkImage(
-                                    imageUrl: (_shopProfile?.logoUrl ?? ''),
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) =>
-                                        const ImageSkeletonLoader(),
-                                    errorWidget: (context, url, error) =>
-                                        _buildLogoFallback(
-                                          _shopProfile?.nameEn ?? '',
-                                        ),
-                                  )
-                                : _buildLogoFallback(
-                                    _shopProfile?.nameEn ?? '',
-                                  ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        // Name + category
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      _shopProfile?.nameEn ?? '',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  if (_shopProfile?.isVerified == true) ...[
-                                    const SizedBox(width: 4),
-                                    const PhosphorIcon(
-                                      PhosphorIconsFill.sealCheck,
-                                      size: 16,
-                                      color: Color(0xFF38BDF8),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              if ((_shopProfile?.categoryEn ?? '').isNotEmpty)
-                                Text(
-                                  '${_shopProfile?.categoryEn}${(_shopProfile?.subCategoryEn ?? '').isNotEmpty ? ' • ${_shopProfile?.subCategoryEn}' : ''}',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    color: Colors.grey[600],
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
 
           // ── App Bar ──────────────────────────────────────────────────────
           Positioned(
@@ -527,6 +410,91 @@ class _ShopProfilePageState extends State<ShopProfilePage>
   // -------------------------------------------------------------------------
   // Info Section (below hero)
   // -------------------------------------------------------------------------
+  Widget _buildProfileHeader() {
+    return Transform.translate(
+      offset: const Offset(0, -36),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ClipOval(
+                child: (_shopProfile?.logoUrl ?? '').isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: _shopProfile!.logoUrl!,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => const ImageSkeletonLoader(),
+                        errorWidget: (context, url, error) => _buildLogoFallback(_shopProfile?.nameEn ?? ''),
+                      )
+                    : _buildLogoFallback(_shopProfile?.nameEn ?? ''),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            _shopProfile?.nameEn ?? '',
+                            style: GoogleFonts.poppins(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF1E293B),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (_shopProfile?.isVerified == true) ...[
+                          const SizedBox(width: 6),
+                          const PhosphorIcon(
+                            PhosphorIconsFill.sealCheck,
+                            size: 18,
+                            color: Color(0xFF38BDF8),
+                          ),
+                        ],
+                      ],
+                    ),
+                    if ((_shopProfile?.categoryEn ?? '').isNotEmpty)
+                      Text(
+                        '${_shopProfile?.categoryEn}${(_shopProfile?.subCategoryEn ?? '').isNotEmpty ? ' • ${_shopProfile?.subCategoryEn}' : ''}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: const Color(0xFF64748B),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildInfoSection() {
     return Container(
       color: Colors.white,
@@ -538,7 +506,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Restaurant Details',
+                'Shop Details',
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,

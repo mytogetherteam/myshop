@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import '../widgets/menu_item_card.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import '../../data/services/menu_service.dart';
 import '../../data/models/menu_item_model.dart';
 import 'add_new_item_screen.dart';
@@ -29,6 +31,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
   final TextEditingController _searchCtrl = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   Timer? _debounce;
+  bool _isSearching = false;
 
   @override
   void initState() {
@@ -216,76 +219,101 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: AppColors.primaryGradient,
+          ),
+        ),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1E293B)),
-          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            if (_isSearching) {
+              setState(() {
+                _isSearching = false;
+                _searchCtrl.clear();
+              });
+            } else {
+              Navigator.pop(context);
+            }
+          },
         ),
-        title: Text(
-          'Manage Shop Menu',
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF1E293B),
-          ),
+        title: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: _isSearching
+              ? TextField(
+                  key: const ValueKey('searchField'),
+                  controller: _searchCtrl,
+                  autofocus: true,
+                  style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),
+                  decoration: InputDecoration(
+                    hintText: 'Search menu items...',
+                    hintStyle: GoogleFonts.poppins(color: Colors.white70, fontSize: 14),
+                    border: InputBorder.none,
+                  ),
+                )
+              : Text(
+                  'Manage Shop Menu',
+                  key: const ValueKey('titleText'),
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
         ),
-        centerTitle: true,
+        centerTitle: false,
+        actions: [
+          if (!_isSearching) ...[
+            IconButton(
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              icon: const Icon(Icons.search, color: Colors.white),
+              onPressed: () => setState(() => _isSearching = true),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: TextButton(
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const AddNewItemScreen()),
+                  );
+                  if (result == true) _fetchItems(isRefresh: true);
+                },
+                child: Text(
+                  '+ Create',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
+          if (_isSearching)
+            IconButton(
+              icon: const Icon(Icons.close, color: Colors.white),
+              onPressed: () {
+                setState(() {
+                  _isSearching = false;
+                  _searchCtrl.clear();
+                });
+              },
+            ),
+        ],
       ),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-              ),
-              child: TextField(
-                controller: _searchCtrl,
-                decoration: InputDecoration(
-                  hintText: 'Search menu items...',
-                  hintStyle: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: const Color(0xFF94A3B8),
-                  ),
-                  border: InputBorder.none,
-                  icon: const Icon(
-                    Icons.search,
-                    color: Color(0xFF64748B),
-                    size: 22,
-                  ),
-                  suffixIcon: _searchCtrl.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear, size: 18),
-                          onPressed: () {
-                            _searchCtrl.clear();
-                            // clearing instantly triggers listener which debounces
-                          },
-                        )
-                      : null,
-                ),
-              ),
-            ),
-          ),
-
-          // Total count
-          if (!_isLoading)
-            Padding(
-              padding: const EdgeInsets.only(left: 20, right: 20, bottom: 16),
-              child: Text(
-                'Total Items: ${_filteredItems.length}',
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF64748B),
-                ),
-              ),
-            ),
-
+          const SizedBox(height: 10),
           // Menu List
           Expanded(
             child: AnimatedSwitcher(
@@ -297,24 +325,38 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                   : RefreshIndicator(
                       key: const ValueKey('data'),
                       onRefresh: () => _fetchItems(isRefresh: true),
-                      color: const Color(0xFFED3973),
+                      color: AppColors.primary,
                       child: ListView.builder(
                         controller: _scrollController,
-                        padding: const EdgeInsets.only(bottom: 100),
+                        padding: const EdgeInsets.only(bottom: 20),
                         itemCount:
-                            _filteredItems.length + (_isLoadingMore ? 1 : 0),
+                            _filteredItems.length + (_isLoadingMore ? 2 : 1),
                         itemBuilder: (context, index) {
-                          if (index == _filteredItems.length) {
-                            return const Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  color: Color(0xFFED3973),
+                          if (index == 0) {
+                            return Padding(
+                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                              child: Text(
+                                'Total Menu Items: ${_filteredItems.length}',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF64748B),
                                 ),
                               ),
                             );
                           }
-                          final item = _filteredItems[index];
+                          final itemIndex = index - 1;
+                          if (itemIndex == _filteredItems.length) {
+                            return const Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            );
+                          }
+                          final item = _filteredItems[itemIndex];
                           return MenuItemCard(
                             item: item,
                             onTap: () async {
@@ -340,19 +382,6 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddNewItemScreen()),
-          );
-          if (result == true) _fetchItems(isRefresh: true);
-        },
-        backgroundColor: const Color(0xFFED3973),
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
       ),
     );
   }

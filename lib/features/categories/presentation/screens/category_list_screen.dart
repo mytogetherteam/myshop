@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/features/menu/data/models/menu_category_model.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
 import 'package:my_shop/core/presentation/widgets/status_badge.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_switch.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 
 import 'create_category_screen.dart';
 import 'edit_category_screen.dart';
@@ -78,44 +80,54 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: AppColors.primaryGradient,
+          ),
+        ),
         elevation: 0,
-        scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Category',
+          'Manage Category',
           style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
           ),
         ),
         centerTitle: false,
-        actions: const [SizedBox(width: 8)],
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: TextButton(
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CreateCategoryScreen(),
+                  ),
+                );
+                if (result == true) _fetchCategories(forceRefresh: true);
+              },
+              child: Text(
+                '+ Create',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _fetchCategories,
-        color: const Color(0xFFED3A72),
+        color: AppColors.primary,
         child: _isLoading ? _buildSkeletonList() : _buildCategoryList(),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const CreateCategoryScreen(),
-            ),
-          );
-          if (result == true) _fetchCategories(forceRefresh: true);
-        },
-
-        backgroundColor: const Color(0xFFED3A72),
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
       ),
     );
   }
@@ -131,7 +143,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
     }
 
     return ReorderableListView.builder(
-      padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 100),
+      padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 20),
       itemCount: _categories.length,
       onReorder: _onReorder,
       buildDefaultDragHandles: false,
@@ -439,7 +451,7 @@ class _CategoryCard extends StatelessWidget {
             fontSize: 8,
             fontWeight: FontWeight.w600,
             color: isPublished
-                ? const Color(0xFFED3A72)
+                ? AppColors.primary
                 : const Color(0xFF94A3B8),
           ),
         ),

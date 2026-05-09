@@ -90,58 +90,30 @@ class _MenuItemCardState extends State<MenuItemCard> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Item Image
-                Stack(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: widget.item.imageUrl != null
-                            ? Image.network(
-                                widget.item.imageUrl!,
-                                width: 76,
-                                height: 76,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    _buildPlaceholderImage(),
-                              )
-                            : _buildPlaceholderImage(),
-                      ),
-                    ),
-                    if (widget.item.imageUrl != null)
-                      Positioned(
-                        top: 4,
-                        right: 4,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black12,
-                                blurRadius: 4,
-                              ),
-                            ],
-                          ),
-                          child: const GradientWidget(
-                            child: Icon(
-                              Icons.refresh_rounded,
-                              size: 10,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: widget.item.imageUrl != null
+                        ? Image.network(
+                            widget.item.imageUrl!,
+                            width: 76,
+                            height: 76,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                _buildPlaceholderImage(),
+                          )
+                        : _buildPlaceholderImage(),
+                  ),
                 ),
                 const SizedBox(width: 16),
                 // Content
@@ -206,7 +178,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                                   widget.item.price) ...[
                             Text(
                               widget.item.originalPrice!.toFormattedPrice(
-                                currency: widget.item.currency ?? '฿',
+                                currency: widget.item.currency ?? 'K',
                               ),
                               style: GoogleFonts.poppins(
                                 fontSize: 12,
@@ -218,7 +190,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                             const SizedBox(width: 8),
                             GradientText(
                               widget.item.price.toFormattedPrice(
-                                currency: widget.item.currency ?? '฿',
+                                currency: widget.item.currency ?? 'K',
                               ),
                               style: GoogleFonts.poppins(
                                 fontSize: 13,

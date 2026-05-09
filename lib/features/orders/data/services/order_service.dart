@@ -14,6 +14,7 @@ class OrderService {
   Future<List<OrderModel>?> getOrders({
     String? status,
     String? tab,
+    int? shopId,
     int page = 0,
     int size = 20,
   }) async {
@@ -24,6 +25,7 @@ class OrderService {
       };
       if (status != null) queryParams['status'] = status;
       if (tab != null) queryParams['tab'] = tab;
+      if (shopId != null) queryParams['shopId'] = shopId;
       
       debugPrint('GET REQUEST: $_ordersPath, Params: $queryParams');
       final response = await ApiClient().dio.get(

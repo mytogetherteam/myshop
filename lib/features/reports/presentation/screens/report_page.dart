@@ -411,7 +411,7 @@ class ReportPageState extends State<ReportPage>
       RevenueCard(
         revenue: currencyFormat.format(_summary?.revenue ?? 0),
         trend: "${_summary?.revenueTrend ?? '0%'} from last period",
-        orders: _summary?.orders.toString() ?? '0',
+        orders: _summary?.orders.toString() ?? '0', // This is Total Orders
         avgOrder: currencyFormat.format(_summary?.avgOrderValue ?? 0),
         cancelled: _summary?.cancelledCount.toString() ?? '0',
       ),
@@ -423,8 +423,10 @@ class ReportPageState extends State<ReportPage>
               Expanded(
                 child: SummaryCard(
                   label: "Completed",
-                  value: _summary?.orders.toString() ?? '0',
-                  trend: "Now",
+                  value: ((_summary?.orders ?? 0) -
+                          (_summary?.cancelledCount ?? 0))
+                      .toString(),
+                  trend: "Success",
                   isPositive: true,
                 ),
               ),
