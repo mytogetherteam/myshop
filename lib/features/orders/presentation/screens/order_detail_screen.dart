@@ -64,14 +64,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _deliveryRiderNameController.text = _currentOrder.riderName ?? '';
     _deliveryPhoneNoController.text = (_currentOrder.riderPhone == null || _currentOrder.riderPhone!.isEmpty) ? '+66' : _currentOrder.riderPhone!;
     _deliveryTrackingUrlController.text = _currentOrder.deliveryTrackingUrl ?? '';
-    _waitingTimeMinutesController.text = _currentOrder.waitingTimeMinutes.toString();
-    _selectedWaitingTime = _currentOrder.waitingTimeMinutes.toString();
-    // Default to '1' if the current value is not in our 1-15 range
-    final wt = int.tryParse(_selectedWaitingTime) ?? 1;
-    if (wt < 1 || wt > 15) {
-      _selectedWaitingTime = '1';
-      _waitingTimeMinutesController.text = '1';
-    }
+    _waitingTimeMinutesController.text = _currentOrder.waitingTimeMinutes > 0 
+        ? _currentOrder.waitingTimeMinutes.toString() 
+        : '';
+    _selectedWaitingTime = _currentOrder.waitingTimeMinutes > 0 
+        ? _currentOrder.waitingTimeMinutes.toString() 
+        : '1';
     _deliveryOption = _currentOrder.deliveryType == 'NORMAL' ? 'NORMAL' : 'PREPAID';
     _validateFormState();
   }
@@ -124,16 +122,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     bool isValid = false;
 
     if (_currentOrder.status == 'PENDING') {
-      isValid = _deliveryOption == 'NORMAL' || (
-        fee.isNotEmpty &&
-        double.tryParse(fee) != null &&
-        rider.isNotEmpty &&
-        phone.isNotEmpty &&
-        thaiPhoneRegex.hasMatch(phone) &&
-        cycle.isNotEmpty &&
-        waiting.isNotEmpty &&
-        int.tryParse(waiting) != null
-      );
+      if (_deliveryOption == 'NORMAL') {
+        isValid = waiting.isNotEmpty && int.tryParse(waiting) != null;
+      } else {
+        isValid = fee.isNotEmpty &&
+          double.tryParse(fee) != null &&
+          rider.isNotEmpty &&
+          phone.isNotEmpty &&
+          thaiPhoneRegex.hasMatch(phone) &&
+          cycle.isNotEmpty &&
+          waiting.isNotEmpty &&
+          int.tryParse(waiting) != null;
+      }
     } else if (_currentOrder.status == 'PREPARING' && _currentOrder.deliveryType == 'NORMAL') {
       isValid = fee.isNotEmpty &&
         double.tryParse(fee) != null &&
@@ -254,7 +254,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       "deliveryRiderName": _deliveryOption == 'NORMAL' ? '' : _deliveryRiderNameController.text,
       "deliveryPhoneNo": _deliveryOption == 'NORMAL' ? '' : _deliveryPhoneNoController.text,
       "deliveryTrackingUrl": _deliveryOption == 'NORMAL' ? '' : _deliveryTrackingUrlController.text,
-      "waitingTimeMinutes": _deliveryOption == 'NORMAL' ? 0 : (int.tryParse(_waitingTimeMinutesController.text) ?? 0),
+      "waitingTimeMinutes": int.tryParse(_waitingTimeMinutesController.text) ?? 0,
     };
 
     await _runOrderAction(
@@ -638,11 +638,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       child: Column(
                         children: [
                           _buildItemsSection(),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 24),
                           const Divider(color: Color(0xFFF1F5F9), thickness: 1.5),
                         ],
                       ),
                     ),
+                    const SizedBox(height: 16),
 
                     // Confirmation Form (Full Width - it has its own internal padding)
                     if (_currentOrder.status == 'PENDING' || 
@@ -1129,56 +1130,77 @@ Widget _buildAnimatedProgress() {
   }
 
   Widget _buildRiderSection() {
+    final name = _currentOrder.riderName ?? 'Assigning Rider...';
+    final phone = _currentOrder.riderPhone;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            'Rider Information',
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: AppColors.onSurface,
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const GradientWidget(
+              child: Icon(
+                PhosphorIconsFill.moped,
+                size: 28,
+              ),
             ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              const Icon(PhosphorIconsRegular.bicycle, color: AppColors.onSurfaceVariant, size: 24),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _currentOrder.riderName ?? 'Assigning Rider...',
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.onSurface,
+                  ),
+                ),
+                if (phone != null && phone.isNotEmpty)
+                  Text(
+                    phone,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                if (_currentOrder.deliveryCycleNo != null && _currentOrder.deliveryCycleNo!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: GradientText(
+                      'Vehicle No: ${_currentOrder.deliveryCycleNo!}',
                       style: GoogleFonts.poppins(
-                        fontSize: 15,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.onSurface,
                       ),
                     ),
-                    if (_currentOrder.riderPhone != null)
-                      Text(
-                        _currentOrder.riderPhone!,
-                        style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          color: AppColors.onSurfaceVariant,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              if (_currentOrder.riderPhone != null)
-                _buildCircularIcon(PhosphorIconsFill.phone),
-            ],
+                  ),
+              ],
+            ),
           ),
+          if (phone != null && phone.isNotEmpty)
+            _buildCircularIcon(PhosphorIconsFill.phone),
         ],
       ),
     );
@@ -1856,7 +1878,7 @@ Widget _buildAnimatedProgress() {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'Use this for orders that take a long time to cook. Customers pay for the food now and pay the delivery fee to the rider later.',
+                            'Shop admin choose delivery service to send food to customer. So user must pay order fee first and delivery fees later separately.',
                             style: GoogleFonts.poppins(
                               fontSize: 13,
                               color: const Color(0xFF64748B),
@@ -1868,6 +1890,14 @@ Widget _buildAnimatedProgress() {
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(height: 16),
+              _buildInputField(
+                'Estimated Preparation Time (mins)', 
+                _waitingTimeMinutesController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
               ),
             ] else ...[
               Row(
@@ -1915,7 +1945,7 @@ Widget _buildAnimatedProgress() {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 20),
               _buildInputField(
                 'Rider Name', 
                 _deliveryRiderNameController,

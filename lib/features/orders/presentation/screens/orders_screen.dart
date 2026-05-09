@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import 'package:my_shop/features/orders/data/models/order_model.dart';
 import 'package:my_shop/features/orders/data/services/order_service.dart';
 import 'package:my_shop/features/orders/presentation/widgets/order_card.dart';
@@ -36,6 +38,7 @@ class OrdersScreenState extends State<OrdersScreen>
     'DELIVERED': 0,
     'CANCELLED': 0,
   };
+  int? _selectedShopId;
 
   @override
   bool get wantKeepAlive => true;
@@ -49,11 +52,12 @@ class OrdersScreenState extends State<OrdersScreen>
   }
 
   Future<void> _fetchInitialData() async {
+    _selectedShopId = await StorageService.instance.getSelectedShopId();
     final tabs = ['NEW', 'PAYMENT', 'PREPARING', 'DELIVERING', 'DELIVERED', 'CANCELLED'];
     
     // Fetch all in parallel
     final results = await Future.wait(
-      tabs.map((tab) => _orderService.getOrders(tab: tab))
+      tabs.map((tab) => _orderService.getOrders(tab: tab, shopId: _selectedShopId))
     );
 
     if (mounted) {
@@ -177,6 +181,7 @@ class OrdersScreenState extends State<OrdersScreen>
                 OrderListTabView(
                   tabStatus: 'NEW',
                   orderService: _orderService,
+                  shopId: _selectedShopId,
                   updateStream: _orderUpdatesController.stream,
                   refreshStream: _refreshController.stream,
                   onCountUpdated: (count) => _updateTabCount('NEW', count),
@@ -185,6 +190,7 @@ class OrdersScreenState extends State<OrdersScreen>
                 OrderListTabView(
                   tabStatus: 'PAYMENT',
                   orderService: _orderService,
+                  shopId: _selectedShopId,
                   updateStream: _orderUpdatesController.stream,
                   refreshStream: _refreshController.stream,
                   onCountUpdated: (count) => _updateTabCount('PAYMENT', count),
@@ -193,6 +199,7 @@ class OrdersScreenState extends State<OrdersScreen>
                 OrderListTabView(
                   tabStatus: 'PREPARING',
                   orderService: _orderService,
+                  shopId: _selectedShopId,
                   updateStream: _orderUpdatesController.stream,
                   refreshStream: _refreshController.stream,
                   onCountUpdated: (count) =>
@@ -202,6 +209,7 @@ class OrdersScreenState extends State<OrdersScreen>
                 OrderListTabView(
                   tabStatus: 'DELIVERING',
                   orderService: _orderService,
+                  shopId: _selectedShopId,
                   updateStream: _orderUpdatesController.stream,
                   refreshStream: _refreshController.stream,
                   onCountUpdated: (count) =>
@@ -211,6 +219,7 @@ class OrdersScreenState extends State<OrdersScreen>
                 OrderListTabView(
                   tabStatus: 'DELIVERED',
                   orderService: _orderService,
+                  shopId: _selectedShopId,
                   updateStream: _orderUpdatesController.stream,
                   refreshStream: _refreshController.stream,
                   onCountUpdated: (count) =>
@@ -220,6 +229,7 @@ class OrdersScreenState extends State<OrdersScreen>
                 OrderListTabView(
                   tabStatus: 'CANCELLED',
                   orderService: _orderService,
+                  shopId: _selectedShopId,
                   updateStream: _orderUpdatesController.stream,
                   refreshStream: _refreshController.stream,
                   onCountUpdated: (count) =>
@@ -291,6 +301,7 @@ class OrderListTabView extends StatefulWidget {
   final Stream<void> refreshStream;
   final Function(int) onCountUpdated;
   final bool loadImmediately;
+  final int? shopId;
 
   const OrderListTabView({
     super.key,
@@ -300,6 +311,7 @@ class OrderListTabView extends StatefulWidget {
     required this.refreshStream,
     required this.onCountUpdated,
     this.loadImmediately = true,
+    this.shopId,
   });
 
 
@@ -427,6 +439,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
 
     final fetchedOrders = await widget.orderService.getOrders(
       tab: widget.tabStatus,
+      shopId: widget.shopId,
       page: _page,
       size: _size,
     );

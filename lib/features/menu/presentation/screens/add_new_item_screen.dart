@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
+import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_switch.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -1000,7 +1002,8 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFFED3973) : Colors.white,
+                color: isSelected ? null : Colors.white,
+                gradient: isSelected ? AppColors.primaryGradient : null,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: isSelected
@@ -1484,12 +1487,11 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               ),
             ),
             if (isRequired)
-              Text(
+              const GradientText(
                 ' *',
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFFED3973),
                 ),
               ),
           ],
@@ -1559,12 +1561,11 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               ),
             ),
             if (isRequired)
-              Text(
+              const GradientText(
                 ' *',
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFFED3973),
                 ),
               ),
           ],
@@ -1628,12 +1629,11 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               ),
             ),
             if (isRequired)
-              Text(
+              const GradientText(
                 ' *',
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFFED3973),
                 ),
               ),
           ],
@@ -1680,7 +1680,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFED3973)),
+              borderSide: const BorderSide(color: AppColors.primary),
             ),
             contentPadding: const EdgeInsets.all(16),
           ),
@@ -1696,12 +1696,11 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         Row(
           children: [
             _buildSectionLabel('Discovery Tags'),
-            Text(
+            const GradientText(
               ' *',
-              style: GoogleFonts.poppins(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFFED3973),
               ),
             ),
           ],
@@ -1771,12 +1770,11 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         Row(
           children: [
             _buildSectionLabel('Meal Types'),
-            Text(
+            const GradientText(
               ' *',
-              style: GoogleFonts.poppins(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFFED3973),
               ),
             ),
           ],
@@ -1819,7 +1817,8 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFFED3A72) : Colors.white,
+          gradient: selected ? AppColors.primaryGradient : null,
+          color: selected ? null : Colors.white,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: selected ? Colors.transparent : const Color(0xFFE2E8F0),
@@ -1865,12 +1864,11 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           children: [
             if (label.startsWith('+'))
               const Padding(padding: EdgeInsets.only(right: 6)),
-            Text(
+            GradientText(
               label,
               style: GoogleFonts.poppins(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFFED3A72),
               ),
             ),
           ],
@@ -1906,66 +1904,41 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              if (_pickedImage != null)
-                kIsWeb
-                    ? Image.network(_pickedImage!.path, fit: BoxFit.cover)
-                    : Image.file(File(_pickedImage!.path), fit: BoxFit.cover)
-              else if (existingUrl != null && existingUrl.isNotEmpty)
-                CachedNetworkImage(
-                  imageUrl: existingUrl,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) =>
-                      const Center(child: CustomLoadingIndicator(size: 24)),
-                  errorWidget: (context, url, error) => const Icon(Icons.error),
-                )
-              else
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.camera_alt_outlined,
-                        color: Color(0xFFED3973),
-                        size: 32,
+          child: _pickedImage != null
+              ? (kIsWeb
+                  ? Image.network(_pickedImage!.path, fit: BoxFit.cover)
+                  : Image.file(File(_pickedImage!.path), fit: BoxFit.cover))
+              : (existingUrl != null && existingUrl.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: existingUrl,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) =>
+                          const Center(child: CustomLoadingIndicator(size: 24)),
+                      errorWidget: (context, url, error) =>
+                          const Icon(Icons.error),
+                    )
+                  : Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const GradientWidget(
+                            child: Icon(
+                              Icons.camera_alt_outlined,
+                              size: 32,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Tap to upload',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF1E293B),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Tap to upload',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF1E293B),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              if (_pickedImage != null ||
-                  (existingUrl != null && existingUrl.isNotEmpty))
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(color: Colors.black12, blurRadius: 4),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.refresh_rounded,
-                      size: 20,
-                      color: Color(0xFFED3973),
-                    ),
-                  ),
-                ),
-            ],
-          ),
+                    )),
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_shop/core/presentation/widgets/custom_search_dropdown.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import '../widgets/quick_action_cards.dart';
 import '../widgets/menu_item_card.dart';
@@ -172,7 +173,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
             Expanded(
               child: RefreshIndicator(
                 onRefresh: refresh,
-                color: const Color(0xFFED3973),
+                color: AppColors.primary,
 
                 child: SingleChildScrollView(
                   controller: _scrollController,
@@ -214,7 +215,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 24),
                           child: Center(
-                            child: CustomLoadingIndicator(size: 24, color: Color(0xFFED3973)),
+                            child: CustomLoadingIndicator(size: 24, color: AppColors.primary),
                           ),
                         ),
                       const SizedBox(height: 20),

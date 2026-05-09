@@ -46,30 +46,26 @@ class SummaryCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                flex: 3,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
                   children: [
-                      Text(
-                        value,
-                        style: GoogleFonts.poppins(
-                          color: isPositive && label == "Completed" ? const Color(0xFF22C55E) : (label == "Cancelled" ? const Color(0xFFEF4444) : const Color(0xFF1E293B)),
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                        ),
+                    Text(
+                      value,
+                      style: GoogleFonts.poppins(
+                        color: isPositive && label == "Completed" ? const Color(0xFF22C55E) : (label == "Cancelled" ? const Color(0xFFEF4444) : const Color(0xFF1E293B)),
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
                       ),
+                    ),
                     if (unit != null) ...[
                       const SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          unit!,
-                          style: GoogleFonts.poppins(
-                            color: const Color(0xFF1E293B),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          overflow: TextOverflow.ellipsis,
+                      Text(
+                        unit!,
+                        style: GoogleFonts.poppins(
+                          color: const Color(0xFF1E293B),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -77,25 +73,27 @@ class SummaryCard extends StatelessWidget {
                 ),
               ),
               Expanded(
-                flex: 2,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     PhosphorIcon(
                       isPositive ? PhosphorIconsRegular.arrowUp : PhosphorIconsRegular.arrowDown,
-                      size: 14,
+                      size: 12,
                       color: (isTrendPositive ?? isPositive) ? const Color(0xFF22C55E) : const Color(0xFFEF4444),
                     ),
                     const SizedBox(width: 4),
                     Flexible(
-                      child: Text(
-                        trend,
-                        style: GoogleFonts.poppins(
-                          color: (isTrendPositive ?? isPositive) ? const Color(0xFF22C55E) : const Color(0xFFEF4444),
-                            fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          trend,
+                          style: GoogleFonts.poppins(
+                            color: (isTrendPositive ?? isPositive) ? const Color(0xFF22C55E) : const Color(0xFFEF4444),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
