@@ -1762,8 +1762,33 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             }),
             _buildCustomChip(
               label: 'Other',
-              selected: _isOtherTagSelected,
-              onTap: () => setState(() => _isOtherTagSelected = !_isOtherTagSelected),
+              selected: () {
+                try {
+                  final otherTag = _menuTags.firstWhere(
+                    (t) => t.nameEn?.toLowerCase() == 'other',
+                  );
+                  return _selectedTagIds.contains(otherTag.id);
+                } catch (_) {
+                  return _isOtherTagSelected;
+                }
+              }(),
+              onTap: () {
+                setState(() {
+                  try {
+                    final otherTag = _menuTags.firstWhere(
+                      (t) => t.nameEn?.toLowerCase() == 'other',
+                    );
+                    if (_selectedTagIds.contains(otherTag.id)) {
+                      _selectedTagIds.remove(otherTag.id);
+                    } else {
+                      _selectedTagIds.add(otherTag.id);
+                    }
+                  } catch (_) {
+                    // Fallback to local bool if master data tag not found
+                    _isOtherTagSelected = !_isOtherTagSelected;
+                  }
+                });
+              },
             ),
           ],
         ),
