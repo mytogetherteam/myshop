@@ -86,6 +86,8 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   bool _isVegetarian = false;
   bool _isHotDeal = false;
   bool _isCombo = false;
+  bool _isOtherTagSelected = false;
+  bool _isOtherMealTypeSelected = false;
   bool _isAvailable = true;
 
   bool _isLoadingData = true;
@@ -170,12 +172,9 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       _selectedTagIds = List.from(item.tagIds);
       _selectedMealTypes = List.from(item.mealTypes);
       
-      // Ensure any custom meal types are in the options list
-      for (var type in _selectedMealTypes) {
-        if (!_mealTypeOptions.contains(type)) {
-          _mealTypeOptions.add(type);
-        }
-      }
+      _isOtherMealTypeSelected = _selectedMealTypes.contains('OTHER');
+      // For tags, we don't know if 'Other' is a specific ID, so we use the bool
+      // If we wanted to be more robust, we could check if any selected ID is not in _menuTags
       
       _variants = List.from(item.variants);
       _optionGroups = List.from(item.optionGroups);
@@ -1763,8 +1762,8 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             }),
             _buildCustomChip(
               label: 'Other',
-              selected: false,
-              onTap: _showOtherTagDialog,
+              selected: _isOtherTagSelected,
+              onTap: () => setState(() => _isOtherTagSelected = !_isOtherTagSelected),
             ),
           ],
         ),
@@ -1811,8 +1810,19 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             }),
             _buildCustomChip(
               label: 'Other',
-              selected: false,
-              onTap: _showOtherMealTypeDialog,
+              selected: _isOtherMealTypeSelected,
+              onTap: () {
+                setState(() {
+                  _isOtherMealTypeSelected = !_isOtherMealTypeSelected;
+                  if (_isOtherMealTypeSelected) {
+                    if (!_selectedMealTypes.contains('OTHER')) {
+                      _selectedMealTypes.add('OTHER');
+                    }
+                  } else {
+                    _selectedMealTypes.remove('OTHER');
+                  }
+                });
+              },
             ),
           ],
         ),
@@ -1827,6 +1837,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   }) {
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
@@ -1997,108 +2008,6 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       ),
     );
   }
-  void _showOtherMealTypeDialog() {
-    final TextEditingController controller = TextEditingController();
-    GlobalModal.show(
-      context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Add Custom Meal Type',
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF1E293B),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Enter a name for the new meal type (e.g., BRUNCH, SNACK)',
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              color: const Color(0xFF64748B),
-            ),
-          ),
-          const SizedBox(height: 24),
-          _buildTextField('Meal Type Name', controller, hint: 'ENTER NAME...'),
-          const SizedBox(height: 32),
-          PrimaryGradientButton(
-            text: 'Add Meal Type',
-            onPressed: () {
-              final val = controller.text.trim().toUpperCase();
-              if (val.isNotEmpty) {
-                setState(() {
-                  if (!_mealTypeOptions.contains(val)) {
-                    _mealTypeOptions.add(val);
-                  }
-                  if (!_selectedMealTypes.contains(val)) {
-                    _selectedMealTypes.add(val);
-                  }
-                });
-                Navigator.pop(context);
-              }
-            },
-          ),
-          const SizedBox(height: 12),
-        ],
-      ),
-    );
-  }
-
-  void _showOtherTagDialog() {
-    final TextEditingController controller = TextEditingController();
-    GlobalModal.show(
-      context: context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Add Custom Discovery Tag',
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF1E293B),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Create a new tag to help customers find this item.',
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              color: const Color(0xFF64748B),
-            ),
-          ),
-          const SizedBox(height: 24),
-          _buildTextField('Tag Name', controller, hint: 'e.g. Organic, Keto...'),
-          const SizedBox(height: 32),
-          PrimaryGradientButton(
-            text: 'Create & Add Tag',
-            onPressed: () async {
-              final val = controller.text.trim();
-              if (val.isNotEmpty) {
-                // Close modal first to show loading if needed, or just do it inside
-                final newTag = await _menuService.createMenuTag(val);
-                if (newTag != null) {
-                  setState(() {
-                    _menuTags.add(newTag);
-                    _selectedTagIds.add(newTag.id);
-                  });
-                  if (mounted) Navigator.pop(context);
-                } else {
-                  if (mounted) {
-                    AppDialog.showToast(context, 'Failed to create tag', isError: true);
-                  }
-                }
-              }
-            },
-          ),
-          const SizedBox(height: 12),
-        ],
-      ),
-    );
   }
 }
 
