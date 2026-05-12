@@ -9,6 +9,7 @@ import 'package:my_shop/core/presentation/widgets/primary_gradient_switch.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/data/services/image_upload_service.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/core/presentation/widgets/fullscreen_image_viewer.dart';
@@ -767,34 +768,15 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                   runSpacing: 8,
                   children: _cuisineTypes.map((c) {
                     final isSelected = _selectedCuisineTypes.contains(c);
-                    return FilterChip(
-                      label: Text(
-                        c.displayName,
-                        style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          color: isSelected
-                              ? Colors.white
-                              : const Color(0xFF475569),
-                        ),
-                      ),
+                    return _buildCustomChip(
+                      label: c.displayName,
                       selected: isSelected,
-                      selectedColor: const Color(0xFFED3973),
-                      backgroundColor: Colors.white,
-                      checkmarkColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        side: BorderSide(
-                          color: isSelected
-                              ? const Color(0xFFED3973)
-                              : const Color(0xFFE2E8F0),
-                        ),
-                      ),
-                      onSelected: (selected) {
+                      onTap: () {
                         setState(() {
-                          if (selected) {
-                            _selectedCuisineTypes.add(c);
-                          } else {
+                          if (isSelected) {
                             _selectedCuisineTypes.remove(c);
+                          } else {
+                            _selectedCuisineTypes.add(c);
                           }
                           _markChanged();
                         });
@@ -2116,6 +2098,46 @@ class _LogoPickerSheet extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCustomChip({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          gradient: selected ? AppColors.primaryGradient : null,
+          color: selected ? null : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: selected ? Colors.transparent : const Color(0xFFE2E8F0),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (selected)
+              const Padding(
+                padding: EdgeInsets.only(right: 6),
+                child: Icon(Icons.check, color: Colors.white, size: 14),
+              ),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                color: selected ? Colors.white : const Color(0xFF64748B),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
