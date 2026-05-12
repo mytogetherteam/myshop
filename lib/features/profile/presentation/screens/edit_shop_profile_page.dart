@@ -1862,6 +1862,52 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B)),
     );
   }
+
+  Widget _buildCustomChip({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          gradient: selected 
+            ? const LinearGradient(
+                colors: [Color(0xFFED3973), Color(0xFFEFA240)],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              )
+            : null,
+          color: selected ? null : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: selected ? Colors.transparent : const Color(0xFFE2E8F0),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (selected)
+              const Padding(
+                padding: EdgeInsets.only(right: 6),
+                child: Icon(Icons.check, color: Colors.white, size: 14),
+              ),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                color: selected ? Colors.white : const Color(0xFF64748B),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 // ── Supporting classes ────────────────────────────────────────────────────────
@@ -2012,52 +2058,6 @@ class _ImageActionSheet extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildCustomChip({
-    required String label,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          gradient: selected 
-            ? const LinearGradient(
-                colors: [Color(0xFFED3973), Color(0xFFEFA240)],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              )
-            : null,
-          color: selected ? null : Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: selected ? Colors.transparent : const Color(0xFFE2E8F0),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (selected)
-              const Padding(
-                padding: EdgeInsets.only(right: 6),
-                child: Icon(Icons.check, color: Colors.white, size: 14),
-              ),
-            Text(
-              label,
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                color: selected ? Colors.white : const Color(0xFF64748B),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class _LogoPickerSheet extends StatelessWidget {
@@ -2147,3 +2147,4 @@ class _LogoPickerSheet extends StatelessWidget {
       ),
     );
   }
+}
