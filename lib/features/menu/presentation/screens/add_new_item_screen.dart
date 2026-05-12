@@ -2033,8 +2033,8 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       ),
     );
   }
-  }
 }
+
 
 class _NumberThousandSeparatorFormatter extends TextInputFormatter {
   @override
