@@ -386,6 +386,28 @@ class MenuService {
     return null;
   }
 
+  Future<MasterDataModel?> createMenuTag(String name) async {
+    try {
+      debugPrint('POST REQUEST: $_masterTagsPath, Data: {nameEn: $name}');
+      final response = await ApiClient().dio.post(
+            _masterTagsPath,
+            data: {'nameEn': name},
+          );
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        // Clear cache so the new tag shows up elsewhere
+        _menuTagsCache = null;
+        return MasterDataModel.fromJson(response.data['data'] ?? response.data);
+      }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'MenuService.createMenuTag');
+    } catch (e) {
+      ApiHelper.handleError(e, context: 'MenuService.createMenuTag');
+    }
+    return null;
+  }
+
   Future<List<MasterDataModel>?> _parseMasterDataList(dynamic response) async {
     if (response.statusCode != null &&
         response.statusCode! >= 200 &&
