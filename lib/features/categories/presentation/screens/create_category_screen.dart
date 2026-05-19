@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
-import 'package:my_shop/core/presentation/widgets/global_modal.dart';
-import 'package:my_shop/core/presentation/widgets/success_sheet.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';

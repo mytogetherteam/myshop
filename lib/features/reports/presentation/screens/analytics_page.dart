@@ -413,30 +413,28 @@ class _AnalyticsPageState extends State<AnalyticsPage>
     bool isSelected = _tabController.index == index;
     return Tab(
       child: Container(
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: isSelected ? AppColors.primaryGradient : null,
-            color: isSelected ? null : Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: isSelected ? null : Border.all(color: const Color(0xFFE2E8F0)),
-          ),
-          child: InkWell(
-            onTap: () {
-              if (index == 3) {
-                _showCustomDatePicker();
-              }
-              _tabController.animateTo(index);
-              setState(() {});
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Text(
-                text,
-                style: GoogleFonts.poppins(
-                  color: isSelected ? Colors.white : const Color(0xFF64748B),
-                  fontSize: 14,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                ),
+        decoration: BoxDecoration(
+          gradient: isSelected ? AppColors.primaryGradient : null,
+          color: isSelected ? null : Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: isSelected ? null : Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: InkWell(
+          onTap: () {
+            if (index == 3) {
+              _showCustomDatePicker();
+            }
+            _tabController.animateTo(index);
+            setState(() {});
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: Text(
+              text,
+              style: GoogleFonts.poppins(
+                color: isSelected ? Colors.white : const Color(0xFF64748B),
+                fontSize: 14,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),
             ),
           ),

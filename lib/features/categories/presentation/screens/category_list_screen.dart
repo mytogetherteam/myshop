@@ -7,7 +7,6 @@ import 'package:my_shop/features/categories/data/services/category_service.dart'
 import 'package:my_shop/core/presentation/widgets/status_badge.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_switch.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
-import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 
 import 'create_category_screen.dart';
 import 'edit_category_screen.dart';

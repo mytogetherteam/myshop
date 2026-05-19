@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/core/presentation/widgets/app_logo.dart';
 import 'package:my_shop/features/auth/data/services/auth_service.dart';
 import '../../../../core/network/websocket_service.dart';

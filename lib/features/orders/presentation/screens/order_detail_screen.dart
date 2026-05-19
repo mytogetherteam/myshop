@@ -509,32 +509,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
-  ButtonStyle _getPrimaryButtonStyle() {
-    return ElevatedButton.styleFrom(
-      backgroundColor: AppColors.primary,
-      foregroundColor: Colors.white,
-      disabledBackgroundColor: const Color(0xFFF1F5F9),
-      disabledForegroundColor: const Color(0xFF94A3B8),
-      minimumSize: const Size(0, 54),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-    );
-  }
-
-  ButtonStyle _getSecondaryButtonStyle() {
-    return ElevatedButton.styleFrom(
-      foregroundColor: AppColors.primary,
-      backgroundColor: const Color(0xFFFFF1F2),
-      elevation: 0,
-      minimumSize: const Size(0, 54),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: Color(0xFFFEE2E2)),
-      ),
-    );
-  }
 
 
 
@@ -2048,7 +2022,7 @@ Widget _buildAnimatedProgress() {
         ),
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
-          value: value,
+          initialValue: value,
           icon: const Icon(PhosphorIconsRegular.caretDown, size: 16),
           items: items.map((i) => DropdownMenuItem(
             value: i,
@@ -2098,7 +2072,7 @@ Widget _buildAnimatedProgress() {
             bytes,
             width: double.infinity,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _buildReceiptError(),
+            errorBuilder: (_, _, _) => _buildReceiptError(),
           ),
         );
       } catch (_) {
@@ -2119,7 +2093,7 @@ Widget _buildAnimatedProgress() {
               child: Center(child: CustomLoadingIndicator(size: 24)),
             );
           },
-          errorBuilder: (_, __, ___) => _buildReceiptError(),
+          errorBuilder: (_, _, _) => _buildReceiptError(),
         ),
       );
     }

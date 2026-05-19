@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -16,7 +15,6 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import '../widgets/password_confirmation_sheet.dart';
-import 'package:my_shop/core/presentation/widgets/success_sheet.dart';
 import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import '../../../../core/data/services/image_upload_service.dart';
 import 'package:my_shop/core/utils/app_colors.dart';

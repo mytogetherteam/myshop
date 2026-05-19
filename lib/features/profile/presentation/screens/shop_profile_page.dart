@@ -69,7 +69,6 @@ class _ShopProfilePageState extends State<ShopProfilePage>
 
   // ---- CHANGE 1: hero height constant used everywhere ----
   static const double _heroHeight = 280.0;
-  static const double _cardTopBase = 245.0; // heroHeight - 35
 
   final List<String> _categories = ['All'];
   final CategoryService _categoryService = CategoryService();

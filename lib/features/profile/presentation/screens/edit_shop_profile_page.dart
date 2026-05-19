@@ -19,6 +19,7 @@ import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import 'package:my_shop/core/data/models/master_data_model.dart';
 import 'package:my_shop/core/data/services/master_data_service.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 
 
 class EditShopProfilePage extends StatefulWidget {
@@ -767,38 +768,46 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                   runSpacing: 8,
                   children: _cuisineTypes.map((c) {
                     final isSelected = _selectedCuisineTypes.contains(c);
-                    return FilterChip(
-                      label: Text(
-                        c.displayName,
-                        style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          color: isSelected
-                              ? Colors.white
-                              : const Color(0xFF475569),
-                        ),
-                      ),
-                      selected: isSelected,
-                      selectedColor: const Color(0xFFED3973),
-                      backgroundColor: Colors.white,
-                      checkmarkColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        side: BorderSide(
-                          color: isSelected
-                              ? const Color(0xFFED3973)
-                              : const Color(0xFFE2E8F0),
-                        ),
-                      ),
-                      onSelected: (selected) {
+                    return GestureDetector(
+                      onTap: () {
                         setState(() {
-                          if (selected) {
-                            _selectedCuisineTypes.add(c);
-                          } else {
+                          if (isSelected) {
                             _selectedCuisineTypes.remove(c);
+                          } else {
+                            _selectedCuisineTypes.add(c);
                           }
                           _markChanged();
                         });
                       },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          gradient: isSelected ? AppColors.primaryGradient : null,
+                          color: isSelected ? null : Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: isSelected ? Colors.transparent : const Color(0xFFE2E8F0),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (isSelected)
+                              const Padding(
+                                padding: EdgeInsets.only(right: 6),
+                                child: Icon(Icons.check, color: Colors.white, size: 14),
+                              ),
+                            Text(
+                              c.displayName,
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                color: isSelected ? Colors.white : const Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     );
                   }).toList(),
                 ),

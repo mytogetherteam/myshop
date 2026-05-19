@@ -9,7 +9,6 @@ import '../screens/order_detail_screen.dart';
 import 'status_progress_indicator.dart';
 import 'package:my_shop/core/presentation/widgets/animated_ellipsis_text.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
-import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 
@@ -246,8 +245,6 @@ class OrderCard extends StatelessWidget {
     }
 
     String mainButtonText = 'View order';
-    Color mainButtonColor = const Color(0xFFED3973);
-    Color mainButtonTextColor = Colors.white;
     bool isMainButtonEnabled = true;
     IconData? mainButtonIcon;
 
@@ -258,8 +255,6 @@ class OrderCard extends StatelessWidget {
       case 'CONFIRMED':
       case 'PAYMENT_SLIP_REQUESTED':
         mainButtonText = 'Waiting for payment';
-        mainButtonColor = const Color(0xFFED3973);
-        mainButtonTextColor = Colors.white;
         isMainButtonEnabled = false;
         mainButtonIcon = Icons.access_time_outlined;
         break;

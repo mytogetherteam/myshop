@@ -16,9 +16,7 @@ import 'app_permissions_page.dart';
 import 'change_password_page.dart';
 import 'reviews_page.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
-import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'accepted_payment_page.dart';
-import 'package:my_shop/features/orders/presentation/screens/orders_screen.dart';
 
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';

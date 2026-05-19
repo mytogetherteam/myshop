@@ -4,7 +4,6 @@ import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import '../widgets/menu_item_card.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
-import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import '../../data/services/menu_service.dart';
 import '../../data/models/menu_item_model.dart';
 import 'add_new_item_screen.dart';

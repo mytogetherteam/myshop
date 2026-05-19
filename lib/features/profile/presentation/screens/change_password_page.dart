@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../data/services/profile_service.dart';
-import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import '../../../../core/presentation/widgets/skeleton.dart';
 import '../../../../core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
@@ -92,14 +91,15 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const PhosphorIcon(PhosphorIconsRegular.caretLeft, size: 24, color: Color(0xFF1E293B)),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Change Password',
           style: GoogleFonts.poppins(
-            fontSize: 18,
+            fontSize: 20,
             fontWeight: FontWeight.w600,
             color: const Color(0xFF1E293B),
           ),
