@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:my_shop/core/notifications/notification_service.dart';
+import 'package:my_shop/core/utils/app_version.dart';
 import 'app.dart';
 
 @pragma('vm:entry-point')
@@ -15,6 +16,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp();
+  await AppVersion.init();
   
   // Initialize notification service
   NotificationService().initialize();

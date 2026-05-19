@@ -17,12 +17,15 @@ import 'change_password_page.dart';
 import 'reviews_page.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'accepted_payment_page.dart';
+import 'package:my_shop/features/orders/presentation/screens/orders_screen.dart';
+import 'help_support_page.dart';
 
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
 import 'package:my_shop/features/profile/data/services/shop_service.dart';
 import 'package:my_shop/features/profile/data/models/shop_model.dart';
 import 'global_shop_selection_page.dart';
+import 'package:my_shop/core/utils/app_version.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -37,6 +40,7 @@ class ProfilePageState extends State<ProfilePage>
   final ShopService _shopService = ShopService();
   UserInfo? _userInfo;
   bool _deliveryEnabled = false;
+  bool _isDeletingAccount = false;
   bool _isTogglingDelivery = false;
   List<Shop> _userShops = [];
   ShopProfileModel? _shopProfile;
@@ -121,6 +125,48 @@ class ProfilePageState extends State<ProfilePage>
     );
   }
 
+  Future<void> _handleDeleteAccount() async {
+    GlobalModal.show(
+      context: context,
+      child: ConfirmationSheet(
+        title: 'Delete Account',
+        message:
+            'Are you sure you want to permanently delete your account? This action cannot be undone and all your shop data will be removed.',
+        confirmLabel: 'Yes, Delete Account',
+        cancelLabel: 'Cancel',
+        onConfirm: () async {
+          setState(() => _isDeletingAccount = true);
+          try {
+            final success = await AuthService.instance.deleteAccount();
+            if (!mounted) return;
+            if (success) {
+              WebSocketService().disconnect();
+              Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil('/login', (route) => false);
+            } else {
+              setState(() => _isDeletingAccount = false);
+              AppDialog.showToast(
+                context,
+                'Failed to delete account. Please try again or contact support.',
+                isError: true,
+              );
+            }
+          } catch (e) {
+            if (mounted) setState(() => _isDeletingAccount = false);
+          }
+        },
+      ),
+    );
+  }
+
+  Future<void> _handleContactSupport() async {
+    Navigator.push(
+      context,
+      CupertinoPageRoute(builder: (_) => const HelpSupportPage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -143,7 +189,7 @@ class ProfilePageState extends State<ProfilePage>
               const SizedBox(height: 32),
               Center(
                 child: Text(
-                  'version demo 0.0.1',
+                  AppVersion.fullVersion,
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     color: const Color(0xFF94A3B8),
@@ -404,6 +450,11 @@ class ProfilePageState extends State<ProfilePage>
             CupertinoPageRoute(builder: (_) => const ChangePasswordPage()),
           ),
         ),
+        _buildMenuOption(
+          icon: PhosphorIconsRegular.headset,
+          title: 'Help & Support',
+          onTap: _handleContactSupport,
+        ),
         if (_userShops.length > 1)
           _buildMenuOption(
             icon: PhosphorIconsRegular.arrowsLeftRight,
@@ -423,7 +474,53 @@ class ProfilePageState extends State<ProfilePage>
           onTap: _handleLogout,
           showArrow: false,
         ),
+        const SizedBox(height: 12),
+        _buildDeleteAccountOption(),
       ],
+    );
+  }
+
+  Widget _buildDeleteAccountOption() {
+    return InkWell(
+      onTap: _isDeletingAccount ? null : _handleDeleteAccount,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(
+            bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              PhosphorIconsRegular.trash,
+              size: 24,
+              color: Colors.red.shade400,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                'Delete Account',
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.red.shade400,
+                ),
+              ),
+            ),
+            if (_isDeletingAccount)
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.red.shade400),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
