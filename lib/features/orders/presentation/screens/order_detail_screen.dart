@@ -1499,18 +1499,11 @@ Widget _buildAnimatedProgress() {
             Row(
               children: [
                 Text(
-                  _currentOrder.displayTotalAmount,
+                  '฿ ${(_currentOrder.foodPrice + _currentOrder.deliveryFee).toInt()}',
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF1E293B),
-                  ),
-                ),
-                Text(
-                  ' +Delivery Fee',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: const Color(0xFF64748B),
                   ),
                 ),
               ],

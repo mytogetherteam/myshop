@@ -74,6 +74,20 @@ class AuthService {
     }
   }
 
+  Future<bool> deleteAccount() async {
+    try {
+      await ApiClient().dio.delete('$_authPath/delete-account');
+      await StorageService.instance.clearAll();
+      return true;
+    } on DioException catch (e) {
+      debugPrint('[AuthService.deleteAccount] API error: ${ApiHelper.handleError(e).message}');
+      return false;
+    } catch (e) {
+      debugPrint('[AuthService.deleteAccount] Error: $e');
+      return false;
+    }
+  }
+
   Future<void> logoutWithRedirect() async {
     await logout();
     App.navigatorKey.currentState?.pushNamedAndRemoveUntil(

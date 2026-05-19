@@ -190,7 +190,7 @@ class OrderModel {
   }
 
   // Helper for UI
-  double get foodPrice => totalAmount - deliveryFee;
+  double get foodPrice => items.fold(0.0, (sum, item) => sum + (item.price * item.quantity));
   String get deliveryAddressDetail => deliveryAddress?.address ?? '-';
   String get deliveryAddressTitle => 'Delivery Address';
   String get statusName => statusLabel ?? statusLabelMm ?? status;
