@@ -322,43 +322,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (widget.paymentMethod.pendingStatus == 'REJECTED' && widget.paymentMethod.rejectReason != null)
-                          Container(
-                            width: double.infinity,
-                            margin: const EdgeInsets.only(bottom: 24),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFEF2F2),
-                              border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 20),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Rejected',
-                                      style: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w600,
-                                        color: const Color(0xFFEF4444),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  widget.paymentMethod.rejectReason!,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    color: const Color(0xFFEF4444),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+
                         _buildForm(),
                       ],
                     ),
@@ -395,27 +359,13 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                 isLoading: _isSaving,
                 height: 64,
                 borderRadius: 18,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Update Payment Method',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Changes will take effect after verified',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'Update Payment Method',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),

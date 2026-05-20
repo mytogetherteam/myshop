@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class OrderHistoryItem extends StatelessWidget {
   final String orderId;
@@ -20,6 +21,8 @@ class OrderHistoryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    final displayStatus = t?.translate(status.toLowerCase()) ?? status;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -55,7 +58,7 @@ class OrderHistoryItem extends StatelessWidget {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        status,
+                        displayStatus,
                         style: GoogleFonts.poppins(
                           color: statusColor,
                           fontSize: 10,

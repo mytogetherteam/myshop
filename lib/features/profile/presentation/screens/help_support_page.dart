@@ -6,6 +6,7 @@ import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import '../../../profile/data/models/support_info_model.dart';
 import '../../../profile/data/services/support_service.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class HelpSupportPage extends StatefulWidget {
   const HelpSupportPage({super.key});
@@ -41,7 +42,8 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       if (mounted) {
-        AppDialog.showToast(context, 'Could not open this link', isError: true);
+        final t = AppLocalizations.of(context);
+        AppDialog.showToast(context, t?.translate('could_not_open_link') ?? 'Could not open this link', isError: true);
       }
     }
   }
@@ -62,6 +64,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -73,7 +76,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Help & Support',
+          t?.translate('help_support') ?? 'Help & Support',
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -117,6 +120,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
 
   Widget _buildContent() {
     final info = _supportInfo;
+    final t = AppLocalizations.of(context);
 
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -149,7 +153,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'We\'re here to help!',
+                      t?.translate('we_are_here_to_help') ?? 'We\'re here to help!',
                       style: GoogleFonts.poppins(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
@@ -158,7 +162,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      info?.workingHours ?? 'Contact us anytime',
+                      info?.workingHours ?? (t?.translate('contact_us_anytime') ?? 'Contact us anytime'),
                       style: GoogleFonts.poppins(
                         fontSize: 13,
                         color: Colors.white.withValues(alpha: 0.85),
@@ -176,26 +180,26 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
         if (info == null || !info.hasAnyContact) ...[
           _buildEmptyState(),
         ] else ...[
-          _buildSectionLabel('Contact Us'),
+          _buildSectionLabel(t?.translate('contact_us') ?? 'Contact Us'),
           const SizedBox(height: 12),
           if (info.email?.isNotEmpty ?? false)
             _buildContactTile(
               icon: PhosphorIconsRegular.envelope,
-              label: 'Email Support',
+              label: t?.translate('email_support') ?? 'Email Support',
               value: info.email!,
               onTap: () => _launchEmail(info.email!),
             ),
           if (info.phone?.isNotEmpty ?? false)
             _buildContactTile(
               icon: PhosphorIconsRegular.phone,
-              label: 'Phone / Hotline',
+              label: t?.translate('phone_hotline') ?? 'Phone / Hotline',
               value: info.phone!,
               onTap: () => _launchPhone(info.phone!),
             ),
           if (info.whatsapp?.isNotEmpty ?? false)
             _buildContactTile(
               icon: PhosphorIconsRegular.whatsappLogo,
-              label: 'WhatsApp',
+              label: t?.translate('whatsapp') ?? 'WhatsApp',
               value: info.whatsapp!,
               color: const Color(0xFF25D366),
               onTap: () => _launchWhatsapp(info.whatsapp!),
@@ -203,7 +207,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
           if (info.line?.isNotEmpty ?? false)
             _buildContactTile(
               icon: PhosphorIconsRegular.chatCircle,
-              label: 'LINE',
+              label: t?.translate('line') ?? 'LINE',
               value: info.line!,
               color: const Color(0xFF06C755),
               onTap: () => _launchUrl('https://line.me/R/ti/p/${info.line}'),
@@ -211,7 +215,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
           if (info.facebook?.isNotEmpty ?? false)
             _buildContactTile(
               icon: PhosphorIconsRegular.facebookLogo,
-              label: 'Facebook',
+              label: t?.translate('facebook') ?? 'Facebook',
               value: info.facebook!,
               color: const Color(0xFF1877F2),
               onTap: () => _launchUrl(info.facebook!),
@@ -219,7 +223,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
           if (info.website?.isNotEmpty ?? false)
             _buildContactTile(
               icon: PhosphorIconsRegular.globe,
-              label: 'Website',
+              label: t?.translate('website') ?? 'Website',
               value: info.website!,
               onTap: () => _launchUrl(info.website!),
             ),
@@ -228,7 +232,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
         const SizedBox(height: 32),
         Center(
           child: Text(
-            'Pull down to refresh',
+            t?.translate('pull_to_refresh') ?? 'Pull down to refresh',
             style: GoogleFonts.poppins(
               fontSize: 12,
               color: const Color(0xFF94A3B8),
@@ -324,6 +328,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
   }
 
   Widget _buildEmptyState() {
+    final t = AppLocalizations.of(context);
     return Column(
       children: [
         const SizedBox(height: 32),
@@ -334,7 +339,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
         ),
         const SizedBox(height: 16),
         Text(
-          'Support info not configured yet',
+          t?.translate('support_not_configured') ?? 'Support info not configured yet',
           style: GoogleFonts.poppins(
             fontSize: 15,
             fontWeight: FontWeight.w500,
@@ -343,7 +348,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Please check back later.',
+          t?.translate('check_back_later') ?? 'Please check back later.',
           style: GoogleFonts.poppins(
             fontSize: 13,
             color: const Color(0xFFCBD5E1),

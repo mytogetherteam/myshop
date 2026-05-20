@@ -10,6 +10,7 @@ class StorageService {
   static const String _keyNotificationHandled =
       'notification_permission_handled';
   static const String _keySelectedShopId = 'selected_shop_id';
+  static const String _keyLanguage = 'app_language';
 
   static final StorageService instance = StorageService._();
 
@@ -69,6 +70,7 @@ class StorageService {
     await _secureStorage.delete(key: _keyRefreshToken);
     await _prefs!.remove(_keyUserInfo);
     await _prefs!.remove(_keySelectedShopId);
+    await _prefs!.remove(_keyLanguage);
   }
 
   Future<bool> hasToken() async {
@@ -99,5 +101,15 @@ class StorageService {
   Future<void> removeSelectedShopId() async {
     await _ensureInitialized();
     await _prefs!.remove(_keySelectedShopId);
+  }
+
+  Future<void> saveLanguage(String langCode) async {
+    await _ensureInitialized();
+    await _prefs!.setString(_keyLanguage, langCode);
+  }
+
+  Future<String> getLanguage() async {
+    await _ensureInitialized();
+    return _prefs!.getString(_keyLanguage) ?? 'en'; // default English
   }
 }

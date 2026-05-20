@@ -8,6 +8,7 @@ import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart'
 import 'package:my_shop/features/reports/presentation/widgets/best_seller_tile.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class TopSellingItemsScreen extends StatefulWidget {
   const TopSellingItemsScreen({super.key});
@@ -23,6 +24,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
   bool _isLoadingMore = false;
   int _selectedFilterIndex = 0;
   final List<String> _filters = ["Today", "Yesterday", "This Week", "Custom"];
+  final List<String> _filterKeys = ["today", "yesterday", "this_week", "custom"];
   DateTimeRange? _selectedDateRange;
 
   // Dummy data generated for Infinite Scroll
@@ -99,6 +101,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
   }
 
   Future<void> _showCustomDatePicker() async {
+    final t = AppLocalizations.of(context);
     List<DateTime?>? results = await showModalBottomSheet<List<DateTime?>>(
       context: context,
       isScrollControlled: true,
@@ -113,7 +116,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
 
         return StatefulBuilder(
           builder: (context, setModalState) {
-            String rangeText = "Select Dates";
+            String rangeText = t?.translate('custom') ?? "Select Dates";
             if (tempValues.length == 2 &&
                 tempValues[0] != null &&
                 tempValues[1] != null) {
@@ -149,7 +152,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                         ),
                         Expanded(
                           child: Text(
-                            "Choose Revenue Period",
+                            t?.translate('custom') ?? "Choose Revenue Period",
                             style: GoogleFonts.poppins(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -223,7 +226,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                         TextButton(
                           onPressed: () => Navigator.pop(context),
                           child: Text(
-                            "CANCEL",
+                            t?.translate('cancel').toUpperCase() ?? "CANCEL",
                             style: GoogleFonts.poppins(
                               color: const Color(0xFF64748B),
                               fontWeight: FontWeight.w600,
@@ -274,6 +277,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -285,7 +289,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Top Selling items',
+          t?.translate('best_sellers') ?? 'Top Selling items',
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -338,7 +342,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                         ),
                       ),
                       child: Text(
-                        _filters[index],
+                        t?.translate(_filterKeys[index]) ?? _filters[index],
                         style: GoogleFonts.poppins(
                           color: isSelected
                               ? Colors.white
@@ -361,18 +365,56 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
               padding: const EdgeInsets.only(bottom: 16, left: 20, right: 20),
               child: Row(
                 children: [
-                  const GradientWidget(
-                    child: PhosphorIcon(
-                      PhosphorIconsRegular.calendar,
-                      size: 20,
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  GradientText(
-                    "${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.start)} - ${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.end)}",
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const GradientWidget(
+                          child: PhosphorIcon(
+                            PhosphorIconsRegular.calendar,
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: _showCustomDatePicker,
+                          child: GradientText(
+                            "${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.start)} - ${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.end)}",
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedDateRange = null;
+                              _selectedFilterIndex = 0;
+                            });
+                            _loadInitialData();
+                          },
+                          child: const Icon(
+                            Icons.close,
+                            size: 16,
+                            color: Color(0xFF94A3B8),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

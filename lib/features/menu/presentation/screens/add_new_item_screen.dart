@@ -22,6 +22,7 @@ import 'package:my_shop/core/data/models/master_data_model.dart';
 // import 'package:my_shop/core/presentation/widgets/success_sheet.dart';
 import 'package:my_shop/core/presentation/widgets/confirmation_sheet.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class AddNewItemScreen extends StatefulWidget {
   final MenuItemModel? item;
@@ -443,6 +444,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (didPop, result) {},
@@ -457,7 +459,9 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             onPressed: () => Navigator.pop(context),
           ),
           title: Text(
-            widget.item == null ? 'Create Item' : 'Edit Item',
+            widget.item == null 
+                ? (t?.translate('add_new_item') ?? 'Create Item') 
+                : (t?.translate('edit_item') ?? 'Edit Item'),
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -655,16 +659,18 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                               GlobalModal.show(
                                 context: context,
                                 child: ConfirmationSheet(
-                                  title: 'Delete Item?',
-                                  message: 'Are you sure you want to delete "${widget.item!.displayName}"? This action cannot be undone.',
-                                  confirmLabel: 'Delete',
+                                  title: t?.translate('delete_item') ?? 'Delete Item?',
+                                  message: t?.translate('delete_item_confirm') ?? 'Are you sure you want to delete this item? This action cannot be undone.',
+                                  confirmLabel: t?.translate('delete') ?? 'Delete',
                                   confirmColor: const Color(0xFFEF4444),
                                   onConfirm: () async {
                                     bool success = await _deleteItem();
                                     if (!context.mounted) return;
                                     if (success) {
-                                      AppDialog.showToast(context, 'Successfully deleted');
+                                      AppDialog.showToast(context, t?.translate('successfully_deleted') ?? 'Successfully deleted');
                                       Navigator.of(context).pop(true);
+                                    } else {
+                                      AppDialog.showToast(context, t?.translate('failed_delete') ?? 'Failed to delete', isError: true);
                                     }
                                   },
                                 ),
@@ -675,7 +681,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                               color: Color(0xFFEF4444),
                             ),
                             label: Text(
-                              'Delete menu item',
+                              t?.translate('delete') ?? 'Delete menu item',
                               style: GoogleFonts.poppins(
                                 color: const Color(0xFFEF4444),
                                 fontSize: 14,
@@ -1874,10 +1880,11 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   }
 
   Widget _buildSaveButton() {
+    final t = AppLocalizations.of(context);
     return PrimaryGradientButton(
-      onPressed: _handleSave,
+      onPressed: _isSaving ? null : _handleSave,
       isLoading: _isSaving,
-      text: widget.item == null ? 'Create Item' : 'Update Item',
+      text: t?.translate('save') ?? 'Save',
       height: 56,
       borderRadius: 16,
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class SummaryCard extends StatelessWidget {
   final String label;
@@ -53,7 +54,11 @@ class SummaryCard extends StatelessWidget {
                     Text(
                       value,
                       style: GoogleFonts.poppins(
-                        color: isPositive && label == "Completed" ? const Color(0xFF22C55E) : (label == "Cancelled" ? const Color(0xFFEF4444) : const Color(0xFF1E293B)),
+                        color: (isPositive && (label == "Completed" || label == (AppLocalizations.of(context)?.translate('completed') ?? "Completed")))
+                            ? const Color(0xFF22C55E)
+                            : ((label == "Cancelled" || label == (AppLocalizations.of(context)?.translate('cancelled') ?? "Cancelled"))
+                                ? const Color(0xFFEF4444)
+                                : const Color(0xFF1E293B)),
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
                       ),

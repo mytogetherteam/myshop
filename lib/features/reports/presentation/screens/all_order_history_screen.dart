@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/features/reports/presentation/widgets/order_history_item.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class AllOrderHistoryScreen extends StatefulWidget {
   const AllOrderHistoryScreen({super.key});
@@ -19,6 +20,7 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
   bool _isLoadingMore = false;
   int _selectedFilterIndex = 11;
   final List<String> _filters = [];
+  final List<DateTime> _filterDates = [];
 
   // Dummy data generated for Infinite Scroll
   final List<Map<String, dynamic>> _dummyData = [
@@ -185,6 +187,7 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
     for (int i = 11; i >= 0; i--) {
       final monthDate = DateTime(now.year, now.month - i, 1);
       _filters.add(DateFormat('MMM').format(monthDate));
+      _filterDates.add(monthDate);
     }
   }
 
@@ -233,6 +236,7 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -244,7 +248,7 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'All order history',
+          t?.translate('order_history') ?? 'All order history',
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -303,7 +307,7 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
                         ),
                       ),
                       child: Text(
-                        _filters[realIndex],
+                        DateFormat('MMM', Localizations.localeOf(context).toString()).format(_filterDates[realIndex]),
                         style: GoogleFonts.poppins(
                           color: isSelected
                               ? Colors.white

@@ -11,6 +11,7 @@ import 'package:my_shop/core/presentation/widgets/animated_ellipsis_text.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class OrderCard extends StatelessWidget {
   final OrderModel order;
@@ -112,7 +113,7 @@ class OrderCard extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      _getTimeAgo(order.createdAt),
+                      _getTimeAgo(order.createdAt, context),
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         color: const Color(0xFF64748B),
@@ -122,7 +123,7 @@ class OrderCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 if (order.status == 'CANCELLED')
-                  _buildCancellationBox()
+                  _buildCancellationBox(context)
                 else
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 600),
@@ -154,7 +155,8 @@ class OrderCard extends StatelessWidget {
     );
   }
 
-  Widget _buildCancellationBox() {
+  Widget _buildCancellationBox(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -171,7 +173,7 @@ class OrderCard extends StatelessWidget {
               const Icon(PhosphorIconsFill.smileySad, color: Color(0xFFEF4444), size: 20),
               const SizedBox(width: 8),
               Text(
-                'Order Cancelled',
+                t?.translate('order_cancelled') ?? 'Order Cancelled',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -198,6 +200,7 @@ class OrderCard extends StatelessWidget {
   }
 
   Widget _buildActionButtons(BuildContext context) {
+    final t = AppLocalizations.of(context);
     bool isInformational = order.status == 'DELIVERED' || order.status == 'CANCELLED';
     
     if (isInformational) {
@@ -234,7 +237,7 @@ class OrderCard extends StatelessWidget {
             ),
           ),
           child: Text(
-            'View Details',
+            t?.translate('view_details') ?? 'View Details',
             style: GoogleFonts.poppins(
               fontWeight: FontWeight.w600,
               fontSize: 14,
@@ -244,28 +247,28 @@ class OrderCard extends StatelessWidget {
       );
     }
 
-    String mainButtonText = 'View order';
+    String mainButtonText = t?.translate('view_details') ?? 'View order';
     bool isMainButtonEnabled = true;
     IconData? mainButtonIcon;
 
     switch (order.status) {
       case 'PAYMENT_UPLOADED':
-        mainButtonText = 'Check Payment';
+        mainButtonText = t?.translate('check_payment') ?? 'Check Payment';
         break;
       case 'CONFIRMED':
       case 'PAYMENT_SLIP_REQUESTED':
-        mainButtonText = 'Waiting for payment';
+        mainButtonText = t?.translate('waiting_payment') ?? 'Waiting for payment';
         isMainButtonEnabled = false;
         mainButtonIcon = Icons.access_time_outlined;
         break;
       case 'PREPARING':
-        mainButtonText = 'Picked Up by Rider';
+        mainButtonText = t?.translate('picked_up_rider') ?? 'Picked Up by Rider';
         break;
       case 'ON_THE_WAY':
-        mainButtonText = isDeliveryTab ? 'Check Delivery' : 'Delivered';
+        mainButtonText = isDeliveryTab ? (t?.translate('check_delivery') ?? 'Check Delivery') : (t?.translate('tab_delivered') ?? 'Delivered');
         break;
       case 'READY_FOR_PICKUP':
-        mainButtonText = isDeliveryTab ? 'Check Delivery' : 'Mark as Delivered';
+        mainButtonText = isDeliveryTab ? (t?.translate('check_delivery') ?? 'Check Delivery') : (t?.translate('mark_delivered') ?? 'Mark as Delivered');
         break;
     }
 
@@ -291,9 +294,9 @@ class OrderCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const GradientText(
-                'Cancel',
-                style: TextStyle(
+              child: GradientText(
+                t?.translate('cancel') ?? 'Cancel',
+                style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),
@@ -361,6 +364,7 @@ class OrderCard extends StatelessWidget {
   }
 
   void _showCancelDialog(BuildContext context) {
+    final t = AppLocalizations.of(context);
     final TextEditingController reasonController = TextEditingController();
 
     showModalBottomSheet(
@@ -393,7 +397,7 @@ class OrderCard extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                'Cancel Order',
+                t?.translate('cancel_order') ?? 'Cancel Order',
                 style: GoogleFonts.poppins(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -402,7 +406,7 @@ class OrderCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Are you sure you want to cancel this order? This action cannot be undone.',
+                t?.translate('cancel_order_confirm') ?? 'Are you sure you want to cancel this order? This action cannot be undone.',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   color: const Color(0xFF64748B),
@@ -410,7 +414,7 @@ class OrderCard extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                'Reason for cancellation',
+                t?.translate('cancel_reason') ?? 'Reason for cancellation',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -424,7 +428,7 @@ class OrderCard extends StatelessWidget {
                 autofocus: true,
                 style: GoogleFonts.poppins(fontSize: 14),
                 decoration: InputDecoration(
-                  hintText: 'Enter reason here...',
+                  hintText: t?.translate('cancel_reason_hint') ?? 'Enter reason here...',
                   hintStyle: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[400]),
                   filled: true,
                   fillColor: const Color(0xFFF8FAFC),
@@ -449,7 +453,7 @@ class OrderCard extends StatelessWidget {
                         side: const BorderSide(color: Color(0xFFE2E8F0)),
                       ),
                       child: Text(
-                        'No, Go Back',
+                        t?.translate('no_go_back') ?? 'No, Go Back',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -469,7 +473,7 @@ class OrderCard extends StatelessWidget {
                           reason.isEmpty ? null : reason
                         );
                         if (context.mounted) {
-                          AppDialog.showToast(context, success ? 'Order cancelled' : 'Failed to cancel order', isError: !success);
+                          AppDialog.showToast(context, success ? (t?.translate('order_cancelled_success') ?? 'Order cancelled') : (t?.translate('order_cancelled_fail') ?? 'Failed to cancel order'), isError: !success);
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -482,7 +486,7 @@ class OrderCard extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        'Yes, Cancel Order',
+                        t?.translate('yes_cancel_order') ?? 'Yes, Cancel Order',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -499,11 +503,12 @@ class OrderCard extends StatelessWidget {
     );
   }
 
-  String _getTimeAgo(DateTime dateTime) {
+  String _getTimeAgo(DateTime dateTime, BuildContext context) {
+    final t = AppLocalizations.of(context);
     final difference = DateTime.now().difference(dateTime);
-    if (difference.inMinutes < 1) return 'Just now';
-    if (difference.inMinutes < 60) return '${difference.inMinutes}m ago';
-    if (difference.inHours < 24) return '${difference.inHours}h ago';
+    if (difference.inMinutes < 1) return t?.translate('just_now') ?? 'Just now';
+    if (difference.inMinutes < 60) return '${difference.inMinutes}${t?.translate('mins_ago') ?? 'm ago'}';
+    if (difference.inHours < 24) return '${difference.inHours}${t?.translate('hours_ago') ?? 'h ago'}';
     return DateFormat('dd MMM').format(dateTime);
   }
 }

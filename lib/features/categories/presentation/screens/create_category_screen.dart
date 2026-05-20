@@ -5,6 +5,7 @@ import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart'
 import 'package:my_shop/features/categories/data/services/category_service.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class CreateCategoryScreen extends StatefulWidget {
   const CreateCategoryScreen({super.key});
@@ -61,7 +62,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
     if (_nameEnController.text.isEmpty &&
         _nameMmController.text.isEmpty &&
         _nameThController.text.isEmpty) {
-      AppDialog.showToast(context, 'Please enter at least one category name', isError: true);
+      AppDialog.showToast(context, AppLocalizations.of(context)?.translate('please_enter_category_name') ?? 'Please enter at least one category name', isError: true);
       return;
     }
 
@@ -83,11 +84,11 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
 
     if (mounted) {
       if (success) {
-        AppDialog.showToast(context, 'Successfully requested');
+        AppDialog.showToast(context, AppLocalizations.of(context)?.translate('successfully_requested') ?? 'Successfully requested');
         Navigator.of(context).pop(true);
       } else {
         setState(() => _isSaving = false);
-        AppDialog.showToast(context, 'Failed to create category', isError: true);
+        AppDialog.showToast(context, AppLocalizations.of(context)?.translate('failed_create_category') ?? 'Failed to create category', isError: true);
       }
     }
   }
@@ -105,7 +106,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Create Category',
+          AppLocalizations.of(context)?.translate('create_category') ?? 'Create Category',
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -137,7 +138,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'CREATE NEW CATEGORY',
+                        (AppLocalizations.of(context)?.translate('create_category') ?? 'CREATE NEW CATEGORY').toUpperCase(),
                         style: GoogleFonts.poppins(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -151,7 +152,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
 
                       // Icon Gallery
                       Text(
-                        'Choose icon',
+                        AppLocalizations.of(context)?.translate('choose_icon') ?? 'Choose icon',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -164,7 +165,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
 
                       // Name Lang Switcher
                       Text(
-                        'Category name',
+                        AppLocalizations.of(context)?.translate('category_name') ?? 'Category name',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -180,7 +181,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
                             : _nameLang == 'MM'
                             ? _nameMmController
                             : _nameThController,
-                        hint: 'Enter category name',
+                        hint: AppLocalizations.of(context)?.translate('enter_category_name') ?? 'Enter category name',
                       ),
                     ],
                   ),
@@ -200,7 +201,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
             child: PrimaryGradientButton(
               onPressed: _saveCategory,
               isLoading: _isSaving,
-              text: 'Create Category',
+              text: AppLocalizations.of(context)?.translate('create_category') ?? 'Create Category',
               height: 56,
               borderRadius: 16,
             ),
@@ -213,9 +214,9 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
 
   Widget _buildIconGallery() {
     if (_gallery.isEmpty) {
-      return const Text(
-        'No icons available',
-        style: TextStyle(fontSize: 12, color: Colors.grey),
+      return Text(
+        AppLocalizations.of(context)?.translate('no_icons_available') ?? 'No icons available',
+        style: const TextStyle(fontSize: 12, color: Colors.grey),
       );
     }
 

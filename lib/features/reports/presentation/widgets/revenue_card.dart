@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class RevenueCard extends StatelessWidget {
   final String revenue;
   final String trend;
   final String orders;
-  final String avgOrder;
   final String cancelled;
 
   const RevenueCard({
@@ -15,12 +15,12 @@ class RevenueCard extends StatelessWidget {
     required this.revenue,
     required this.trend,
     required this.orders,
-    required this.avgOrder,
     required this.cancelled,
   });
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -52,7 +52,7 @@ class RevenueCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Today's Revenue",
+                t?.translate('todays_revenue') ?? "Today's Revenue",
                 style: GoogleFonts.poppins(
                   color: Colors.white.withValues(alpha: 0.9),
                   fontSize: 14,
@@ -88,11 +88,10 @@ class RevenueCard extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildStatItem("Orders", orders),
-                  _buildStatItem("Avg Order", "฿ $avgOrder"),
-                  _buildStatItem("Cancelled", cancelled),
+                  _buildStatItem(t?.translate('orders') ?? "Orders", orders),
+                  const SizedBox(width: 80),
+                  _buildStatItem(t?.translate('cancelled') ?? "Cancelled", cancelled),
                 ],
               ),
             ],

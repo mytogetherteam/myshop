@@ -12,6 +12,7 @@ import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:intl/intl.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 import '../../data/models/report_model.dart';
 import '../../data/services/report_service.dart';
 
@@ -110,6 +111,7 @@ class ReportPageState extends State<ReportPage>
   }
 
   Future<void> _showCustomDatePicker() async {
+    final t = AppLocalizations.of(context);
     List<DateTime?>? results = await showModalBottomSheet<List<DateTime?>>(
       context: context,
       isScrollControlled: true,
@@ -124,7 +126,7 @@ class ReportPageState extends State<ReportPage>
 
         return StatefulBuilder(
           builder: (context, setModalState) {
-            String rangeText = "Select Dates";
+            String rangeText = t?.translate('custom') ?? "Select Dates";
             if (tempValues.length == 2 &&
                 tempValues[0] != null &&
                 tempValues[1] != null) {
@@ -160,7 +162,7 @@ class ReportPageState extends State<ReportPage>
                         ),
                         Expanded(
                           child: Text(
-                            "Choose Revenue Period",
+                            t?.translate('custom') ?? "Choose Revenue Period",
                             style: GoogleFonts.poppins(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -234,7 +236,7 @@ class ReportPageState extends State<ReportPage>
                         TextButton(
                           onPressed: () => Navigator.pop(context),
                           child: Text(
-                            "CANCEL",
+                            t?.translate('cancel').toUpperCase() ?? "CANCEL",
                             style: GoogleFonts.poppins(
                               color: const Color(0xFF64748B),
                               fontWeight: FontWeight.w600,
@@ -286,6 +288,7 @@ class ReportPageState extends State<ReportPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: Column(
@@ -322,13 +325,73 @@ class ReportPageState extends State<ReportPage>
                 setState(() {});
               },
               tabs: [
-                _buildFilterTab("Today", 0),
-                _buildFilterTab("Yesterday", 1),
-                _buildFilterTab("This Week", 2),
-                _buildFilterTab("Custom", 3),
+                _buildFilterTab(t?.translate('today') ?? "Today", 0),
+                _buildFilterTab(t?.translate('yesterday') ?? "Yesterday", 1),
+                _buildFilterTab(t?.translate('this_week') ?? "This Week", 2),
+                _buildFilterTab(t?.translate('custom') ?? "Custom", 3),
               ],
             ),
           ),
+          if (_tabController.index == 3 && _selectedDateRange != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const GradientWidget(
+                          child: PhosphorIcon(
+                            PhosphorIconsRegular.calendar,
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: _showCustomDatePicker,
+                          child: GradientText(
+                            "${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.start)} - ${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.end)}",
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedDateRange = null;
+                              _tabController.animateTo(0);
+                            });
+                            _loadData();
+                          },
+                          child: const Icon(
+                            Icons.close,
+                            size: 16,
+                            color: Color(0xFF94A3B8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           Expanded(
             child: RefreshIndicator(
               onRefresh: _loadData,
@@ -382,35 +445,13 @@ class ReportPageState extends State<ReportPage>
 
   List<Widget> _buildContent() {
     final currencyFormat = NumberFormat.currency(symbol: '', decimalDigits: 0);
+    final t = AppLocalizations.of(context);
     
     return [
-      if (_tabController.index == 3 && _selectedDateRange != null)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: Row(
-            children: [
-              const GradientWidget(
-                child: PhosphorIcon(
-                  PhosphorIconsRegular.calendar,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 10),
-              GradientText(
-                "${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.start)} - ${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.end)}",
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
       RevenueCard(
         revenue: currencyFormat.format(_summary?.revenue ?? 0),
-        trend: "${_summary?.revenueTrend ?? '0%'} from last period",
+        trend: "${_summary?.revenueTrend ?? '0%'} ${t?.translate('from_last_period') ?? 'from last period'}",
         orders: _summary?.orders.toString() ?? '0', // This is Total Orders
-        avgOrder: currencyFormat.format(_summary?.avgOrderValue ?? 0),
         cancelled: _summary?.cancelledCount.toString() ?? '0',
       ),
       const SizedBox(height: 20),
@@ -420,7 +461,7 @@ class ReportPageState extends State<ReportPage>
             children: [
               Expanded(
                 child: SummaryCard(
-                  label: "Completed",
+                  label: t?.translate('completed') ?? "Completed",
                   value: ((_summary?.orders ?? 0) -
                           (_summary?.cancelledCount ?? 0))
                       .toString(),
@@ -431,7 +472,7 @@ class ReportPageState extends State<ReportPage>
               const SizedBox(width: 12),
               Expanded(
                 child: SummaryCard(
-                  label: "Cancelled",
+                  label: t?.translate('cancelled') ?? "Cancelled",
                   value: _summary?.cancelledCount.toString() ?? '0',
                   trend: "Total",
                   isPositive: false,
@@ -445,7 +486,7 @@ class ReportPageState extends State<ReportPage>
             children: [
               Expanded(
                 child: SummaryCard(
-                  label: "Avg Wait Time",
+                  label: t?.translate('avg_wait_time') ?? "Avg Wait Time",
                   value: _summary?.avgWaitTime.toString() ?? '15',
                   unit: "min",
                   trend: "Estimated",
@@ -455,7 +496,7 @@ class ReportPageState extends State<ReportPage>
               const SizedBox(width: 12),
               Expanded(
                 child: SummaryCard(
-                  label: "Items Sold",
+                  label: t?.translate('items_sold') ?? "Items Sold",
                   value: _summary?.itemsSold.toString() ?? '0',
                   trend: "Period",
                   isPositive: true,
@@ -470,7 +511,7 @@ class ReportPageState extends State<ReportPage>
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            "Best Sellers",
+            t?.translate('best_sellers') ?? "Best Sellers",
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -490,7 +531,7 @@ class ReportPageState extends State<ReportPage>
               child: Row(
                 children: [
                   Text(
-                    "See more",
+                    t?.translate('view_all') ?? "See more",
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -514,7 +555,7 @@ class ReportPageState extends State<ReportPage>
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Text(
-              "No sales data for this period",
+              t?.translate('no_top_selling_items_yet') ?? "No sales data for this period",
               style: GoogleFonts.poppins(color: const Color(0xFF64748B)),
             ),
           ),
@@ -536,7 +577,7 @@ class ReportPageState extends State<ReportPage>
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            "Order History",
+            t?.translate('order_history') ?? "Order History",
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -556,7 +597,7 @@ class ReportPageState extends State<ReportPage>
               child: Row(
                 children: [
                   Text(
-                    "See more",
+                    t?.translate('view_all') ?? "See more",
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -580,7 +621,7 @@ class ReportPageState extends State<ReportPage>
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Text(
-              "No orders found",
+              t?.translate('no_orders_yet') ?? "No orders found",
               style: GoogleFonts.poppins(color: const Color(0xFF64748B)),
             ),
           ),

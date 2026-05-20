@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class SuccessSheet extends StatefulWidget {
   final VoidCallback? onDone;
@@ -13,6 +14,7 @@ class SuccessSheet extends StatefulWidget {
 class _SuccessSheetState extends State<SuccessSheet> {
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -47,7 +49,7 @@ class _SuccessSheetState extends State<SuccessSheet> {
         ),
         const SizedBox(height: 24),
         Text(
-          'Successfully requested',
+          t?.translate('successfully_requested') ?? 'Successfully requested',
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.w700,
@@ -58,7 +60,7 @@ class _SuccessSheetState extends State<SuccessSheet> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Text(
-            'Your request has been submitted successfully. We\u2019ll notify you once it\u2019s approved by the admin.',
+            t?.translate('request_submitted_desc') ?? 'Your request has been submitted successfully. We\u2019ll notify you once it\u2019s approved by the admin.',
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 14,
@@ -81,7 +83,7 @@ class _SuccessSheetState extends State<SuccessSheet> {
                 nav.pop(true);
               }
             },
-            text: 'Got it',
+            text: t?.translate('got_it') ?? 'Got it',
             height: 56,
             borderRadius: 12,
           ),

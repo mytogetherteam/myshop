@@ -16,6 +16,7 @@ import 'package:my_shop/features/notifications/presentation/widgets/notification
 import 'package:flutter/services.dart';
 import 'package:my_shop/core/presentation/widgets/app_bar_title_with_logo.dart';
 import 'dart:async';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final int initialIndex;
@@ -193,7 +194,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     }
   }
 
-  final List<String> _titles = ['Order', 'Menu', 'Report', 'Profile'];
+
 
   Widget _buildGradientItem(IconData icon, String label) {
     return ShaderMask(
@@ -240,6 +241,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    final localizedTitles = [
+      t?.translate('order') ?? 'Order',
+      t?.translate('menu') ?? 'Menu',
+      t?.translate('report') ?? 'Report',
+      t?.translate('profile') ?? 'Profile',
+    ];
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -247,7 +255,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        title: AppBarTitleWithLogo(title: _titles[_currentIndex]),
+        title: AppBarTitleWithLogo(title: localizedTitles[_currentIndex]),
         actions: [const NotificationBadgeIcon(), const SizedBox(width: 8)],
       ),
       body: IndexedStack(
@@ -294,24 +302,24 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         elevation: 8,
         items: [
           BottomNavigationBarItem(
-            icon: _buildInactiveItem(PhosphorIconsRegular.cookingPot, 'Order'),
-            activeIcon: _buildGradientItem(PhosphorIconsFill.cookingPot, 'Order'),
-            label: 'Order',
+            icon: _buildInactiveItem(PhosphorIconsRegular.cookingPot, t?.translate('order') ?? 'Order'),
+            activeIcon: _buildGradientItem(PhosphorIconsFill.cookingPot, t?.translate('order') ?? 'Order'),
+            label: t?.translate('order') ?? 'Order',
           ),
           BottomNavigationBarItem(
-            icon: _buildInactiveItem(PhosphorIconsRegular.forkKnife, 'Menu'),
-            activeIcon: _buildGradientItem(PhosphorIconsFill.forkKnife, 'Menu'),
-            label: 'Menu',
+            icon: _buildInactiveItem(PhosphorIconsRegular.forkKnife, t?.translate('menu') ?? 'Menu'),
+            activeIcon: _buildGradientItem(PhosphorIconsFill.forkKnife, t?.translate('menu') ?? 'Menu'),
+            label: t?.translate('menu') ?? 'Menu',
           ),
           BottomNavigationBarItem(
-            icon: _buildInactiveItem(PhosphorIconsRegular.listHeart, 'Report'),
-            activeIcon: _buildGradientItem(PhosphorIconsFill.listHeart, 'Report'),
-            label: 'Report',
+            icon: _buildInactiveItem(PhosphorIconsRegular.listHeart, t?.translate('report') ?? 'Report'),
+            activeIcon: _buildGradientItem(PhosphorIconsFill.listHeart, t?.translate('report') ?? 'Report'),
+            label: t?.translate('report') ?? 'Report',
           ),
           BottomNavigationBarItem(
-            icon: _buildInactiveItem(PhosphorIconsRegular.storefront, 'Profile'),
-            activeIcon: _buildGradientItem(PhosphorIconsFill.storefront, 'Profile'),
-            label: 'Profile',
+            icon: _buildInactiveItem(PhosphorIconsRegular.storefront, t?.translate('profile') ?? 'Profile'),
+            activeIcon: _buildGradientItem(PhosphorIconsFill.storefront, t?.translate('profile') ?? 'Profile'),
+            label: t?.translate('profile') ?? 'Profile',
           ),
         ],
       ),

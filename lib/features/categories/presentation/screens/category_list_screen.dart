@@ -4,12 +4,11 @@ import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/features/menu/data/models/menu_category_model.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
-import 'package:my_shop/core/presentation/widgets/status_badge.dart';
-import 'package:my_shop/core/presentation/widgets/primary_gradient_switch.dart';
-import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+
 
 import 'create_category_screen.dart';
 import 'edit_category_screen.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class CategoryListScreen extends StatefulWidget {
   const CategoryListScreen({super.key});
@@ -90,7 +89,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Manage Category',
+          AppLocalizations.of(context)?.translate('manage_category') ?? 'Manage Category',
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -112,7 +111,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
                 if (result == true) _fetchCategories(forceRefresh: true);
               },
               child: Text(
-                '+ Create',
+                AppLocalizations.of(context)?.translate('create') ?? '+ Create',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -135,7 +134,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
     if (_categories.isEmpty) {
       return Center(
         child: Text(
-          'No categories found',
+          AppLocalizations.of(context)?.translate('no_categories_found') ?? 'No categories found',
           style: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
         ),
       );
@@ -182,42 +181,10 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
               );
               if (result == true) _fetchCategories(forceRefresh: true);
             },
-
-            onPublishStatusChanged: (isPublished) {
-              _toggleCategoryPublishStatus(category, isPublished);
-            },
           ),
         );
       },
     );
-  }
-
-  Future<void> _toggleCategoryPublishStatus(
-    MenuCategoryModel category,
-    bool isPublished,
-  ) async {
-    final index = _categories.indexWhere((c) => c.id == category.id);
-    if (index == -1) return;
-
-    final newStatus = isPublished ? 'PUBLISHED' : 'UNPUBLISHED';
-
-    // Optimistic Update
-    setState(() {
-      _categories[index] = category.copyWith(publishStatus: newStatus);
-    });
-
-    final success = await _categoryService.toggleCategoryPublishStatus(
-      category.id,
-      newStatus,
-    );
-
-    if (!success && mounted) {
-      // Revert on failure
-      setState(() {
-        _categories[index] = category;
-      });
-      AppDialog.showToast(context, 'Failed to update publish status', isError: true);
-    }
   }
 
   Widget _buildSkeletonList() {
@@ -276,36 +243,26 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
 class _CategoryCard extends StatelessWidget {
   final MenuCategoryModel category;
   final VoidCallback onEdit;
-  final ValueChanged<bool> onPublishStatusChanged;
   final int index;
 
   const _CategoryCard({
     required this.category,
     required this.onEdit,
-    required this.onPublishStatusChanged,
     required this.index,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bool isPending = category.pendingStatus == 'PENDING_APPROVAL';
-    final bool isRejected = category.pendingStatus == 'REJECTED';
-
+    final t = AppLocalizations.of(context);
     return InkWell(
-      onTap: isPending ? null : onEdit,
+      onTap: onEdit,
       borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isRejected
-              ? const Color(0xFFFEF2F2).withValues(alpha: 0.5)
-              : (isPending ? const Color(0xFFF8FAFC) : Colors.white),
+          color: Colors.white,
           border: Border.all(
-            color: isRejected
-                ? const Color(0xFFEF4444).withValues(alpha: 0.3)
-                : (isPending
-                      ? const Color(0xFFE2E8F0)
-                      : const Color(0xFFF1F5F9)),
+            color: const Color(0xFFF1F5F9),
           ),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
@@ -380,42 +337,20 @@ class _CategoryCard extends StatelessWidget {
                           color: const Color(0xFF1E293B),
                         ),
                       ),
-                      if (isPending)
-                        const StatusBadge(status: 'PENDING_APPROVAL')
-                      else if (isRejected)
-                        const StatusBadge(status: 'REJECTED'),
                     ],
                   ),
                   Text(
-                    '${category.itemCount} items',
+                    '${category.itemCount} ${t?.translate('items_count_suffix') ?? 'items'}',
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                       color: const Color(0xFF94A3B8),
                     ),
                   ),
-                  if (isRejected && category.rejectReason != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        category.rejectReason!,
-                        style: GoogleFonts.poppins(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFFEF4444),
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
                 ],
               ),
             ),
             const SizedBox(width: 8),
-            if (!isPending && !isRejected) ...[
-              _buildPublishSwitch(),
-              const SizedBox(width: 8),
-            ],
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -432,29 +367,6 @@ class _CategoryCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildPublishSwitch() {
-    final bool isPublished = category.publishStatus == 'PUBLISHED';
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        PrimaryGradientSwitch(
-          value: isPublished,
-          onChanged: onPublishStatusChanged,
-        ),
-        Text(
-          isPublished ? 'Published' : 'Draft',
-          style: GoogleFonts.poppins(
-            fontSize: 8,
-            fontWeight: FontWeight.w600,
-            color: isPublished
-                ? AppColors.primary
-                : const Color(0xFF94A3B8),
-          ),
-        ),
-      ],
     );
   }
 

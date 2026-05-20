@@ -7,9 +7,10 @@ import '../../data/services/payment_service.dart';
 import '../../../../core/presentation/widgets/skeleton.dart';
 import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import '../../../../core/presentation/widgets/global_modal.dart';
-import '../../../../core/presentation/widgets/status_badge.dart';
+
 import '../widgets/password_confirmation_sheet.dart';
 import '../../../../core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 import 'edit_payment_page.dart';
 
@@ -63,6 +64,7 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
   }
 
   Future<void> _handleDelete(PaymentMethod pm) async {
+    final t = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -73,13 +75,13 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
             Image.asset('assets/images/app_logo.png', width: 24, height: 24),
             const SizedBox(width: 8),
             Text(
-              'Delete Payment Method',
+              t?.translate('delete_payment_method') ?? 'Delete Payment Method',
               style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 16),
             ),
           ],
         ),
         content: Text(
-          'Are you sure you want to delete "${pm.paymentMethodName}"? This action cannot be undone.',
+          t?.translate('delete_payment_confirm').replaceAll('{name}', pm.paymentMethodName) ?? 'Are you sure you want to delete "${pm.paymentMethodName}"? This action cannot be undone.',
           style: GoogleFonts.poppins(
             fontSize: 14,
             color: const Color(0xFF475569),
@@ -89,14 +91,14 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
-              'Cancel',
+              t?.translate('cancel') ?? 'Cancel',
               style: GoogleFonts.poppins(color: const Color(0xFF64748B)),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              'Delete',
+              t?.translate('delete') ?? 'Delete',
               style: GoogleFonts.poppins(
                 color: Colors.red,
                 fontWeight: FontWeight.w600,
@@ -121,6 +123,7 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
   }
 
   Future<void> _performDelete(PaymentMethod pm) async {
+    final t = AppLocalizations.of(context);
     // Show loading overlay
     showDialog(
       context: context,
@@ -134,15 +137,16 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
     Navigator.pop(context); // Remove loading overlay
 
     if (result['success'] == true) {
-      AppDialog.showToast(context, result['message'] ?? 'Payment method deleted successfully');
+      AppDialog.showToast(context, result['message'] ?? (t?.translate('payment_deleted_success') ?? 'Payment method deleted successfully'));
       _loadPaymentMethods();
     } else {
-      AppDialog.showToast(context, result['message'] ?? 'Failed to delete payment method', isError: true);
+      AppDialog.showToast(context, result['message'] ?? (t?.translate('failed_delete_payment') ?? 'Failed to delete payment method'), isError: true);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -153,7 +157,7 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Accepted payment',
+          t?.translate('accepted_payment') ?? 'Accepted payment',
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -195,9 +199,7 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
   }
 
   Widget _buildPaymentItem(PaymentMethod pm) {
-    final bool isPending = pm.pendingStatus == 'PENDING_APPROVAL';
-    final bool isRejected = pm.pendingStatus == 'REJECTED';
-
+    final t = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -214,256 +216,144 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
               ),
             ),
             const Spacer(),
-            if (pm.pendingStatus != 'APPROVED') ...[
-              StatusBadge(status: pm.pendingStatus),
-              const SizedBox(width: 12),
-            ],
-            if (!isPending) ...[
-              GestureDetector(
-                onTap: () async {
-                  final result = await Navigator.push(
-                    context,
-                    CupertinoPageRoute(
-                      builder: (_) => EditPaymentPage(paymentMethod: pm),
-                    ),
-                  );
-                  if (result == true) _loadPaymentMethods(forceRefresh: true);
-                },
-                child: Text(
-                  'Edit',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFFED3973),
+            GestureDetector(
+              onTap: () async {
+                final result = await Navigator.push(
+                  context,
+                  CupertinoPageRoute(
+                    builder: (_) => EditPaymentPage(paymentMethod: pm),
                   ),
+                );
+                if (result == true) _loadPaymentMethods(forceRefresh: true);
+              },
+              child: Text(
+                t?.translate('edit') ?? 'Edit',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFFED3973),
                 ),
               ),
-              if (_paymentMethods.length > 1) ...[
-                const SizedBox(width: 16),
-                GestureDetector(
-                  onTap: () => _handleDelete(pm),
-                  child: const Icon(
-                    PhosphorIconsRegular.trash,
-                    size: 20,
-                    color: Color(0xFFEF4444),
-                  ),
+            ),
+            if (_paymentMethods.length > 1) ...[
+              const SizedBox(width: 16),
+              GestureDetector(
+                onTap: () => _handleDelete(pm),
+                child: const Icon(
+                  PhosphorIconsRegular.trash,
+                  size: 20,
+                  color: Color(0xFFEF4444),
                 ),
-              ],
+              ),
             ],
           ],
         ),
         const SizedBox(height: 16),
-        Stack(
-          children: [
-            Opacity(
-              opacity: isPending ? 0.4 : 1.0,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isRejected ? const Color(0xFFEF4444).withValues(alpha: 0.2) : const Color(0xFFF1F5F9),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: pm.qrImageUrl.isNotEmpty
-                          ? Image.network(
-                              pm.fullQrImageUrl,
-                              width: double.infinity,
-                              height: 250,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stack) =>
-                                  _buildQrPlaceholder(),
-                            )
-                          : _buildQrPlaceholder(),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        const Icon(
-                          PhosphorIconsRegular.user,
-                          size: 16,
-                          color: Color(0xFF64748B),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Name: ',
-                          style: GoogleFonts.poppins(
-                            fontSize: 13,
-                            color: const Color(0xFF64748B),
-                          ),
-                        ),
-                        Text(
-                          pm.accountName,
-                          style: GoogleFonts.poppins(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1E293B),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(
-                          PhosphorIconsRegular.hash,
-                          size: 16,
-                          color: Color(0xFF64748B),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'No: ',
-                          style: GoogleFonts.poppins(
-                            fontSize: 13,
-                            color: const Color(0xFF64748B),
-                          ),
-                        ),
-                        Text(
-                          pm.accountNumber,
-                          style: GoogleFonts.poppins(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1E293B),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(
-                          pm.isActive
-                              ? PhosphorIconsRegular.checkCircle
-                              : PhosphorIconsRegular.xCircle,
-                          size: 16,
-                          color: pm.isActive
-                              ? const Color(0xFF22C55E)
-                              : const Color(0xFFEF4444),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          pm.isActive ? 'Active' : 'Inactive',
-                          style: GoogleFonts.poppins(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: pm.isActive
-                                ? const Color(0xFF22C55E)
-                                : const Color(0xFFEF4444),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: const Color(0xFFF1F5F9),
             ),
-            if (isPending)
-              Positioned.fill(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: const Color(0xFF64748B),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 2,
-                            color: const Color(
-                              0xFF64748B,
-                            ).withValues(alpha: 0.3),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Waiting for approval...',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF64748B),
-                              height: 1.4,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            width: 32,
-                            height: 2,
-                            color: const Color(
-                              0xFF64748B,
-                            ).withValues(alpha: 0.3),
-                          ),
-                        ],
-                      ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: pm.qrImageUrl.isNotEmpty
+                    ? Image.network(
+                        pm.fullQrImageUrl,
+                        width: double.infinity,
+                        height: 250,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stack) =>
+                            _buildQrPlaceholder(),
+                      )
+                    : _buildQrPlaceholder(),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  const Icon(
+                    PhosphorIconsRegular.user,
+                    size: 16,
+                    color: Color(0xFF64748B),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    t?.translate('name_label') ?? 'Name: ',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: const Color(0xFF64748B),
                     ),
                   ),
-                ),
-              ),
-            if (isRejected)
-              Positioned.fill(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: const Color(0xFFEF4444),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        pm.rejectReason != null ? 'Rejected: ${pm.rejectReason}' : 'Rejected. Please contact admin.',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFFEF4444),
-                          height: 1.4,
-                        ),
-                      ),
+                  Text(
+                    pm.accountName,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF1E293B),
                     ),
                   ),
-                ),
+                ],
               ),
-          ],
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(
+                    PhosphorIconsRegular.hash,
+                    size: 16,
+                    color: Color(0xFF64748B),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    t?.translate('no_label') ?? 'No: ',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: const Color(0xFF64748B),
+                    ),
+                  ),
+                  Text(
+                    pm.accountNumber,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF1E293B),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(
+                    pm.isActive
+                        ? PhosphorIconsRegular.checkCircle
+                        : PhosphorIconsRegular.xCircle,
+                    size: 16,
+                    color: pm.isActive
+                        ? const Color(0xFF22C55E)
+                        : const Color(0xFFEF4444),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    pm.isActive ? (t?.translate('active') ?? 'Active') : (t?.translate('inactive') ?? 'Inactive'),
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: pm.isActive
+                          ? const Color(0xFF22C55E)
+                          : const Color(0xFFEF4444),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -508,6 +398,7 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
   }
 
   Widget _buildEmptyState() {
+    final t = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -527,7 +418,7 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
           ),
           const SizedBox(height: 24),
           Text(
-            'No payment methods yet',
+            t?.translate('no_payment_methods') ?? 'No payment methods yet',
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -536,7 +427,7 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Add your payment methods to start receiving payments.',
+            t?.translate('add_payment_methods_desc') ?? 'Add your payment methods to start receiving payments.',
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 14,

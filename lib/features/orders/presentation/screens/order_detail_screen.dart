@@ -17,6 +17,7 @@ import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 
 class OrderDetailScreen extends StatefulWidget {
@@ -347,6 +348,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Future<void> _handleCancelOrder() async {
+    final t = AppLocalizations.of(context);
     _cancelReasonController.clear();
     
     final result = await showModalBottomSheet<bool>(
@@ -379,7 +381,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
               const SizedBox(height: 24),
               Text(
-                'Cancel Order',
+                t?.translate('cancel_order') ?? 'Cancel Order',
                 style: GoogleFonts.poppins(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -388,7 +390,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Are you sure you want to cancel this order? This action cannot be undone.',
+                t?.translate('cancel_order_confirm') ?? 'Are you sure you want to cancel this order? This action cannot be undone.',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   color: const Color(0xFF64748B),
@@ -396,7 +398,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
               const SizedBox(height: 24),
               Text(
-                'Reason for cancellation',
+                t?.translate('cancel_reason') ?? 'Reason for cancellation',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -409,7 +411,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 maxLines: 3,
                 style: GoogleFonts.poppins(fontSize: 14),
                 decoration: InputDecoration(
-                  hintText: 'Enter reason here...',
+                  hintText: t?.translate('cancel_reason_hint') ?? 'Enter reason here...',
                   hintStyle: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[400]),
                   filled: true,
                   fillColor: const Color(0xFFF8FAFC),
@@ -431,7 +433,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       colors: [Color(0xFFF8FAFC), Color(0xFFF8FAFC)],
                     ),
                     child: Text(
-                      'No, Go Back',
+                      t?.translate('no_go_back') ?? 'No, Go Back',
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -449,7 +451,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       colors: [Color(0xFFEF4444), Color(0xFFEF4444)],
                     ),
                     child: Text(
-                      'Yes, Cancel Order',
+                      t?.translate('yes_cancel_order') ?? 'Yes, Cancel Order',
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -741,6 +743,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildStickyProgress() {
+    final t = AppLocalizations.of(context);
     if (_currentOrder.status == 'CANCELLED') {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -752,7 +755,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             const Icon(PhosphorIconsFill.smileySad, color: Color(0xFFEF4444), size: 24),
             const SizedBox(width: 12),
             Text(
-              'Order Cancelled',
+              t?.translate('order_cancelled') ?? 'Order Cancelled',
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -1577,6 +1580,7 @@ Widget _buildAnimatedProgress() {
   }
 
   Widget _buildBottomActionButtons() {
+    final t = AppLocalizations.of(context);
     String mainButtonText = 'Accept order';
     String? nextStatus;
     bool isCancelable = false;
@@ -1648,7 +1652,7 @@ Widget _buildAnimatedProgress() {
                       colors: [Color(0xFFFFF1F2), Color(0xFFFFF1F2)],
                     ),
                     child: GradientText(
-                      'Cancel',
+                      t?.translate('cancel') ?? 'Cancel',
                       style: GoogleFonts.poppins(
                         fontWeight: FontWeight.w600, 
                         fontSize: 14,

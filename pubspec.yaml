@@ -30,14 +30,16 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  google_fonts: ^8.0.2
+  google_fonts: ^8.1.0
   phosphor_flutter: ^2.1.0
   cached_network_image: ^3.4.1
   intl: ^0.20.2
-  shared_preferences: ^2.5.2
+  shared_preferences: ^2.5.5
   flutter_secure_storage: ^9.2.4
   dio: ^5.8.0
   dio_cache_interceptor: ^3.5.0
@@ -51,10 +53,11 @@ dependencies:
   url_launcher: ^6.3.1
   package_info_plus: ^8.1.2
   device_info_plus: ^11.0.0
-  image_picker: ^1.2.1
+  image_picker: ^1.2.2
   fl_chart: ^1.2.0
   calendar_date_picker2: ^1.1.8
   http_parser: ^4.1.2
+  crypto: ^3.0.7
 
 dev_dependencies:
   flutter_test:
@@ -86,6 +89,7 @@ flutter:
     - assets/images/
     - assets/fonts/
     - assets/data/
+    - assets/lang/
 
   fonts:
     - family: Poppins

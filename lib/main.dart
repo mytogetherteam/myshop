@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:my_shop/core/notifications/notification_service.dart';
 import 'package:my_shop/core/utils/app_version.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 import 'app.dart';
 
 @pragma('vm:entry-point')
@@ -21,6 +22,8 @@ void main() async {
   // Initialize notification service
   NotificationService().initialize();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  await LocalizationService.instance.init();
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

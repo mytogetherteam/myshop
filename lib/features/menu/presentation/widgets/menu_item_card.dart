@@ -4,10 +4,11 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../data/models/menu_item_model.dart';
 import '../../../../core/presentation/widgets/global_modal.dart';
 import '../../../../core/presentation/widgets/confirmation_sheet.dart';
-import '../../../../core/presentation/widgets/status_badge.dart';
+
 import '../../../../core/utils/price_formatter.dart';
 import '../../../../core/utils/app_colors.dart';
 import '../../../../core/presentation/widgets/gradient_widgets.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class MenuItemCard extends StatefulWidget {
   final MenuItemModel item;
@@ -51,14 +52,6 @@ class _MenuItemCardState extends State<MenuItemCard> {
 
   @override
   Widget build(BuildContext context) {
-    final String status = widget.item.pendingStatus?.toUpperCase() ?? '';
-    final bool isRejected = status == 'REJECTED';
-    final bool isPending =
-        status != '' &&
-        status != 'APPROVED' &&
-        status != 'PUBLISHED' &&
-        !isRejected;
-
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       decoration: BoxDecoration(
@@ -72,9 +65,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
           ),
         ],
         border: Border.all(
-          color: isRejected
-              ? AppColors.errorLight
-              : (isPending ? AppColors.outlineVariant : Colors.transparent),
+          color: Colors.transparent,
           width: 1,
         ),
       ),
@@ -82,7 +73,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(20),
         child: InkWell(
-          onTap: isPending ? null : widget.onTap,
+          onTap: widget.onTap,
           borderRadius: BorderRadius.circular(20),
           child: Padding(
             padding: const EdgeInsets.all(12),
@@ -151,24 +142,8 @@ class _MenuItemCardState extends State<MenuItemCard> {
                               ],
                             ),
                           ),
-                          if (isPending || isRejected)
-                            StatusBadge(status: widget.item.pendingStatus),
                         ],
                       ),
-                      if (isRejected && widget.item.rejectReason != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            widget.item.rejectReason!,
-                            style: GoogleFonts.poppins(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.error,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
                       const SizedBox(height: 6),
                       Row(
                         children: [
@@ -223,10 +198,8 @@ class _MenuItemCardState extends State<MenuItemCard> {
                     ],
                   ),
                 ),
-                if (!isPending && !isRejected) ...[
-                  const SizedBox(width: 12),
-                  _buildActionSwitches(),
-                ],
+                const SizedBox(width: 12),
+                _buildActionSwitches(),
               ],
             ),
           ),
@@ -245,22 +218,23 @@ class _MenuItemCardState extends State<MenuItemCard> {
   }
 
   Widget _buildActionSwitches() {
+    final t = AppLocalizations.of(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         _buildSwitch(
           value: _isPublished,
-          label: _isPublished ? 'Published' : 'Draft',
+          label: _isPublished ? (t?.translate('published') ?? 'Published') : (t?.translate('draft') ?? 'Draft'),
           onChanged: (value) {
             GlobalModal.show(
               context: context,
               child: ConfirmationSheet(
-                title: value ? 'Publish Item?' : 'Un-publish Item?',
+                title: value ? (t?.translate('publish_item') ?? 'Publish Item?') : (t?.translate('unpublish_item') ?? 'Un-publish Item?'),
                 message: value
-                    ? 'This item will be visible to customers on the app.'
-                    : 'This item will be hidden from customers and saved as a draft.',
-                confirmLabel: value ? 'Publish' : 'Un-publish',
+                    ? (t?.translate('publish_item_desc') ?? 'This item will be visible to customers on the app.')
+                    : (t?.translate('unpublish_item_desc') ?? 'This item will be hidden from customers and saved as a draft.'),
+                confirmLabel: value ? (t?.translate('publish') ?? 'Publish') : (t?.translate('unpublish') ?? 'Un-publish'),
                 confirmColor: value
                     ? AppColors.primary
                     : AppColors.onSurfaceVariant,
@@ -276,16 +250,16 @@ class _MenuItemCardState extends State<MenuItemCard> {
         const SizedBox(height: 12),
         _buildSwitch(
           value: _inStock,
-          label: _inStock ? 'Available' : 'Unavailable',
+          label: _inStock ? (t?.translate('available') ?? 'Available') : (t?.translate('unavailable') ?? 'Unavailable'),
           onChanged: (value) {
             GlobalModal.show(
               context: context,
               child: ConfirmationSheet(
-                title: value ? 'Mark as Available?' : 'Mark as Unavailable?',
+                title: value ? (t?.translate('mark_available') ?? 'Mark as Available?') : (t?.translate('mark_unavailable') ?? 'Mark as Unavailable?'),
                 message: value
-                    ? 'This item will be available for customers to order.'
-                    : 'This item will be hidden or marked as unavailable for customers.',
-                confirmLabel: value ? 'Mark Available' : 'Mark Unavailable',
+                    ? (t?.translate('mark_available_desc') ?? 'This item will be available for customers to order.')
+                    : (t?.translate('mark_unavailable_desc') ?? 'This item will be hidden or marked as unavailable for customers.'),
+                confirmLabel: value ? (t?.translate('mark_available_btn') ?? 'Mark Available') : (t?.translate('mark_unavailable_btn') ?? 'Mark Unavailable'),
                 confirmColor: value
                     ? AppColors.primary
                     : AppColors.error,

@@ -12,6 +12,7 @@ import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -141,6 +142,7 @@ class OrdersScreenState extends State<OrdersScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: Column(
@@ -165,12 +167,12 @@ class OrdersScreenState extends State<OrdersScreen>
                 fontWeight: FontWeight.w500,
               ),
               tabs: [
-                _buildTab('New order', 'NEW', 0),
-                _buildTab('Payment', 'PAYMENT', 1),
-                _buildTab('Preparing', 'PREPARING', 2),
-                _buildTab('Delivering', 'DELIVERING', 3),
-                _buildTab('Delivered', 'DELIVERED', 4),
-                _buildTab('Cancelled', 'CANCELLED', 5),
+                _buildTab(t?.translate('tab_new') ?? 'New order', 'NEW', 0),
+                _buildTab(t?.translate('tab_payment') ?? 'Payment', 'PAYMENT', 1),
+                _buildTab(t?.translate('tab_preparing') ?? 'Preparing', 'PREPARING', 2),
+                _buildTab(t?.translate('tab_delivering') ?? 'Delivering', 'DELIVERING', 3),
+                _buildTab(t?.translate('tab_delivered') ?? 'Delivered', 'DELIVERED', 4),
+                _buildTab(t?.translate('tab_cancelled') ?? 'Cancelled', 'CANCELLED', 5),
               ],
             ),
           ),
@@ -446,6 +448,8 @@ class _OrderListTabViewState extends State<OrderListTabView>
 
     if (!mounted) return;
 
+    final t = AppLocalizations.of(context);
+
     if (fetchedOrders == null) {
       setState(() {
         _hasError = isRefresh;
@@ -453,7 +457,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
         _isLoadingMore = false;
       });
       if (!isRefresh) {
-        AppDialog.showToast(context, 'Failed to load more orders.', isError: true);
+        AppDialog.showToast(context, t?.translate('failed_load_more_orders') ?? 'Failed to load more orders.', isError: true);
       }
       return;
     }
@@ -483,6 +487,8 @@ class _OrderListTabViewState extends State<OrderListTabView>
   }
 
   Widget _buildContent() {
+    final t = AppLocalizations.of(context);
+
     if (_isLoading) {
       return _buildSkeletonList(key: const ValueKey('loading'));
     }
@@ -496,7 +502,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
             const Icon(Icons.error_outline, size: 64, color: Color(0xFFCBD5E1)),
             const SizedBox(height: 16),
             Text(
-              'Failed to load orders',
+              t?.translate('failed_load_orders') ?? 'Failed to load orders',
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -506,7 +512,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
             const SizedBox(height: 16),
             PrimaryGradientButton(
               onPressed: () => _fetchOrders(isRefresh: true),
-              text: 'Retry',
+              text: t?.translate('retry') ?? 'Retry',
               height: 48,
               borderRadius: 12,
             ),
@@ -528,7 +534,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
             ),
             const SizedBox(height: 16),
             Text(
-              'No orders yet',
+              t?.translate('no_orders_yet') ?? 'No orders yet',
               style: GoogleFonts.poppins(
                 color: const Color(0xFF94A3B8),
                 fontSize: 16,

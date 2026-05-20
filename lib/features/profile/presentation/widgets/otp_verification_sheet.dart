@@ -6,6 +6,7 @@ import '../../../../core/presentation/widgets/global_modal.dart';
 import 'package:my_shop/core/presentation/widgets/success_sheet.dart';
 import '../../../../core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class OtpVerificationSheet extends StatefulWidget {
   const OtpVerificationSheet({super.key});
@@ -75,6 +76,7 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
   }
 
   Future<void> _handleVerify() async {
+    final t = AppLocalizations.of(context);
     final otp = _controllers.map((c) => c.text).join();
     if (otp.length < 6) return;
 
@@ -91,7 +93,7 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
     if (otp == '000000') {
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Invalid code. (Test mode: any other 6 digits work)';
+        _errorMessage = t?.translate('invalid_code_test_mode') ?? 'Invalid code. (Test mode: any other 6 digits work)';
         // Clear inputs on failure
         for (var c in _controllers) {
           c.clear();
@@ -114,11 +116,13 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
   }
 
   Future<void> _handleResend() async {
-    AppDialog.showToast(context, 'OTP sent again!');
+    final t = AppLocalizations.of(context);
+    AppDialog.showToast(context, t?.translate('otp_sent_again') ?? 'OTP sent again!');
   }
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,7 +140,7 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
         const SizedBox(height: 32),
         Center(
           child: Text(
-            'OTP Verification',
+            t?.translate('otp_verification') ?? 'OTP Verification',
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -149,7 +153,7 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Text(
-              'We sent a 6-digit code to \n$_maskedEmail',
+              (t?.translate('we_sent_code_to') ?? 'We sent a 6-digit code to \n') + _maskedEmail,
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 14,
@@ -184,7 +188,7 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
           child: PrimaryGradientButton(
             onPressed: _handleVerify,
             isLoading: _isLoading,
-            text: 'Verify',
+            text: t?.translate('verify') ?? 'Verify',
             height: 56,
             borderRadius: 16,
           ),
@@ -195,7 +199,7 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                "Didn't receive code? ",
+                t?.translate('did_not_receive_code') ?? "Didn't receive code? ",
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   color: const Color(0xFF64748B),
@@ -204,7 +208,7 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
               GestureDetector(
                 onTap: _handleResend,
                 child: Text(
-                  'Send again',
+                  t?.translate('send_again') ?? 'Send again',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,

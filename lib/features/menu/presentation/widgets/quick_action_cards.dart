@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/features/categories/presentation/screens/category_list_screen.dart';
 import '../screens/manage_shop_menu_page.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class QuickActionCards extends StatelessWidget {
   final VoidCallback? onRefresh;
@@ -9,6 +10,7 @@ class QuickActionCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
@@ -23,7 +25,8 @@ class QuickActionCards extends StatelessWidget {
                 onRefresh?.call();
               },
               child: _ActionCard(
-                title: 'Manage\nCategory',
+                topText: t?.translate('manage_category_top') ?? 'Manage',
+                bottomText: t?.translate('manage_category_bottom') ?? 'Category',
                 imagePath: 'assets/images/Category.png',
                 backgroundColor: const Color(0xFFFDE6D2), // Soft cream/orange
               ),
@@ -40,7 +43,8 @@ class QuickActionCards extends StatelessWidget {
                 onRefresh?.call();
               },
               child: _ActionCard(
-                title: 'Manage\nShop Menu',
+                topText: t?.translate('manage_menu_top') ?? 'Manage',
+                bottomText: t?.translate('manage_menu_bottom') ?? 'Shop Menu',
                 imagePath: 'assets/images/Promotion.png',
                 backgroundColor: const Color(0xFFFBD2D1), // Soft pink/red
               ),
@@ -53,12 +57,14 @@ class QuickActionCards extends StatelessWidget {
 }
 
 class _ActionCard extends StatelessWidget {
-  final String title;
+  final String topText;
+  final String bottomText;
   final String imagePath;
   final Color backgroundColor;
 
   const _ActionCard({
-    required this.title,
+    required this.topText,
+    required this.bottomText,
     required this.imagePath,
     required this.backgroundColor,
   });
@@ -81,7 +87,7 @@ class _ActionCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Manage',
+                  topText,
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     fontWeight: FontWeight.w400,
@@ -90,7 +96,7 @@ class _ActionCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  title.split('\n').last,
+                  bottomText,
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,

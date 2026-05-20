@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class AppPermissionsPage extends StatefulWidget {
   const AppPermissionsPage({super.key});
@@ -66,6 +67,7 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -77,7 +79,7 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'App Permissions',
+          t?.translate('app_permissions') ?? 'App Permissions',
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -94,7 +96,7 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Manage Access',
+                  t?.translate('manage_access') ?? 'Manage Access',
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -103,7 +105,7 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Control what features this app has access to. You can easily enable or disable them in your device settings.',
+                  t?.translate('control_permissions_desc') ?? 'Control what features this app has access to. You can easily enable or disable them in your device settings.',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     color: const Color(0xFF64748B),
@@ -115,8 +117,8 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
                 // Notifications Permission Card
                 _buildPermissionCard(
                   icon: PhosphorIconsRegular.bellRinging,
-                  title: 'Notifications',
-                  description: 'Receive real-time alerts for new orders, order statuses, and shop updates.',
+                  title: t?.translate('notifications') ?? 'Notifications',
+                  description: t?.translate('notifications_desc') ?? 'Receive real-time alerts for new orders, order statuses, and shop updates.',
                   status: _notificationStatus,
                   onActionPressed: _requestNotificationPermission,
                 ),
@@ -135,6 +137,7 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
     required VoidCallback onActionPressed,
   }) {
     final bool isGranted = status.isGranted;
+    final t = AppLocalizations.of(context);
     
     return Container(
       padding: const EdgeInsets.all(20),
@@ -198,7 +201,7 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            isGranted ? 'Allowed' : 'Not Allowed',
+                            isGranted ? (t?.translate('allowed') ?? 'Allowed') : (t?.translate('not_allowed') ?? 'Not Allowed'),
                             style: GoogleFonts.poppins(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
@@ -227,7 +230,7 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
             width: double.infinity,
             child: PrimaryGradientButton(
               onPressed: onActionPressed,
-              text: isGranted ? 'Open Settings' : 'Allow Access',
+              text: isGranted ? (t?.translate('open_settings') ?? 'Open Settings') : (t?.translate('allow_access') ?? 'Allow Access'),
               height: 48,
               borderRadius: 12,
             ),
