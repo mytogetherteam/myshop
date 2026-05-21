@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/features/main_navigation/presentation/screens/main_navigation_screen.dart';
@@ -109,9 +110,10 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
       }
     } catch (e) {
       if (mounted) {
+        final t = AppLocalizations.of(context);
         setState(() {
           _isLoadingHours = false;
-          _loadError = 'Failed to load operating hours.';
+          _loadError = t?.translate('failed_load_hours') ?? 'Failed to load operating hours.';
         });
       }
     }
@@ -172,11 +174,15 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
       }
     });
     _markChanged();
-    AppDialog.showToast(context, '${_days[sourceIndex]}\'s hours copied to all days');
+    final t = AppLocalizations.of(context);
+    final dayName = t?.translate(_days[sourceIndex].toLowerCase()) ?? _days[sourceIndex];
+    final msg = t?.translate('hours_copied_toast')?.replaceAll('{day}', dayName) ?? "$dayName's hours copied to all days";
+    AppDialog.showToast(context, msg);
   }
 
   Future<bool> _onWillPop() async {
     if (!_hasChanges) return true;
+    final t = AppLocalizations.of(context);
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -186,21 +192,30 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
           children: [
             Image.asset('assets/images/app_logo.png', width: 24, height: 24),
             const SizedBox(width: 8),
-            Text('Discard changes?', style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 16)),
+            Text(
+              t?.translate('discard_changes_title') ?? 'Discard changes?',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 16),
+            ),
           ],
         ),
         content: Text(
-          'You have unsaved changes. Do you want to discard them?',
+          t?.translate('discard_changes_content') ?? 'You have unsaved changes. Do you want to discard them?',
           style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF475569)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('Continue Editing', style: GoogleFonts.poppins(color: const Color(0xFF475569), fontWeight: FontWeight.w500)),
+            child: Text(
+              t?.translate('continue_editing') ?? 'Continue Editing',
+              style: GoogleFonts.poppins(color: const Color(0xFF475569), fontWeight: FontWeight.w500),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: GradientText('Discard', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+            child: GradientText(
+              t?.translate('discard') ?? 'Discard',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -254,7 +269,8 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
         _isSaving = false;
         _hasChanges = false;
       });
-      AppDialog.showToast(context, 'Operating hours saved successfully!');
+      final t = AppLocalizations.of(context);
+      AppDialog.showToast(context, t?.translate('operating_hours_saved_success') ?? 'Operating hours saved successfully!');
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const MainNavigationScreen(initialIndex: 3)),
@@ -262,13 +278,15 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
       );
     } else {
       setState(() => _isSaving = false);
-      final errorMessage = response['message'] ?? 'Failed to save operating hours. Please try again.';
+      final t = AppLocalizations.of(context);
+      final errorMessage = response['message'] ?? t?.translate('operating_hours_saved_failed') ?? 'Failed to save operating hours. Please try again.';
       AppDialog.showToast(context, errorMessage, isError: true);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return PopScope(
       canPop: !_hasChanges,
       onPopInvokedWithResult: (didPop, result) async {
@@ -290,7 +308,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
             },
           ),
           title: Text(
-            'Operating Hours',
+            t?.translate('operating_hours') ?? 'Operating Hours',
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -316,7 +334,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                     child: PrimaryGradientButton(
                       onPressed: _save,
                       isLoading: _isSaving,
-                      text: 'Save',
+                      text: t?.translate('save') ?? 'Save',
                       height: 56,
                       borderRadius: 16,
                     ),
@@ -328,6 +346,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
   }
 
   Widget _buildErrorState() {
+    final t = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -344,7 +363,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
             const SizedBox(height: 24),
             PrimaryGradientButton(
               onPressed: _fetchOperatingHours,
-              text: 'Retry',
+              text: t?.translate('retry') ?? 'Retry',
               height: 48,
               borderRadius: 12,
             ),
@@ -355,6 +374,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
   }
 
   Widget _buildContent() {
+    final t = AppLocalizations.of(context);
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
@@ -372,6 +392,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
               final day = _days[i];
               final h = _hours[i];
               final isLast = i == _days.length - 1;
+              final localizedDay = t?.translate(day.toLowerCase()) ?? day;
               return Column(
                 children: [
                   Theme(
@@ -384,7 +405,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                           SizedBox(
                             width: 100,
                             child: Text(
-                              day,
+                              localizedDay,
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -395,7 +416,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                           Expanded(
                             child: Text(
                               h.isClosed
-                                  ? 'Closed'
+                                  ? (t?.translate('closed') ?? 'Closed')
                                   : '${_formatTime(h.openTime)} – ${_formatTime(h.closeTime)}',
                               style: GoogleFonts.poppins(
                                 fontSize: 13,
@@ -418,13 +439,13 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                             children: [
                               if (!h.isClosed) ...[
                                 _TimePickerRow(
-                                  label: 'Open',
+                                  label: t?.translate('open') ?? 'Open',
                                   time: h.openTime,
                                   onTap: () => _pickTime(i, true),
                                 ),
                                 const SizedBox(height: 10),
                                 _TimePickerRow(
-                                  label: 'Close',
+                                  label: t?.translate('close') ?? 'Close',
                                   time: h.closeTime,
                                   onTap: () => _pickTime(i, false),
                                 ),
@@ -444,7 +465,9 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                                       _markChanged();
                                     },
                                     child: Text(
-                                      h.isClosed ? 'Set hours for this day' : 'Mark as closed',
+                                      h.isClosed
+                                          ? (t?.translate('set_hours_this_day') ?? 'Set hours for this day')
+                                          : (t?.translate('mark_as_closed') ?? 'Mark as closed'),
                                       style: GoogleFonts.poppins(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w500,
@@ -463,7 +486,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                                           const PhosphorIcon(PhosphorIconsRegular.copy, size: 14, color: Color(0xFF64748B)),
                                           const SizedBox(width: 4),
                                           Text(
-                                            'Copy to all',
+                                            t?.translate('copy_to_all') ?? 'Copy to all',
                                             style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B)),
                                           ),
                                         ],
@@ -489,7 +512,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'Changes are saved when you tap the Save button.',
+            t?.translate('operating_hours_disclaimer') ?? 'Changes are saved when you tap the Save button.',
             style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF94A3B8)),
             textAlign: TextAlign.center,
           ),

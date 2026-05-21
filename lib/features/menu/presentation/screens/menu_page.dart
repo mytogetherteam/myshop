@@ -11,6 +11,7 @@ import '../../data/models/menu_item_model.dart';
 import '../../data/models/menu_category_model.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class MenuPage extends StatefulWidget {
   const MenuPage({super.key});
@@ -49,7 +50,8 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
       if (!_isLoadingMoreItems && _hasMore) {
         _fetchMoreItems();
       }
@@ -62,13 +64,21 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
 
   Future<void> _fetchCategories({bool forceRefresh = false}) async {
     setState(() => _isLoadingCategories = true);
-    final categories = await _menuService.getCategories(forceRefresh: forceRefresh);
+    final categories = await _menuService.getCategories(
+      forceRefresh: forceRefresh,
+    );
 
     if (mounted) {
+      final t = AppLocalizations.of(context);
       setState(() {
         _categories = [
-          MenuCategoryModel(id: 0, nameEn: 'All Categories', nameMm: 'All Categories', nameTh: 'All Categories'),
-          ...categories ?? []
+          MenuCategoryModel(
+            id: 0,
+            nameEn: t?.translate('all_categories') ?? 'All Categories',
+            nameMm: t?.translate('all_categories') ?? 'All Categories',
+            nameTh: t?.translate('all_categories') ?? 'All Categories',
+          ),
+          ...categories ?? [],
         ];
         _isLoadingCategories = false;
         if (_categories.isNotEmpty) {
@@ -83,7 +93,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
 
   Future<void> _fetchItems({bool refresh = true}) async {
     if (_selectedCategory == null) return;
-    
+
     if (refresh) {
       setState(() {
         _isLoadingItems = true;
@@ -91,16 +101,18 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
         _hasMore = true;
       });
     }
-    
+
     // If id is 0, fetch all items, otherwise filter by categoryId
-    final int? filterId = _selectedCategory!.id == 0 ? null : _selectedCategory!.id;
+    final int? filterId = _selectedCategory!.id == 0
+        ? null
+        : _selectedCategory!.id;
     final items = await _menuService.getMenuItems(
       categoryId: filterId,
       page: _currentPage,
       limit: 20,
       forceRefresh: refresh,
     );
-    
+
     if (mounted) {
       setState(() {
         if (refresh) {
@@ -108,10 +120,12 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
         } else {
           _items.addAll(items ?? []);
         }
-        
+
         // Debug logging
         for (var item in _items) {
-          debugPrint('DEBUG: Item: ${item.nameEn}, Status: ${item.pendingStatus}');
+          debugPrint(
+            'DEBUG: Item: ${item.nameEn}, Status: ${item.pendingStatus}',
+          );
         }
 
         _hasMore = items != null && items.length == 20;
@@ -138,10 +152,18 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
     _fetchItems(refresh: true);
   }
 
-  Future<void> _toggleItemAvailability(MenuItemModel item, bool available) async {
+  Future<void> _toggleItemAvailability(
+    MenuItemModel item,
+    bool available,
+  ) async {
     final success = await _menuService.toggleAvailability(item.id, available);
     if (!success && mounted) {
-      AppDialog.showToast(context, 'Failed to update availability', isError: true);
+      final t = AppLocalizations.of(context);
+      AppDialog.showToast(
+        context,
+        t?.translate('failed_update_availability') ?? 'Failed to update availability',
+        isError: true,
+      );
       // Revert if failed
       _fetchItems(refresh: true);
     }
@@ -152,10 +174,17 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
     bool isPublished,
   ) async {
     final newStatus = isPublished ? 'PUBLISHED' : 'UNPUBLISHED';
-    final success =
-        await _menuService.toggleMenuItemPublishStatus(item.id, newStatus);
+    final success = await _menuService.toggleMenuItemPublishStatus(
+      item.id,
+      newStatus,
+    );
     if (!success && mounted) {
-      AppDialog.showToast(context, 'Failed to update publish status', isError: true);
+      final t = AppLocalizations.of(context);
+      AppDialog.showToast(
+        context,
+        t?.translate('failed_update_publish') ?? 'Failed to update publish status',
+        isError: true,
+      );
       // Revert if failed
       _fetchItems(refresh: true);
     }
@@ -186,11 +215,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Row(
-                          children: [
-                            Expanded(
-                              child: _buildCategoryDropdown(),
-                            ),
-                          ],
+                          children: [Expanded(child: _buildCategoryDropdown())],
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -204,8 +229,10 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
                           child: Padding(
                             padding: const EdgeInsets.all(40.0),
                             child: Text(
-                              'No items found',
-                              style: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
+                              AppLocalizations.of(context)?.translate('no_items_found') ?? 'No items found',
+                              style: GoogleFonts.poppins(
+                                color: const Color(0xFF94A3B8),
+                              ),
                             ),
                           ),
                         )
@@ -215,7 +242,10 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 24),
                           child: Center(
-                            child: CustomLoadingIndicator(size: 24, color: AppColors.primary),
+                            child: CustomLoadingIndicator(
+                              size: 24,
+                              color: AppColors.primary,
+                            ),
                           ),
                         ),
                       const SizedBox(height: 20),
@@ -230,70 +260,96 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
     );
   }
 
-  List<Widget> _buildMenuSections() {
-    // Group items by category name
-    final Map<String, List<MenuItemModel>> groupedItems = {};
-    
-    for (var item in _items) {
-      final categoryName = _categories.firstWhere(
-        (c) => c.id == item.menuCategoryId,
-        orElse: () => MenuCategoryModel(id: item.menuCategoryId ?? -1, nameEn: 'Other', nameMm: 'Other', nameTh: 'Other'),
-      ).displayName;
-      
-      if (!groupedItems.containsKey(categoryName)) {
-        groupedItems[categoryName] = [];
-      }
-      groupedItems[categoryName]!.add(item);
-    }
-
-    return groupedItems.entries.map((entry) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            child: Text(
-              entry.key,
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF1E293B),
-              ),
+  Widget _buildCategorySection(String title, List<MenuItemModel> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Text(
+            title,
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1E293B),
             ),
           ),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: entry.value.length,
-            itemBuilder: (context, index) {
-              final item = entry.value[index];
-              return MenuItemCard(
-                item: item,
-                onTap: () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AddNewItemScreen(item: item),
-                    ),
-                  );
-                  if (result == true) {
-                    _fetchItems(refresh: true);
-                  }
-                },
-                onAvailabilityChanged: (available) {
-                  _toggleItemAvailability(item, available);
-                },
-                onPublishStatusChanged: (isPublished) {
-                  _toggleItemPublishStatus(item, isPublished);
-                },
+        ),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: items.length,
+          itemBuilder: (context, index) {
+            final item = items[index];
+            return MenuItemCard(
+              item: item,
+              onTap: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddNewItemScreen(item: item),
+                  ),
+                );
+                if (result == true) {
+                  _fetchItems(refresh: true);
+                }
+              },
+              onAvailabilityChanged: (available) {
+                _toggleItemAvailability(item, available);
+              },
+              onPublishStatusChanged: (isPublished) {
+                _toggleItemPublishStatus(item, isPublished);
+              },
+            );
+          },
+        ),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
 
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-        ],
-      );
-    }).toList();
+  List<Widget> _buildMenuSections() {
+    // Group items by category ID
+    final Map<int, List<MenuItemModel>> itemsByCategoryId = {};
+    final List<MenuItemModel> uncategorizedItems = [];
+
+    for (var item in _items) {
+      final categoryId = item.menuCategoryId;
+      if (categoryId == null) {
+        uncategorizedItems.add(item);
+      } else {
+        final hasCategory = _categories.any(
+          (c) => c.id == categoryId && c.id != 0,
+        );
+        if (hasCategory) {
+          itemsByCategoryId.putIfAbsent(categoryId, () => []).add(item);
+        } else {
+          uncategorizedItems.add(item);
+        }
+      }
+    }
+
+    final List<Widget> sections = [];
+
+    // Iterate through categories in their exact custom-sorted order
+    for (var category in _categories) {
+      if (category.id == 0) continue; // Skip 'All Categories' virtual category
+
+      final categoryItems = itemsByCategoryId[category.id];
+      if (categoryItems != null && categoryItems.isNotEmpty) {
+        sections.add(
+          _buildCategorySection(category.displayName, categoryItems),
+        );
+      }
+    }
+
+    // Add fallback section for uncategorized/orphan items
+    if (uncategorizedItems.isNotEmpty) {
+      final t = AppLocalizations.of(context);
+      sections.add(_buildCategorySection(t?.translate('other') ?? 'Other', uncategorizedItems));
+    }
+
+    return sections;
   }
 
   Widget _buildCategoryDropdown() {
@@ -302,7 +358,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
       value: _selectedCategory,
       itemLabelBuilder: (category) => category.displayName,
       onChanged: _onCategoryChanged,
-      hintText: 'Select Category',
+      hintText: AppLocalizations.of(context)?.translate('select_category') ?? 'Select Category',
     );
   }
 

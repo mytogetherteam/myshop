@@ -6,7 +6,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:my_shop/core/notifications/notification_service.dart';
-import 'firebase_options.dart';
+import 'package:my_shop/core/utils/app_version.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 import 'app.dart';
 
 @pragma('vm:entry-point')
@@ -25,28 +26,14 @@ void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  } catch (_) {
-    try {
-      await Firebase.initializeApp();
-    } catch (e) {
-      debugPrint('🔥 [Main] Firebase initialization failed: $e');
-    }
-  }
+  await Firebase.initializeApp();
+  await AppVersion.init();
+  
+  // Initialize notification service
+  NotificationService().initialize();
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  // Initialize notification service - wrapped in try-catch to prevent app crash
-  try {
-    await NotificationService().initialize();
-  } catch (e) {
-    debugPrint('🔔 [Main] NotificationService initialization failed: $e');
-  }
-
-  if (!kIsWeb) {
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  }
+  await LocalizationService.instance.init();
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

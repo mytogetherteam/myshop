@@ -2,8 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/auth/auth_interceptor.dart';
 import 'package:my_shop/core/config/env_config.dart';
-import 'package:my_shop/core/network/certificate_pinning_interceptor.dart';
 import 'package:my_shop/core/network/shop_interceptor.dart';
+import 'package:my_shop/core/network/certificate_pinning_interceptor.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 
@@ -24,7 +24,6 @@ class ApiClient {
   );
 
   late final Dio _dio;
-  int _retryCount = 0;
   static const int _maxRetries = 3;
 
   ApiClient._internal() {
@@ -37,9 +36,9 @@ class ApiClient {
       ),
     );
 
-    _dio.interceptors.add(AuthInterceptor(_dio));
+    _dio.interceptors.add(CertificatePinningInterceptor(_dio));
 
-    _dio.interceptors.add(CertificatePinningInterceptor());
+    _dio.interceptors.add(AuthInterceptor(_dio));
 
     _dio.interceptors.add(ShopInterceptor());
 
@@ -51,19 +50,19 @@ class ApiClient {
       InterceptorsWrapper(
         onError: (err, handler) async {
           if (_shouldRetry(err)) {
-            try {
-              _retryCount++;
-              if (_retryCount <= _maxRetries) {
-                await Future.delayed(Duration(seconds: _retryCount));
+            int retryCount = err.requestOptions.extra['retry_count'] ?? 0;
+            if (retryCount < _maxRetries) {
+              retryCount++;
+              err.requestOptions.extra['retry_count'] = retryCount;
+              try {
+                await Future.delayed(Duration(seconds: retryCount));
                 final response = await _retry(err.requestOptions);
-                _retryCount = 0;
                 return handler.resolve(response);
+              } catch (e) {
+                // If retry throws, it will be caught and passed to the next error handler.
               }
-            } catch (e) {
-              _retryCount = 0;
             }
           }
-          _retryCount = 0;
           return handler.next(err);
         },
       ),
@@ -104,6 +103,7 @@ class ApiClient {
     final options = Options(
       method: requestOptions.method,
       headers: requestOptions.headers,
+      extra: requestOptions.extra,
     );
     return _dio.request(
       requestOptions.path,

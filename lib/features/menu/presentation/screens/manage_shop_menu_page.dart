@@ -4,11 +4,11 @@ import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import '../widgets/menu_item_card.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
-import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import '../../data/services/menu_service.dart';
 import '../../data/models/menu_item_model.dart';
 import 'add_new_item_screen.dart';
 import 'dart:async';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class ManageShopMenuPage extends StatefulWidget {
   const ManageShopMenuPage({super.key});
@@ -177,7 +177,8 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
         _filteredItems[index] = revertedItem;
         _items[globalIndex] = revertedItem;
       });
-      AppDialog.showToast(context, 'Failed to update availability', isError: true);
+      final t = AppLocalizations.of(context);
+      AppDialog.showToast(context, t?.translate('failed_update_availability') ?? 'Failed to update availability', isError: true);
     }
   }
 
@@ -208,7 +209,8 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
         _filteredItems[index] = revertedItem;
         _items[globalIndex] = revertedItem;
       });
-      AppDialog.showToast(context, 'Failed to update publish status', isError: true);
+      final t = AppLocalizations.of(context);
+      AppDialog.showToast(context, t?.translate('failed_update_publish') ?? 'Failed to update publish status', isError: true);
     }
   }
 
@@ -216,6 +218,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -247,13 +250,13 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                   autofocus: true,
                   style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),
                   decoration: InputDecoration(
-                    hintText: 'Search menu items...',
+                    hintText: t?.translate('search_menu_items') ?? 'Search menu items...',
                     hintStyle: GoogleFonts.poppins(color: Colors.white70, fontSize: 14),
                     border: InputBorder.none,
                   ),
                 )
               : Text(
-                  'Manage Shop Menu',
+                  t?.translate('manage_shop_menu') ?? 'Manage Shop Menu',
                   key: const ValueKey('titleText'),
                   style: GoogleFonts.poppins(
                     fontSize: 18,
@@ -288,7 +291,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                   if (result == true) _fetchItems(isRefresh: true);
                 },
                 child: Text(
-                  '+ Create',
+                  t?.translate('create') ?? '+ Create',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -336,7 +339,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                             return Padding(
                               padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                               child: Text(
-                                'Total Menu Items: ${_filteredItems.length}',
+                                '${t?.translate('total_menu_items') ?? 'Total Menu Items'}: ${_filteredItems.length}',
                                 style: GoogleFonts.poppins(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
@@ -387,6 +390,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
   }
 
   Widget _buildEmptyState({Key? key}) {
+    final t = AppLocalizations.of(context);
     return Center(
       key: key,
       child: Column(
@@ -399,7 +403,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No menu items found',
+            t?.translate('no_items_found') ?? 'No menu items found',
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -409,8 +413,8 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
           const SizedBox(height: 8),
           Text(
             _searchCtrl.text.isNotEmpty
-                ? 'Try a different search query'
-                : 'Start adding items to your shop menu',
+                ? (t?.translate('try_different_search') ?? 'Try a different search query')
+                : (t?.translate('start_adding_items') ?? 'Start adding items to your shop menu'),
             style: GoogleFonts.poppins(
               fontSize: 14,
               color: const Color(0xFF94A3B8),

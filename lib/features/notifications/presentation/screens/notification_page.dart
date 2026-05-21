@@ -8,6 +8,7 @@ import 'package:my_shop/features/orders/presentation/screens/order_detail_screen
 import 'package:my_shop/features/orders/data/services/order_service.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
@@ -160,13 +161,14 @@ class _NotificationPageState extends State<NotificationPage> {
         // We can't easily find MainNavigationScreen here without a GlobalKey or similar.
         // However, if the user returns to the list later, the status might have changed.
       } else {
-        AppDialog.showToast(context, 'Could not find order details.', isError: true);
+        AppDialog.showToast(context, AppLocalizations.of(context)?.translate('could_not_find_order_details') ?? 'Could not find order details.', isError: true);
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -178,7 +180,7 @@ class _NotificationPageState extends State<NotificationPage> {
           onPressed: () => Navigator.pop(context, true), // Return true to refresh parent count
         ),
         title: Text(
-          'Notifications',
+          t?.translate('notifications') ?? 'Notifications',
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -215,6 +217,7 @@ class _NotificationPageState extends State<NotificationPage> {
   }
 
   Widget _buildEmptyState() {
+    final t = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -229,7 +232,7 @@ class _NotificationPageState extends State<NotificationPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No notifications yet',
+            t?.translate('no_notifications_yet') ?? 'No notifications yet',
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w600,

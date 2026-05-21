@@ -5,6 +5,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:my_shop/core/notifications/notification_service.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class NotificationPermissionScreen extends StatelessWidget {
   const NotificationPermissionScreen({super.key});
@@ -12,6 +13,7 @@ class NotificationPermissionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const primaryColor = Color(0xFFED3973);
+    final t = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -36,7 +38,7 @@ class NotificationPermissionScreen extends StatelessWidget {
               ),
               const SizedBox(height: 48),
               Text(
-                'Don\'t Miss Out!',
+                t?.translate('dont_miss_out') ?? "Don't Miss Out!",
                 style: GoogleFonts.poppins(
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
@@ -46,7 +48,7 @@ class NotificationPermissionScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Turn on notifications to get real-time updates on your orders, special offers, and new arrivals tailored for you.',
+                t?.translate('notification_permission_desc') ?? 'Turn on notifications to get real-time updates on your orders, special offers, and new arrivals tailored for you.',
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   color: const Color(0xFF64748B),
@@ -72,7 +74,7 @@ class NotificationPermissionScreen extends StatelessWidget {
                 }
               }
             },
-            text: 'Allow Notifications',
+            text: t?.translate('allow_notifications') ?? 'Allow Notifications',
             height: 56,
             borderRadius: 16,
           ),
@@ -91,7 +93,7 @@ class NotificationPermissionScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: Text(
-                    'Maybe Later',
+                    t?.translate('maybe_later') ?? 'Maybe Later',
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,

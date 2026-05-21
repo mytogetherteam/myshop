@@ -13,18 +13,21 @@ import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'edit_shop_profile_page.dart';
 import 'operating_hours_page.dart';
 import 'app_permissions_page.dart';
-import 'change_password_page.dart';
+import 'account_settings_page.dart';
 import 'reviews_page.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
-import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'accepted_payment_page.dart';
-import 'package:my_shop/features/orders/presentation/screens/orders_screen.dart';
+import 'help_support_page.dart';
 
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
 import 'package:my_shop/features/profile/data/services/shop_service.dart';
 import 'package:my_shop/features/profile/data/models/shop_model.dart';
 import 'global_shop_selection_page.dart';
+import 'package:my_shop/core/utils/app_version.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
+import '../widgets/language_selector_sheet.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -82,6 +85,7 @@ class ProfilePageState extends State<ProfilePage>
   }
 
   Future<void> _toggleDelivery(bool value) async {
+    final t = AppLocalizations.of(context);
     setState(() => _isTogglingDelivery = true);
 
     try {
@@ -94,7 +98,7 @@ class ProfilePageState extends State<ProfilePage>
         });
       } else if (mounted) {
         setState(() => _isTogglingDelivery = false);
-        AppDialog.showToast(context, 'Failed to update delivery status', isError: true);
+        AppDialog.showToast(context, t?.translate('failed_update_delivery') ?? 'Failed to update delivery status', isError: true);
       }
     } catch (e) {
       if (mounted) {
@@ -104,13 +108,14 @@ class ProfilePageState extends State<ProfilePage>
   }
 
   Future<void> _handleLogout() async {
+    final t = AppLocalizations.of(context);
     GlobalModal.show(
       context: context,
       child: ConfirmationSheet(
-        title: 'Logout',
-        message:
+        title: t?.translate('logout_title') ?? 'Logout',
+        message: t?.translate('logout_message') ??
             'Are you sure you want to logout? This will revoke your current session.',
-        confirmLabel: 'Yes, Logout',
+        confirmLabel: t?.translate('yes_logout') ?? 'Yes, Logout',
         onConfirm: () async {
           WebSocketService().disconnect();
           await AuthService.instance.logout();
@@ -120,6 +125,37 @@ class ProfilePageState extends State<ProfilePage>
           ).pushNamedAndRemoveUntil('/login', (route) => false);
         },
       ),
+    );
+  }
+
+
+  Future<void> _handleContactSupport() async {
+    Navigator.push(
+      context,
+      CupertinoPageRoute(builder: (_) => const HelpSupportPage()),
+    );
+  }
+
+  Future<void> _handlePrivacyPolicy() async {
+    final uri = Uri.parse('https://mytogether.org/privacy-policy/shop');
+    try {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && mounted) {
+        final t = AppLocalizations.of(context);
+        AppDialog.showToast(context, t?.translate('could_not_open_link') ?? 'Could not open this link', isError: true);
+      }
+    } catch (e) {
+      if (mounted) {
+        final t = AppLocalizations.of(context);
+        AppDialog.showToast(context, t?.translate('could_not_open_link') ?? 'Could not open this link', isError: true);
+      }
+    }
+  }
+
+  void _showLanguageSelector() {
+    GlobalModal.show(
+      context: context,
+      child: const LanguageSelectorSheet(),
     );
   }
 
@@ -145,7 +181,7 @@ class ProfilePageState extends State<ProfilePage>
               const SizedBox(height: 32),
               Center(
                 child: Text(
-                  'version demo 0.0.1',
+                  AppVersion.fullVersion,
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     color: const Color(0xFF94A3B8),
@@ -214,6 +250,7 @@ class ProfilePageState extends State<ProfilePage>
   }
 
   Widget _buildProfileHeader() {
+    final t = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -255,7 +292,7 @@ class ProfilePageState extends State<ProfilePage>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _shopProfile?.nameEn ?? 'Shop Name',
+                  _shopProfile?.nameEn ?? t?.translate('shop_name') ?? 'Shop Name',
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -280,7 +317,7 @@ class ProfilePageState extends State<ProfilePage>
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    _userInfo?.role ?? 'ADMIN',
+                    _userInfo?.role ?? t?.translate('admin') ?? 'ADMIN',
                     style: GoogleFonts.poppins(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
@@ -316,13 +353,14 @@ class ProfilePageState extends State<ProfilePage>
   }
 
   Widget _buildShopSection() {
+    final t = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
           child: Text(
-            'Shop',
+            t?.translate('shop') ?? 'Shop',
             style: GoogleFonts.poppins(
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -333,14 +371,14 @@ class ProfilePageState extends State<ProfilePage>
         ),
         _buildToggleOption(
           icon: PhosphorIconsRegular.truck,
-          title: 'Delivery Enabled',
+          title: t?.translate('delivery_enabled') ?? 'Delivery Enabled',
           value: _deliveryEnabled,
           isLoading: _isTogglingDelivery,
           onChanged: _toggleDelivery,
         ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.storefront,
-          title: 'Edit shop profile',
+          title: t?.translate('edit_shop_profile') ?? 'Edit shop profile',
           onTap: () => Navigator.push(
             context,
             CupertinoPageRoute(builder: (_) => const EditShopProfilePage()),
@@ -348,7 +386,7 @@ class ProfilePageState extends State<ProfilePage>
         ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.clock,
-          title: 'Operating hours',
+          title: t?.translate('operating_hours') ?? 'Operating hours',
           onTap: () => Navigator.push(
             context,
             CupertinoPageRoute(builder: (_) => const OperatingHoursPage()),
@@ -356,7 +394,7 @@ class ProfilePageState extends State<ProfilePage>
         ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.creditCard,
-          title: 'Accepted payment',
+          title: t?.translate('accepted_payment') ?? 'Accepted payment',
           onTap: () => Navigator.push(
             context,
             CupertinoPageRoute(builder: (_) => const AcceptedPaymentPage()),
@@ -364,7 +402,7 @@ class ProfilePageState extends State<ProfilePage>
         ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.star,
-          title: 'Reviews',
+          title: t?.translate('reviews') ?? 'Reviews',
           onTap: () => Navigator.push(
             context,
             CupertinoPageRoute(builder: (_) => const ReviewsPage()),
@@ -375,13 +413,14 @@ class ProfilePageState extends State<ProfilePage>
   }
 
   Widget _buildMenuItems() {
+    final t = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
           child: Text(
-            'Account',
+            t?.translate('account') ?? 'Account',
             style: GoogleFonts.poppins(
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -392,24 +431,39 @@ class ProfilePageState extends State<ProfilePage>
         ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.shieldCheck,
-          title: 'App Permissions',
+          title: t?.translate('app_permissions') ?? 'App Permissions',
           onTap: () => Navigator.push(
             context,
             CupertinoPageRoute(builder: (_) => const AppPermissionsPage()),
           ),
         ),
         _buildMenuOption(
-          icon: PhosphorIconsRegular.lock,
-          title: 'Change Password',
+          icon: PhosphorIconsRegular.user,
+          title: t?.translate('account_settings') ?? 'Account Settings',
           onTap: () => Navigator.push(
             context,
-            CupertinoPageRoute(builder: (_) => const ChangePasswordPage()),
+            CupertinoPageRoute(builder: (_) => const AccountSettingsPage()),
           ),
+        ),
+        _buildMenuOption(
+          icon: PhosphorIconsRegular.translate,
+          title: t?.translate('language') ?? 'Language',
+          onTap: _showLanguageSelector,
+        ),
+        _buildMenuOption(
+          icon: PhosphorIconsRegular.headset,
+          title: t?.translate('help_support') ?? 'Help & Support',
+          onTap: _handleContactSupport,
+        ),
+        _buildMenuOption(
+          icon: PhosphorIconsRegular.shield,
+          title: t?.translate('privacy_policy') ?? 'Privacy Policy',
+          onTap: _handlePrivacyPolicy,
         ),
         if (_userShops.length > 1)
           _buildMenuOption(
             icon: PhosphorIconsRegular.arrowsLeftRight,
-            title: 'Switch Shop',
+            title: t?.translate('switch_shop') ?? 'Switch Shop',
             onTap: () => Navigator.push(
               context,
               CupertinoPageRoute(
@@ -420,7 +474,7 @@ class ProfilePageState extends State<ProfilePage>
         const SizedBox(height: 24),
         _buildMenuOption(
           icon: PhosphorIconsRegular.signOut,
-          title: 'Logout',
+          title: t?.translate('logout') ?? 'Logout',
           isDestructive: true,
           onTap: _handleLogout,
           showArrow: false,
@@ -428,6 +482,7 @@ class ProfilePageState extends State<ProfilePage>
       ],
     );
   }
+
 
   Widget _buildMenuOption({
     required IconData icon,

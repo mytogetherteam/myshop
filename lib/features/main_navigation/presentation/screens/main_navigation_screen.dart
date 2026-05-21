@@ -16,6 +16,7 @@ import 'package:my_shop/features/notifications/presentation/widgets/notification
 import 'package:flutter/services.dart';
 import 'package:my_shop/core/presentation/widgets/app_bar_title_with_logo.dart';
 import 'dart:async';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final int initialIndex;
@@ -193,7 +194,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     }
   }
 
-  final List<String> _titles = ['Order', 'Menu', 'Report', 'Profile'];
+
 
   Widget _buildGradientItem(IconData icon, String label) {
     return Column(
@@ -241,84 +242,87 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      child: SafeArea(
-        child: Scaffold(
-          backgroundColor: Colors.white,
-          appBar: AppBar(
-            backgroundColor: Colors.white,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            centerTitle: false,
-            title: AppBarTitleWithLogo(title: _titles[_currentIndex]),
-            actions: [const NotificationBadgeIcon(), const SizedBox(width: 8)],
+    final t = AppLocalizations.of(context);
+    final localizedTitles = [
+      t?.translate('order') ?? 'Order',
+      t?.translate('menu') ?? 'Menu',
+      t?.translate('report') ?? 'Report',
+      t?.translate('profile') ?? 'Profile',
+    ];
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        title: AppBarTitleWithLogo(title: localizedTitles[_currentIndex]),
+        actions: [const NotificationBadgeIcon(), const SizedBox(width: 8)],
+      ),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _pages.asMap().entries.map((entry) {
+          final int idx = entry.key;
+          final Widget page = entry.value;
+          return _visited[idx] ? page : const SizedBox.shrink();
+        }).toList(),
+      ),
+
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          if (_currentIndex == index) {
+            switch (index) {
+              case 0:
+                _ordersKey.currentState?.refresh();
+                break;
+              case 1:
+                _menuKey.currentState?.refresh();
+                break;
+              case 2:
+                _reportKey.currentState?.refresh();
+                break;
+              case 3:
+                _profileKey.currentState?.refresh();
+                break;
+            }
+          }
+          setState(() {
+            _currentIndex = index;
+            _visited[index] = true;
+          });
+        },
+        backgroundColor: Colors.white,
+        selectedItemColor: const Color(0xFFED3973),
+        unselectedItemColor: const Color(0xFF94A3B8),
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        selectedFontSize: 0,
+        unselectedFontSize: 0,
+        type: BottomNavigationBarType.fixed,
+        elevation: 8,
+        items: [
+          BottomNavigationBarItem(
+            icon: _buildInactiveItem(PhosphorIconsRegular.cookingPot, t?.translate('order') ?? 'Order'),
+            activeIcon: _buildGradientItem(PhosphorIconsFill.cookingPot, t?.translate('order') ?? 'Order'),
+            label: t?.translate('order') ?? 'Order',
           ),
-          body: IndexedStack(
-            index: _currentIndex,
-            children: _pages.asMap().entries.map((entry) {
-              final int idx = entry.key;
-              final Widget page = entry.value;
-              return _visited[idx] ? page : const SizedBox.shrink();
-            }).toList(),
+          BottomNavigationBarItem(
+            icon: _buildInactiveItem(PhosphorIconsRegular.forkKnife, t?.translate('menu') ?? 'Menu'),
+            activeIcon: _buildGradientItem(PhosphorIconsFill.forkKnife, t?.translate('menu') ?? 'Menu'),
+            label: t?.translate('menu') ?? 'Menu',
           ),
-          bottomNavigationBar: BottomNavigationBar(
-            currentIndex: _currentIndex,
-            onTap: (index) {
-              if (_currentIndex == index) {
-                switch (index) {
-                  case 0:
-                    _ordersKey.currentState?.refresh();
-                    break;
-                  case 1:
-                    _menuKey.currentState?.refresh();
-                    break;
-                  case 2:
-                    _reportKey.currentState?.refresh();
-                    break;
-                  case 3:
-                    _profileKey.currentState?.refresh();
-                    break;
-                }
-              }
-              setState(() {
-                _currentIndex = index;
-                _visited[index] = true;
-              });
-            },
-            backgroundColor: Colors.white,
-            selectedItemColor: const Color(0xFFED3973),
-            unselectedItemColor: const Color(0xFF94A3B8),
-            showSelectedLabels: false,
-            showUnselectedLabels: false,
-            selectedFontSize: 0,
-            unselectedFontSize: 0,
-            type: BottomNavigationBarType.fixed,
-            elevation: 8,
-            items: [
-              BottomNavigationBarItem(
-                icon: _buildInactiveItem(PhosphorIconsRegular.cookingPot, 'Order'),
-                activeIcon: _buildGradientItem(PhosphorIconsFill.cookingPot, 'Order'),
-                label: 'Order',
-              ),
-              BottomNavigationBarItem(
-                icon: _buildInactiveItem(PhosphorIconsRegular.forkKnife, 'Menu'),
-                activeIcon: _buildGradientItem(PhosphorIconsFill.forkKnife, 'Menu'),
-                label: 'Menu',
-              ),
-              BottomNavigationBarItem(
-                icon: _buildInactiveItem(PhosphorIconsRegular.listHeart, 'Report'),
-                activeIcon: _buildGradientItem(PhosphorIconsFill.listHeart, 'Report'),
-                label: 'Report',
-              ),
-              BottomNavigationBarItem(
-                icon: _buildInactiveItem(PhosphorIconsRegular.storefront, 'Profile'),
-                activeIcon: _buildGradientItem(PhosphorIconsFill.storefront, 'Profile'),
-                label: 'Profile',
-              ),
-            ],
+          BottomNavigationBarItem(
+            icon: _buildInactiveItem(PhosphorIconsRegular.listHeart, t?.translate('report') ?? 'Report'),
+            activeIcon: _buildGradientItem(PhosphorIconsFill.listHeart, t?.translate('report') ?? 'Report'),
+            label: t?.translate('report') ?? 'Report',
           ),
-        ),
+          BottomNavigationBarItem(
+            icon: _buildInactiveItem(PhosphorIconsRegular.storefront, t?.translate('profile') ?? 'Profile'),
+            activeIcon: _buildGradientItem(PhosphorIconsFill.storefront, t?.translate('profile') ?? 'Profile'),
+            label: t?.translate('profile') ?? 'Profile',
+          ),
+        ],
       ),
     );
   }

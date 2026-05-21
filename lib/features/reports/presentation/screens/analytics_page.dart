@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class AnalyticsPage extends StatefulWidget {
   const AnalyticsPage({super.key});
@@ -126,6 +127,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
   }
 
   Future<void> _showCustomDatePicker() async {
+    final t = AppLocalizations.of(context);
     List<DateTime?>? results = await showModalBottomSheet<List<DateTime?>>(
       context: context,
       isScrollControlled: true,
@@ -140,7 +142,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
 
         return StatefulBuilder(
           builder: (context, setModalState) {
-            String rangeText = "Select Dates";
+            String rangeText = t?.translate('custom') ?? "Select Dates";
             if (tempValues.length == 2 &&
                 tempValues[0] != null &&
                 tempValues[1] != null) {
@@ -177,7 +179,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                         ),
                         Expanded(
                           child: Text(
-                            "Choose Revenue Period",
+                            t?.translate('custom') ?? "Choose Revenue Period",
                             style: GoogleFonts.poppins(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -254,7 +256,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                         TextButton(
                           onPressed: () => Navigator.pop(context),
                           child: Text(
-                            "CANCEL",
+                            t?.translate('cancel').toUpperCase() ?? "CANCEL",
                             style: GoogleFonts.poppins(
                               color: const Color(0xFF64748B),
                               fontWeight: FontWeight.w600,
@@ -306,6 +308,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -322,7 +325,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
           },
         ),
         title: Text(
-          "Analytics",
+          t?.translate('analytics') ?? "Analytics",
           style: GoogleFonts.poppins(
             color: const Color(0xFF1E293B),
             fontSize: 18,
@@ -340,7 +343,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                 color: Color(0xFF64748B),
               ),
               label: Text(
-                "Export",
+                t?.translate('export') ?? "Export",
                 style: GoogleFonts.poppins(
                   color: const Color(0xFF64748B),
                   fontWeight: FontWeight.w500,
@@ -386,10 +389,10 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               ),
               onTap: (index) => setState(() {}),
               tabs: [
-                _buildFilterTab("Today", 0),
-                _buildFilterTab("Yesterday", 1),
-                _buildFilterTab("This Week", 2),
-                _buildFilterTab("Custom", 3),
+                _buildFilterTab(t?.translate('today') ?? "Today", 0),
+                _buildFilterTab(t?.translate('yesterday') ?? "Yesterday", 1),
+                _buildFilterTab(t?.translate('this_week') ?? "This Week", 2),
+                _buildFilterTab(t?.translate('custom') ?? "Custom", 3),
               ],
             ),
           ),
@@ -413,30 +416,28 @@ class _AnalyticsPageState extends State<AnalyticsPage>
     bool isSelected = _tabController.index == index;
     return Tab(
       child: Container(
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: isSelected ? AppColors.primaryGradient : null,
-            color: isSelected ? null : Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: isSelected ? null : Border.all(color: const Color(0xFFE2E8F0)),
-          ),
-          child: InkWell(
-            onTap: () {
-              if (index == 3) {
-                _showCustomDatePicker();
-              }
-              _tabController.animateTo(index);
-              setState(() {});
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Text(
-                text,
-                style: GoogleFonts.poppins(
-                  color: isSelected ? Colors.white : const Color(0xFF64748B),
-                  fontSize: 14,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                ),
+        decoration: BoxDecoration(
+          gradient: isSelected ? AppColors.primaryGradient : null,
+          color: isSelected ? null : Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: isSelected ? null : Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: InkWell(
+          onTap: () {
+            if (index == 3) {
+              _showCustomDatePicker();
+            }
+            _tabController.animateTo(index);
+            setState(() {});
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: Text(
+              text,
+              style: GoogleFonts.poppins(
+                color: isSelected ? Colors.white : const Color(0xFF64748B),
+                fontSize: 14,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),
             ),
           ),
@@ -515,6 +516,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
 
   List<Widget> _buildContent() {
     if (_data == null) return [];
+    final t = AppLocalizations.of(context);
 
     final orders = _data!['orders'];
     final revenue = _data!['revenue'];
@@ -551,21 +553,21 @@ class _AnalyticsPageState extends State<AnalyticsPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(
-              "${orders['total']} Orders",
+              "${orders['total']} ${t?.translate('orders') ?? 'Orders'}",
               orders['trend'],
               orders['trendPositive'],
-              subtitle: "from previous 30days",
+              subtitle: t?.translate('from_previous_30_days') ?? "from previous 30 days",
             ),
             const SizedBox(height: 24),
             ProgressBarItem(
-              label: "Last 30days",
+              label: t?.translate('last_30_days') ?? "Last 30 days",
               value: "2,764",
               percentage: 0.9,
               barGradient: AppColors.primaryGradient,
             ),
             const SizedBox(height: 16),
             ProgressBarItem(
-              label: "Previous 30 days",
+              label: t?.translate('previous_30_days') ?? "Previous 30 days",
               value: "2,003",
               percentage: 0.65,
               barGradient: AppColors.primaryGradient,
@@ -578,10 +580,10 @@ class _AnalyticsPageState extends State<AnalyticsPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(
-              "${revenue['total']} in approximate revenue",
+              "${revenue['total']} ${t?.translate('total_sales') ?? 'Total Sales'}",
               revenue['trend'],
               revenue['trendPositive'],
-              subtitle: "from previous 30 days",
+              subtitle: t?.translate('from_previous_30_days') ?? "from previous 30 days",
             ),
             const SizedBox(height: 32),
             AnalyticsLineChart(
@@ -601,10 +603,10 @@ class _AnalyticsPageState extends State<AnalyticsPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(
-              "${newCustomers['total']} New customers",
+              "${newCustomers['total']} ${t?.translate('new_customers') ?? 'New customers'}",
               newCustomers['trend'],
               newCustomers['trendPositive'],
-              subtitle: "from previous 28 days",
+              subtitle: t?.translate('from_previous_28_days') ?? "from previous 28 days",
             ),
             const SizedBox(height: 24),
             AnalyticsDonutChart(
@@ -612,8 +614,8 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               section2Value: newCustomers['adsPercentage'].toDouble(),
               section1Gradient: AppColors.primaryGradient,
               section2Color: const Color(0xFFFBCFE8),
-              section1Label: "Organic",
-              section2Label: "Ads / Promotion",
+              section1Label: t?.translate('organic') ?? "Organic",
+              section2Label: t?.translate('ads_promotion') ?? "Ads / Promotion",
               centerTitle: "${newCustomers['adsPercentage']}%",
               centerSubtitle: "${newCustomers['adsPromotion']}",
             ),
@@ -622,14 +624,14 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _buildLegendDot(
-                  "Ads / Promotion",
+                  t?.translate('ads_promotion') ?? "Ads / Promotion",
                   const Color(0xFFFBCFE8),
                   "${newCustomers['adsPercentage']}%",
                   "${newCustomers['adsPromotion']}",
                 ),
                 const SizedBox(width: 32),
                 _buildLegendDot(
-                  "Organic",
+                  t?.translate('organic') ?? "Organic",
                   AppColors.primary,
                   "${newCustomers['organicPercentage']}%",
                   "${newCustomers['organic']}",
@@ -645,10 +647,10 @@ class _AnalyticsPageState extends State<AnalyticsPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(
-              "Order Status Breakdown",
+              t?.translate('order_status_breakdown') ?? "Order Status Breakdown",
               orderStatus['trend'],
               orderStatus['trendPositive'],
-              subtitle: "from previous 28 days",
+              subtitle: t?.translate('from_previous_28_days') ?? "from previous 28 days",
             ),
             const SizedBox(height: 24),
             AnalyticsDonutChart(
@@ -656,8 +658,8 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               section2Value: orderStatus['cancelledPercentage'].toDouble(),
               section1Gradient: AppColors.primaryGradient,
               section2Color: const Color(0xFFFBCFE8),
-              section1Label: "Completed",
-              section2Label: "Cancelled",
+              section1Label: t?.translate('completed') ?? "Completed",
+              section2Label: t?.translate('cancelled') ?? "Cancelled",
               centerTitle: "${orderStatus['cancelledPercentage']}%",
               centerSubtitle: "${orderStatus['cancelled']}",
             ),
@@ -666,14 +668,14 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _buildLegendDot(
-                  "Cancelled",
+                  t?.translate('cancelled') ?? "Cancelled",
                   const Color(0xFFFBCFE8),
                   "${orderStatus['cancelledPercentage']}%",
                   "${orderStatus['cancelled']}",
                 ),
                 const SizedBox(width: 32),
                 _buildLegendDot(
-                  "Completed",
+                  t?.translate('completed') ?? "Completed",
                   AppColors.primary,
                   "${orderStatus['completedPercentage']}%",
                   "${orderStatus['completed']}",
@@ -689,10 +691,10 @@ class _AnalyticsPageState extends State<AnalyticsPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(
-              "${interactions['total']} Interactions",
+              "${interactions['total']} ${t?.translate('customer_interaction') ?? 'Interactions'}",
               interactions['trend'],
               interactions['trendPositive'],
-              subtitle: "from previous 30days",
+              subtitle: t?.translate('from_previous_30_days') ?? "from previous 30 days",
             ),
             const SizedBox(height: 24),
             ...List.generate(interactions['items'].length, (index) {
@@ -700,7 +702,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               return Padding(
                 padding: const EdgeInsets.only(bottom: 16.0),
                 child: ProgressBarItem(
-                  label: item['label'],
+                  label: _translateInteractionLabel(item['label'], t),
                   value: item['value'],
                   percentage: item['percentage'],
                   barGradient: AppColors.primaryGradient,
@@ -715,21 +717,21 @@ class _AnalyticsPageState extends State<AnalyticsPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(
-              "${totalCustomers['total']} Total customers",
+              "${totalCustomers['total']} ${t?.translate('new_customers') ?? 'Total customers'}", // Wait, "total_customers" or just "Total customers". Since totalCustomers maps returning vs new, let's fallback to "Total customers".
               totalCustomers['trend'],
               totalCustomers['trendPositive'],
-              subtitle: "from previous 30days",
+              subtitle: t?.translate('from_previous_30_days') ?? "from previous 30 days",
             ),
             const SizedBox(height: 24),
             Row(
               children: [
                 _buildSimpleLegendDot(
-                  "Returning customers",
+                  t?.translate('returning_customers') ?? "Returning customers",
                   AppColors.primary,
                   useGradient: true,
                 ),
                 const SizedBox(width: 16),
-                _buildSimpleLegendDot("New customers", const Color(0xFF22C55E)),
+                _buildSimpleLegendDot(t?.translate('new_customers') ?? "New customers", const Color(0xFF22C55E)),
               ],
             ),
             const SizedBox(height: 24),
@@ -738,7 +740,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               return Padding(
                 padding: const EdgeInsets.only(bottom: 16.0),
                 child: ProgressBarItem(
-                  label: item['label'],
+                  label: _translatePeakHourLabel(item['label'], t),
                   value: item['value'],
                   percentage: item['percentage'],
                   barGradient: AppColors.primaryGradient,
@@ -850,5 +852,35 @@ class _AnalyticsPageState extends State<AnalyticsPage>
         ),
       ),
     );
+  }
+
+  String _translateInteractionLabel(String label, AppLocalizations? t) {
+    switch (label) {
+      case 'Menu views':
+        return t?.translate('menu_views') ?? label;
+      case 'Add to cart':
+        return t?.translate('add_to_cart') ?? label;
+      case 'Checkout visit':
+        return t?.translate('checkout_visit') ?? label;
+      case 'Ordered':
+        return t?.translate('ordered') ?? label;
+      case 'Reviews tapped':
+        return t?.translate('reviews_tapped') ?? label;
+      default:
+        return label;
+    }
+  }
+
+  String _translatePeakHourLabel(String label, AppLocalizations? t) {
+    if (label.contains("Lunch")) {
+      return label.replaceAll("Lunch", t?.translate('lunch') ?? "Lunch");
+    }
+    if (label.contains("Dinner")) {
+      return label.replaceAll("Dinner", t?.translate('dinner') ?? "Dinner");
+    }
+    if (label.contains("Breakfast")) {
+      return label.replaceAll("Breakfast", t?.translate('breakfast') ?? "Breakfast");
+    }
+    return label;
   }
 }

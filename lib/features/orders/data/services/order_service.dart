@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:my_shop/features/orders/data/models/order_model.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
@@ -27,7 +26,6 @@ class OrderService {
       if (tab != null) queryParams['tab'] = tab;
       if (shopId != null) queryParams['shopId'] = shopId;
       
-      debugPrint('GET REQUEST: $_ordersPath, Params: $queryParams');
       final response = await ApiClient().dio.get(
         _ordersPath,
         queryParameters: queryParams,
@@ -37,17 +35,10 @@ class OrderService {
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
-        debugPrint('FULL API RESPONSE (getOrders): $data');
         if (data['success'] == true && data['data'] != null) {
           final List content = data['data']['content'] ?? [];
-          return await compute(_parseOrders, content);
-        } else {
-          debugPrint(
-            'API Error: success is false OR data is null. Message: ${data['message']}, Details: ${data['details']}',
-          );
+          return _parseOrders(content);
         }
-      } else {
-        debugPrint('API Error: Status Code ${response.statusCode}');
       }
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'OrderService.getOrders');
@@ -61,20 +52,14 @@ class OrderService {
   Future<OrderModel?> getOrderDetail(String orderId) async {
     try {
       final url = '$_ordersPath/$orderId';
-      debugPrint('GET REQUEST: $url');
       final response = await ApiClient().dio.get(url);
 
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
-        debugPrint('FULL API RESPONSE (getOrderDetail): $data');
         if (data['success'] == true && data['data'] != null) {
           return OrderModel.fromJson(data['data']);
-        } else {
-          debugPrint(
-            'API Error in getOrderDetail: success is false OR data is null',
-          );
         }
       }
     } on DioException catch (e) {
@@ -88,9 +73,6 @@ class OrderService {
   Future<bool> updateOrderStatus(String orderId, String status) async {
     try {
       final url = '$_ordersPath/$orderId/status';
-      debugPrint(
-        'POST REQUEST (updateOrderStatus): $url, Data: {status: $status}',
-      );
       final response = await ApiClient().dio.post(
         url,
         data: {'status': status},
@@ -100,7 +82,6 @@ class OrderService {
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
-        debugPrint('UPDATE STATUS RESPONSE: $data');
         return data['success'] == true;
       }
     } on DioException catch (e) {
@@ -117,18 +98,15 @@ class OrderService {
   ) async {
     try {
       final url = '$_ordersPath/$orderId/confirm';
-      debugPrint('PUT REQUEST (confirmOrder): $url, Data: $payload');
       final response = await ApiClient().dio.put(url, data: payload);
 
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
-        debugPrint('CONFIRM ORDER RESPONSE: $data');
         return data;
       }
     } on DioException catch (e) {
-      debugPrint('API Error in confirmOrder: ${e.response?.data}');
       if (e.response?.data != null && e.response?.data is Map) {
         return Map<String, dynamic>.from(e.response!.data);
       }
@@ -150,18 +128,15 @@ class OrderService {
   Future<Map<String, dynamic>> verifyPayment(String orderId) async {
     try {
       final url = '$_ordersPath/$orderId/verify-payment';
-      debugPrint('PUT REQUEST (verifyPayment): $url');
       final response = await ApiClient().dio.put(url);
 
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
-        debugPrint('VERIFY PAYMENT RESPONSE: $data');
         return data;
       }
     } on DioException catch (e) {
-      debugPrint('API Error in verifyPayment: ${e.response?.data}');
       if (e.response?.data != null && e.response?.data is Map) {
         return Map<String, dynamic>.from(e.response!.data);
       }
@@ -183,14 +158,12 @@ class OrderService {
   Future<bool> prepareOrder(String orderId) async {
     try {
       final url = '$_ordersPath/$orderId/prepare';
-      debugPrint('PUT REQUEST (prepareOrder): $url');
       final response = await ApiClient().dio.put(url);
 
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
-        debugPrint('PREPARE ORDER RESPONSE: $data');
         return data['success'] == true;
       }
     } on DioException catch (e) {
@@ -204,7 +177,6 @@ class OrderService {
   Future<bool> requestSlip(String orderId, String reason) async {
     try {
       final url = '$_ordersPath/$orderId/request-slip';
-      debugPrint('PUT REQUEST (requestSlip): $url, Reason: $reason');
       final response = await ApiClient().dio.put(
         url,
         queryParameters: {'reason': reason},
@@ -214,7 +186,6 @@ class OrderService {
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
-        debugPrint('REQUEST SLIP RESPONSE: $data');
         return data['success'] == true;
       }
     } on DioException catch (e) {
@@ -228,14 +199,12 @@ class OrderService {
   Future<bool> dispatchOrder(String orderId, [Map<String, dynamic>? payload]) async {
     try {
       final url = '$_ordersPath/$orderId/dispatch';
-      debugPrint('PUT REQUEST (dispatchOrder): $url, Data: $payload');
       final response = await ApiClient().dio.put(url, data: payload);
 
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
-        debugPrint('DISPATCH ORDER RESPONSE: $data');
         return data['success'] == true;
       }
     } on DioException catch (e) {
@@ -249,7 +218,6 @@ class OrderService {
   Future<bool> cancelOrder(String orderId, String? reason) async {
     try {
       final url = '$_ordersPath/$orderId/cancel';
-      debugPrint('PUT REQUEST (cancelOrder): $url, Reason: $reason');
       final response = await ApiClient().dio.put(
         url,
         queryParameters: reason != null ? {'reason': reason} : null,
@@ -259,7 +227,6 @@ class OrderService {
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
-        debugPrint('CANCEL ORDER RESPONSE: $data');
         return data['success'] == true;
       }
     } on DioException catch (e) {
@@ -273,9 +240,6 @@ class OrderService {
   Future<bool> completeOrder(String orderId, String proofPhotoUrl) async {
     try {
       final url = '$_ordersPath/$orderId/complete';
-      debugPrint(
-        'PUT REQUEST (completeOrder): $url, proofPhotoUrl: $proofPhotoUrl',
-      );
       final response = await ApiClient().dio.put(
         url,
         queryParameters: {'proofPhotoUrl': proofPhotoUrl},
@@ -285,7 +249,6 @@ class OrderService {
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
-        debugPrint('COMPLETE ORDER RESPONSE: $data');
         return data['success'] == true;
       }
     } on DioException catch (e) {

@@ -7,6 +7,12 @@ class AnalyticsDonutChart extends StatefulWidget {
   final double section2Value;
   final Gradient? section1Gradient;
   final Gradient? section2Gradient;
+  final Color section1Color;
+  final Color section2Color;
+  final String section1Label;
+  final String section2Label;
+  final String centerTitle;
+  final String centerSubtitle;
 
   const AnalyticsDonutChart({
     super.key,

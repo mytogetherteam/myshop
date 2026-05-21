@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 import '../../data/models/shop_model.dart';
 import '../../data/services/shop_service.dart';
 import 'accepted_payment_page.dart';
@@ -62,6 +63,7 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -72,7 +74,7 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Choose Shop',
+          t?.translate('choose_shop') ?? 'Choose Shop',
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,

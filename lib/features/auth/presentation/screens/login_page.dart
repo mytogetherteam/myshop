@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/core/presentation/widgets/app_logo.dart';
 import 'package:my_shop/features/auth/data/services/auth_service.dart';
 import '../../../../core/network/websocket_service.dart';
 import '../../../../core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/utils/app_version.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -185,7 +185,7 @@ class _LoginPageState extends State<LoginPage>
                     // Version Info
                     Center(
                       child: Text(
-                        'version demo 0.0.1',
+                        AppVersion.fullVersion,
                         style: GoogleFonts.poppins(
                           fontSize: 12,
                           color: Colors.grey[400],

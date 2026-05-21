@@ -10,6 +10,12 @@ class WebSocketService {
   factory WebSocketService() => _instance;
   WebSocketService._internal();
 
+  void _log(String message) {
+    if (kDebugMode) {
+      debugPrint(message);
+    }
+  }
+
   StompClient? _stompClient;
   bool get isConnected => _stompClient?.connected ?? false;
 
@@ -45,7 +51,7 @@ class WebSocketService {
     }
 
     _isConnecting = true;
-    debugPrint('⏳ [WS] Connecting to WebSocket...');
+    _log('⏳ [WS] Connecting to WebSocket...');
 
     final token = await AuthService.instance.getAccessToken();
     if (token == null || token.isEmpty) {
@@ -61,17 +67,15 @@ class WebSocketService {
         onWebSocketError: (dynamic error) {
           _isConnecting = false;
           connectionStatus.value = false;
-          debugPrint('🚨 [WS] Error: $error');
+          _log('🚨 [WS] Error: $error');
           _scheduleReconnect();
         },
-        onDebugMessage: (String message) =>
-            debugPrint('⚙️ [WS] Debug: $message'),
+        onDebugMessage: (String message) => _log('⚙️ [WS] Debug: $message'),
         stompConnectHeaders: {'Authorization': 'Bearer $token'},
-        onStompError: (frame) =>
-            debugPrint('💥 [WS] Stomp Error: ${frame.body}'),
+        onStompError: (frame) => _log('💥 [WS] Stomp Error: ${frame.body}'),
         onDisconnect: (frame) {
           connectionStatus.value = false;
-          debugPrint('🔌 [WS] Disconnected');
+          _log('🔌 [WS] Disconnected');
           _scheduleReconnect();
         },
         heartbeatOutgoing: const Duration(milliseconds: 10000),
@@ -85,14 +89,14 @@ class WebSocketService {
   void _scheduleReconnect() {
     if (!_shouldReconnect) return;
     if (_reconnectAttempts >= _maxReconnectAttempts) {
-      debugPrint('🚫 [WS] Max reconnection attempts reached');
+      _log('🚫 [WS] Max reconnection attempts reached');
       return;
     }
 
     _reconnectAttempts++;
     final delay = Duration(seconds: _reconnectAttempts * 2);
 
-    debugPrint(
+    _log(
       '🔄 [WS] Scheduling reconnection in ${delay.inSeconds}s (attempt $_reconnectAttempts/$_maxReconnectAttempts)',
     );
 
@@ -106,7 +110,7 @@ class WebSocketService {
     _isConnecting = false;
     _reconnectAttempts = 0;
     connectionStatus.value = true;
-    debugPrint('✨ [WS] Connected Successfully');
+    _log('✨ [WS] Connected Successfully');
 
     final token = await AuthService.instance.getAccessToken();
     final headers = {if (token != null) 'Authorization': 'Bearer $token'};
@@ -130,13 +134,10 @@ class WebSocketService {
           final String status =
               raw['order']?['status'] ?? raw['status'] ?? 'unknown';
 
-          debugPrint(
-            '📥 [WS] Message: $type | Order: $orderId | Status: $status',
-          );
+          _log('📥 [WS] Message: $type | Order: $orderId | Status: $status');
           _orderUpdateController.add(raw);
-
         } catch (e) {
-          debugPrint('⚠️ Error parsing socket message: $e');
+          _log('⚠️ Error parsing socket message: $e');
         }
       },
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class BestSellerTile extends StatefulWidget {
   final int rank;
@@ -92,7 +93,7 @@ class _BestSellerTileState extends State<BestSellerTile>
                 ),
               ),
               Text(
-                "${widget.soldCount} sold",
+                "${widget.soldCount} ${AppLocalizations.of(context)?.translate('sold') ?? 'sold'}",
                 style: GoogleFonts.poppins(
                   color: const Color(0xFF94A3B8),
                   fontSize: 12,

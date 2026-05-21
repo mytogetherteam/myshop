@@ -6,9 +6,9 @@ import 'package:my_shop/features/menu/data/models/menu_category_model.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/presentation/widgets/global_modal.dart';
-import 'package:my_shop/core/presentation/widgets/success_sheet.dart';
 import 'package:my_shop/core/presentation/widgets/confirmation_sheet.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 
 class EditCategoryScreen extends StatefulWidget {
@@ -87,16 +87,16 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
     if (_nameEnController.text.isEmpty &&
         _nameMmController.text.isEmpty &&
         _nameThController.text.isEmpty) {
-      AppDialog.showToast(context, 'Please enter at least one category name', isError: true);
+      AppDialog.showToast(context, AppLocalizations.of(context)?.translate('please_enter_category_name') ?? 'Please enter at least one category name', isError: true);
       return;
     }
 
     GlobalModal.show(
       context: context,
       child: ConfirmationSheet(
-        title: 'Update Category?',
-        message: 'Are you sure you want to save the changes to this category?',
-        confirmLabel: 'Update',
+        title: AppLocalizations.of(context)?.translate('update_category_title') ?? 'Update Category?',
+        message: AppLocalizations.of(context)?.translate('update_category_confirm') ?? 'Are you sure you want to save the changes to this category?',
+        confirmLabel: AppLocalizations.of(context)?.translate('update') ?? 'Update',
         onConfirm: _performUpdate,
       ),
     );
@@ -124,11 +124,11 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
 
     if (mounted) {
       if (success) {
-        AppDialog.showToast(context, 'Successfully requested');
+        AppDialog.showToast(context, AppLocalizations.of(context)?.translate('successfully_requested') ?? 'Successfully requested');
         Navigator.of(context).pop(true);
       } else {
         setState(() => _isSaving = false);
-        AppDialog.showToast(context, 'Failed to update category', isError: true);
+        AppDialog.showToast(context, AppLocalizations.of(context)?.translate('failed_update_category') ?? 'Failed to update category', isError: true);
       }
     }
   }
@@ -137,10 +137,10 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
     GlobalModal.show(
       context: context,
       child: ConfirmationSheet(
-        title: 'Delete Category?',
+        title: AppLocalizations.of(context)?.translate('delete_category_title') ?? 'Delete Category?',
         message:
-            'Are you sure you want to delete this category? This action cannot be undone.',
-        confirmLabel: 'Delete',
+            AppLocalizations.of(context)?.translate('delete_category_confirm') ?? 'Are you sure you want to delete this category? This action cannot be undone.',
+        confirmLabel: AppLocalizations.of(context)?.translate('delete') ?? 'Delete',
         confirmColor: const Color(0xFFEF4444),
         onConfirm: () async {
           final success =
@@ -149,7 +149,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
             if (success) {
               Navigator.pop(context, true);
             } else {
-              AppDialog.showToast(context, 'Failed to delete category', isError: true);
+              AppDialog.showToast(context, AppLocalizations.of(context)?.translate('failed_delete_category') ?? 'Failed to delete category', isError: true);
             }
           }
         },
@@ -170,7 +170,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Edit Category',
+          AppLocalizations.of(context)?.translate('edit_category') ?? 'Edit Category',
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -185,43 +185,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
           : ListView(
               padding: const EdgeInsets.all(24.0),
               children: [
-                if (widget.category.pendingStatus == 'REJECTED' && widget.category.rejectReason != null)
-                  Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(bottom: 24),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFEF2F2),
-                      border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 20),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Rejected',
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFFEF4444),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          widget.category.rejectReason!,
-                          style: GoogleFonts.poppins(
-                            fontSize: 13,
-                            color: const Color(0xFFEF4444),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -239,7 +203,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'EDIT CATEGORY',
+                        (AppLocalizations.of(context)?.translate('edit_category') ?? 'EDIT CATEGORY').toUpperCase(),
                         style: GoogleFonts.poppins(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -253,7 +217,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
 
                       // Icon Gallery
                       Text(
-                        'Choose icon',
+                        AppLocalizations.of(context)?.translate('choose_icon') ?? 'Choose icon',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -266,7 +230,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
 
                       // Name Lang Switcher
                       Text(
-                        'Category name',
+                        AppLocalizations.of(context)?.translate('category_name') ?? 'Category name',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -282,7 +246,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
                             : _nameLang == 'MM'
                             ? _nameMmController
                             : _nameThController,
-                        hint: 'Enter category name',
+                        hint: AppLocalizations.of(context)?.translate('enter_category_name') ?? 'Enter category name',
                       ),
                     ],
                   ),
@@ -295,7 +259,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
                     color: Color(0xFFEF4444),
                   ),
                   label: Text(
-                    'Delete category',
+                    AppLocalizations.of(context)?.translate('delete_category') ?? 'Delete category',
                     style: GoogleFonts.poppins(
                       color: const Color(0xFFEF4444),
                       fontSize: 14,
@@ -318,7 +282,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
             child: PrimaryGradientButton(
               onPressed: _updateCategory,
               isLoading: _isSaving,
-              text: 'Update Category',
+              text: AppLocalizations.of(context)?.translate('update') ?? 'Update Category',
               height: 56,
               borderRadius: 16,
             ),
@@ -331,9 +295,9 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
 
   Widget _buildIconGallery() {
     if (_gallery.isEmpty) {
-      return const Text(
-        'No icons available',
-        style: TextStyle(fontSize: 12, color: Colors.grey),
+      return Text(
+        AppLocalizations.of(context)?.translate('no_icons_available') ?? 'No icons available',
+        style: const TextStyle(fontSize: 12, color: Colors.grey),
       );
     }
 

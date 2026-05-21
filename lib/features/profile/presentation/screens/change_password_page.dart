@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../data/services/profile_service.dart';
-import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import '../../../../core/presentation/widgets/skeleton.dart';
 import '../../../../core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});
@@ -25,22 +25,11 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   bool _isNewPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _isLoading = false;
-  bool _isPageLoading = true;
+  bool _isPageLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _initializePage();
-  }
-
-  Future<void> _initializePage() async {
-    // Simulate initial loading to show skeleton
-    await Future.delayed(const Duration(milliseconds: 600));
-    if (mounted) {
-      setState(() {
-        _isPageLoading = false;
-      });
-    }
   }
 
   @override
@@ -52,6 +41,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   }
 
   Future<void> _handleChangePassword() async {
+    final t = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -68,14 +58,14 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       if (!mounted) return;
 
       if (result['success'] == true) {
-        AppDialog.showToast(context, result['message'] ?? 'Password changed successfully');
+        AppDialog.showToast(context, result['message'] ?? (t?.translate('password_changed_success') ?? 'Password changed successfully'));
         Navigator.pop(context);
       } else {
-        AppDialog.showToast(context, result['message'] ?? 'Failed to change password', isError: true);
+        AppDialog.showToast(context, result['message'] ?? (t?.translate('failed_change_password') ?? 'Failed to change password'), isError: true);
       }
     } catch (e) {
       if (!mounted) return;
-      AppDialog.showToast(context, 'An error occurred. Please try again.', isError: true);
+      AppDialog.showToast(context, t?.translate('error_occurred_try_again') ?? 'An error occurred. Please try again.', isError: true);
     } finally {
       if (mounted) {
         setState(() {
@@ -87,19 +77,21 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const PhosphorIcon(PhosphorIconsRegular.caretLeft, size: 24, color: Color(0xFF1E293B)),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Change Password',
+          t?.translate('change_password') ?? 'Change Password',
           style: GoogleFonts.poppins(
-            fontSize: 18,
+            fontSize: 20,
             fontWeight: FontWeight.w600,
             color: const Color(0xFF1E293B),
           ),
@@ -107,88 +99,92 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         centerTitle: false,
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: _isPageLoading 
-                    ? _buildSkeletons()
-                    : Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildPasswordField(
-                              label: 'Current Password',
-                              controller: _currentPasswordController,
-                              isVisible: _isCurrentPasswordVisible,
-                              onToggleVisibility: () {
-                                setState(() => _isCurrentPasswordVisible = !_isCurrentPasswordVisible);
-                              },
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your current password';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 24),
-                            _buildPasswordField(
-                              label: 'New Password',
-                              controller: _newPasswordController,
-                              isVisible: _isNewPasswordVisible,
-                              onToggleVisibility: () {
-                                setState(() => _isNewPasswordVisible = !_isNewPasswordVisible);
-                              },
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter a new password';
-                                }
-                                if (value.length < 8) {
-                                  return 'Password must be at least 8 characters';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 24),
-                            _buildPasswordField(
-                              label: 'Confirm New Password',
-                              controller: _confirmPasswordController,
-                              isVisible: _isConfirmPasswordVisible,
-                              onToggleVisibility: () {
-                                setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible);
-                              },
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please confirm your new password';
-                                }
-                                if (value != _newPasswordController.text) {
-                                  return 'Passwords do not match';
-                                }
-                                return null;
-                              },
-                            ),
-                          ],
-                        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: _isPageLoading 
+              ? _buildSkeletons()
+              : Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildPasswordField(
+                        label: t?.translate('current_password') ?? 'Current Password',
+                        controller: _currentPasswordController,
+                        isVisible: _isCurrentPasswordVisible,
+                        onToggleVisibility: () {
+                          setState(() => _isCurrentPasswordVisible = !_isCurrentPasswordVisible);
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return t?.translate('please_enter_current_password') ?? 'Please enter your current password';
+                          }
+                          return null;
+                        },
                       ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: PrimaryGradientButton(
-                  onPressed: _handleChangePassword,
-                  isLoading: _isLoading,
-                  text: 'Change Password',
-                  height: 56,
-                  borderRadius: 16,
+                      const SizedBox(height: 24),
+                      _buildPasswordField(
+                        label: t?.translate('new_password') ?? 'New Password',
+                        controller: _newPasswordController,
+                        isVisible: _isNewPasswordVisible,
+                        onToggleVisibility: () {
+                          setState(() => _isNewPasswordVisible = !_isNewPasswordVisible);
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return t?.translate('please_enter_new_password') ?? 'Please enter a new password';
+                          }
+                          if (value.length < 8) {
+                            return t?.translate('password_min_length') ?? 'Password must be at least 8 characters';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      _buildPasswordField(
+                        label: t?.translate('confirm_new_password') ?? 'Confirm New Password',
+                        controller: _confirmPasswordController,
+                        isVisible: _isConfirmPasswordVisible,
+                        onToggleVisibility: () {
+                          setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible);
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return t?.translate('please_confirm_new_password') ?? 'Please confirm your new password';
+                          }
+                          if (value != _newPasswordController.text) {
+                            return t?.translate('passwords_do_not_match') ?? 'Passwords do not match';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
                 ),
+        ),
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(
+            top: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: PrimaryGradientButton(
+                onPressed: _handleChangePassword,
+                isLoading: _isLoading,
+                text: t?.translate('change_password') ?? 'Change Password',
+                height: 56,
+                borderRadius: 16,
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -201,6 +197,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     required VoidCallback onToggleVisibility,
     String? Function(String?)? validator,
   }) {
+    final t = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -222,7 +219,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             fontWeight: FontWeight.w500,
           ),
           decoration: InputDecoration(
-            hintText: 'Enter your password',
+            hintText: t?.translate('enter_password_hint') ?? 'Enter your password',
             hintStyle: GoogleFonts.poppins(
               fontSize: 14,
               color: const Color(0xFFCBD5E1),

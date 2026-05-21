@@ -1,5 +1,6 @@
 import 'dart:convert';
-import 'package:flutter/cupertino.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_switch.dart';
@@ -14,13 +15,12 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import '../widgets/password_confirmation_sheet.dart';
-import 'package:my_shop/core/presentation/widgets/success_sheet.dart';
 import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import '../../../../core/data/services/image_upload_service.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
-import 'package:my_shop/core/presentation/widgets/picked_image_preview.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class EditPaymentPage extends StatefulWidget {
   final PaymentMethod paymentMethod;
@@ -112,22 +112,23 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
     final pickedImage = _pickedImages[_currentPayment?.id.toString()];
     final hasExistingImage = _currentPayment?.qrImageUrl.isNotEmpty ?? false;
     final hasImage = pickedImage != null || hasExistingImage;
+    final t = AppLocalizations.of(context);
 
     if (!hasImage) {
       _scrollToKey(_qrImageKey);
-      AppDialog.showToast(context, 'QR Image is required', isError: true);
+      AppDialog.showToast(context, t?.translate('qr_image_required') ?? 'QR Image is required', isError: true);
       return false;
     }
 
     if (accountName.isEmpty) {
       _scrollToKey(_accountNameKey);
-      AppDialog.showToast(context, 'Account Name is required', isError: true);
+      AppDialog.showToast(context, t?.translate('account_name_required') ?? 'Account Name is required', isError: true);
       return false;
     }
 
     if (accountNumber.isEmpty) {
       _scrollToKey(_accountNumberKey);
-      AppDialog.showToast(context, 'Account Number is required', isError: true);
+      AppDialog.showToast(context, t?.translate('account_number_required') ?? 'Account Number is required', isError: true);
       return false;
     }
 
@@ -135,12 +136,13 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
   }
 
   Future<void> _handleUpdate() async {
+    final t = AppLocalizations.of(context);
     GlobalModal.show(
       context: context,
       child: ConfirmationSheet(
-        title: 'Update Payment',
-        message: 'Are you sure you want to update this payment method?',
-        confirmLabel: 'Yes, Update',
+        title: t?.translate('update_payment_title') ?? 'Update Payment',
+        message: t?.translate('update_payment_confirm') ?? 'Are you sure you want to update this payment method?',
+        confirmLabel: t?.translate('yes_update') ?? 'Yes, Update',
         onConfirm: () async {
           await _performUpdate();
         },
@@ -184,16 +186,18 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
 
     if (mounted) {
       setState(() => _isSaving = false);
+      final t = AppLocalizations.of(context);
       if (result['success'] == true) {
-        AppDialog.showToast(context, 'Successfully requested');
+        AppDialog.showToast(context, t?.translate('successfully_requested') ?? 'Successfully requested');
         Navigator.of(context).pop(true);
       } else {
-        AppDialog.showToast(context, result['message'] ?? 'Failed to update payment method', isError: true);
+        AppDialog.showToast(context, result['message'] ?? (t?.translate('failed_update_payment') ?? 'Failed to update payment method'), isError: true);
       }
     }
   }
 
   Future<void> _pickImage(String paymentId) async {
+    final t = AppLocalizations.of(context);
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -218,7 +222,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
               child: Text(
-                'Upload QR Photo',
+                t?.translate('upload_qr_photo') ?? 'Upload QR Photo',
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
@@ -233,13 +237,13 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                   Icons.photo_library_outlined,
                 ),
               ),
-              title: Text('Choose from Gallery', style: GoogleFonts.poppins()),
+              title: Text(t?.translate('choose_from_gallery') ?? 'Choose from Gallery', style: GoogleFonts.poppins()),
               onTap: () async {
                 Navigator.pop(context);
                 final result = await ImageUploadService().pickFromGallery();
                 if (result.isTooLarge) {
                   if (mounted) {
-                    AppDialog.showToast(context, 'Image size must be less than 1MB', isError: true);
+                    AppDialog.showToast(context, t?.translate('image_size_limit_msg') ?? 'Image size must be less than 1MB', isError: true);
                   }
                   return;
                 }
@@ -255,13 +259,13 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                   Icons.camera_alt_outlined,
                 ),
               ),
-              title: Text('Take a Photo', style: GoogleFonts.poppins()),
+              title: Text(t?.translate('take_photo') ?? 'Take a Photo', style: GoogleFonts.poppins()),
               onTap: () async {
                 Navigator.pop(context);
                 final result = await ImageUploadService().pickFromCamera();
                 if (result.isTooLarge) {
                   if (mounted) {
-                    AppDialog.showToast(context, 'Image size must be less than 1MB', isError: true);
+                    AppDialog.showToast(context, t?.translate('image_size_limit_msg') ?? 'Image size must be less than 1MB', isError: true);
                   }
                   return;
                 }
@@ -277,7 +281,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                 width: double.infinity,
                 child: TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: Text('Cancel', style: GoogleFonts.poppins()),
+                  child: Text(t?.translate('cancel') ?? 'Cancel', style: GoogleFonts.poppins()),
                 ),
               ),
             ),
@@ -299,7 +303,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Edit payment',
+          AppLocalizations.of(context)?.translate('edit_payment') ?? 'Edit payment',
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -319,43 +323,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (widget.paymentMethod.pendingStatus == 'REJECTED' && widget.paymentMethod.rejectReason != null)
-                          Container(
-                            width: double.infinity,
-                            margin: const EdgeInsets.only(bottom: 24),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFEF2F2),
-                              border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 20),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Rejected',
-                                      style: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w600,
-                                        color: const Color(0xFFEF4444),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  widget.paymentMethod.rejectReason!,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    color: const Color(0xFFEF4444),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+
                         _buildForm(),
                       ],
                     ),
@@ -392,27 +360,13 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                 isLoading: _isSaving,
                 height: 64,
                 borderRadius: 18,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Update Payment Method',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Changes will take effect after verified',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  AppLocalizations.of(context)?.translate('update_payment_method') ?? 'Update Payment Method',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -423,6 +377,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
   }
 
   Widget _buildForm() {
+    final t = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -430,22 +385,22 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
         const SizedBox(height: 24),
         SizedBox(key: _qrImageKey, child: _buildImagePicker()),
         const SizedBox(height: 32),
-        _buildSectionTitle('Account Details'),
+        _buildSectionTitle(t?.translate('account_details') ?? 'Account Details'),
         const SizedBox(height: 16),
         _buildInputField(
           key: _accountNameKey,
-          label: 'Account Name',
+          label: t?.translate('account_name') ?? 'Account Name',
           controller: _accountNameCtrl,
-          hint: 'e.g. John Doe',
+          hint: t?.translate('john_doe_hint') ?? 'e.g. John Doe',
           icon: PhosphorIconsRegular.user,
           maxLength: 100,
         ),
         const SizedBox(height: 20),
         _buildInputField(
           key: _accountNumberKey,
-          label: 'Account Number',
+          label: t?.translate('account_number') ?? 'Account Number',
           controller: _accountNumberCtrl,
-          hint: 'e.g. 123456789',
+          hint: t?.translate('account_number_hint') ?? 'e.g. 123456789',
           icon: PhosphorIconsRegular.hash,
           maxLength: 50,
         ),
@@ -584,7 +539,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Tap to upload QR Code',
+            AppLocalizations.of(context)?.translate('tap_to_upload_qr') ?? 'Tap to upload QR Code',
             style: GoogleFonts.poppins(
               fontSize: 12,
               color: const Color(0xFF94A3B8),
@@ -666,11 +621,12 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
   }
 
   Widget _buildStatusToggle() {
+    final t = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Status',
+          t?.translate('status') ?? 'Status',
           style: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.w500,
@@ -689,7 +645,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
           child: Row(
             children: [
               Text(
-                'Is Active',
+                t?.translate('is_active') ?? 'Is Active',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   color: const Color(0xFF1E293B),

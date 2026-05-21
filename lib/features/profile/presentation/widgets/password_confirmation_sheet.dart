@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/features/auth/data/services/auth_service.dart';
-import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import '../../../../core/presentation/widgets/global_modal.dart';
 import '../../../../core/presentation/widgets/primary_gradient_button.dart';
 import 'otp_verification_sheet.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class PasswordConfirmationSheet extends StatefulWidget {
   final Function(String password)? onConfirm;
@@ -27,7 +27,8 @@ class _PasswordConfirmationSheetState extends State<PasswordConfirmationSheet> {
     super.dispose();
   }
 
-  Future<void> _handleUpdate() async {
+  Future<void> _verifyPassword() async {
+    final t = AppLocalizations.of(context);
     if (_passwordController.text.isEmpty) return;
 
     setState(() {
@@ -48,7 +49,7 @@ class _PasswordConfirmationSheetState extends State<PasswordConfirmationSheet> {
       if (!authResponse.success) {
         setState(() {
           _isLoading = false;
-          _errorMessage = 'Incorrect password';
+          _errorMessage = t?.translate('incorrect_password') ?? 'Incorrect password';
         });
         return;
       }
@@ -56,7 +57,7 @@ class _PasswordConfirmationSheetState extends State<PasswordConfirmationSheet> {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = 'User info not found';
+        _errorMessage = t?.translate('user_info_not_found') ?? 'User info not found';
       });
       return;
     }
@@ -77,6 +78,7 @@ class _PasswordConfirmationSheetState extends State<PasswordConfirmationSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,7 +96,7 @@ class _PasswordConfirmationSheetState extends State<PasswordConfirmationSheet> {
         const SizedBox(height: 32),
         Center(
           child: Text(
-            'Enter your password',
+            t?.translate('enter_your_password') ?? 'Enter your password',
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -104,7 +106,7 @@ class _PasswordConfirmationSheetState extends State<PasswordConfirmationSheet> {
         ),
         const SizedBox(height: 32),
         Text(
-          'Password',
+          t?.translate('password') ?? 'Password',
           style: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.w500,
@@ -171,9 +173,9 @@ class _PasswordConfirmationSheetState extends State<PasswordConfirmationSheet> {
           width: double.infinity,
           height: 56,
           child: PrimaryGradientButton(
-            onPressed: _handleUpdate,
+            onPressed: _verifyPassword,
             isLoading: _isLoading,
-            text: 'Confirm',
+            text: t?.translate('confirm') ?? 'Confirm',
             height: 56,
             borderRadius: 16,
           ),

@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:my_shop/core/data/services/image_upload_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Shape of the image picker preview area.
 enum ImagePickerShape {

@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:intl/intl.dart';
+import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/features/reports/presentation/widgets/best_seller_tile.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
+import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class TopSellingItemsScreen extends StatefulWidget {
   const TopSellingItemsScreen({super.key});
@@ -18,6 +24,8 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
   bool _isLoadingMore = false;
   int _selectedFilterIndex = 0;
   final List<String> _filters = ["Today", "Yesterday", "This Week", "Custom"];
+  final List<String> _filterKeys = ["today", "yesterday", "this_week", "custom"];
+  DateTimeRange? _selectedDateRange;
 
   // Dummy data generated for Infinite Scroll
   final List<Map<String, dynamic>> _dummyData = [
@@ -92,8 +100,184 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
     }
   }
 
+  Future<void> _showCustomDatePicker() async {
+    final t = AppLocalizations.of(context);
+    List<DateTime?>? results = await showModalBottomSheet<List<DateTime?>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        List<DateTime?> tempValues = _selectedDateRange != null
+            ? [_selectedDateRange!.start, _selectedDateRange!.end]
+            : [DateTime.now(), DateTime.now().add(const Duration(days: 7))];
+
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            String rangeText = t?.translate('custom') ?? "Select Dates";
+            if (tempValues.length == 2 &&
+                tempValues[0] != null &&
+                tempValues[1] != null) {
+              final start = tempValues[0]!;
+              final end = tempValues[1]!;
+              if (start.month == end.month) {
+                rangeText =
+                    "${DateFormat('dd').format(start)} - ${DateFormat('dd MMM').format(end)}";
+              } else {
+                rangeText =
+                    "${DateFormat('dd MMM').format(start)} - ${DateFormat('dd MMM').format(end)}";
+              }
+            }
+
+            return Container(
+              padding: EdgeInsets.only(
+                top: 16,
+                bottom: MediaQuery.of(context).padding.bottom + 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(
+                            Icons.expand_more,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            t?.translate('custom') ?? "Choose Revenue Period",
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF0F172A),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(width: 48),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    rangeText,
+                    style: GoogleFonts.poppins(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1E293B),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  CalendarDatePicker2(
+                    config: CalendarDatePicker2Config(
+                      calendarType: CalendarDatePicker2Type.range,
+                      selectedDayHighlightColor: AppColors.primary,
+                      selectedRangeHighlightColor: AppColors.primary.withValues(alpha: 0.25),
+                      dayBorderRadius: BorderRadius.circular(8),
+                      centerAlignModePicker: true,
+                      controlsHeight: 50,
+                      dayMaxWidth: 45,
+                      modePickersGap: 16,
+                      disableVibration: true,
+                      rangeBidirectional: true,
+                      weekdayLabelTextStyle: GoogleFonts.poppins(
+                        color: const Color(0xFF64748B),
+                        fontWeight: FontWeight.w500,
+                        fontSize: 13,
+                      ),
+                      controlsTextStyle: GoogleFonts.poppins(
+                        color: const Color(0xFF1E293B),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                      dayTextStyle: GoogleFonts.poppins(
+                        color: const Color(0xFF1E293B),
+                        fontWeight: FontWeight.w400,
+                      ),
+                      selectedDayTextStyle: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      todayTextStyle: GoogleFonts.poppins(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      firstDate: DateTime(2025, 1, 1),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    ),
+                    value: tempValues,
+                    onValueChanged: (values) {
+                      setModalState(() => tempValues = values);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text(
+                            t?.translate('cancel').toUpperCase() ?? "CANCEL",
+                            style: GoogleFonts.poppins(
+                              color: const Color(0xFF64748B),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            if (tempValues.length == 2 &&
+                                tempValues[0] != null &&
+                                tempValues[1] != null) {
+                              Navigator.pop(context, tempValues);
+                            }
+                          },
+                          child: const GradientText(
+                            "OK",
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (results != null &&
+        results.length == 2 &&
+        results[0] != null &&
+        results[1] != null) {
+      setState(() {
+        _selectedDateRange = DateTimeRange(
+          start: results[0]!,
+          end: results[1]!,
+        );
+      });
+      _loadInitialData();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -105,7 +289,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Top Selling items',
+          t?.translate('best_sellers') ?? 'Top Selling items',
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -130,7 +314,15 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                   child: InkWell(
                     onTap: () {
                       setState(() => _selectedFilterIndex = index);
-                      _loadInitialData();
+                      if (index == 3) {
+                        if (_selectedDateRange == null) {
+                          _showCustomDatePicker();
+                        } else {
+                          _loadInitialData();
+                        }
+                      } else {
+                        _loadInitialData();
+                      }
                     },
                     borderRadius: BorderRadius.circular(20),
                     child: Container(
@@ -150,7 +342,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                         ),
                       ),
                       child: Text(
-                        _filters[index],
+                        t?.translate(_filterKeys[index]) ?? _filters[index],
                         style: GoogleFonts.poppins(
                           color: isSelected
                               ? Colors.white
@@ -168,6 +360,66 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
             ),
           ),
           const Divider(color: Color(0xFFF1F5F9), height: 32, thickness: 1),
+          if (_selectedFilterIndex == 3 && _selectedDateRange != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16, left: 20, right: 20),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const GradientWidget(
+                          child: PhosphorIcon(
+                            PhosphorIconsRegular.calendar,
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: _showCustomDatePicker,
+                          child: GradientText(
+                            "${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.start)} - ${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.end)}",
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedDateRange = null;
+                              _selectedFilterIndex = 0;
+                            });
+                            _loadInitialData();
+                          },
+                          child: const Icon(
+                            Icons.close,
+                            size: 16,
+                            color: Color(0xFF94A3B8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           Expanded(
             child: RefreshIndicator(
               onRefresh: _loadInitialData,

@@ -6,6 +6,8 @@ class ReviewModel {
   final String comment;
   final DateTime createdAt;
   final bool isVerified;
+  final String? reply;
+  final DateTime? replyCreatedAt;
 
   ReviewModel({
     required this.id,
@@ -15,6 +17,8 @@ class ReviewModel {
     required this.comment,
     required this.createdAt,
     this.isVerified = false,
+    this.reply,
+    this.replyCreatedAt,
   });
 
   factory ReviewModel.fromJson(Map<String, dynamic> json) {
@@ -26,6 +30,10 @@ class ReviewModel {
       comment: json['comment'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
       isVerified: json['isVerified'] as bool? ?? false,
+      reply: json['reply'] as String?,
+      replyCreatedAt: json['replyCreatedAt'] != null
+          ? DateTime.parse(json['replyCreatedAt'] as String)
+          : null,
     );
   }
 }
