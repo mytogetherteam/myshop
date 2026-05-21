@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
+
 
 class ShopProfileImageHeader extends StatelessWidget {
   final XFile? pickedCover;
@@ -28,6 +30,7 @@ class ShopProfileImageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     const heroHeight = 360.0;
 
     return SizedBox(
@@ -111,7 +114,7 @@ class ShopProfileImageHeader extends StatelessWidget {
                               ),
                               const SizedBox(height: 10),
                               Text(
-                                'Tap to add cover photo',
+                                t?.translate('tap_to_add_cover_photo') ?? 'Tap to add cover photo',
                                 style: GoogleFonts.poppins(
                                   color: Colors.white,
                                   fontSize: 14,

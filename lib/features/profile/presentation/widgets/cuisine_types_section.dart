@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/data/models/master_data_model.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 import 'form_section.dart';
 
 class CuisineTypesSection extends StatefulWidget {
@@ -32,7 +33,7 @@ class _CuisineTypesSectionState extends State<CuisineTypesSection> {
   @override
   Widget build(BuildContext context) {
     return FormSection(
-      label: 'Cuisine Types',
+      label: AppLocalizations.of(context)?.translate('cuisine_types') ?? 'Cuisine Types',
       required: true,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),

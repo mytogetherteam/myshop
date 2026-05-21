@@ -9,6 +9,7 @@ import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
 import 'package:my_shop/features/menu/data/services/menu_service.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class GlobalShopSelectionPage extends StatefulWidget {
   final bool isInitialFlow;
@@ -94,6 +95,7 @@ class _GlobalShopSelectionPageState extends State<GlobalShopSelectionPage> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -106,7 +108,7 @@ class _GlobalShopSelectionPageState extends State<GlobalShopSelectionPage> {
                 onPressed: () => Navigator.pop(context),
               ),
         title: Text(
-          'Choose Shop',
+          t?.translate('choose_shop') ?? 'Choose Shop',
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,

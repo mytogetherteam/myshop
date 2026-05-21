@@ -9,6 +9,8 @@ class RevenueCard extends StatelessWidget {
   final String trend;
   final String orders;
   final String cancelled;
+  final String? title;
+  final String? dateRange;
 
   const RevenueCard({
     super.key,
@@ -16,6 +18,8 @@ class RevenueCard extends StatelessWidget {
     required this.trend,
     required this.orders,
     required this.cancelled,
+    this.title,
+    this.dateRange,
   });
 
   @override
@@ -51,13 +55,27 @@ class RevenueCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                t?.translate('todays_revenue') ?? "Today's Revenue",
-                style: GoogleFonts.poppins(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    title ?? (t?.translate('todays_revenue') ?? "Today's Revenue"),
+                    style: GoogleFonts.poppins(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  if (dateRange != null)
+                    Text(
+                      dateRange!,
+                      style: GoogleFonts.poppins(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(height: 8),
               Text(

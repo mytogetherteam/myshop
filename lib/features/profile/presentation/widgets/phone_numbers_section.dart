@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 import 'form_section.dart';
 
 class PhoneNumbersSection extends StatefulWidget {
@@ -66,8 +67,9 @@ class _PhoneNumbersSectionState extends State<PhoneNumbersSection> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return FormSection(
-      label: 'Phone Numbers',
+      label: t?.translate('phone_numbers') ?? 'Phone Numbers',
       required: true,
       child: Column(
         children: [

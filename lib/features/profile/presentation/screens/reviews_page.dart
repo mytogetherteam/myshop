@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 import '../../data/models/review_model.dart';
 import '../../data/services/review_service.dart';
 import '../widgets/review_card.dart';
@@ -85,6 +86,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -96,7 +98,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Reviews',
+          t?.translate('reviews') ?? 'Reviews',
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -112,6 +114,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
   }
 
   Widget _buildContent() {
+    final t = AppLocalizations.of(context);
     return RefreshIndicator(
       onRefresh: _loadInitialData,
       child: ListView.builder(
@@ -127,7 +130,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Text(
-                    'Recent Reviews',
+                    t?.translate('recent_reviews') ?? 'Recent Reviews',
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -162,7 +165,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
                     ),
                   )
                 : Text(
-                    'No more reviews',
+                    t?.translate('no_more_reviews') ?? 'No more reviews',
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       color: const Color(0xFF64748B),

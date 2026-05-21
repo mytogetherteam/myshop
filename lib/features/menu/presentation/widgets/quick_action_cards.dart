@@ -71,9 +71,14 @@ class _ActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context);
+    final isMyanmar = locale.languageCode == 'my';
+    final isThai = locale.languageCode == 'th';
+    final hasDiacritics = isMyanmar || isThai;
+
     return Container(
       height: 90,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(20),
@@ -92,16 +97,17 @@ class _ActionCard extends StatelessWidget {
                     fontSize: 12,
                     fontWeight: FontWeight.w400,
                     color: const Color(0xFF1E293B),
-                    height: 1.3,
+                    height: hasDiacritics ? 1.5 : 1.3,
                   ),
                 ),
+                SizedBox(height: hasDiacritics ? 6 : 2),
                 Text(
                   bottomText,
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF1E293B),
-                    height: 1.1,
+                    height: hasDiacritics ? 1.4 : 1.1,
                   ),
                 ),
               ],

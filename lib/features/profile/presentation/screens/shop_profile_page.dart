@@ -11,6 +11,7 @@ import 'package:my_shop/features/categories/data/services/category_service.dart'
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 
 // ---------------------------------------------------------------------------
@@ -196,6 +197,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     if (_isLoading) {
       return _buildSkeletonProfile();
     }
@@ -221,7 +223,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
               const SizedBox(height: 16),
               PrimaryGradientButton(
                 onPressed: _loadProfile,
-                text: 'Retry',
+                text: t?.translate('retry') ?? 'Retry',
                 height: 48,
                 borderRadius: 12,
               ),
@@ -276,11 +278,11 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                     ),
-                    tabs: const [
-                      Tab(text: 'Menu'),
-                      Tab(text: 'Reviews'),
-                      Tab(text: 'Info'),
-                      Tab(text: 'Photos'),
+                    tabs: [
+                      Tab(text: t?.translate('tab_menu') ?? 'Menu'),
+                      Tab(text: t?.translate('tab_reviews') ?? 'Reviews'),
+                      Tab(text: t?.translate('tab_info') ?? 'Info'),
+                      Tab(text: t?.translate('tab_photos') ?? 'Photos'),
                     ],
                   ),
                 ),
@@ -487,25 +489,11 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                   ],
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoSection() {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Shop Details',
+                t?.translate('shop_details') ?? 'Shop Details',
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -536,7 +524,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
               ),
               const SizedBox(width: 4),
               Text(
-                '(${_shopProfile?.ratingCount ?? 0} reviews)',
+                t?.translate('reviews_count')?.replaceAll('{count}', '${_shopProfile?.ratingCount ?? 0}') ?? '(${_shopProfile?.ratingCount ?? 0} reviews)',
                 style: GoogleFonts.poppins(
                   fontSize: 13,
                   color: const Color(0xFF94A3B8),
@@ -590,13 +578,13 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                 _infoStat(
                   PhosphorIconsRegular.tag,
                   _shopProfile?.displayBaseDeliveryFee ?? '฿ ${_shopProfile?.baseDeliveryFee ?? 0}',
-                  'Delivery fee',
+                  t?.translate('delivery_fee_label') ?? 'Delivery fee',
                 ),
                 _infoStatDivider(),
                 _infoStat(
                   PhosphorIconsRegular.clock,
                   _shopProfile?.estimatedTime ?? '25-35 min',
-                  'Est. time',
+                  t?.translate('est_time') ?? 'Est. time',
                 ),
               ],
             ),
@@ -628,7 +616,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Operating Hours',
+                        t?.translate('operating_hours') ?? 'Operating Hours',
                         style: GoogleFonts.poppins(
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
@@ -657,7 +645,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                     color: Color(0xFF475569),
                   ),
                   label: Text(
-                    'Edit Profile',
+                    t?.translate('edit_profile') ?? 'Edit Profile',
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
@@ -700,7 +688,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _shopProfile?.phone ?? 'No phone added',
+                        _shopProfile?.phone ?? (t?.translate('no_phone_added') ?? 'No phone added'),
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -708,7 +696,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                         ),
                       ),
                       Text(
-                        'This is the phone number currently shown to customers on your public profile.',
+                        t?.translate('phone_disclaimer') ?? 'This is the phone number currently shown to customers on your public profile.',
                         style: GoogleFonts.poppins(
                           fontSize: 11,
                           color: const Color(0xFF94A3B8),
@@ -727,6 +715,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
 
   Widget _buildOpenStatusBadge() {
     final isOpen = _shopProfile?.isOpen ?? false;
+    final t = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -734,7 +723,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        isOpen ? 'OPEN' : 'CLOSED',
+        isOpen ? (t?.translate('open')?.toUpperCase() ?? 'OPEN') : (t?.translate('closed')?.toUpperCase() ?? 'CLOSED'),
         style: GoogleFonts.poppins(
           fontSize: 12,
           fontWeight: FontWeight.w700,
@@ -904,6 +893,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
   }
 
   Widget _buildMenuItemCard(_MenuItem item) {
+    final t = AppLocalizations.of(context);
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
       decoration: BoxDecoration(
@@ -955,25 +945,25 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                     children: [
                       if (item.isHot)
                         _badge(
-                          '🔥 Hot Deal',
+                          t?.translate('hot_deal') ?? '🔥 Hot Deal',
                           const Color(0xFFFFF3CD),
                           const Color(0xFF92400E),
                         ),
                       if (item.isPopular)
                         _badge(
-                          '⭐ Popular',
+                          t?.translate('popular') ?? '⭐ Popular',
                           const Color(0xFFE0F2FE),
                           const Color(0xFF0369A1),
                         ),
                       if (item.isVeg)
                         _badge(
-                          '🌿 Veg',
+                          t?.translate('veg') ?? '🌿 Veg',
                           const Color(0xFFDCFCE7),
                           const Color(0xFF166534),
                         ),
                       if (item.isSpicy)
                         _badge(
-                          '🌶 Spicy',
+                          t?.translate('spicy') ?? '🌶 Spicy',
                           const Color(0xFFFFE4E6),
                           const Color(0xFF9F1239),
                         ),
@@ -1055,7 +1045,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '128 reviews',
+                    AppLocalizations.of(context)?.translate('reviews_count')?.replaceAll('{count}', '128') ?? '128 reviews',
                     style: GoogleFonts.poppins(
                       fontSize: 11,
                       color: const Color(0xFF94A3B8),
@@ -1224,18 +1214,19 @@ class _ShopProfilePageState extends State<ShopProfilePage>
     final lat = _shopProfile?.latitude?.toStringAsFixed(4) ?? '0.0000';
     final lng = _shopProfile?.longitude?.toStringAsFixed(4) ?? '0.0000';
 
+    final t = AppLocalizations.of(context);
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         _infoCard([
-          _infoRow(PhosphorIconsRegular.mapPin, 'Address', address),
-          _infoRow(PhosphorIconsRegular.phone, 'Phone', phone),
-          _infoRow(PhosphorIconsRegular.envelope, 'Email', email),
-          _infoRow(PhosphorIconsRegular.tag, 'Category', _shopProfile?.categoryEn ?? '-'),
-          _infoRow(PhosphorIconsRegular.listBullets, 'Sub-category', _shopProfile?.subCategoryEn ?? '-'),
-          _infoRow(PhosphorIconsRegular.link, 'Slug', _shopProfile?.slug ?? '-'),
+          _infoRow(PhosphorIconsRegular.mapPin, t?.translate('address') ?? 'Address', address),
+          _infoRow(PhosphorIconsRegular.phone, t?.translate('phone') ?? 'Phone', phone),
+          _infoRow(PhosphorIconsRegular.envelope, t?.translate('email') ?? 'Email', email),
+          _infoRow(PhosphorIconsRegular.tag, t?.translate('category') ?? 'Category', _shopProfile?.categoryEn ?? '-'),
+          _infoRow(PhosphorIconsRegular.listBullets, t?.translate('sub_category') ?? 'Sub-category', _shopProfile?.subCategoryEn ?? '-'),
+          _infoRow(PhosphorIconsRegular.link, t?.translate('slug') ?? 'Slug', _shopProfile?.slug ?? '-'),
           if (_shopProfile?.googleMapsLink?.isNotEmpty == true)
-            _infoRow(PhosphorIconsRegular.mapTrifold, 'Map Link', 'Open in Google Maps', highlight: true),
+            _infoRow(PhosphorIconsRegular.mapTrifold, t?.translate('map_link') ?? 'Map Link', t?.translate('open_in_google_maps') ?? 'Open in Google Maps', highlight: true),
         ]),
         const SizedBox(height: 12),
         if (_shopProfile?.latitude != null && _shopProfile?.longitude != null)
@@ -1268,10 +1259,10 @@ class _ShopProfilePageState extends State<ShopProfilePage>
           ),
         if (_shopProfile?.latitude != null && _shopProfile?.longitude != null)
           const SizedBox(height: 12),
-        _sectionLabel('Operating Hours'),
+        _sectionLabel(t?.translate('operating_hours') ?? 'Operating Hours'),
         _infoCard([
           if (_shopProfile?.operatingHours.isEmpty ?? true)
-            _infoRow(PhosphorIconsRegular.clock, 'Hours', 'Not set'),
+            _infoRow(PhosphorIconsRegular.clock, t?.translate('hours') ?? 'Hours', t?.translate('not_set') ?? 'Not set'),
           for (final opHour in _shopProfile?.operatingHours ?? [])
             _infoRow(
               opHour.isClosed
@@ -1279,33 +1270,33 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                   : PhosphorIconsRegular.clock,
               opHour.dayName,
               opHour.isClosed
-                  ? 'Closed'
+                  ? (t?.translate('closed') ?? 'Closed')
                   : '${opHour.openingTime.formatTime()} – ${opHour.closingTime.formatTime()}',
               highlight: opHour.isClosed,
             ),
         ]),
         const SizedBox(height: 12),
-        _sectionLabel('Delivery Options'),
+        _sectionLabel(t?.translate('delivery_options') ?? 'Delivery Options'),
         _infoCard([
           _infoRow(
             PhosphorIconsRegular.motorcycle,
-            'Standard',
-            _shopProfile?.deliveryEnabled == true ? 'Available' : 'Unavailable',
+            t?.translate('standard') ?? 'Standard',
+            _shopProfile?.deliveryEnabled == true ? (t?.translate('available') ?? 'Available') : (t?.translate('unavailable') ?? 'Unavailable'),
           ),
           _infoRow(
             PhosphorIconsRegular.lightning,
-            'Express',
+            t?.translate('express') ?? 'Express',
             '฿ 50  •  15–20 min',
           ),
         ]),
         const SizedBox(height: 12),
-        _sectionLabel('Accepted Payments'),
+        _sectionLabel(t?.translate('accepted_payments') ?? 'Accepted Payments'),
         _infoCard([
-          _infoRow(PhosphorIconsRegular.money, 'Cash on Delivery', 'Accepted'),
-          _infoRow(PhosphorIconsRegular.creditCard, 'Card', 'Accepted'),
+          _infoRow(PhosphorIconsRegular.money, t?.translate('cash_on_delivery') ?? 'Cash on Delivery', t?.translate('accepted') ?? 'Accepted'),
+          _infoRow(PhosphorIconsRegular.creditCard, t?.translate('card') ?? 'Card', t?.translate('accepted') ?? 'Accepted'),
           _infoRow(
             PhosphorIconsRegular.deviceMobile,
-            'Mobile Pay',
+            t?.translate('mobile_pay') ?? 'Mobile Pay',
             'KBZPay, AYAPay, WavePay',
           ),
         ]),
