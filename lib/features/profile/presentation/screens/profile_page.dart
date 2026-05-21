@@ -27,6 +27,7 @@ import 'global_shop_selection_page.dart';
 import 'package:my_shop/core/utils/app_version.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import '../widgets/language_selector_sheet.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -133,6 +134,22 @@ class ProfilePageState extends State<ProfilePage>
       context,
       CupertinoPageRoute(builder: (_) => const HelpSupportPage()),
     );
+  }
+
+  Future<void> _handlePrivacyPolicy() async {
+    final uri = Uri.parse('https://mytogether.org/privacy-policy/shop');
+    try {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && mounted) {
+        final t = AppLocalizations.of(context);
+        AppDialog.showToast(context, t?.translate('could_not_open_link') ?? 'Could not open this link', isError: true);
+      }
+    } catch (e) {
+      if (mounted) {
+        final t = AppLocalizations.of(context);
+        AppDialog.showToast(context, t?.translate('could_not_open_link') ?? 'Could not open this link', isError: true);
+      }
+    }
   }
 
   void _showLanguageSelector() {
@@ -437,6 +454,11 @@ class ProfilePageState extends State<ProfilePage>
           icon: PhosphorIconsRegular.headset,
           title: t?.translate('help_support') ?? 'Help & Support',
           onTap: _handleContactSupport,
+        ),
+        _buildMenuOption(
+          icon: PhosphorIconsRegular.shield,
+          title: t?.translate('privacy_policy') ?? 'Privacy Policy',
+          onTap: _handlePrivacyPolicy,
         ),
         if (_userShops.length > 1)
           _buildMenuOption(

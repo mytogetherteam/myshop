@@ -38,9 +38,13 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
   }
 
   Future<void> _launch(Uri uri) async {
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
+    try {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && mounted) {
+        final t = AppLocalizations.of(context);
+        AppDialog.showToast(context, t?.translate('could_not_open_link') ?? 'Could not open this link', isError: true);
+      }
+    } catch (e) {
       if (mounted) {
         final t = AppLocalizations.of(context);
         AppDialog.showToast(context, t?.translate('could_not_open_link') ?? 'Could not open this link', isError: true);
