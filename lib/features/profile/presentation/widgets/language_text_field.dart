@@ -129,6 +129,8 @@ class LanguageTextField extends StatelessWidget {
           style: GoogleFonts.poppins(
             fontSize: 14,
             color: const Color(0xFF1E293B),
+            height: selectedLang == 'MM' ? 1.5 : 1.2,
+            letterSpacing: selectedLang == 'MM' ? 0.3 : null,
           ),
         ),
       ],

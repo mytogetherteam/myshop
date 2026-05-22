@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_switch.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 import 'form_section.dart';
 
 class AmenitiesAndDietarySection extends StatefulWidget {
@@ -92,11 +93,12 @@ class _AmenitiesAndDietarySectionState extends State<AmenitiesAndDietarySection>
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         FormSection(
-          label: 'Amenities',
+          label: t?.translate('amenities') ?? 'Amenities',
           child: Container(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -107,7 +109,7 @@ class _AmenitiesAndDietarySectionState extends State<AmenitiesAndDietarySection>
               children: [
                 _buildToggleRow(
                   icon: PhosphorIconsRegular.car,
-                  label: 'Parking',
+                  label: t?.translate('parking') ?? 'Parking',
                   value: _hasParking,
                   onChanged: (v) {
                     setState(() => _hasParking = v);
@@ -117,7 +119,7 @@ class _AmenitiesAndDietarySectionState extends State<AmenitiesAndDietarySection>
                 const Divider(height: 1, indent: 48),
                 _buildToggleRow(
                   icon: PhosphorIconsRegular.wifiHigh,
-                  label: 'WiFi',
+                  label: t?.translate('wifi') ?? 'WiFi',
                   value: _hasWifi,
                   onChanged: (v) {
                     setState(() => _hasWifi = v);
@@ -127,7 +129,7 @@ class _AmenitiesAndDietarySectionState extends State<AmenitiesAndDietarySection>
                 const Divider(height: 1, indent: 48),
                 _buildToggleRow(
                   icon: PhosphorIconsRegular.motorcycle,
-                  label: 'Delivery',
+                  label: t?.translate('delivery') ?? 'Delivery',
                   value: _hasDelivery,
                   onChanged: (v) {
                     setState(() => _hasDelivery = v);
@@ -140,7 +142,7 @@ class _AmenitiesAndDietarySectionState extends State<AmenitiesAndDietarySection>
         ),
         const SizedBox(height: 32),
         FormSection(
-          label: 'Dietary Tags',
+          label: t?.translate('dietary_tags') ?? 'Dietary Tags',
           child: Container(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -151,7 +153,7 @@ class _AmenitiesAndDietarySectionState extends State<AmenitiesAndDietarySection>
               children: [
                 _buildToggleRow(
                   icon: PhosphorIconsRegular.moon,
-                  label: 'Halal',
+                  label: t?.translate('halal') ?? 'Halal',
                   value: _isHalal,
                   onChanged: (v) {
                     setState(() => _isHalal = v);
@@ -161,7 +163,7 @@ class _AmenitiesAndDietarySectionState extends State<AmenitiesAndDietarySection>
                 const Divider(height: 1, indent: 48),
                 _buildToggleRow(
                   icon: PhosphorIconsRegular.leaf,
-                  label: 'Vegetarian',
+                  label: t?.translate('vegetarian') ?? 'Vegetarian',
                   value: _isVegetarian,
                   onChanged: (v) {
                     setState(() => _isVegetarian = v);

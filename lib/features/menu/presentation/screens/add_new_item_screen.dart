@@ -114,7 +114,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   List<MenuComboComponentModel> _comboComponents = [];
   List<MenuItemModel> _availableItems = [];
 
-
+  bool _isLocaleInitialized = false;
 
   @override
   void initState() {
@@ -174,6 +174,23 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     }
 
     _fetchAllData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isLocaleInitialized) {
+      final locale = Localizations.localeOf(context);
+      final langCode = locale.languageCode.toUpperCase();
+      if (langCode == 'MY' || langCode == 'MM') {
+        _selectedItemInfoLang = 'MM';
+      } else if (langCode == 'TH') {
+        _selectedItemInfoLang = 'TH';
+      } else {
+        _selectedItemInfoLang = 'EN';
+      }
+      _isLocaleInitialized = true;
+    }
   }
 
   Future<void> _fetchAllData() async {
@@ -522,7 +539,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                       const SizedBox(height: 32),
 
                       // Item Information Section
-                      _buildSectionTitle('ITEM INFORMATION'),
+                      _buildSectionTitle(t?.translate('item_information') ?? 'Item Information'),
                       const SizedBox(height: 16),
                       _buildLanguagePills(
                         selectedLang: _selectedItemInfoLang,
@@ -536,10 +553,10 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                       const SizedBox(height: 16),
                       _buildDropdownField<MasterDataModel>(
                         key: _masterCategoryKey,
-                        label: 'Master Category',
+                        label: t?.translate('master_category') ?? 'Master Category',
                         value: _selectedMasterCategory,
                         items: _masterCategories,
-                        hint: 'Search master categories...',
+                        hint: t?.translate('search_master_categories') ?? 'Search master categories...',
                         isRequired: true,
                         onChanged: (val) =>
                             setState(() => _selectedMasterCategory = val),
@@ -547,10 +564,10 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                       const SizedBox(height: 16),
                       _buildDropdownField<MenuCategoryModel>(
                         key: _categoryKey,
-                        label: 'Category',
+                        label: t?.translate('category') ?? 'Category',
                         value: _selectedCategory,
                         items: _categories,
-                        hint: 'Search categories...',
+                        hint: t?.translate('search_categories') ?? 'Search categories...',
                         isRequired: true,
                         onChanged: (val) =>
                             setState(() => _selectedCategory = val),
@@ -560,7 +577,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                       const SizedBox(height: 32),
 
                       // Categorization Section
-                      _buildSectionTitle('CATEGORIZATION'),
+                      _buildSectionTitle(t?.translate('categorization') ?? 'Categorization'),
                       const SizedBox(height: 16),
                       SizedBox(key: _mealTypesKey, child: _buildMealTypesSelection()),
                       const SizedBox(height: 24),
@@ -568,13 +585,13 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                       const SizedBox(height: 32),
 
                       // Pricing Section
-                      SizedBox(key: _priceKey, child: _buildSectionTitle('PRICING')),
+                      SizedBox(key: _priceKey, child: _buildSectionTitle(t?.translate('pricing') ?? 'Pricing')),
                       const SizedBox(height: 16),
                       Row(
                         children: [
                           Expanded(
                             child: _buildTextField(
-                              'Original Price',
+                              t?.translate('original_price') ?? 'Original Price',
                               _originalPriceController,
                               hint: '0.00',
                               keyboardType: TextInputType.number,
@@ -588,7 +605,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                           const SizedBox(width: 16),
                           Expanded(
                             child: _buildTextField(
-                              'Discount Price',
+                              t?.translate('discount_price') ?? 'Discount Price',
                               _priceController,
                               hint: '0.00',
                               keyboardType: TextInputType.number,
@@ -614,39 +631,39 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                       const SizedBox(height: 32),
 
                       // Properties Section
-                      _buildSectionTitle('PROPERTIES'),
+                      _buildSectionTitle(t?.translate('properties') ?? 'Properties'),
                       const SizedBox(height: 16),
                       _buildPropertiesSection(),
                       const SizedBox(height: 32),
 
                       // Variants Section
-                      _buildSectionTitle('VARIANTS'),
+                      _buildSectionTitle(t?.translate('variants') ?? 'Variants'),
                       const SizedBox(height: 16),
                       ..._variants.asMap().entries.map(
                         (entry) => _buildVariantCard(entry.value, entry.key),
                       ),
-                      _buildOutlinedButton('+ Add Variant', _addNewVariant),
+                      _buildOutlinedButton(t?.translate('add_variant') ?? '+ Add Variant', _addNewVariant),
                       const SizedBox(height: 32),
 
                       // Add On Section
-                      _buildSectionTitle('ADD-ONS'),
+                      _buildSectionTitle(t?.translate('addons') ?? 'Add-ons'),
                       const SizedBox(height: 16),
                       ..._optionGroups.asMap().entries.map(
                         (entry) =>
                             _buildOptionGroupCard(entry.value, entry.key),
                       ),
-                      _buildOutlinedButton('+ Add Add-on', _addNewOptionGroup),
+                      _buildOutlinedButton(t?.translate('add_addon') ?? '+ Add Add-on', _addNewOptionGroup),
 
                       if (_isCombo) ...[
                         const SizedBox(height: 32),
-                        _buildSectionTitle('COMBO COMPONENTS'),
+                        _buildSectionTitle(t?.translate('combo_components') ?? 'Combo Components'),
                         const SizedBox(height: 16),
                         ..._comboComponents.asMap().entries.map(
                           (entry) =>
                               _buildComboComponentCard(entry.value, entry.key),
                         ),
                         _buildOutlinedButton(
-                          '+ Add Component',
+                          t?.translate('add_component') ?? '+ Add Component',
                           _addNewComboComponent,
                         ),
                       ],
@@ -681,7 +698,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                               color: Color(0xFFEF4444),
                             ),
                             label: Text(
-                              t?.translate('delete') ?? 'Delete menu item',
+                              t?.translate('delete_menu_item') ?? 'Delete menu item',
                               style: GoogleFonts.poppins(
                                 color: const Color(0xFFEF4444),
                                 fontSize: 14,
@@ -878,6 +895,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   */
 
   Widget _buildPropertiesSection() {
+    final t = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
@@ -887,37 +905,37 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       child: Column(
         children: [
           _buildPropertySwitch(
-            'Popular',
+            t?.translate('property_popular') ?? 'Popular',
             _isPopular,
             (v) => setState(() => _isPopular = v),
           ),
           const Divider(height: 1, color: Color(0xFFE2E8F0)),
           _buildPropertySwitch(
-            'Recommended',
+            t?.translate('property_recommended') ?? 'Recommended',
             _isRecommended,
             (v) => setState(() => _isRecommended = v),
           ),
           const Divider(height: 1, color: Color(0xFFE2E8F0)),
           _buildPropertySwitch(
-            'Combo Set',
+            t?.translate('property_combo_set') ?? 'Combo Set',
             _isCombo,
             (v) => setState(() => _isCombo = v),
           ),
           const Divider(height: 1, color: Color(0xFFE2E8F0)),
           _buildPropertySwitch(
-            'Vegetarian',
+            t?.translate('property_vegetarian') ?? 'Vegetarian',
             _isVegetarian,
             (v) => setState(() => _isVegetarian = v),
           ),
           const Divider(height: 1, color: Color(0xFFE2E8F0)),
           _buildPropertySwitch(
-            'Spicy',
+            t?.translate('property_spicy') ?? 'Spicy',
             _isSpicy,
             (v) => setState(() => _isSpicy = v),
           ),
           const Divider(height: 1, color: Color(0xFFE2E8F0)),
           _buildPropertySwitch(
-            'Hot Deal',
+            t?.translate('property_hot_deal') ?? 'Hot Deal',
             _isHotDeal,
             (v) => setState(() => _isHotDeal = v),
           ),
@@ -967,20 +985,22 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       descCtrl = _descriptionController;
     }
 
+    final t = AppLocalizations.of(context);
+
     return Column(
       children: [
         _buildTextField(
-          'Item Name ($_selectedItemInfoLang)',
+          '${t?.translate('item_name') ?? 'Item Name'} ($_selectedItemInfoLang)',
           nameCtrl,
-          hint: 'Enter item name',
+          hint: t?.translate('enter_item_name') ?? 'Enter item name',
           isRequired: _selectedItemInfoLang == 'EN',
           maxLength: 100,
         ),
         const SizedBox(height: 16),
         _buildTextField(
-          'Description ($_selectedItemInfoLang)',
+          '${t?.translate('description') ?? 'Description'} ($_selectedItemInfoLang)',
           descCtrl,
-          hint: 'Enter description',
+          hint: t?.translate('enter_description') ?? 'Enter description',
           isMultiline: true,
           maxLength: 500,
         ),
@@ -1029,7 +1049,8 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   }
 
   Widget _buildVariantCard(MenuItemVariantModel variant, int index) {
-    final lang = _variantLangs[index] ?? 'EN';
+    final t = AppLocalizations.of(context);
+    final lang = _variantLangs[index] ?? _selectedItemInfoLang;
 
     final nameText = lang == 'MM'
         ? variant.nameMm
@@ -1068,7 +1089,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Variant #${index + 1}',
+                  '${t?.translate('variant') ?? 'Variant'} #${index + 1}',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -1098,7 +1119,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
-                  'Variant Name ($lang)',
+                  '${t?.translate('variant_name') ?? 'Variant Name'} ($lang)',
                   nameCtrl,
                   maxLength: 100,
                   onChanged: (v) {
@@ -1116,7 +1137,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
-                  'Price',
+                  t?.translate('price') ?? 'Price',
                   priceCtrl,
                   keyboardType: TextInputType.number,
                   validator: _priceValidator,
@@ -1138,7 +1159,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                 Row(
                   children: [
                     Text(
-                      'Available',
+                      t?.translate('available') ?? 'Available',
                       style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -1177,6 +1198,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     MenuComboComponentModel component,
     int index,
   ) {
+    final t = AppLocalizations.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -1191,7 +1213,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Component #${index + 1}',
+                '${t?.translate('component') ?? 'Component'} #${index + 1}',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -1208,7 +1230,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             ],
           ),
           _buildTextField(
-            'Quantity',
+            t?.translate('quantity') ?? 'Quantity',
             () {
               final qtyText = component.quantity.toString();
               final qtyCtrl = _comboQtyCtrls.putIfAbsent(
@@ -1234,7 +1256,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           ),
           const SizedBox(height: 16),
           _buildDropdownField<MenuItemModel>(
-            label: 'Included Item',
+            label: t?.translate('included_item') ?? 'Included Item',
             value: () {
               try {
                 return _availableItems.firstWhere(
@@ -1245,7 +1267,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               }
             }(),
             items: _availableItems,
-            hint: 'Select an item...',
+            hint: t?.translate('select_item') ?? 'Select an item...',
             isRequired: true,
             onChanged: (val) {
               setState(() {
@@ -1265,7 +1287,8 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   }
 
   Widget _buildOptionGroupCard(MenuItemOptionGroupModel group, int index) {
-    final lang = _addonLangs[index] ?? 'EN';
+    final t = AppLocalizations.of(context);
+    final lang = _addonLangs[index] ?? _selectedItemInfoLang;
 
     final groupNameText = lang == 'MM'
         ? group.nameMm
@@ -1294,7 +1317,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Add-on: ${group.displayName.isEmpty ? "New Add-on" : group.displayName}',
+                  '${t?.translate('addons') ?? 'Add-on'}: ${group.displayName.isEmpty ? (t?.translate('new_addon') ?? "New Add-on") : group.displayName}',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -1323,7 +1346,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
-                  'Add-on Name ($lang)',
+                  '${t?.translate('addon_name') ?? 'Add-on Name'} ($lang)',
                   groupNameCtrl,
                   maxLength: 100,
                   onChanged: (v) {
@@ -1360,7 +1383,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Available',
+                            t?.translate('available') ?? 'Available',
                             style: GoogleFonts.poppins(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -1414,7 +1437,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                     children: [
                       if (group.options.length > 1)
                         _buildTextField(
-                          'Add-on Name ($lang)',
+                          '${t?.translate('addon_name') ?? 'Add-on Name'} ($lang)',
                           optNameCtrl,
                           maxLength: 100,
                           onChanged: (v) {
@@ -1435,7 +1458,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                         ),
                       const SizedBox(height: 16),
                       _buildTextField(
-                        'Price',
+                        t?.translate('price') ?? 'Price',
                         optPriceCtrl,
                         keyboardType: TextInputType.number,
                         validator: _priceValidator,

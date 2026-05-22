@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/core/data/services/image_upload_service.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/core/presentation/widgets/fullscreen_image_viewer.dart';
@@ -194,6 +195,28 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     }
   }
 
+  bool _didInitLocale = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_didInitLocale) {
+      final locale = Localizations.localeOf(context).languageCode;
+      String userLang = 'EN';
+      if (locale == 'my') {
+        userLang = 'MM';
+      } else if (locale == 'th') {
+        userLang = 'TH';
+      }
+      setState(() {
+        _nameLang = userLang;
+        _descLang = userLang;
+        _addressLang = userLang;
+      });
+      _didInitLocale = true;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -377,6 +400,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
 
   Future<bool> _onWillPop() async {
     if (!_hasChanges) return true;
+    final t = AppLocalizations.of(context);
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -387,7 +411,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             Image.asset('assets/images/app_logo.png', width: 24, height: 24),
             const SizedBox(width: 8),
             Text(
-              'Discard changes?',
+              t?.translate('discard_changes_title') ?? 'Discard changes?',
               style: GoogleFonts.poppins(
                 fontWeight: FontWeight.w700,
                 fontSize: 16,
@@ -396,7 +420,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
           ],
         ),
         content: Text(
-          'You have unsaved changes. Do you want to discard them?',
+          t?.translate('discard_changes_content') ?? 'You have unsaved changes. Do you want to discard them?',
           style: GoogleFonts.poppins(
             fontSize: 14,
             color: const Color(0xFF475569),
@@ -406,7 +430,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: Text(
-              'Continue Editing',
+              t?.translate('continue_editing') ?? 'Continue Editing',
               style: GoogleFonts.poppins(
                 color: const Color(0xFF475569),
                 fontWeight: FontWeight.w500,
@@ -416,7 +440,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
-              'Discard',
+              t?.translate('discard') ?? 'Discard',
               style: GoogleFonts.poppins(
                 color: const Color(0xFFED3973),
                 fontWeight: FontWeight.w600,
@@ -446,24 +470,25 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   }
 
   bool _validate() {
+    final t = AppLocalizations.of(context);
     if (_nameEnCtrl.text.trim().isEmpty) {
       _scrollToKey(_nameKey);
-      _showError('Shop Name (EN) is required');
+      _showError(t?.translate('shop_name_en_required') ?? 'Shop Name (EN) is required');
       return false;
     }
     if (_selectedCategory == null) {
       _scrollToKey(_categoryKey);
-      _showError('Category is required');
+      _showError(t?.translate('category_required') ?? 'Category is required');
       return false;
     }
     if (_selectedSubcategory == null) {
       _scrollToKey(_subCategoryKey);
-      _showError('Sub-category is required');
+      _showError(t?.translate('subcategory_required') ?? 'Sub-category is required');
       return false;
     }
     if (_selectedCuisineTypes.isEmpty) {
       _scrollToKey(_cuisineTypeKey);
-      _showError('At least one Cuisine Type is required');
+      _showError(t?.translate('cuisine_type_required') ?? 'At least one Cuisine Type is required');
       return false;
     }
     final validPhones = _phoneControllers
@@ -471,19 +496,19 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         .toList();
     if (validPhones.isEmpty) {
       _scrollToKey(_phoneKey);
-      _showError('At least one Phone Number is required');
+      _showError(t?.translate('phone_number_required') ?? 'At least one Phone Number is required');
       return false;
     }
     if (_addressEnCtrl.text.trim().isEmpty) {
       // Switch to EN tab if not already on it so the user sees the empty field
       if (_addressLang != 'EN') setState(() => _addressLang = 'EN');
       _scrollToKey(_addressKey);
-      _showError('Street Address (EN) is required');
+      _showError(t?.translate('street_address_en_required') ?? 'Street Address (EN) is required');
       return false;
     }
     final minAmount = double.tryParse(_minAmountCtrl.text.trim());
     if (minAmount != null && minAmount > 999999.9) {
-      _showError('Minimum Order Amount is too large');
+      _showError(t?.translate('min_order_amount_too_large') ?? 'Minimum Order Amount is too large');
       return false;
     }
     return true;
@@ -579,13 +604,15 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         _pickedCover = null;
         _pickedLogo = null;
       });
-      AppDialog.showToast(context, 'Profile saved successfully!');
+      final t = AppLocalizations.of(context);
+      AppDialog.showToast(context, t?.translate('profile_saved_success') ?? 'Profile saved successfully!');
       Navigator.pop(context, true);
     } else {
       setState(() => _isSaving = false);
+      final t = AppLocalizations.of(context);
       AppDialog.showToast(
         context,
-        'Failed to save profile. Please try again.',
+        t?.translate('profile_saved_failed') ?? 'Failed to save profile. Please try again.',
         isError: true,
       );
     }
@@ -603,6 +630,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       safeItems.add(value);
     }
 
+    final t = AppLocalizations.of(context);
     if (safeItems.isEmpty) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -627,7 +655,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 value: null,
                 enabled: false,
                 child: Text(
-                  'No data found',
+                  t?.translate('no_data_found') ?? 'No data found',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     color: const Color(0xFF94A3B8),
@@ -645,7 +673,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       items: safeItems,
       value: value,
       hintText: hint,
-      searchHintText: 'Search...',
+      searchHintText: t?.translate('search_hint') ?? 'Search...',
       itemLabelBuilder: (item) => item.displayName,
       onChanged: onChanged,
     );
@@ -655,12 +683,13 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     if (_isLoading) {
       return Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
           title: Text(
-            'Edit Profile',
+            t?.translate('edit_profile') ?? 'Edit Profile',
             style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
           ),
           backgroundColor: Colors.white,
@@ -726,7 +755,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
 
             FormSection(
               key: _nameKey,
-              label: 'Shop Name',
+              label: t?.translate('shop_name_label') ?? 'Shop Name',
               child: LanguageTextField(
                 selectedLang: _nameLang,
                 onLangChanged: (l) => setState(() => _nameLang = l),
@@ -735,7 +764,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                     : _nameLang == 'MM'
                     ? _nameMmCtrl
                     : _nameThCtrl,
-                hint: 'Enter shop name',
+                hint: t?.translate('enter_shop_name_hint') ?? 'Enter shop name',
                 enabled: true,
                 maxLength: 100,
                 onChanged: _markChanged,
@@ -744,13 +773,13 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             const SizedBox(height: 32),
             FormSection(
               key: _categoryKey,
-              label: 'Category',
+              label: t?.translate('category') ?? 'Category',
               required: true,
               child: _buildDropdown(
-                'Select Category',
+                t?.translate('select_category') ?? 'Select Category',
                 _selectedCategory,
                 _categories,
-                'Choose category',
+                t?.translate('choose_category') ?? 'Choose category',
                 (v) => setState(() {
                   _selectedCategory = v;
                   _markChanged();
@@ -760,13 +789,13 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             const SizedBox(height: 32),
             FormSection(
               key: _subCategoryKey,
-              label: 'Sub-category',
+              label: t?.translate('subcategory') ?? 'Sub-category',
               required: true,
               child: _buildDropdown(
-                'Select Sub-category',
+                t?.translate('select_subcategory') ?? 'Select Sub-category',
                 _selectedSubcategory,
                 _subcategories,
-                'Choose sub-category',
+                t?.translate('choose_subcategory') ?? 'Choose sub-category',
                 (v) => setState(() {
                   _selectedSubcategory = v;
                   _markChanged();
@@ -786,7 +815,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             const SizedBox(height: 32),
 
             FormSection(
-              label: 'Description',
+              label: t?.translate('description') ?? 'Description',
               child: LanguageTextField(
                 selectedLang: _descLang,
                 onLangChanged: (l) => setState(() => _descLang = l),
@@ -795,7 +824,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                     : _descLang == 'MM'
                     ? _descMmCtrl
                     : _descThCtrl,
-                hint: 'Enter description',
+                hint: t?.translate('enter_description_hint') ?? 'Enter description',
                 maxLines: 3,
                 maxLength: 500,
                 onChanged: _markChanged,
@@ -895,7 +924,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 child: PrimaryGradientButton(
                   onPressed: _save,
                   isLoading: _isSaving,
-                  text: 'Save',
+                  text: t?.translate('save') ?? 'Save',
                   height: 64,
                   borderRadius: 18,
                 ),
@@ -943,13 +972,14 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   }
 
   Future<void> _pickCover() async {
+    final t = AppLocalizations.of(context);
     final coverUrl = _currentProfile?.coverUrl;
     final hasImage =
         _pickedCover != null || (coverUrl != null && coverUrl.isNotEmpty);
 
     if (hasImage) {
       _showImageActionSheet(
-        title: 'Cover Photo',
+        title: t?.translate('cover_photo_label') ?? 'Cover Photo',
         imageUrl: _pickedCover == null ? coverUrl : null,
         imagePath: _pickedCover?.path,
         onChange: _openCoverPicker,
@@ -960,6 +990,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   }
 
   Future<void> _openCoverPicker() async {
+    final t = AppLocalizations.of(context);
     final result = await ImageUploadService().pickFromGallery();
     if (result.permanentlyDenied && mounted) {
       _showSettingsDialog();
@@ -969,7 +1000,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       if (!mounted) return;
       AppDialog.showToast(
         context,
-        'Image size must be less than 1MB',
+        t?.translate('image_size_limit_msg') ?? 'Image size must be less than 1MB',
         isError: true,
       );
       return;
@@ -983,13 +1014,14 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   }
 
   Future<void> _pickLogo() async {
+    final t = AppLocalizations.of(context);
     final logoUrl = _currentProfile?.logoUrl;
     final hasImage =
         _pickedLogo != null || (logoUrl != null && logoUrl.isNotEmpty);
 
     if (hasImage) {
       _showImageActionSheet(
-        title: 'Profile Picture',
+        title: t?.translate('profile_picture_label') ?? 'Profile Picture',
         imageUrl: _pickedLogo == null ? logoUrl : null,
         imagePath: _pickedLogo?.path,
         onChange: _openLogoPicker,
@@ -1000,6 +1032,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   }
 
   Future<void> _openLogoPicker() async {
+    final t = AppLocalizations.of(context);
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1011,7 +1044,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             if (!mounted) return;
             AppDialog.showToast(
               context,
-              'Image size must be less than 1MB',
+              t?.translate('image_size_limit_msg') ?? 'Image size must be less than 1MB',
               isError: true,
             );
             return;
@@ -1030,7 +1063,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             if (!mounted) return;
             AppDialog.showToast(
               context,
-              'Image size must be less than 1MB',
+              t?.translate('image_size_limit_msg') ?? 'Image size must be less than 1MB',
               isError: true,
             );
             return;
@@ -1047,16 +1080,17 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   }
 
   void _showSettingsDialog() {
+    final t = AppLocalizations.of(context);
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Permission Required',
+          t?.translate('permission_required') ?? 'Permission Required',
           style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 16),
         ),
         content: Text(
-          'Photo library access is required. Please enable it in Settings.',
+          t?.translate('photo_library_permission_msg') ?? 'Photo library access is required. Please enable it in Settings.',
           style: GoogleFonts.poppins(
             fontSize: 14,
             color: const Color(0xFF475569),
@@ -1066,14 +1100,14 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             child: Text(
-              'Cancel',
+              t?.translate('cancel') ?? 'Cancel',
               style: GoogleFonts.poppins(color: const Color(0xFF475569)),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             child: Text(
-              'Open Settings',
+              t?.translate('open_settings') ?? 'Open Settings',
               style: GoogleFonts.poppins(
                 color: const Color(0xFFED3973),
                 fontWeight: FontWeight.w600,

@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../data/models/review_model.dart';
@@ -31,13 +32,16 @@ class _ReviewCardState extends State<ReviewCard>
   late Animation<double> _replyFadeAnim;
   late Animation<Offset> _replySlideAnim;
 
-  static const List<String> _quickReplies = [
-    'Thank you for the review! 🙏',
-    'Glad you enjoyed it! 😊',
-    'Hope to see you again! 👋',
-    "We'll work to improve! 💪",
-    'Your feedback means a lot! ❤️',
-  ];
+  List<String> _getLocalizedQuickReplies(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    return [
+      t?.translate('quick_reply_1') ?? 'Thank you for the review! 🙏',
+      t?.translate('quick_reply_2') ?? 'Glad you enjoyed it! 😊',
+      t?.translate('quick_reply_3') ?? 'Hope to see you again! 👋',
+      t?.translate('quick_reply_4') ?? "We'll work to improve! 💪",
+      t?.translate('quick_reply_5') ?? 'Your feedback means a lot! ❤️',
+    ];
+  }
 
   @override
   void initState() {
@@ -151,22 +155,22 @@ class _ReviewCardState extends State<ReviewCard>
         children: [
           _buildHeader(),
           const SizedBox(height: 12),
-          _buildRatingAndDate(),
+          _buildRatingAndDate(context),
           const SizedBox(height: 12),
           _buildComment(),
           // Reply section
           if (_hasReply && !_isReplyOpen) ...[
             const SizedBox(height: 12),
-            _buildReplyDisplay(),
+            _buildReplyDisplay(context),
           ] else if (!_hasReply) ...[
             const SizedBox(height: 12),
-            if (!_isReplyOpen) _buildReplyButton(),
+            if (!_isReplyOpen) _buildReplyButton(context),
             if (_isReplyOpen)
               FadeTransition(
                 opacity: _replyFadeAnim,
                 child: SlideTransition(
                   position: _replySlideAnim,
-                  child: _buildReplyInput(),
+                  child: _buildReplyInput(context),
                 ),
               ),
           ],
@@ -219,7 +223,7 @@ class _ReviewCardState extends State<ReviewCard>
     );
   }
 
-  Widget _buildRatingAndDate() {
+  Widget _buildRatingAndDate(BuildContext context) {
     return Row(
       children: [
         Row(
@@ -235,7 +239,7 @@ class _ReviewCardState extends State<ReviewCard>
         ),
         const SizedBox(width: 8),
         Text(
-          _getTimeAgo(widget.review.createdAt),
+          _getTimeAgo(context, widget.review.createdAt),
           style: GoogleFonts.poppins(
             fontSize: 14,
             color: const Color(0xFF64748B),
@@ -263,7 +267,7 @@ class _ReviewCardState extends State<ReviewCard>
         tp.layout(maxWidth: constraints.maxWidth);
 
         if (tp.didExceedMaxLines && !_isExpanded) {
-          return _buildTruncatedComment(textStyle);
+          return _buildTruncatedComment(context, textStyle);
         } else {
           return Text(widget.review.comment, style: textStyle);
         }
@@ -271,8 +275,9 @@ class _ReviewCardState extends State<ReviewCard>
     );
   }
 
-  Widget _buildTruncatedComment(TextStyle textStyle) {
-    const seeMoreText = ' ..... see more';
+  Widget _buildTruncatedComment(BuildContext context, TextStyle textStyle) {
+    final t = AppLocalizations.of(context);
+    final seeMoreText = t?.translate('see_more') ?? ' ..... see more';
     final seeMoreStyle = textStyle.copyWith(
       fontWeight: FontWeight.w600,
       color: const Color(0xFF64748B),
@@ -317,7 +322,8 @@ class _ReviewCardState extends State<ReviewCard>
 
   // ─── Reply Button ────────────────────────────────────────────────────────────
 
-  Widget _buildReplyButton() {
+  Widget _buildReplyButton(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return GestureDetector(
       onTap: _openReply,
       child: Container(
@@ -336,7 +342,7 @@ class _ReviewCardState extends State<ReviewCard>
             ),
             const SizedBox(width: 6),
             Text(
-              'Reply',
+              t?.translate('reply') ?? 'Reply',
               style: GoogleFonts.poppins(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -351,7 +357,10 @@ class _ReviewCardState extends State<ReviewCard>
 
   // ─── Reply Input Panel ───────────────────────────────────────────────────────
 
-  Widget _buildReplyInput() {
+  // ─── Reply Input Panel ───────────────────────────────────────────────────────
+
+  Widget _buildReplyInput(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -364,7 +373,7 @@ class _ReviewCardState extends State<ReviewCard>
         children: [
           // Quick reply chips label
           Text(
-            'Quick Replies',
+            t?.translate('quick_replies') ?? 'Quick Replies',
             style: GoogleFonts.poppins(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -376,7 +385,7 @@ class _ReviewCardState extends State<ReviewCard>
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: _quickReplies.map((label) {
+            children: _getLocalizedQuickReplies(context).map((label) {
               final isSelected = _selectedQuickReply == label;
               return GestureDetector(
                 onTap: () => _selectQuickReply(label),
@@ -400,7 +409,7 @@ class _ReviewCardState extends State<ReviewCard>
                     children: [
                       if (isSelected)
                         const Padding(
-                          padding: EdgeInsets.only(right: 5),
+                           padding: EdgeInsets.only(right: 5),
                           child: Icon(
                             Icons.check,
                             color: Colors.white,
@@ -444,7 +453,7 @@ class _ReviewCardState extends State<ReviewCard>
               }
             },
             decoration: InputDecoration(
-              hintText: 'Write your reply...',
+              hintText: t?.translate('write_reply_hint') ?? 'Write your reply...',
               hintStyle: GoogleFonts.poppins(
                 fontSize: 14,
                 color: const Color(0xFFB0BEC5),
@@ -487,7 +496,7 @@ class _ReviewCardState extends State<ReviewCard>
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    'Cancel',
+                    t?.translate('cancel') ?? 'Cancel',
                     style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -525,7 +534,7 @@ class _ReviewCardState extends State<ReviewCard>
                                 color: Colors.white, size: 14),
                             const SizedBox(width: 6),
                             Text(
-                              'Send',
+                              t?.translate('send') ?? 'Send',
                               style: GoogleFonts.poppins(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
@@ -545,7 +554,8 @@ class _ReviewCardState extends State<ReviewCard>
 
   // ─── Reply Display ───────────────────────────────────────────────────────────
 
-  Widget _buildReplyDisplay() {
+  Widget _buildReplyDisplay(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -573,7 +583,7 @@ class _ReviewCardState extends State<ReviewCard>
                 shaderCallback: (bounds) =>
                     AppColors.primaryGradient.createShader(bounds),
                 child: Text(
-                  'Your Response',
+                  t?.translate('your_response') ?? 'Your Response',
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -600,19 +610,29 @@ class _ReviewCardState extends State<ReviewCard>
     );
   }
 
-  String _getTimeAgo(DateTime date) {
+  String _getTimeAgo(BuildContext context, DateTime date) {
+    final t = AppLocalizations.of(context);
     final now = DateTime.now();
     final difference = now.difference(date);
 
     if (difference.inDays > 30) {
       final months = (difference.inDays / 30).floor();
-      return '$months month${months > 1 ? 's' : ''} ago';
+      if (months == 1) {
+        return t?.translate('time_month_ago') ?? '1 month ago';
+      }
+      return t?.translate('time_months_ago')?.replaceAll('{count}', '$months') ?? '$months months ago';
     } else if (difference.inDays > 0) {
-      return '${difference.inDays} day${difference.inDays > 1 ? 's' : ''} ago';
+      if (difference.inDays == 1) {
+        return t?.translate('time_day_ago') ?? '1 day ago';
+      }
+      return t?.translate('time_days_ago')?.replaceAll('{count}', '${difference.inDays}') ?? '${difference.inDays} days ago';
     } else if (difference.inHours > 0) {
-      return '${difference.inHours} hour${difference.inHours > 1 ? 's' : ''} ago';
+      if (difference.inHours == 1) {
+        return t?.translate('time_hour_ago') ?? '1 hour ago';
+      }
+      return t?.translate('time_hours_ago')?.replaceAll('{count}', '${difference.inHours}') ?? '${difference.inHours} hours ago';
     } else {
-      return 'Just now';
+      return t?.translate('time_just_now') ?? 'Just now';
     }
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 import 'form_section.dart';
 import 'price_option.dart';
 
@@ -27,8 +28,9 @@ class _PriceRangeSectionState extends State<PriceRangeSection> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return FormSection(
-      label: 'Price Range',
+      label: t?.translate('price_range') ?? 'Price Range',
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -38,7 +40,7 @@ class _PriceRangeSectionState extends State<PriceRangeSection> {
         child: Row(
           children: [
             PriceOption(
-              label: '฿ Budget',
+              label: t?.translate('budget') ?? '฿ Budget',
               index: 0,
               selected: _priceRange == 0,
               onTap: () {
@@ -47,7 +49,7 @@ class _PriceRangeSectionState extends State<PriceRangeSection> {
               },
             ),
             PriceOption(
-              label: '฿฿ Mid-range',
+              label: t?.translate('mid_range') ?? '฿฿ Mid-range',
               index: 1,
               selected: _priceRange == 1,
               onTap: () {
@@ -56,7 +58,7 @@ class _PriceRangeSectionState extends State<PriceRangeSection> {
               },
             ),
             PriceOption(
-              label: '฿฿฿ Premium',
+              label: t?.translate('premium') ?? '฿฿฿ Premium',
               index: 2,
               selected: _priceRange == 2,
               onTap: () {

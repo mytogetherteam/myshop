@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_shop/core/data/models/master_data_model.dart';
 import 'package:my_shop/core/presentation/widgets/custom_search_dropdown.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 import 'form_section.dart';
 import 'language_text_field.dart';
 
@@ -35,12 +36,14 @@ class ShopLocationSection extends StatelessWidget {
   });
 
   Widget _buildDropdown(
+    BuildContext context,
     String label,
     MasterDataModel? value,
     List<MasterDataModel> items,
     String hint,
     ValueChanged<MasterDataModel?> onChanged,
   ) {
+    final t = AppLocalizations.of(context);
     final List<MasterDataModel> safeItems = List.from(items);
     if (value != null && !safeItems.contains(value)) {
       safeItems.add(value);
@@ -67,7 +70,7 @@ class ShopLocationSection extends StatelessWidget {
                 value: null,
                 enabled: false,
                 child: Text(
-                  'No data found',
+                  t?.translate('no_data_found') ?? 'No data found',
                   style: const TextStyle(
                     fontSize: 14,
                     color: Color(0xFF94A3B8),
@@ -85,7 +88,7 @@ class ShopLocationSection extends StatelessWidget {
       items: safeItems,
       value: value,
       hintText: hint,
-      searchHintText: 'Search...',
+      searchHintText: t?.translate('search_hint') ?? 'Search...',
       itemLabelBuilder: (item) => item.displayName,
       onChanged: onChanged,
     );
@@ -93,11 +96,12 @@ class ShopLocationSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         FormSection(
-          label: 'Street Address',
+          label: t?.translate('street_address') ?? 'Street Address',
           required: true,
           child: LanguageTextField(
             selectedLang: addressLang,
@@ -107,7 +111,7 @@ class ShopLocationSection extends StatelessWidget {
                 : addressLang == 'MM'
                 ? addressMmCtrl
                 : addressThCtrl,
-            hint: 'Enter street address',
+            hint: t?.translate('enter_street_address') ?? 'Enter street address',
             requiredLang: 'EN',
             maxLength: 255,
             onChanged: onMarkChanged,
@@ -120,13 +124,14 @@ class ShopLocationSection extends StatelessWidget {
             children: [
               Expanded(
                 child: FormSection(
-                  label: 'City',
+                  label: t?.translate('city') ?? 'City',
                   padding: EdgeInsets.zero,
                   child: _buildDropdown(
-                    'Select City',
+                    context,
+                    t?.translate('select_city') ?? 'Select City',
                     selectedCity,
                     cities,
-                    'Choose city',
+                    t?.translate('choose_city') ?? 'Choose city',
                     onCityChanged,
                   ),
                 ),
@@ -134,13 +139,14 @@ class ShopLocationSection extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: FormSection(
-                  label: 'District',
+                  label: t?.translate('district') ?? 'District',
                   padding: EdgeInsets.zero,
                   child: _buildDropdown(
-                    'Select District',
+                    context,
+                    t?.translate('select_district') ?? 'Select District',
                     selectedDistrict,
                     districts,
-                    'Choose district',
+                    t?.translate('choose_district') ?? 'Choose district',
                     onDistrictChanged,
                   ),
                 ),
