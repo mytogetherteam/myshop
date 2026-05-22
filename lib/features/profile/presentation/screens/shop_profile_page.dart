@@ -489,6 +489,20 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                   ],
                 ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoSection() {
+    final t = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -723,7 +737,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        isOpen ? (t?.translate('open')?.toUpperCase() ?? 'OPEN') : (t?.translate('closed')?.toUpperCase() ?? 'CLOSED'),
+        isOpen ? (t?.translate('open').toUpperCase() ?? 'OPEN') : (t?.translate('closed').toUpperCase() ?? 'CLOSED'),
         style: GoogleFonts.poppins(
           fontSize: 12,
           fontWeight: FontWeight.w700,

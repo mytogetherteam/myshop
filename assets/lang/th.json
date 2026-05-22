@@ -437,5 +437,21 @@
   "tap_to_add_cover_photo": "แตะเพื่อเพิ่มภาพหน้าปก",
   "chat": "แชท",
   "type_a_message": "พิมพ์ข้อความ...",
-  "no_chats_yet": "ยังไม่มีแชท"
+  "no_chats_yet": "ยังไม่มีแชท",
+  "rider_management": "จัดการไรเดอร์",
+  "add_rider": "เพิ่มไรเดอร์",
+  "edit_rider": "แก้ไขไรเดอร์",
+  "delete_rider": "ลบไรเดอร์",
+  "delete_rider_confirm": "คุณแน่ใจหรือไม่ว่าต้องการลบไรเดอร์นี้?",
+  "rider_deleted": "ลบไรเดอร์เรียบร้อยแล้ว",
+  "failed_delete_rider": "ลบไรเดอร์ไม่สำเร็จ",
+  "failed_save_rider": "บันทึกไรเดอร์ไม่สำเร็จ",
+  "no_riders_found": "ไม่พบไรเดอร์",
+  "add_rider_desc": "เพิ่มไรเดอร์เพื่อจัดการการจัดส่ง",
+  "name": "ชื่อ",
+  "enter_rider_name": "กรอกชื่อไรเดอร์",
+  "phone_number": "เบอร์โทรศัพท์",
+  "enter_phone_number": "กรอกเบอร์โทรศัพท์",
+  "license_plate": "ทะเบียนรถ",
+  "enter_license_plate": "กรอกทะเบียนรถ"
 }

@@ -176,7 +176,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
     _markChanged();
     final t = AppLocalizations.of(context);
     final dayName = t?.translate(_days[sourceIndex].toLowerCase()) ?? _days[sourceIndex];
-    final msg = t?.translate('hours_copied_toast')?.replaceAll('{day}', dayName) ?? "$dayName's hours copied to all days";
+    final msg = t?.translate('hours_copied_toast').replaceAll('{day}', dayName) ?? "$dayName's hours copied to all days";
     AppDialog.showToast(context, msg);
   }
 
