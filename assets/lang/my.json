@@ -434,5 +434,8 @@
   "district": "ခရိုင်",
   "select_district": "ခရိုင် ရွေးချယ်ပါ",
   "choose_district": "ခရိုင် ရွေးချယ်ပါ",
-  "tap_to_add_cover_photo": "ကာဗာဓာတ်ပုံ ထည့်ရန် နှိပ်ပါ"
+  "tap_to_add_cover_photo": "ကာဗာဓာတ်ပုံ ထည့်ရန် နှိပ်ပါ",
+  "chat": "ချတ်",
+  "type_a_message": "မက်ဆေ့ခ်ျ ရိုက်ထည့်ပါ...",
+  "no_chats_yet": "ချတ် မရှိသေးပါ"
 }

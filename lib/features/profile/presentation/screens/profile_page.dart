@@ -18,6 +18,7 @@ import 'reviews_page.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'accepted_payment_page.dart';
 import 'help_support_page.dart';
+import 'feedback_page.dart';
 
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
@@ -454,6 +455,14 @@ class ProfilePageState extends State<ProfilePage>
           icon: PhosphorIconsRegular.headset,
           title: t?.translate('help_support') ?? 'Help & Support',
           onTap: _handleContactSupport,
+        ),
+        _buildMenuOption(
+          icon: PhosphorIconsRegular.chatCircleText,
+          title: t?.translate('feedback') ?? 'Feedback',
+          onTap: () => Navigator.push(
+            context,
+            CupertinoPageRoute(builder: (_) => const FeedbackPage()),
+          ),
         ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.shield,

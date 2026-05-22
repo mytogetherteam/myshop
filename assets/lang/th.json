@@ -434,5 +434,8 @@
   "district": "เขต / อำเภอ",
   "select_district": "เลือกเขต / อำเภอ",
   "choose_district": "เลือกเขต / อำเภอ",
-  "tap_to_add_cover_photo": "แตะเพื่อเพิ่มภาพหน้าปก"
+  "tap_to_add_cover_photo": "แตะเพื่อเพิ่มภาพหน้าปก",
+  "chat": "แชท",
+  "type_a_message": "พิมพ์ข้อความ...",
+  "no_chats_yet": "ยังไม่มีแชท"
 }
