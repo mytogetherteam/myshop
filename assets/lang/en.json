@@ -437,5 +437,12 @@
   "tap_to_add_cover_photo": "Tap to add cover photo",
   "chat": "Chat",
   "type_a_message": "Type a message...",
-  "no_chats_yet": "No chats yet"
+  "no_chats_yet": "No chats yet",
+  "feedback": "Feedback",
+  "no_feedback_yet": "No feedback yet",
+  "submit_feedback": "Submit Feedback",
+  "feedback_submitted": "Feedback submitted successfully",
+  "failed_submit_feedback": "Failed to submit feedback",
+  "feedback_hint": "Tell us what you think...",
+  "submit": "Submit"
 }

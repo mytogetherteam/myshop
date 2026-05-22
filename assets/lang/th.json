@@ -437,5 +437,12 @@
   "tap_to_add_cover_photo": "แตะเพื่อเพิ่มภาพหน้าปก",
   "chat": "แชท",
   "type_a_message": "พิมพ์ข้อความ...",
-  "no_chats_yet": "ยังไม่มีแชท"
+  "no_chats_yet": "ยังไม่มีแชท",
+  "feedback": "ข้อเสนอแนะ",
+  "no_feedback_yet": "ยังไม่มีข้อเสนอแนะ",
+  "submit_feedback": "ส่งข้อเสนอแนะ",
+  "feedback_submitted": "ส่งข้อเสนอแนะสำเร็จแล้ว",
+  "failed_submit_feedback": "ไม่สามารถส่งข้อเสนอแนะได้",
+  "feedback_hint": "บอกเราว่าคุณคิดอย่างไร...",
+  "submit": "ส่ง"
 }
