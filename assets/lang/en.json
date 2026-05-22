@@ -444,5 +444,21 @@
   "feedback_submitted": "Feedback submitted successfully",
   "failed_submit_feedback": "Failed to submit feedback",
   "feedback_hint": "Tell us what you think...",
-  "submit": "Submit"
+  "submit": "Submit",
+  "rider_management": "Rider Management",
+  "add_rider": "Add Rider",
+  "edit_rider": "Edit Rider",
+  "delete_rider": "Delete Rider",
+  "delete_rider_confirm": "Are you sure you want to delete this rider?",
+  "rider_deleted": "Rider deleted successfully",
+  "failed_delete_rider": "Failed to delete rider",
+  "failed_save_rider": "Failed to save rider",
+  "no_riders_found": "No riders found",
+  "add_rider_desc": "Add a rider to manage deliveries.",
+  "name": "Name",
+  "enter_rider_name": "Enter rider name",
+  "phone_number": "Phone Number",
+  "enter_phone_number": "Enter phone number",
+  "license_plate": "License Plate",
+  "enter_license_plate": "Enter license plate"
 }

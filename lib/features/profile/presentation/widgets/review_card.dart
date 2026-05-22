@@ -620,17 +620,17 @@ class _ReviewCardState extends State<ReviewCard>
       if (months == 1) {
         return t?.translate('time_month_ago') ?? '1 month ago';
       }
-      return t?.translate('time_months_ago')?.replaceAll('{count}', '$months') ?? '$months months ago';
+      return t?.translate('time_months_ago').replaceAll('{count}', '$months') ?? '$months months ago';
     } else if (difference.inDays > 0) {
       if (difference.inDays == 1) {
         return t?.translate('time_day_ago') ?? '1 day ago';
       }
-      return t?.translate('time_days_ago')?.replaceAll('{count}', '${difference.inDays}') ?? '${difference.inDays} days ago';
+      return t?.translate('time_days_ago').replaceAll('{count}', '${difference.inDays}') ?? '${difference.inDays} days ago';
     } else if (difference.inHours > 0) {
       if (difference.inHours == 1) {
         return t?.translate('time_hour_ago') ?? '1 hour ago';
       }
-      return t?.translate('time_hours_ago')?.replaceAll('{count}', '${difference.inHours}') ?? '${difference.inHours} hours ago';
+      return t?.translate('time_hours_ago').replaceAll('{count}', '${difference.inHours}') ?? '${difference.inHours} hours ago';
     } else {
       return t?.translate('time_just_now') ?? 'Just now';
     }

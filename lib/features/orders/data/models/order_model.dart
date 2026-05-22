@@ -179,7 +179,7 @@ class OrderModel {
       customerUsername: json['customerUsername'],
       shopOwnerEmail: json['shopOwnerEmail'],
       shopOwnerUsername: json['shopOwnerUsername'],
-      estimatedDeliveryTime: json['estimatedDeliveryTime'],
+      estimatedDeliveryTime: json['estimatedDeliveryTime']?.toString() ?? json['estimatedTime']?.toString() ?? ((json['waitingTimeMinutes'] != null && json['waitingTimeMinutes'] > 0) ? '${json['waitingTimeMinutes']} mins' : null),
       deliveryCycleNo: json['deliveryCycleNo'],
       deliveryTrackingUrl: json['deliveryTrackingUrl'],
       proofPhotoUrl: _resolveUrl(json['proofPhotoUrl']),

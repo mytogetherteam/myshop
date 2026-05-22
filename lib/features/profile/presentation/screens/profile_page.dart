@@ -19,6 +19,7 @@ import 'package:my_shop/core/utils/app_colors.dart';
 import 'accepted_payment_page.dart';
 import 'help_support_page.dart';
 import 'feedback_page.dart';
+import 'rider_management_page.dart';
 
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
@@ -407,6 +408,14 @@ class ProfilePageState extends State<ProfilePage>
           onTap: () => Navigator.push(
             context,
             CupertinoPageRoute(builder: (_) => const ReviewsPage()),
+          ),
+        ),
+        _buildMenuOption(
+          icon: PhosphorIconsRegular.motorcycle,
+          title: t?.translate('rider_management') ?? 'Rider Management',
+          onTap: () => Navigator.push(
+            context,
+            CupertinoPageRoute(builder: (_) => const RiderManagementPage()),
           ),
         ),
       ],
