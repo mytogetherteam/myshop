@@ -434,5 +434,8 @@
   "district": "District",
   "select_district": "Select District",
   "choose_district": "Choose district",
-  "tap_to_add_cover_photo": "Tap to add cover photo"
+  "tap_to_add_cover_photo": "Tap to add cover photo",
+  "chat": "Chat",
+  "type_a_message": "Type a message...",
+  "no_chats_yet": "No chats yet"
 }
