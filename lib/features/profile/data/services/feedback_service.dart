@@ -5,7 +5,7 @@ import 'package:my_shop/core/network/api_helper.dart';
 import '../models/feedback_model.dart';
 
 class FeedbackService {
-  static const String _feedbackPath = '/api/feedback';
+  static const String _feedbackPath = '/api/shop/feedback';
 
   Future<List<FeedbackModel>> getFeedbacks() async {
     try {
