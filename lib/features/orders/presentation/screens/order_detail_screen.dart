@@ -626,13 +626,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     const SizedBox(height: 16),
 
                     // Confirmation Form (Full Width - it has its own internal padding)
-                    if (_currentOrder.status == 'PENDING') ...[
+                    if (_currentOrder.status == 'PENDING' ||
+                        (_currentOrder.status == 'PREPARING' && _currentOrder.deliveryType == 'NORMAL')) ...[
                       _buildConfirmationForm(),
                       const SizedBox(height: 8),
                     ],
 
-                    // Waiting Time Update (PREPARING state only)
-                    if (_currentOrder.status == 'PREPARING') ...[
+                    // Waiting Time Update (PREPARING state only for Fast Delivery)
+                    if (_currentOrder.status == 'PREPARING' && _currentOrder.deliveryType == 'PREPAID') ...[
                       _buildWaitingTimeUpdate(),
                       const SizedBox(height: 8),
                     ],
@@ -648,14 +649,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           // Rider Section if applicable
                           if (_currentOrder.riderName != null && _currentOrder.riderName!.trim().isNotEmpty) _buildRiderSection(),
                           
-                          if (_currentOrder.estimatedDeliveryTime != null && _currentOrder.status != 'CANCELLED')
-                            _buildEstimatedTimeBox(),
                           if (_currentOrder.status == 'CANCELLED')
                             _buildCancelReasonBox(),
                           
                           if (_currentOrder.isScheduled || 
                               (_currentOrder.riderName != null && _currentOrder.riderName!.trim().isNotEmpty) ||
-                              (_currentOrder.estimatedDeliveryTime != null && _currentOrder.status != 'CANCELLED') ||
                               _currentOrder.status == 'CANCELLED')
                             const SizedBox(height: 16),
 
@@ -677,6 +675,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                             const SizedBox(height: 12),
                           ],
                           
+                          // Estimated Time
+                          if (_currentOrder.estimatedDeliveryTime != null && _currentOrder.estimatedDeliveryTime!.isNotEmpty && _currentOrder.status != 'CANCELLED') ...[
+                            _buildEstimatedTimeBox(),
+                            const SizedBox(height: 24),
+                          ],
+
                           // Payment Summary
                           _buildPaymentSummary(),
                           const SizedBox(height: 32),
@@ -825,7 +829,7 @@ Widget _buildAnimatedProgress() {
           const Icon(PhosphorIconsRegular.timer, color: Color(0xFF16A34A), size: 20),
           const SizedBox(width: 8),
           Text(
-            'Estimated Delivery: ',
+            'Est Waiting Time: ',
             style: GoogleFonts.poppins(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -956,6 +960,24 @@ Widget _buildAnimatedProgress() {
         _buildCircularIcon(PhosphorIconsFill.phone),
         const SizedBox(width: 12),
         _buildCircularIcon(PhosphorIconsFill.chatCircleDots),
+        const SizedBox(width: 12),
+        GestureDetector(
+          onTap: () {
+            Clipboard.setData(ClipboardData(
+                text: '${_currentOrder.customerName}\n${_currentOrder.customerPhone}'));
+            AppDialog.showToast(context, 'Customer info copied to clipboard');
+          },
+          child: Container(
+            width: 44,
+            height: 44,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.surfaceVariant,
+            ),
+            child: const Icon(PhosphorIconsRegular.copy,
+                color: AppColors.onSurface, size: 20),
+          ),
+        ),
       ],
     );
   }
@@ -1306,14 +1328,15 @@ Widget _buildAnimatedProgress() {
           ],
         ),
         const SizedBox(height: 16),
-        ..._currentOrder.items.map((item) => _buildOrderItem(item)),
+        for (int i = 0; i < _currentOrder.items.length; i++)
+          _buildOrderItem(_currentOrder.items[i], isLast: i == _currentOrder.items.length - 1),
       ],
     );
   }
 
-  Widget _buildOrderItem(OrderItemModel item) {
+  Widget _buildOrderItem(OrderItemModel item, {bool isLast = false}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+      padding: EdgeInsets.only(bottom: isLast ? 0 : 20),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1439,7 +1462,7 @@ Widget _buildAnimatedProgress() {
         const SizedBox(height: 12),
         Row(
           children: [
-            const GradientWidget(child: Icon(PhosphorIconsRegular.bicycle, size: 20)),
+            const GradientWidget(child: Icon(PhosphorIconsFill.moped, size: 20)),
             const SizedBox(width: 8),
             Text(
               _currentOrder.deliveryFee > 0 ? 'Delivery Fee' : 'Est. Amount',
@@ -1456,7 +1479,7 @@ Widget _buildAnimatedProgress() {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                'Delivery fee',
+                _currentOrder.deliveryType == 'NORMAL' ? 'Estimate' : 'Delivery fee',
                 style: GoogleFonts.poppins(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
@@ -1472,7 +1495,6 @@ Widget _buildAnimatedProgress() {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const Icon(Icons.chevron_right, color: Color(0xFF94A3B8), size: 20),
           ],
         ),
         const SizedBox(height: 16),
@@ -1630,7 +1652,7 @@ Widget _buildAnimatedProgress() {
         break;
       case 'PREPARING':
         mainButtonText = 'Picked Up by Rider';
-        onPressed = (_isUpdating || _waitingTimeMinutesController.text.isEmpty)
+        onPressed = (_isUpdating || _waitingTimeMinutesController.text.isEmpty || (_currentOrder.deliveryType == 'NORMAL' && !_isFormValid))
             ? null
             : _handleDispatchOrder;
         isCancelable = false;
@@ -1955,28 +1977,36 @@ Widget _buildAnimatedProgress() {
                 ),
               ),
               const SizedBox(height: 16),
-              _buildInputField(
-                'Estimated Delivery Fee',
-                _deliveryFeeController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  ThousandsSeparatorInputFormatter()
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildInputField(
+                      'Estimated Delivery Fee',
+                      _deliveryFeeController,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        ThousandsSeparatorInputFormatter()
+                      ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) return null;
+                        final numValue = value.replaceAll(',', '');
+                        if (double.tryParse(numValue) == null) return 'Invalid number';
+                        return null;
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildInputField(
+                      'Est Prep Time (mins)',
+                      _waitingTimeMinutesController,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
+                    ),
+                  ),
                 ],
-                validator: (value) {
-                  if (value == null || value.isEmpty) return null;
-                  final numValue = value.replaceAll(',', '');
-                  if (double.tryParse(numValue) == null) return 'Invalid number';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildInputField(
-                'Estimated Preparation Time (mins)',
-                _waitingTimeMinutesController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
               ),
 
             // ── Fast Delivery (PENDING): fee + waiting only ─────────────
@@ -1985,7 +2015,7 @@ Widget _buildAnimatedProgress() {
                 children: [
                   Expanded(
                     child: _buildInputField(
-                      'Estimated Delivery Fee',
+                      'Delivery Fee',
                       _deliveryFeeController,
                       keyboardType: TextInputType.number,
                       inputFormatters: [
@@ -2003,7 +2033,7 @@ Widget _buildAnimatedProgress() {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildInputField(
-                      'Waiting Time (mins)',
+                      'Est Waiting Time (mins)',
                       _waitingTimeMinutesController,
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -2080,7 +2110,7 @@ Widget _buildAnimatedProgress() {
                 children: [
                   Expanded(
                     child: _buildInputField(
-                      'Estimated Delivery Fee',
+                      'Delivery Fee',
                       _deliveryFeeController,
                       keyboardType: TextInputType.number,
                       inputFormatters: [
@@ -2098,7 +2128,7 @@ Widget _buildAnimatedProgress() {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildInputField(
-                      'Waiting Time (mins)',
+                      'Est Waiting Time (mins)',
                       _waitingTimeMinutesController,
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
