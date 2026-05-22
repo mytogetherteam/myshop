@@ -5,7 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import '../../../profile/data/models/support_info_model.dart';
-import '../../../profile/data/services/support_service.dart';
+
 import 'package:my_shop/core/localization/app_localizations.dart';
 
 class HelpSupportPage extends StatefulWidget {
@@ -16,25 +16,12 @@ class HelpSupportPage extends StatefulWidget {
 }
 
 class _HelpSupportPageState extends State<HelpSupportPage> {
-  final SupportService _supportService = SupportService();
   SupportInfoModel? _supportInfo;
-  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadSupportInfo();
-  }
-
-  Future<void> _loadSupportInfo() async {
-    setState(() => _isLoading = true);
-    final info = await _supportService.getSupportInfo();
-    if (mounted) {
-      setState(() {
-        _supportInfo = info;
-        _isLoading = false;
-      });
-    }
+    _supportInfo = const SupportInfoModel(email: 'support@mytogether.org');
   }
 
   Future<void> _launch(Uri uri) async {
@@ -89,38 +76,11 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
         ),
         centerTitle: false,
       ),
-      body: RefreshIndicator(
-        onRefresh: _loadSupportInfo,
-        color: AppColors.primary,
-        child: _isLoading ? _buildSkeleton() : _buildContent(),
-      ),
+      body: _buildContent(),
     );
   }
 
-  Widget _buildSkeleton() {
-    return ListView(
-      padding: const EdgeInsets.all(24),
-      children: [
-        _shimmerBox(height: 120, radius: 16),
-        const SizedBox(height: 24),
-        _shimmerBox(height: 60),
-        const SizedBox(height: 12),
-        _shimmerBox(height: 60),
-        const SizedBox(height: 12),
-        _shimmerBox(height: 60),
-      ],
-    );
-  }
 
-  Widget _shimmerBox({required double height, double radius = 12}) {
-    return Container(
-      height: height,
-      decoration: BoxDecoration(
-        color: const Color(0xFFE2E8F0),
-        borderRadius: BorderRadius.circular(radius),
-      ),
-    );
-  }
 
   Widget _buildContent() {
     final info = _supportInfo;
@@ -233,16 +193,6 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
             ),
         ],
 
-        const SizedBox(height: 32),
-        Center(
-          child: Text(
-            t?.translate('pull_to_refresh') ?? 'Pull down to refresh',
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              color: const Color(0xFF94A3B8),
-            ),
-          ),
-        ),
       ],
     );
   }

@@ -19,7 +19,7 @@ class SupportInfoModel {
 
   factory SupportInfoModel.fromJson(Map<String, dynamic> json) {
     return SupportInfoModel(
-      email: json['email'] as String?,
+      email: (json['email'] as String?) ?? 'support@mytogether.org',
       phone: json['phone'] as String?,
       website: json['website'] as String?,
       facebook: json['facebook'] as String?,

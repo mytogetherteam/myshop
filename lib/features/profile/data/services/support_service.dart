@@ -26,6 +26,6 @@ class SupportService {
     } catch (e) {
       ApiHelper.handleError(e, context: 'SupportService.getSupportInfo');
     }
-    return null;
+    return const SupportInfoModel(email: 'support@mytogether.org');
   }
 }
