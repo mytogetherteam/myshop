@@ -11,6 +11,7 @@ import 'package:my_shop/features/profile/data/models/payment_method.dart';
 import 'package:my_shop/features/profile/data/services/payment_service.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:my_shop/core/presentation/widgets/picked_image_preview.dart';
 
 
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
