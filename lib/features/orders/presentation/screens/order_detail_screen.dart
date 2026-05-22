@@ -124,17 +124,21 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
     if (_currentOrder.status == 'PENDING') {
       if (_deliveryOption == 'NORMAL') {
+        // Flexible Delivery: only need preparation time
         isValid = waiting.isNotEmpty && int.tryParse(waiting) != null;
       } else {
+        // Fast Delivery (PENDING): only need fee + waiting time
         isValid = fee.isNotEmpty &&
           double.tryParse(fee) != null &&
-          rider.isNotEmpty &&
-          phone.isNotEmpty &&
-          thaiPhoneRegex.hasMatch(phone) &&
-          cycle.isNotEmpty &&
           waiting.isNotEmpty &&
           int.tryParse(waiting) != null;
       }
+    } else if (_currentOrder.status == 'PAYMENT_UPLOADED' && _currentOrder.deliveryType == 'PREPAID') {
+      // Fast Delivery payment state: need rider details
+      isValid = rider.isNotEmpty &&
+        phone.isNotEmpty &&
+        thaiPhoneRegex.hasMatch(phone) &&
+        cycle.isNotEmpty;
     } else if (_currentOrder.status == 'PREPARING' && _currentOrder.deliveryType == 'NORMAL') {
       isValid = fee.isNotEmpty &&
         double.tryParse(fee) != null &&
@@ -250,7 +254,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
     final payload = {
       "deliveryType": _deliveryOption,
-      "deliveryFee": _deliveryOption == 'NORMAL' ? 0 : (double.tryParse(_deliveryFeeController.text.replaceAll(',', '')) ?? 0),
+      "deliveryFee": double.tryParse(_deliveryFeeController.text.replaceAll(',', '')) ?? 0,
       "deliveryCycleNo": _deliveryOption == 'NORMAL' ? '' : _deliveryCycleNoController.text,
       "deliveryRiderName": _deliveryOption == 'NORMAL' ? '' : _deliveryRiderNameController.text,
       "deliveryPhoneNo": _deliveryOption == 'NORMAL' ? '' : _deliveryPhoneNoController.text,
@@ -622,10 +626,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     const SizedBox(height: 16),
 
                     // Confirmation Form (Full Width - it has its own internal padding)
-                    if (_currentOrder.status == 'PENDING' || 
-                       (_currentOrder.status == 'PREPARING' && 
-                        (_currentOrder.deliveryType == 'NORMAL' || (_currentOrder.riderName == null || _currentOrder.riderName!.isEmpty)))) ...[
+                    if (_currentOrder.status == 'PENDING') ...[
                       _buildConfirmationForm(),
+                      const SizedBox(height: 8),
+                    ],
+
+                    // Waiting Time Update (PREPARING state only)
+                    if (_currentOrder.status == 'PREPARING') ...[
+                      _buildWaitingTimeUpdate(),
                       const SizedBox(height: 8),
                     ],
                     
@@ -654,7 +662,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           // Payment Slip Section
                           if (_currentOrder.paymentSlipUrl != null) ...[
                             _buildPaymentSlipSection(),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 16),
+                          ],
+
+                          // Rider Info Form — shown below slip for Fast Delivery payment state
+                          if (_currentOrder.status == 'PAYMENT_UPLOADED' && _currentOrder.deliveryType == 'PREPAID') ...[
+                            _buildConfirmationForm(),
+                            const SizedBox(height: 16),
                           ],
                           
                           // Order Modifications
@@ -1593,8 +1607,13 @@ Widget _buildAnimatedProgress() {
         isCancelable = true;
         break;
       case 'PAYMENT_UPLOADED':
-        mainButtonText = 'Accept order & Send bill';
-        onPressed = _isUpdating ? null : _handleVerifyPayment;
+        // Fast Delivery: rename button and gate on form validity for rider fields
+        mainButtonText = _currentOrder.deliveryType == 'PREPAID'
+            ? 'Confirm Payment'
+            : 'Accept order & Send bill';
+        onPressed = (_isUpdating || (_currentOrder.deliveryType == 'PREPAID' && !_isFormValid))
+            ? null
+            : _handleVerifyPayment;
         isCancelable = false;
         break;
       case 'PAYMENT_VERIFIED':
@@ -1611,7 +1630,9 @@ Widget _buildAnimatedProgress() {
         break;
       case 'PREPARING':
         mainButtonText = 'Picked Up by Rider';
-        onPressed = (_isUpdating || !_isFormValid) ? null : _handleDispatchOrder;
+        onPressed = (_isUpdating || _waitingTimeMinutesController.text.isEmpty)
+            ? null
+            : _handleDispatchOrder;
         isCancelable = false;
         break;
       case 'ON_THE_WAY':
@@ -1738,6 +1759,70 @@ Widget _buildAnimatedProgress() {
     );
   }
 
+  Widget _buildWaitingTimeUpdate() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      color: const Color(0xFFF8FAFC),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const GradientWidget(
+                child: Icon(PhosphorIconsRegular.timer, size: 20),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Update Estimated Waiting Time',
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _waitingTimeMinutesController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            onChanged: (_) => _validateFormState(),
+            style: GoogleFonts.poppins(fontSize: 14),
+            decoration: InputDecoration(
+              hintText: 'Enter minutes...',
+              hintStyle: GoogleFonts.poppins(
+                fontSize: 14,
+                color: const Color(0xFF94A3B8),
+              ),
+              suffixText: 'mins',
+              suffixStyle: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF64748B),
+              ),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: AppColors.primary),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildConfirmationForm() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -1810,9 +1895,14 @@ Widget _buildAnimatedProgress() {
               ),
               const SizedBox(height: 24),
             ],
+            // ── Section header ──────────────────────────────────────────
             if (_deliveryOption == 'PREPAID' || (_currentOrder.status == 'PREPARING' && _currentOrder.deliveryType == 'NORMAL')) ...[
               Text(
-                _currentOrder.status == 'PREPARING' ? 'Dispatch Information' : 'Prepare to confirm',
+                _currentOrder.status == 'PREPARING'
+                    ? 'Dispatch Information'
+                    : _currentOrder.status == 'PAYMENT_UPLOADED'
+                        ? 'Rider Information'
+                        : 'Prepare to confirm',
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -1821,6 +1911,8 @@ Widget _buildAnimatedProgress() {
               ),
               const SizedBox(height: 16),
             ],
+
+            // ── Flexible Delivery (PENDING) ─────────────────────────────
             if (_deliveryOption == 'NORMAL' && _currentOrder.status == 'PENDING') ...[
               Container(
                 padding: const EdgeInsets.all(16),
@@ -1864,19 +1956,37 @@ Widget _buildAnimatedProgress() {
               ),
               const SizedBox(height: 16),
               _buildInputField(
-                'Estimated Preparation Time (mins)', 
+                'Estimated Delivery Fee',
+                _deliveryFeeController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  ThousandsSeparatorInputFormatter()
+                ],
+                validator: (value) {
+                  if (value == null || value.isEmpty) return null;
+                  final numValue = value.replaceAll(',', '');
+                  if (double.tryParse(numValue) == null) return 'Invalid number';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              _buildInputField(
+                'Estimated Preparation Time (mins)',
                 _waitingTimeMinutesController,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
               ),
-            ] else ...[
+
+            // ── Fast Delivery (PENDING): fee + waiting only ─────────────
+            ] else if (_deliveryOption == 'PREPAID' && _currentOrder.status == 'PENDING') ...[
               Row(
                 children: [
                   Expanded(
                     child: _buildInputField(
-                      'Delivery Fee', 
-                      _deliveryFeeController, 
+                      'Estimated Delivery Fee',
+                      _deliveryFeeController,
                       keyboardType: TextInputType.number,
                       inputFormatters: [
                         FilteringTextInputFormatter.digitsOnly,
@@ -1888,51 +1998,66 @@ Widget _buildAnimatedProgress() {
                         if (double.tryParse(numValue) == null) return 'Invalid number';
                         return null;
                       },
-                    )
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: _deliveryOption == 'NORMAL'
-                      ? _buildInputField(
-                          'Waiting Time', 
-                          _waitingTimeMinutesController,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                          validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
-                        )
-                      : _buildDropdownField(
-                          'Waiting Time', 
-                          _selectedWaitingTime, 
-                          List.generate(15, (i) => (i + 1).toString()),
-                          (value) {
-                            if (value != null) {
-                              setState(() {
-                                _selectedWaitingTime = value;
-                                _waitingTimeMinutesController.text = value;
-                              });
-                            }
-                          },
-                        )
+                    child: _buildInputField(
+                      'Waiting Time (mins)',
+                      _waitingTimeMinutesController,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+
+            // ── Fast Delivery (PAYMENT_UPLOADED): rider details ─────────
+            ] else if (_currentOrder.status == 'PAYMENT_UPLOADED' && _currentOrder.deliveryType == 'PREPAID') ...[
+              // Info banner
+              Container(
+                padding: const EdgeInsets.all(14),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Row(
+                  children: [
+                    const GradientWidget(
+                      child: Icon(PhosphorIconsRegular.info, size: 20),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Payment received. Please fill in the rider details before confirming.',
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          color: const Color(0xFF64748B),
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               _buildInputField(
-                'Rider Name', 
+                'Rider Name',
                 _deliveryRiderNameController,
                 validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
               ),
               const SizedBox(height: 12),
               _buildInputField(
-                'Rider Phone', 
-                _deliveryPhoneNoController, 
+                'Rider Phone',
+                _deliveryPhoneNoController,
                 keyboardType: TextInputType.phone,
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9+]')),
                 ],
                 validator: (value) {
                   if (value == null || value.isEmpty || value == '+66') return 'Required';
-                  // Thai Mobile: +66 + 9 digits (total 12 chars)
                   final thaiPhoneRegex = RegExp(r'^\+66[0-9]{9}$');
                   if (!thaiPhoneRegex.hasMatch(value)) {
                     return 'Invalid Thai number (+66xxxxxxxxx)';
@@ -1942,7 +2067,72 @@ Widget _buildAnimatedProgress() {
               ),
               const SizedBox(height: 12),
               _buildInputField(
-                'Cycle No / License', 
+                'Cycle No / License',
+                _deliveryCycleNoController,
+                validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
+              ),
+              const SizedBox(height: 12),
+              _buildInputField('Tracking URL', _deliveryTrackingUrlController),
+
+            // ── Fast Delivery (PREPARING) / dispatch ────────────────────
+            ] else ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildInputField(
+                      'Estimated Delivery Fee',
+                      _deliveryFeeController,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        ThousandsSeparatorInputFormatter()
+                      ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) return 'Required';
+                        final numValue = value.replaceAll(',', '');
+                        if (double.tryParse(numValue) == null) return 'Invalid number';
+                        return null;
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildInputField(
+                      'Waiting Time (mins)',
+                      _waitingTimeMinutesController,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              _buildInputField(
+                'Rider Name',
+                _deliveryRiderNameController,
+                validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
+              ),
+              const SizedBox(height: 12),
+              _buildInputField(
+                'Rider Phone',
+                _deliveryPhoneNoController,
+                keyboardType: TextInputType.phone,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9+]')),
+                ],
+                validator: (value) {
+                  if (value == null || value.isEmpty || value == '+66') return 'Required';
+                  final thaiPhoneRegex = RegExp(r'^\+66[0-9]{9}$');
+                  if (!thaiPhoneRegex.hasMatch(value)) {
+                    return 'Invalid Thai number (+66xxxxxxxxx)';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              _buildInputField(
+                'Cycle No / License',
                 _deliveryCycleNoController,
                 validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
               ),
