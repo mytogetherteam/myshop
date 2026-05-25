@@ -5,7 +5,7 @@ import 'package:my_shop/core/network/api_helper.dart';
 import '../models/feedback_model.dart';
 
 class FeedbackService {
-  static const String _feedbackPath = '/api/feedback';
+  static const String _feedbackPath = '/api/shop/shop-feedback';
 
   Future<List<FeedbackModel>> getFeedbacks() async {
     try {
@@ -15,9 +15,17 @@ class FeedbackService {
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
-        final Map<String, dynamic> data = response.data;
-        if (data['success'] == true && data['data'] != null) {
-          final List<dynamic> feedbackJson = data['data'];
+        final Map<String, dynamic> responseData = response.data;
+        if (responseData['success'] == true && responseData['data'] != null) {
+          final rawData = responseData['data'];
+          final List<dynamic> feedbackJson;
+          if (rawData is Map && rawData['content'] is List) {
+            feedbackJson = rawData['content'];
+          } else if (rawData is List) {
+            feedbackJson = rawData;
+          } else {
+            feedbackJson = [];
+          }
           return feedbackJson.map((e) => FeedbackModel.fromJson(e)).toList();
         }
       }
@@ -34,7 +42,7 @@ class FeedbackService {
       debugPrint('POST REQUEST: $_feedbackPath');
       final response = await ApiClient().dio.post(
         _feedbackPath,
-        data: {'description': description},
+        data: {'message': description},
       );
 
       if (response.statusCode != null &&

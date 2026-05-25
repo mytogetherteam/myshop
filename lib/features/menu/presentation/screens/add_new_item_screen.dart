@@ -67,8 +67,6 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   MenuCategoryModel? _selectedCategory;
 
   // Master Data
-  List<MasterDataModel> _masterItems = [];
-  MasterDataModel? _selectedMasterItem;
   List<MasterDataModel> _masterCategories = [];
   MasterDataModel? _selectedMasterCategory;
   List<MasterDataModel> _menuTags = [];
@@ -199,22 +197,19 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       final results = await Future.wait<dynamic>([
         _menuService.getCategories(forceRefresh: true),
         _menuService.getMasterCategories(forceRefresh: true),
-        _menuService.getMasterMenuItems(),
         _menuService.getMenuTags(),
-        _menuService.getMenuItems(limit: 1000), // Fetch items for combo components
+        _menuService.getMenuItems(limit: 1000),
       ]);
 
       final categories = results[0] as List<MenuCategoryModel>?;
       final mCategories = results[1] as List<MasterDataModel>?;
-      final mItems = results[2] as List<MasterDataModel>?;
-      final tags = results[3] as List<MasterDataModel>?;
-      final allItems = results[4] as List<MenuItemModel>?;
+      final tags = results[2] as List<MasterDataModel>?;
+      final allItems = results[3] as List<MenuItemModel>?;
 
       if (mounted) {
         setState(() {
           _categories = categories ?? [];
           _masterCategories = mCategories ?? [];
-          _masterItems = mItems ?? [];
           _menuTags = tags ?? [];
           _availableItems = allItems ?? [];
 
@@ -233,13 +228,6 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               try {
                 _selectedMasterCategory = _masterCategories.firstWhere(
                   (c) => c.id == item.masterCategoryId,
-                );
-              } catch (_) {}
-            }
-            if (_masterItems.isNotEmpty && item.masterItemId != null) {
-              try {
-                _selectedMasterItem = _masterItems.firstWhere(
-                  (i) => i.id == item.masterItemId,
                 );
               } catch (_) {}
             }
@@ -391,7 +379,6 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       'categoryId': _selectedCategory?.id,
       'menuCategoryId': _selectedCategory?.id,
       'masterCategoryId': _selectedMasterCategory?.id,
-      'masterItemId': _selectedMasterItem?.id,
       'tagIds': _selectedTagIds,
       'mealTypes': _selectedMealTypes,
 
@@ -412,19 +399,14 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     };
 
     bool success;
-    File? imageFile;
-    if (_pickedImage != null) {
-      imageFile = File(_pickedImage!.path);
-    }
 
     if (widget.item != null) {
       success = await _menuService.updateMenuItem(
         widget.item!.id,
         payload,
-        image: imageFile,
       );
     } else {
-      success = await _menuService.createMenuItem(payload, image: imageFile);
+      success = await _menuService.createMenuItem(payload);
     }
 
     if (mounted) {
@@ -879,20 +861,6 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       ),
     );
   }
-
-  /*
-  Widget _buildMasterItemSelection() {
-    return _buildDropdownField<MasterDataModel>(
-      label: 'Master Item',
-      value: _selectedMasterItem,
-      items: _masterItems,
-      hint: 'Search master items...',
-      onChanged: (val) {
-        setState(() => _selectedMasterItem = val);
-      },
-    );
-  }
-  */
 
   Widget _buildPropertiesSection() {
     final t = AppLocalizations.of(context);

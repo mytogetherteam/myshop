@@ -63,7 +63,7 @@ class AuthService {
       final refreshToken = await StorageService.instance.getRefreshToken();
       if (refreshToken != null && refreshToken.isNotEmpty) {
         await ApiClient().dio.post(
-          '$_authPath/logout',
+          '/api/auth/logout',
           data: {'refreshToken': refreshToken},
         );
       }
@@ -104,7 +104,7 @@ class AuthService {
 
     try {
       final response = await dio.post(
-        '$_authPath/refresh',
+        '/api/auth/refresh',
         data: {'refreshToken': refreshToken},
         options: Options(headers: {'Authorization': ''}),
       );

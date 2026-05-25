@@ -3,14 +3,13 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
-import 'package:http_parser/http_parser.dart';
 import '../models/shop_profile_model.dart';
 import '../models/operating_hours_model.dart';
 
 class ProfileService {
-  static const String _profilePath = '/api/shop/profile';
-  static const String _operatingHoursPath = '/api/shop/operating-hours';
-  static const String _changePasswordPath = '/api/shop/profile/password';
+  static const String _profilePath = '/api/shop/shop-profile';
+  static const String _operatingHoursPath = '/api/menu/operating-hours';
+  static const String _changePasswordPath = '/api/shop/auth/change-password';
 
   Future<List<OperatingHoursModel>> getOperatingHours() async {
     try {
@@ -65,29 +64,22 @@ class ProfileService {
     try {
       debugPrint('PUT REQUEST: $_profilePath, Data: $payload');
       
-      final Map<String, dynamic> dataPayload = Map.from(payload);
-      final Map<String, dynamic> formDataMap = {};
+      final formData = FormData();
       
-      if (dataPayload.containsKey('logoPhoto')) {
-        formDataMap['logoPhoto'] = dataPayload.remove('logoPhoto');
+      for (final entry in payload.entries) {
+        final value = entry.value;
+        if (value is MultipartFile) {
+          formData.files.add(MapEntry(entry.key, value));
+        } else if (value is List || value is Map) {
+          formData.fields.add(MapEntry(entry.key, jsonEncode(value)));
+        } else {
+          formData.fields.add(MapEntry(entry.key, value.toString()));
+        }
       }
-      if (dataPayload.containsKey('coverPhoto')) {
-        formDataMap['coverPhoto'] = dataPayload.remove('coverPhoto');
-      }
-      
-      if (dataPayload.isNotEmpty) {
-        formDataMap['data'] = MultipartFile.fromString(
-          jsonEncode(dataPayload),
-          contentType: MediaType('application', 'json'),
-        );
-      }
-      
-      final formData = FormData.fromMap(formDataMap);
       
       final response = await ApiClient().dio.put(
         _profilePath, 
         data: formData,
-        options: Options(headers: {'Content-Type': 'multipart/form-data'}),
       );
 
       if (response.statusCode != null &&
@@ -106,7 +98,7 @@ class ProfileService {
 
   Future<bool> toggleDeliveryStatus(bool enabled) async {
     try {
-      final url = '$_profilePath/delivery-status';
+      const url = '/api/profile/delivery-status';
       debugPrint('PUT REQUEST: $url, Body: {enabled: $enabled}');
       final response = await ApiClient().dio.put(
         url,
@@ -175,8 +167,8 @@ class ProfileService {
         'confirmPassword': confirmPassword,
       };
 
-      debugPrint('PUT REQUEST: $_changePasswordPath, Data: $payload');
-      final response = await ApiClient().dio.put(
+      debugPrint('POST REQUEST: $_changePasswordPath, Data: $payload');
+      final response = await ApiClient().dio.post(
             _changePasswordPath,
             data: payload,
           );

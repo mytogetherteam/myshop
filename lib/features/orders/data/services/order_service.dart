@@ -8,7 +8,7 @@ List<OrderModel> _parseOrders(List<dynamic> jsonList) {
 }
 
 class OrderService {
-  static const String _ordersPath = '/api/shop/orders';
+  static const String _ordersPath = '/api/orders';
 
   Future<List<OrderModel>?> getOrders({
     String? status,

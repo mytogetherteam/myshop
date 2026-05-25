@@ -4,8 +4,8 @@ import 'package:my_shop/core/network/api_helper.dart';
 import '../models/review_model.dart';
 
 class ReviewService {
-  static const String _summaryPath = '/api/shop/reviews/summary';
-  static const String _reviewsPath = '/api/shop/reviews';
+  static const String _summaryPath = '/api/reviews/summary';
+  static const String _reviewsPath = '/api/reviews';
 
   Future<ReviewSummaryModel?> getReviewSummary() async {
     try {

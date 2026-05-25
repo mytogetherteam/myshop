@@ -7,7 +7,7 @@ import 'package:my_shop/core/network/api_helper.dart';
 import '../models/payment_method.dart';
 
 class PaymentService {
-  static const String _paymentsPath = '/api/shop/profile/payment-types';
+  static const String _paymentsPath = '/api/shop/shop-payment-methods';
 
   /// GET /api/shop/profile/payment-types
   /// Get Shop Payment Types
@@ -87,7 +87,7 @@ class PaymentService {
       );
 
       if (qrPhoto != null) {
-        formDataMap['qrPhoto'] = await MultipartFile.fromFile(
+        formDataMap['paymentQrImage'] = await MultipartFile.fromFile(
           qrPhoto.path,
           filename: qrPhoto.path.split('/').last,
         );

@@ -183,7 +183,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
     }
 
     final result = await _paymentService.updatePaymentMethod(
-      paymentTypeId: widget.paymentMethod.id,
+      paymentTypeId: widget.paymentMethod.paymentMethodId,
       requestData: requestData,
       qrPhoto: qrPhoto,
     );

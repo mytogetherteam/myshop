@@ -20,7 +20,7 @@ class NotificationRepository {
   }) async {
     try {
       final response = await _dio.get(
-        '/api/shop/notifications',
+        '/api/notifications',
         queryParameters: {'page': page, 'size': size},
       );
 
@@ -52,7 +52,7 @@ class NotificationRepository {
   Future<int> getUnreadCount() async {
     try {
       debugPrint('Fetching unread count from API...');
-      final response = await _dio.get('/api/shop/notifications/unread-count');
+      final response = await _dio.get('/api/notifications/unread-count');
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300 &&
@@ -94,7 +94,7 @@ class NotificationRepository {
 
   Future<bool> markAsRead(int id) async {
     try {
-      final response = await _dio.put('/api/shop/notifications/$id/read');
+      final response = await _dio.put('/api/notifications/$id/read');
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300 &&
@@ -114,7 +114,7 @@ class NotificationRepository {
 
   Future<bool> markAllAsRead() async {
     try {
-      final response = await _dio.put('/api/shop/notifications/read-all');
+      final response = await _dio.put('/api/notifications/read-all');
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300 &&

@@ -24,7 +24,7 @@ class MasterDataService {
   Future<List<MasterDataModel>?> getShopCategories() async {
     try {
       final response = await ApiClient().dio.get(
-        '/api/shop/master/shop-categories',
+        '/api/master/shop-categories',
       );
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
@@ -42,7 +42,7 @@ class MasterDataService {
   Future<List<MasterDataModel>?> getShopSubcategories() async {
     try {
       final response = await ApiClient().dio.get(
-        '/api/shop/master/shop-subcategories',
+        '/api/master/shop-subcategories',
       );
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
@@ -65,7 +65,7 @@ class MasterDataService {
 
   Future<List<MasterDataModel>?> getCities() async {
     try {
-      final response = await ApiClient().dio.get('/api/shop/master/cities');
+      final response = await ApiClient().dio.get('/api/master/cities');
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
@@ -82,7 +82,7 @@ class MasterDataService {
   Future<List<MasterDataModel>?> getDistricts(int? cityId) async {
     try {
       final response = await ApiClient().dio.get(
-        '/api/shop/master/districts',
+        '/api/master/districts',
         queryParameters: cityId != null ? {'cityId': cityId} : null,
       );
       if (response.statusCode != null &&
@@ -101,7 +101,7 @@ class MasterDataService {
   Future<List<MasterDataModel>?> getCuisineTypes() async {
     try {
       final response = await ApiClient().dio.get(
-        '/api/shop/master/cuisine-types',
+        '/api/master/cuisine-types',
       );
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
@@ -118,7 +118,7 @@ class MasterDataService {
 
   Future<List<MasterDataModel>?> getMenuTags() async {
     try {
-      final response = await ApiClient().dio.get('/api/shop/master/menu-tags');
+      final response = await ApiClient().dio.get('/api/master/menu-tags');
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {

@@ -6,14 +6,11 @@ import 'package:my_shop/core/network/api_helper.dart';
 import '../models/rider_model.dart';
 
 class RiderService {
-  static const String _basePath = '/api/shop/riders';
+  static const String _basePath = '/api/shop/delivery-drivers';
 
-  Future<List<Rider>> getRiders(int shopId) async {
+  Future<List<Rider>> getRiders() async {
     try {
-      final response = await ApiClient().dio.get(
-        _basePath,
-        queryParameters: {'shopId': shopId},
-      );
+      final response = await ApiClient().dio.get(_basePath);
 
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
@@ -45,23 +42,30 @@ class RiderService {
 
   Future<Rider?> createRider(Map<String, dynamic> riderData, {File? image}) async {
     try {
-      final formDataMap = <String, dynamic>{
-        'data': MultipartFile.fromString(
-          jsonEncode(riderData),
-          contentType: DioMediaType.parse('application/json'),
-        ),
-      };
+      final formData = FormData();
+
+      for (final entry in riderData.entries) {
+        final value = entry.value;
+        if (value is List || value is Map) {
+          formData.fields.add(MapEntry(entry.key, jsonEncode(value)));
+        } else {
+          formData.fields.add(MapEntry(entry.key, value.toString()));
+        }
+      }
 
       if (image != null) {
-        formDataMap['image'] = await MultipartFile.fromFile(
-          image.path,
-          filename: image.path.split('/').last,
-        );
+        formData.files.add(MapEntry(
+          'image',
+          await MultipartFile.fromFile(
+            image.path,
+            filename: image.path.split('/').last,
+          ),
+        ));
       }
 
       final response = await ApiClient().dio.post(
         _basePath,
-        data: FormData.fromMap(formDataMap),
+        data: formData,
       );
 
       if (response.statusCode != null &&
@@ -83,23 +87,30 @@ class RiderService {
 
   Future<Rider?> updateRider(int id, Map<String, dynamic> riderData, {File? image}) async {
     try {
-      final formDataMap = <String, dynamic>{
-        'data': MultipartFile.fromString(
-          jsonEncode(riderData),
-          contentType: DioMediaType.parse('application/json'),
-        ),
-      };
+      final formData = FormData();
+
+      for (final entry in riderData.entries) {
+        final value = entry.value;
+        if (value is List || value is Map) {
+          formData.fields.add(MapEntry(entry.key, jsonEncode(value)));
+        } else {
+          formData.fields.add(MapEntry(entry.key, value.toString()));
+        }
+      }
 
       if (image != null) {
-        formDataMap['image'] = await MultipartFile.fromFile(
-          image.path,
-          filename: image.path.split('/').last,
-        );
+        formData.files.add(MapEntry(
+          'image',
+          await MultipartFile.fromFile(
+            image.path,
+            filename: image.path.split('/').last,
+          ),
+        ));
       }
 
       final response = await ApiClient().dio.patch(
         '$_basePath/$id',
-        data: FormData.fromMap(formDataMap),
+        data: formData,
       );
 
       if (response.statusCode != null &&

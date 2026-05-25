@@ -30,6 +30,10 @@ class CertificatePinningInterceptor extends Interceptor {
     if (adapter is IOHttpClientAdapter) {
       adapter
           .validateCertificate = (X509Certificate? cert, String host, int port) {
+        debugPrint('CertificatePinning: validateCertificate called for host: $host, port: $port, hasCert: ${cert != null}');
+        if (host == 'localhost' || host == '127.0.0.1' || host == '10.0.2.2') {
+          return true;
+        }
         if (cert == null) return false;
 
         // If the host is not pinned, allow standard validation

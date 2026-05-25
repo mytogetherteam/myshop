@@ -273,7 +273,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
       AppDialog.showToast(context, t?.translate('operating_hours_saved_success') ?? 'Operating hours saved successfully!');
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => const MainNavigationScreen(initialIndex: 3)),
+        MaterialPageRoute(builder: (context) => const MainNavigationScreen(initialIndex: 4)),
         (route) => false,
       );
     } else {
@@ -304,7 +304,13 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
             icon: const Icon(Icons.arrow_back, color: Colors.black),
             onPressed: () async {
               final shouldPop = await _onWillPop();
-              if (shouldPop && context.mounted) Navigator.of(context).pop();
+              if (shouldPop && context.mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MainNavigationScreen(initialIndex: 4)),
+                  (route) => false,
+                );
+              }
             },
           ),
           title: Text(

@@ -5,7 +5,7 @@ import 'package:my_shop/core/network/api_helper.dart';
 import '../models/shop_model.dart';
 
 class ShopService {
-  static const String _shopsPath = '/api/shop/account/shops';
+  static const String _shopsPath = '/api/account/shops';
 
   Future<List<Shop>> getShops() async {
     try {

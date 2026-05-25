@@ -5,9 +5,9 @@ import '../models/report_model.dart';
 import 'package:intl/intl.dart';
 
 class ReportService {
-  static const String _summaryPath = '/api/shop/reports/summary';
-  static const String _bestSellersPath = '/api/shop/reports/top-selling-items';
-  static const String _ordersPath = '/api/shop/reports/orders';
+  static const String _summaryPath = '/api/reports/summary';
+  static const String _bestSellersPath = '/api/reports/top-selling-items';
+  static const String _ordersPath = '/api/reports/orders';
 
   Future<SalesSummaryModel?> getSummary({required DateTime start, required DateTime end}) async {
     try {

@@ -6,10 +6,9 @@ class ShopInterceptor extends Interceptor {
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
     // Avoid adding X-Shop-Id for auth flow or the initial shops fetch.
     final isAuthPath = options.path.contains('/auth/');
-    final isFetchShopsPath = options.path.contains('/api/shop/account/shops');
-    final isGalleryPath = options.path.contains('/api/shop/menu/categories/gallery');
+    final isFetchShopsPath = options.path.contains('/api/account/shops');
 
-    if (!isAuthPath && !isFetchShopsPath && !isGalleryPath) {
+    if (!isAuthPath && !isFetchShopsPath) {
       final shopId = await StorageService.instance.getSelectedShopId();
       if (shopId != null && !options.headers.containsKey('X-Shop-Id')) {
         options.headers['X-Shop-Id'] = shopId.toString();

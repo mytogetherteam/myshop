@@ -4,9 +4,10 @@ import 'package:my_shop/core/auth/jwt_utils.dart';
 
 class QueuedRequest {
   final RequestOptions requestOptions;
-  final Options? options;
+  final RequestInterceptorHandler? handler;
+  final ErrorInterceptorHandler? errorHandler;
 
-  QueuedRequest({required this.requestOptions, this.options});
+  QueuedRequest({required this.requestOptions, this.handler, this.errorHandler});
 }
 
 class AuthInterceptor extends Interceptor {
@@ -51,9 +52,11 @@ class AuthInterceptor extends Interceptor {
             if (newToken != null) {
               options.headers['Authorization'] = 'Bearer $newToken';
               _processPendingRequests(newToken);
+            } else {
+              _processPendingRequests(null);
             }
           } else {
-            _pendingRequests.add(QueuedRequest(requestOptions: options));
+            _pendingRequests.add(QueuedRequest(requestOptions: options, handler: handler));
             return;
           }
         } catch (e) {
@@ -77,6 +80,21 @@ class AuthInterceptor extends Interceptor {
     for (final queued in _pendingRequests) {
       if (newToken != null) {
         queued.requestOptions.headers['Authorization'] = 'Bearer $newToken';
+        if (queued.handler != null) {
+          queued.handler!.next(queued.requestOptions);
+        } else if (queued.errorHandler != null) {
+          dio.fetch(queued.requestOptions).then(
+            (response) => queued.errorHandler!.resolve(response),
+            onError: (e) => queued.errorHandler!.next(e is DioException ? e : DioException(requestOptions: queued.requestOptions, error: e)),
+          );
+        }
+      } else {
+         final error = DioException(requestOptions: queued.requestOptions, error: 'Token refresh failed');
+         if (queued.handler != null) {
+            queued.handler!.reject(error);
+         } else if (queued.errorHandler != null) {
+            queued.errorHandler!.next(error);
+         }
       }
     }
     _pendingRequests.clear();
@@ -126,7 +144,7 @@ class AuthInterceptor extends Interceptor {
     }
 
     if (_isRefreshing) {
-      _pendingRequests.add(QueuedRequest(requestOptions: err.requestOptions));
+      _pendingRequests.add(QueuedRequest(requestOptions: err.requestOptions, errorHandler: handler));
       return;
     }
 

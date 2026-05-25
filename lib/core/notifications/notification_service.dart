@@ -122,7 +122,7 @@ class NotificationService {
     try {
       String deviceId = await _getDeviceId();
       await ApiClient().dio.post(
-        '/api/shop/notifications/register-device',
+        '/api/notifications/register-device',
         data: {
           'token': token,
           'deviceType': Platform.isAndroid ? 'ANDROID' : 'IOS',

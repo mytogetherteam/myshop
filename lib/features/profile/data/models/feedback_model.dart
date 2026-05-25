@@ -12,8 +12,9 @@ class FeedbackModel {
   factory FeedbackModel.fromJson(Map<String, dynamic> json) {
     return FeedbackModel(
       id: json['id'] as int,
-      description: json['description'] as String,
+      description: (json['message'] ?? json['description'] ?? '') as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }
 }
+

@@ -1,30 +1,39 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+
 class EnvConfig {
   static const String appEnv = String.fromEnvironment(
     'APP_ENV',
     defaultValue: 'production',
   );
 
-  static const String _baseUrlStaging =
-      'https://myshopdemoapi-production.up.railway.app';
-  static const String _baseUrlProduction =
-      'https://myshopdemoapi-production.up.railway.app';
+  static const String _baseUrlStaging = 'http://localhost:3001';
+  static const String _baseUrlProduction = 'http://localhost:3001';
 
-  static const String _wsUrlStaging =
-      'wss://myshopdemoapi-production.up.railway.app/ws/websocket';
-  static const String _wsUrlProduction =
-      'wss://myshopdemoapi-production.up.railway.app/ws/websocket';
+  static const String _wsUrlStaging = 'ws://localhost:3001/ws/websocket';
+  static const String _wsUrlProduction = 'ws://localhost:3001/ws/websocket';
+
+  static String _localizeUrl(String url) {
+    if (kIsWeb) return url;
+    try {
+      if (Platform.isAndroid) {
+        return url.replaceAll('localhost', '10.0.2.2').replaceAll('127.0.0.1', '10.0.2.2');
+      }
+    } catch (_) {}
+    return url;
+  }
 
   static String get apiBaseUrl {
-    if (appEnv == 'staging') return _baseUrlStaging;
-    return _baseUrlProduction;
+    final url = appEnv == 'staging' ? _baseUrlStaging : _baseUrlProduction;
+    return _localizeUrl(url);
   }
 
   static String get wsUrl {
-    if (appEnv == 'staging') return _wsUrlStaging;
-    return _wsUrlProduction;
+    final url = appEnv == 'staging' ? _wsUrlStaging : _wsUrlProduction;
+    return _localizeUrl(url);
   }
 
-  static const String apiPrefix = '/api/shop';
+  static const String apiPrefix = '/api';
 
   static const Duration connectTimeout = Duration(seconds: 45);
   static const Duration receiveTimeout = Duration(seconds: 45);

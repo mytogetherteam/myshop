@@ -36,18 +36,19 @@ class PaymentMethod {
   });
 
   factory PaymentMethod.fromJson(Map<String, dynamic> json) {
+    final paymentMethod = json['paymentMethod'] as Map<String, dynamic>?;
     return PaymentMethod(
       id: json['id'] ?? 0,
       shopId: json['shopId'],
       paymentMethodId: json['paymentMethodId'] ?? 0,
-      paymentMethodCode: json['paymentMethodCode'] ?? '',
-      paymentMethodName: json['paymentMethodName'] ?? '',
-      qrImageUrl: json['qrImageUrl'] ?? '',
+      paymentMethodCode: paymentMethod?['code'] ?? '',
+      paymentMethodName: paymentMethod?['name'] ?? '',
+      qrImageUrl: json['qr'] ?? '',
       accountNumber: json['accountNumber'] ?? '',
       accountName: json['accountName'] ?? '',
       isActive: json['isActive'] ?? false,
       displayOrder: json['displayOrder'] ?? 0,
-      pendingStatus: json['pendingStatus'] ?? json['status'] ?? 'APPROVED',
+      pendingStatus: json['status'] ?? 'APPROVED',
       rejectReason: json['rejectReason'],
     );
   }

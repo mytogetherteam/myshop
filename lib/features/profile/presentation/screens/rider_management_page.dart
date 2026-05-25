@@ -42,7 +42,7 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
     _userId = userInfo?.id;
 
     if (_shopId != null) {
-      _riders = await _riderService.getRiders(_shopId!);
+      _riders = await _riderService.getRiders();
     }
     
     if (mounted) {

@@ -72,7 +72,6 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
       await Future.wait([
         _menuService.getCategories(forceRefresh: false),
         _menuService.getMasterCategories(forceRefresh: false),
-        _menuService.getMasterMenuItems(),
         _menuService.getMenuTags(),
       ]);
       debugPrint('[ManageShopMenuPage] Master data pre-fetched successfully');
