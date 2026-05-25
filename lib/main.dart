@@ -29,18 +29,31 @@ void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  await AppVersion.init();
-  
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    debugPrint('[BOOT] Firebase init failed: $e');
+  }
+
+  try {
+    await AppVersion.init();
+  } catch (e) {
+    debugPrint('[BOOT] AppVersion init failed: $e');
+  }
+
   // Initialize notification service
   if (!kIsWeb) {
     NotificationService().initialize();
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   }
 
-  await LocalizationService.instance.init();
+  try {
+    await LocalizationService.instance.init();
+  } catch (e) {
+    debugPrint('[BOOT] LocalizationService init failed: $e');
+  }
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -54,5 +67,11 @@ void main() async {
   // Remove splash screen after first frame
   WidgetsBinding.instance.addPostFrameCallback((_) {
     FlutterNativeSplash.remove();
+  });
+
+  // Safety net: guarantee splash removal after max 4 seconds
+  Future.delayed(const Duration(seconds: 4), () {
+    FlutterNativeSplash.remove();
+    debugPrint('[BOOT] Safety-net splash removal triggered.');
   });
 }
