@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/presentation/widgets/global_modal.dart';
@@ -9,6 +12,7 @@ import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/features/profile/data/services/rider_service.dart';
 import 'package:my_shop/features/profile/data/models/rider_model.dart';
+import 'package:my_shop/core/presentation/widgets/image_picker_widget.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 
 class RiderManagementPage extends StatefulWidget {
@@ -194,7 +198,18 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
           backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-          child: PhosphorIcon(PhosphorIconsRegular.user, color: AppColors.primary),
+          child: rider.image != null && rider.image!.isNotEmpty
+              ? ClipOval(
+                  child: CachedNetworkImage(
+                    imageUrl: rider.image!,
+                    width: 40,
+                    height: 40,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => const CupertinoActivityIndicator(radius: 8),
+                    errorWidget: (context, url, error) => PhosphorIcon(PhosphorIconsRegular.user, color: AppColors.primary),
+                  ),
+                )
+              : PhosphorIcon(PhosphorIconsRegular.user, color: AppColors.primary),
         ),
         title: Text(
           rider.name,
@@ -260,6 +275,7 @@ class _RiderFormSheetState extends State<_RiderFormSheet> {
   final _licensePlateController = TextEditingController();
   bool _isLoading = false;
   final RiderService _riderService = RiderService();
+  XFile? _pickedImage;
 
   @override
   void initState() {
@@ -292,12 +308,14 @@ class _RiderFormSheetState extends State<_RiderFormSheet> {
       'userId': widget.userId,
     };
 
+    final File? imageFile = _pickedImage != null ? File(_pickedImage!.path) : null;
+
     bool success = false;
     if (widget.rider == null) {
-      final newRider = await _riderService.createRider(data);
+      final newRider = await _riderService.createRider(data, image: imageFile);
       success = newRider != null;
     } else {
-      final updatedRider = await _riderService.updateRider(widget.rider!.id, data);
+      final updatedRider = await _riderService.updateRider(widget.rider!.id, data, image: imageFile);
       success = updatedRider != null;
     }
 
@@ -347,6 +365,19 @@ class _RiderFormSheetState extends State<_RiderFormSheet> {
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF1E293B),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Align(
+              alignment: Alignment.center,
+              child: ImagePickerWidget(
+                imageUrl: widget.rider?.image,
+                shape: ImagePickerShape.circle,
+                width: 80,
+                height: 80,
+                onImageSelected: (file) {
+                  setState(() => _pickedImage = file);
+                },
               ),
             ),
             const SizedBox(height: 24),

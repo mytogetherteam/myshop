@@ -1,5 +1,6 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
 import '../models/rider_model.dart';
@@ -42,11 +43,25 @@ class RiderService {
     return [];
   }
 
-  Future<Rider?> createRider(Map<String, dynamic> riderData) async {
+  Future<Rider?> createRider(Map<String, dynamic> riderData, {File? image}) async {
     try {
+      final formDataMap = <String, dynamic>{
+        'data': MultipartFile.fromString(
+          jsonEncode(riderData),
+          contentType: DioMediaType.parse('application/json'),
+        ),
+      };
+
+      if (image != null) {
+        formDataMap['image'] = await MultipartFile.fromFile(
+          image.path,
+          filename: image.path.split('/').last,
+        );
+      }
+
       final response = await ApiClient().dio.post(
         _basePath,
-        data: riderData,
+        data: FormData.fromMap(formDataMap),
       );
 
       if (response.statusCode != null &&
@@ -66,11 +81,25 @@ class RiderService {
     return null;
   }
 
-  Future<Rider?> updateRider(int id, Map<String, dynamic> riderData) async {
+  Future<Rider?> updateRider(int id, Map<String, dynamic> riderData, {File? image}) async {
     try {
+      final formDataMap = <String, dynamic>{
+        'data': MultipartFile.fromString(
+          jsonEncode(riderData),
+          contentType: DioMediaType.parse('application/json'),
+        ),
+      };
+
+      if (image != null) {
+        formDataMap['image'] = await MultipartFile.fromFile(
+          image.path,
+          filename: image.path.split('/').last,
+        );
+      }
+
       final response = await ApiClient().dio.patch(
         '$_basePath/$id',
-        data: riderData,
+        data: FormData.fromMap(formDataMap),
       );
 
       if (response.statusCode != null &&
