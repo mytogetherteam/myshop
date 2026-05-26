@@ -7,6 +7,7 @@ import '../../../../core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/utils/app_version.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -41,6 +42,9 @@ class _LoginPageState extends State<LoginPage>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
     _animController.forward();
+    
+    // Explicitly remove splash screen when Login page mounts
+    FlutterNativeSplash.remove();
   }
 
   @override

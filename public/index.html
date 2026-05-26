@@ -92,6 +92,10 @@
       bottom: 0;
       right: 0;
     }
+    #splash {
+      pointer-events: none;
+      z-index: 9999;
+    }
   </style>
   <script id="splash-screen-script">
     function removeSplashFromWeb() {
@@ -99,6 +103,10 @@
       document.getElementById("splash-branding")?.remove();
       document.body.style.background = "transparent";
     }
+    
+    // JS Safety net: guarantee splash removal after max 4 seconds
+    // This runs independent of Dart's event loop.
+    setTimeout(removeSplashFromWeb, 4000);
   </script>
 </head>
 <body>

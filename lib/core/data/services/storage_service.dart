@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_shop/features/auth/data/models/auth_models.dart';
@@ -42,17 +43,24 @@ class StorageService {
     required String refreshToken,
   }) async {
     await _ensureInitialized();
-    await _secureStorage.write(key: _keyToken, value: token);
-    await _secureStorage.write(key: _keyRefreshToken, value: refreshToken);
+    if (kIsWeb) {
+      await _prefs!.setString(_keyToken, token);
+      await _prefs!.setString(_keyRefreshToken, refreshToken);
+    } else {
+      await _secureStorage.write(key: _keyToken, value: token);
+      await _secureStorage.write(key: _keyRefreshToken, value: refreshToken);
+    }
   }
 
   Future<String?> getToken() async {
     await _ensureInitialized();
+    if (kIsWeb) return _prefs!.getString(_keyToken);
     return await _secureStorage.read(key: _keyToken);
   }
 
   Future<String?> getRefreshToken() async {
     await _ensureInitialized();
+    if (kIsWeb) return _prefs!.getString(_keyRefreshToken);
     return await _secureStorage.read(key: _keyRefreshToken);
   }
 
@@ -70,8 +78,13 @@ class StorageService {
 
   Future<void> clearAll() async {
     await _ensureInitialized();
-    await _secureStorage.delete(key: _keyToken);
-    await _secureStorage.delete(key: _keyRefreshToken);
+    if (kIsWeb) {
+      await _prefs!.remove(_keyToken);
+      await _prefs!.remove(_keyRefreshToken);
+    } else {
+      await _secureStorage.delete(key: _keyToken);
+      await _secureStorage.delete(key: _keyRefreshToken);
+    }
     await _prefs!.remove(_keyUserInfo);
     await _prefs!.remove(_keySelectedShopId);
     await _prefs!.remove(_keyLanguage);
