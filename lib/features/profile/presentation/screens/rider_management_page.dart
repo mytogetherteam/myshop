@@ -198,10 +198,10 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
           backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-          child: rider.image != null && rider.image!.isNotEmpty
+          child: rider.profileUrl != null && rider.profileUrl!.isNotEmpty
               ? ClipOval(
                   child: CachedNetworkImage(
-                    imageUrl: rider.image!,
+                    imageUrl: rider.profileUrl!,
                     width: 40,
                     height: 40,
                     fit: BoxFit.cover,
@@ -221,14 +221,14 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (rider.phoneNumber != null && rider.phoneNumber!.isNotEmpty)
+            if (rider.phone != null && rider.phone!.isNotEmpty)
               Text(
-                rider.phoneNumber!,
+                rider.phone!,
                 style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF64748B)),
               ),
-            if (rider.licensePlate != null && rider.licensePlate!.isNotEmpty)
+            if (rider.vehicleNo != null && rider.vehicleNo!.isNotEmpty)
               Text(
-                'Plate: ${rider.licensePlate}',
+                'Plate: ${rider.vehicleNo}',
                 style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF64748B)),
               ),
           ],
@@ -282,8 +282,8 @@ class _RiderFormSheetState extends State<_RiderFormSheet> {
     super.initState();
     if (widget.rider != null) {
       _nameController.text = widget.rider!.name;
-      _phoneController.text = widget.rider!.phoneNumber ?? '';
-      _licensePlateController.text = widget.rider!.licensePlate ?? '';
+      _phoneController.text = widget.rider!.phone ?? '';
+      _licensePlateController.text = widget.rider!.vehicleNo ?? '';
     }
   }
 
@@ -302,10 +302,8 @@ class _RiderFormSheetState extends State<_RiderFormSheet> {
 
     final data = {
       'name': _nameController.text,
-      'phoneNumber': _phoneController.text,
-      'licensePlate': _licensePlateController.text,
-      'shopId': widget.shopId,
-      'userId': widget.userId,
+      'phone': _phoneController.text,
+      'vehicleNo': _licensePlateController.text,
     };
 
     final File? imageFile = _pickedImage != null ? File(_pickedImage!.path) : null;
@@ -371,7 +369,7 @@ class _RiderFormSheetState extends State<_RiderFormSheet> {
             Align(
               alignment: Alignment.center,
               child: ImagePickerWidget(
-                imageUrl: widget.rider?.image,
+                imageUrl: widget.rider?.profileUrl,
                 shape: ImagePickerShape.circle,
                 width: 80,
                 height: 80,

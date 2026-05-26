@@ -17,19 +17,21 @@ class RiderService {
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         if (data['success'] == true && data['data'] != null) {
-          final List<dynamic> jsonList = data['data'];
+          final dynamic rawData = data['data'];
+          List jsonList;
+          if (rawData is List) {
+            jsonList = rawData;
+          } else if (rawData is Map && rawData['content'] is List) {
+            jsonList = rawData['content'];
+          } else {
+            jsonList = [];
+          }
           return jsonList.map((e) => Rider.fromJson(e)).toList();
         } else if (data['data'] == null && data['success'] == null) {
-           // Direct return from nestjs standard output without interceptor wrap sometimes
           if (data is List) {
-             return (data as List).map((e) => Rider.fromJson(e)).toList();
+            return (data as List).map((e) => Rider.fromJson(e)).toList();
           }
         }
-      }
-      
-      // Fallback if the standard wrap isn't used
-      if (response.data is List) {
-          return (response.data as List).map((e) => Rider.fromJson(e)).toList();
       }
 
     } on DioException catch (e) {
@@ -55,7 +57,7 @@ class RiderService {
 
       if (image != null) {
         formData.files.add(MapEntry(
-          'image',
+          'profilePhoto',
           await MultipartFile.fromFile(
             image.path,
             filename: image.path.split('/').last,
@@ -100,7 +102,7 @@ class RiderService {
 
       if (image != null) {
         formData.files.add(MapEntry(
-          'image',
+          'profilePhoto',
           await MultipartFile.fromFile(
             image.path,
             filename: image.path.split('/').last,
@@ -108,7 +110,7 @@ class RiderService {
         ));
       }
 
-      final response = await ApiClient().dio.patch(
+      final response = await ApiClient().dio.put(
         '$_basePath/$id',
         data: formData,
       );

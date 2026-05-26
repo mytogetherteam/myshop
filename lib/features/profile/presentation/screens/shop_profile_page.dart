@@ -569,8 +569,6 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                 _amenityChip(PhosphorIconsRegular.car, 'Parking'),
               if (_shopProfile?.hasWifi == true)
                 _amenityChip(PhosphorIconsRegular.wifiHigh, 'WiFi'),
-              if (_shopProfile?.hasDelivery == true)
-                _amenityChip(PhosphorIconsRegular.motorcycle, 'Delivery'),
               if (_shopProfile?.isHalal == true)
                 _amenityChip(PhosphorIconsRegular.moon, 'Halal'),
               if (_shopProfile?.isVegetarian == true)

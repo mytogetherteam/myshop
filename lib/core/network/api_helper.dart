@@ -42,7 +42,8 @@ class ApiException implements Exception {
         break;
       case DioExceptionType.badResponse:
         statusCode = e.response?.statusCode;
-        details = e.response?.data?['message'] ?? e.response?.data?['details'];
+        final msg = e.response?.data?['message'];
+        details = msg is List ? msg.join('; ') : (msg ?? e.response?.data?['details']);
         switch (statusCode) {
           case 400:
             message = 'Bad request';

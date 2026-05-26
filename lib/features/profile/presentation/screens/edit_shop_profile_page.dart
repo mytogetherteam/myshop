@@ -106,7 +106,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
 
   late bool _hasParking;
   late bool _hasWifi;
-  late bool _hasDelivery;
+  late bool _deliveryEnabled;
   late bool _isHalal;
   late bool _isVegetarian;
   late int _priceRange;
@@ -279,7 +279,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
 
     _hasParking = p?.hasParking ?? false;
     _hasWifi = p?.hasWifi ?? false;
-    _hasDelivery = p?.hasDelivery ?? false;
+    _deliveryEnabled = p?.deliveryEnabled ?? false;
     _isHalal = p?.isHalal ?? false;
     _isVegetarian = p?.isVegetarian ?? false;
 
@@ -353,7 +353,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     _longitude = p.longitude;
     _hasParking = p.hasParking;
     _hasWifi = p.hasWifi;
-    _hasDelivery = p.hasDelivery;
+    _deliveryEnabled = p.deliveryEnabled;
     _isHalal = p.isHalal;
     _isVegetarian = p.isVegetarian;
 
@@ -537,11 +537,11 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       'districtEn': _selectedDistrict?.nameEn ?? _districtCtrl.text,
       'districtMm': _selectedDistrict?.nameMm ?? _districtCtrl.text,
       'districtTh': _selectedDistrict?.nameTh ?? _districtCtrl.text,
-      'categoryId': _selectedCategory?.id,
+      'shopCategoryId': _selectedCategory?.id,
       'categoryEn': _selectedCategory?.nameEn ?? _catEnCtrl.text,
       'categoryMm': _selectedCategory?.nameMm ?? _catMmCtrl.text,
       'categoryTh': _selectedCategory?.nameTh ?? _catThCtrl.text,
-      'subCategoryId': _selectedSubcategory?.id,
+      'shopSubCategoryId': _selectedSubcategory?.id,
       'subCategoryEn': _selectedSubcategory?.nameEn ?? _subCatEnCtrl.text,
       'subCategoryMm': _selectedSubcategory?.nameMm ?? _subCatMmCtrl.text,
       'subCategoryTh': _selectedSubcategory?.nameTh ?? _subCatThCtrl.text,
@@ -553,7 +553,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       'longitude': _longitude ?? 96.1735,
       'hasParking': _hasParking,
       'hasWifi': _hasWifi,
-      'hasDelivery': _hasDelivery,
+      'deliveryEnabled': _deliveryEnabled,
       'isHalal': _isHalal,
       'isVegetarian': _isVegetarian,
       'pricePreference': _priceRange == 0
@@ -562,7 +562,6 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       'maxItemQuantityPerOrder': int.tryParse(_maxQtyCtrl.text) ?? 10,
       'minOrderAmount': double.tryParse(_minAmountCtrl.text) ?? 0.0,
       'baseDeliveryFee': _currentProfile?.baseDeliveryFee ?? 0.0,
-      'deliveryEnabled': _currentProfile?.deliveryEnabled ?? false,
       'googleMapsLink': _mapsLinkCtrl.text,
       'cityId': _selectedCity?.id,
       'logoUrl': _currentProfile?.logoUrl,
@@ -885,13 +884,13 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             AmenitiesAndDietarySection(
               hasParking: _hasParking,
               hasWifi: _hasWifi,
-              hasDelivery: _hasDelivery,
+              deliveryEnabled: _deliveryEnabled,
               isHalal: _isHalal,
               isVegetarian: _isVegetarian,
               onChanged: (parking, wifi, delivery, halal, vegetarian) {
                 _hasParking = parking;
                 _hasWifi = wifi;
-                _hasDelivery = delivery;
+                _deliveryEnabled = delivery;
                 _isHalal = halal;
                 _isVegetarian = vegetarian;
                 _markChanged();

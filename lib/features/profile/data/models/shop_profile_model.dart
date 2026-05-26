@@ -24,7 +24,6 @@ class ShopProfileModel {
   // Amenities & Tags
   final bool hasParking;
   final bool hasWifi;
-  final bool hasDelivery;
   final bool isHalal;
   final bool isVegetarian;
   
@@ -94,7 +93,6 @@ class ShopProfileModel {
     required this.ratingCount,
     required this.hasParking,
     required this.hasWifi,
-    required this.hasDelivery,
     required this.isHalal,
     required this.isVegetarian,
     this.displayBaseDeliveryFee,
@@ -155,7 +153,6 @@ class ShopProfileModel {
       
       hasParking: json['hasParking'] ?? false,
       hasWifi: json['hasWifi'] ?? false,
-      hasDelivery: json['hasDelivery'] ?? false,
       isHalal: json['isHalal'] ?? false,
       isVegetarian: json['isVegetarian'] ?? false,
       
@@ -197,7 +194,11 @@ class ShopProfileModel {
       currency: json['currency'] ?? '฿',
       cuisineTypeIds: json['cuisineTypeIds'] != null
           ? List<int>.from(json['cuisineTypeIds'])
-          : [],
+          : json['shopCuisines'] != null
+              ? (json['shopCuisines'] as List)
+                  .map((e) => e['cuisineTypeId'] as int)
+                  .toList()
+              : [],
     );
   }
 }

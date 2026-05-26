@@ -73,7 +73,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   List<int> _selectedTagIds = [];
 
   // Meal Types
-  final List<String> _mealTypeOptions = ['BREAKFAST', 'LUNCH', 'DINNER'];
+  final List<String> _mealTypeOptions = ['BREAKFAST', 'LUNCH', 'DINNER', 'OTHER'];
   List<String> _selectedMealTypes = [];
 
   // Boolean Properties mapped to Tags
@@ -1749,7 +1749,6 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                 },
               );
             }),
-            _buildCustomChip(label: 'Other', selected: false, onTap: () {}),
           ],
         ),
       ],
@@ -1793,7 +1792,6 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                 },
               );
             }),
-            _buildCustomChip(label: 'Other', selected: false, onTap: () {}),
           ],
         ),
       ],

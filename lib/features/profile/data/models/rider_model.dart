@@ -1,31 +1,31 @@
 class Rider {
   final int id;
   final String name;
-  final String? phoneNumber;
-  final String? licensePlate;
-  final String? image;
+  final String? phone;
+  final String? vehicleNo;
+  final String? profileUrl;
   final int shopId;
-  final int userId;
+  final bool isActive;
 
   Rider({
     required this.id,
     required this.name,
-    this.phoneNumber,
-    this.licensePlate,
-    this.image,
+    this.phone,
+    this.vehicleNo,
+    this.profileUrl,
     required this.shopId,
-    required this.userId,
+    this.isActive = true,
   });
 
   factory Rider.fromJson(Map<String, dynamic> json) {
     return Rider(
       id: json['id'],
       name: json['name'],
-      phoneNumber: json['phoneNumber'],
-      licensePlate: json['licensePlate'],
-      image: json['image'],
+      phone: json['phone'],
+      vehicleNo: json['vehicleNo'],
+      profileUrl: json['profileUrl'],
       shopId: json['shopId'],
-      userId: json['userId'],
+      isActive: json['isActive'] ?? true,
     );
   }
 
@@ -33,11 +33,11 @@ class Rider {
     return {
       'id': id,
       'name': name,
-      'phoneNumber': phoneNumber,
-      'licensePlate': licensePlate,
-      'image': image,
+      'phone': phone,
+      'vehicleNo': vehicleNo,
+      'profileUrl': profileUrl,
       'shopId': shopId,
-      'userId': userId,
+      'isActive': isActive,
     };
   }
 }

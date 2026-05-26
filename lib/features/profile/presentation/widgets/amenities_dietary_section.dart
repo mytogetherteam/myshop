@@ -8,7 +8,7 @@ import 'form_section.dart';
 class AmenitiesAndDietarySection extends StatefulWidget {
   final bool hasParking;
   final bool hasWifi;
-  final bool hasDelivery;
+  final bool deliveryEnabled;
   final bool isHalal;
   final bool isVegetarian;
   final Function(
@@ -23,7 +23,7 @@ class AmenitiesAndDietarySection extends StatefulWidget {
     super.key,
     required this.hasParking,
     required this.hasWifi,
-    required this.hasDelivery,
+    required this.deliveryEnabled,
     required this.isHalal,
     required this.isVegetarian,
     required this.onChanged,
@@ -37,7 +37,7 @@ class AmenitiesAndDietarySection extends StatefulWidget {
 class _AmenitiesAndDietarySectionState extends State<AmenitiesAndDietarySection> {
   late bool _hasParking;
   late bool _hasWifi;
-  late bool _hasDelivery;
+  late bool _deliveryEnabled;
   late bool _isHalal;
   late bool _isVegetarian;
 
@@ -46,7 +46,7 @@ class _AmenitiesAndDietarySectionState extends State<AmenitiesAndDietarySection>
     super.initState();
     _hasParking = widget.hasParking;
     _hasWifi = widget.hasWifi;
-    _hasDelivery = widget.hasDelivery;
+    _deliveryEnabled = widget.deliveryEnabled;
     _isHalal = widget.isHalal;
     _isVegetarian = widget.isVegetarian;
   }
@@ -55,7 +55,7 @@ class _AmenitiesAndDietarySectionState extends State<AmenitiesAndDietarySection>
     widget.onChanged(
       _hasParking,
       _hasWifi,
-      _hasDelivery,
+      _deliveryEnabled,
       _isHalal,
       _isVegetarian,
     );
@@ -129,10 +129,10 @@ class _AmenitiesAndDietarySectionState extends State<AmenitiesAndDietarySection>
                 const Divider(height: 1, indent: 48),
                 _buildToggleRow(
                   icon: PhosphorIconsRegular.motorcycle,
-                  label: t?.translate('delivery') ?? 'Delivery',
-                  value: _hasDelivery,
+                  label: t?.translate('delivery_enabled') ?? 'Delivery',
+                  value: _deliveryEnabled,
                   onChanged: (v) {
-                    setState(() => _hasDelivery = v);
+                    setState(() => _deliveryEnabled = v);
                     _notify();
                   },
                 ),

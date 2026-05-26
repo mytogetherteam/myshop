@@ -39,7 +39,8 @@ class CategoryService {
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         if (data['success'] == true && data['data'] != null) {
-          final List list = data['data'] ?? [];
+          final Map<String, dynamic> paginated = data['data'];
+          final List list = paginated['content'] ?? [];
           _categoriesCache = list.map((json) => MenuCategoryModel.fromJson(json)).toList();
           return _categoriesCache;
         }
