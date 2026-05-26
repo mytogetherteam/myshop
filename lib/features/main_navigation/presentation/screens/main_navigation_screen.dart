@@ -222,47 +222,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
 
 
-  Widget _buildGradientItem(IconData icon, String label) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        PhosphorIcon(
-          icon,
-          size: 28,
-          color: const Color(0xFFED3973), // Use primary color directly
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFFED3973),
-          ),
-        ),
-        const SizedBox(height: 8),
-      ],
-    );
-  }
-
-  Widget _buildInactiveItem(IconData icon, String label) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        PhosphorIcon(icon, size: 28, color: const Color(0xFF94A3B8)),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: const Color(0xFF94A3B8),
-          ),
-        ),
-        const SizedBox(height: 8),
-      ],
-    );
-  }
 
 
 
@@ -295,76 +254,107 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         }).toList(),
       ),
 
-      bottomNavigationBar: Container(
+      bottomNavigationBar: _buildBottomNav(t),
+    );
+  }
+
+  Widget _buildBottomNav(AppLocalizations? t) {
+    final items = <_NavItem>[
+      _NavItem(
+        label: t?.translate('order') ?? 'Order',
+        icon: PhosphorIconsRegular.cookingPot,
+        activeIcon: PhosphorIconsFill.cookingPot,
+        onRefresh: () => _ordersKey.currentState?.refresh(),
+      ),
+      _NavItem(
+        label: t?.translate('menu') ?? 'Menu',
+        icon: PhosphorIconsRegular.forkKnife,
+        activeIcon: PhosphorIconsFill.forkKnife,
+        onRefresh: () => _menuKey.currentState?.refresh(),
+      ),
+      _NavItem(
+        label: t?.translate('report') ?? 'Report',
+        icon: PhosphorIconsRegular.listHeart,
+        activeIcon: PhosphorIconsFill.listHeart,
+        onRefresh: () => _reportKey.currentState?.refresh(),
+      ),
+      _NavItem(
+        label: t?.translate('chat') ?? 'Chat',
+        icon: PhosphorIconsRegular.chatCircleDots,
+        activeIcon: PhosphorIconsFill.chatCircleDots,
+        onRefresh: () => _chatKey.currentState?.refresh(),
+      ),
+      _NavItem(
+        label: t?.translate('profile') ?? 'Profile',
+        icon: PhosphorIconsRegular.storefront,
+        activeIcon: PhosphorIconsFill.storefront,
+        onRefresh: () => _profileKey.currentState?.refresh(),
+      ),
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
         color: Colors.white,
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).padding.bottom > 0
-              ? MediaQuery.of(context).padding.bottom
-              : 12,
+        border: Border(
+          top: BorderSide(color: Colors.grey.shade100, width: 1),
         ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            if (_currentIndex == index) {
-              switch (index) {
-                case 0:
-                  _ordersKey.currentState?.refresh();
-                  break;
-                case 1:
-                  _menuKey.currentState?.refresh();
-                  break;
-                case 2:
-                  _reportKey.currentState?.refresh();
-                  break;
-                case 3:
-                  _chatKey.currentState?.refresh();
-                  break;
-                case 4:
-                  _profileKey.currentState?.refresh();
-                  break;
-              }
-            }
+      ),
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.only(bottom: 8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: List.generate(items.length, (index) {
+              return _buildNavItem(items[index], index);
+            }),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(_NavItem item, int index) {
+    final bool isSelected = _currentIndex == index;
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          if (isSelected) {
+            item.onRefresh();
+          } else {
             setState(() {
               _currentIndex = index;
               _visited[index] = true;
             });
-          },
-          backgroundColor: Colors.white,
-          selectedItemColor: const Color(0xFFED3973),
-          unselectedItemColor: const Color(0xFF94A3B8),
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          selectedFontSize: 0,
-          unselectedFontSize: 0,
-          type: BottomNavigationBarType.fixed,
-          elevation: 8,
-          items: [
-            BottomNavigationBarItem(
-              icon: _buildInactiveItem(PhosphorIconsRegular.cookingPot, t?.translate('order') ?? 'Order'),
-              activeIcon: _buildGradientItem(PhosphorIconsFill.cookingPot, t?.translate('order') ?? 'Order'),
-              label: t?.translate('order') ?? 'Order',
-            ),
-            BottomNavigationBarItem(
-              icon: _buildInactiveItem(PhosphorIconsRegular.forkKnife, t?.translate('menu') ?? 'Menu'),
-              activeIcon: _buildGradientItem(PhosphorIconsFill.forkKnife, t?.translate('menu') ?? 'Menu'),
-              label: t?.translate('menu') ?? 'Menu',
-            ),
-            BottomNavigationBarItem(
-              icon: _buildInactiveItem(PhosphorIconsRegular.listHeart, t?.translate('report') ?? 'Report'),
-              activeIcon: _buildGradientItem(PhosphorIconsFill.listHeart, t?.translate('report') ?? 'Report'),
-              label: t?.translate('report') ?? 'Report',
-            ),
-            BottomNavigationBarItem(
-              icon: _buildInactiveItem(PhosphorIconsRegular.chatCircleDots, t?.translate('chat') ?? 'Chat'),
-              activeIcon: _buildGradientItem(PhosphorIconsFill.chatCircleDots, t?.translate('chat') ?? 'Chat'),
-              label: t?.translate('chat') ?? 'Chat',
-            ),
-            BottomNavigationBarItem(
-              icon: _buildInactiveItem(PhosphorIconsRegular.storefront, t?.translate('profile') ?? 'Profile'),
-              activeIcon: _buildGradientItem(PhosphorIconsFill.storefront, t?.translate('profile') ?? 'Profile'),
-              label: t?.translate('profile') ?? 'Profile',
-            ),
-          ],
+          }
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              PhosphorIcon(
+                isSelected ? item.activeIcon : item.icon,
+                size: 26,
+                color: isSelected
+                    ? const Color(0xFFED3973)
+                    : const Color(0xFF94A3B8),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                item.label,
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: isSelected
+                      ? const Color(0xFFED3973)
+                      : const Color(0xFF94A3B8),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -415,4 +405,18 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     );
   }
   */
+}
+
+class _NavItem {
+  final String label;
+  final IconData icon;
+  final IconData activeIcon;
+  final VoidCallback onRefresh;
+
+  const _NavItem({
+    required this.label,
+    required this.icon,
+    required this.activeIcon,
+    required this.onRefresh,
+  });
 }
