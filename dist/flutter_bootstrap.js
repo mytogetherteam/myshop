@@ -35,7 +35,8 @@ if (!window._flutter) {
 }
 _flutter.buildConfig = {"engineRevision":"e4b8dca3f1b4ede4c30371002441c88c12187ed6","builds":[{"compileTarget":"dart2js","renderer":"canvaskit","mainJsPath":"main.dart.js"},{}]};
 
-
-// Do not register Flutter's service worker — a previous custom worker
-// unregistered itself and forced client.reload(), which broke PWA startup.
-_flutter.loader.load();
+_flutter.loader.load({
+  serviceWorkerSettings: {
+    serviceWorkerVersion: "181341894" /* Flutter's service worker is deprecated and will be removed in a future Flutter release. */
+  }
+});

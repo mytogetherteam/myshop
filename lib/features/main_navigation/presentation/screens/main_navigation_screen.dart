@@ -40,6 +40,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final GlobalKey<ProfilePageState> _profileKey = GlobalKey<ProfilePageState>();
   final List<bool> _visited = [false, false, false, false, false];
 
+  // Tracks order IDs that have already triggered a popup in this session, so
+  // WebSocket reconnect replays do not spawn duplicate dialogs (which on web
+  // can stack invisible modal barriers and block all taps).
+  final Set<String> _alertedOrderIds = <String>{};
+  bool _isDialogOpen = false;
+
 
   @override
   void initState() {
@@ -74,75 +80,92 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       final dynamic rawOrder = event['order'];
       final dynamic rawMsg = event['message'];
       final String? msg = rawMsg?.toString();
+      final String eventType = (event['type'] ?? '').toString().toUpperCase();
 
-      if (rawOrder != null) {
-        final orderData = OrderModel.fromJson(rawOrder);
+      // Only treat true push events as alert-worthy; ignore REPLAY/SYNC/initial
+      // state that the server resends every WebSocket reconnect.
+      final bool isPushEvent =
+          eventType == 'NEW_ORDER' ||
+          eventType == 'ORDER_UPDATE' ||
+          eventType == 'ORDER_WARNING';
 
-        if (mounted) {
-          final String status = orderData.status.toUpperCase();
-          final String? lowerMsg = msg?.toLowerCase();
-          final bool isTwoMinWarning =
-              lowerMsg != null &&
-              (lowerMsg.contains('2 min') || lowerMsg.contains('2 မိနစ်'));
-
-          debugPrint(
-            '🧪 [MainNavigation] LOGIC CHECK -> Status: $status, isTwoMin: $isTwoMinWarning, Msg: $msg',
-          );
-
-          if (isTwoMinWarning) {
-            debugPrint(
-              '⚠️ [MainNavigation] TRIGGERING OrderWarningDialog (2-min alert)',
-            );
-            HapticFeedback.vibrate();
-            showDialog(
-              context: context,
-              barrierDismissible: true,
-              builder: (context) => OrderWarningDialog(
-                message: msg!,
-                order: orderData,
-                onTakeAction: () {
-                  Navigator.pop(context);
-                  _navigateToOrderDetail(orderData);
-                },
-              ),
-            );
-          } else if (status == 'PENDING' ||
-              status == 'NEW' ||
-              event['type'] == 'NEW_ORDER') {
-            debugPrint('📦 [MainNavigation] TRIGGERING NewOrderDialog');
-            HapticFeedback.heavyImpact();
-            showDialog(
-              context: context,
-              barrierDismissible: true,
-              builder: (context) => NewOrderDialog(
-                order: orderData,
-                onViewOrder: () {
-                  Navigator.pop(context);
-                  _navigateToOrderDetail(orderData);
-                },
-              ),
-            );
-          } else if (msg != null && msg.trim().isNotEmpty) {
-            // Generic warning for other status updates with messages
-            debugPrint(
-              '⚠️ [MainNavigation] TRIGGERING OrderWarningDialog (Generic message)',
-            );
-            HapticFeedback.vibrate();
-            showDialog(
-              context: context,
-              barrierDismissible: true,
-              builder: (context) => OrderWarningDialog(
-                message: msg,
-                order: orderData,
-                onTakeAction: () {
-                  Navigator.pop(context);
-                  _navigateToOrderDetail(orderData);
-                },
-              ),
-            );
-          }
-        }
+      if (!isPushEvent) {
+        debugPrint('⏭️ [MainNavigation] Ignoring non-push event: $eventType');
+        return;
       }
+
+      if (rawOrder == null) return;
+
+      OrderModel orderData;
+      try {
+        orderData = OrderModel.fromJson(rawOrder);
+      } catch (e) {
+        debugPrint('⚠️ [MainNavigation] Failed to parse order: $e');
+        return;
+      }
+
+      if (!mounted) return;
+
+      // Deduplicate: never show two dialogs for the same order id.
+      if (_alertedOrderIds.contains(orderData.id)) {
+        debugPrint('⏭️ [MainNavigation] Order ${orderData.id} already alerted');
+        return;
+      }
+
+      // Never stack dialogs — one at a time only.
+      if (_isDialogOpen) {
+        debugPrint('⏭️ [MainNavigation] Dialog already open, skipping');
+        return;
+      }
+
+      final String status = orderData.status.toUpperCase();
+      final String? lowerMsg = msg?.toLowerCase();
+      final bool isTwoMinWarning = lowerMsg != null &&
+          (lowerMsg.contains('2 min') || lowerMsg.contains('2 မိနစ်'));
+
+      Widget? dialog;
+      if (isTwoMinWarning) {
+        HapticFeedback.vibrate();
+        dialog = OrderWarningDialog(
+          message: msg!,
+          order: orderData,
+          onTakeAction: () {
+            Navigator.pop(context);
+            _navigateToOrderDetail(orderData);
+          },
+        );
+      } else if (eventType == 'NEW_ORDER' || status == 'PENDING' || status == 'NEW') {
+        HapticFeedback.heavyImpact();
+        dialog = NewOrderDialog(
+          order: orderData,
+          onViewOrder: () {
+            Navigator.pop(context);
+            _navigateToOrderDetail(orderData);
+          },
+        );
+      } else if (msg != null && msg.trim().isNotEmpty) {
+        HapticFeedback.vibrate();
+        dialog = OrderWarningDialog(
+          message: msg,
+          order: orderData,
+          onTakeAction: () {
+            Navigator.pop(context);
+            _navigateToOrderDetail(orderData);
+          },
+        );
+      }
+
+      if (dialog == null) return;
+
+      _alertedOrderIds.add(orderData.id);
+      _isDialogOpen = true;
+      showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (context) => dialog!,
+      ).whenComplete(() {
+        if (mounted) _isDialogOpen = false;
+      });
     });
   }
 
@@ -272,69 +295,77 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         }).toList(),
       ),
 
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          if (_currentIndex == index) {
-            switch (index) {
-              case 0:
-                _ordersKey.currentState?.refresh();
-                break;
-              case 1:
-                _menuKey.currentState?.refresh();
-                break;
-              case 2:
-                _reportKey.currentState?.refresh();
-                break;
-              case 3:
-                _chatKey.currentState?.refresh();
-                break;
-              case 4:
-                _profileKey.currentState?.refresh();
-                break;
+      bottomNavigationBar: Container(
+        color: Colors.white,
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).padding.bottom > 0
+              ? MediaQuery.of(context).padding.bottom
+              : 12,
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            if (_currentIndex == index) {
+              switch (index) {
+                case 0:
+                  _ordersKey.currentState?.refresh();
+                  break;
+                case 1:
+                  _menuKey.currentState?.refresh();
+                  break;
+                case 2:
+                  _reportKey.currentState?.refresh();
+                  break;
+                case 3:
+                  _chatKey.currentState?.refresh();
+                  break;
+                case 4:
+                  _profileKey.currentState?.refresh();
+                  break;
+              }
             }
-          }
-          setState(() {
-            _currentIndex = index;
-            _visited[index] = true;
-          });
-        },
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFFED3973),
-        unselectedItemColor: const Color(0xFF94A3B8),
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        selectedFontSize: 0,
-        unselectedFontSize: 0,
-        type: BottomNavigationBarType.fixed,
-        elevation: 8,
-        items: [
-          BottomNavigationBarItem(
-            icon: _buildInactiveItem(PhosphorIconsRegular.cookingPot, t?.translate('order') ?? 'Order'),
-            activeIcon: _buildGradientItem(PhosphorIconsFill.cookingPot, t?.translate('order') ?? 'Order'),
-            label: t?.translate('order') ?? 'Order',
-          ),
-          BottomNavigationBarItem(
-            icon: _buildInactiveItem(PhosphorIconsRegular.forkKnife, t?.translate('menu') ?? 'Menu'),
-            activeIcon: _buildGradientItem(PhosphorIconsFill.forkKnife, t?.translate('menu') ?? 'Menu'),
-            label: t?.translate('menu') ?? 'Menu',
-          ),
-          BottomNavigationBarItem(
-            icon: _buildInactiveItem(PhosphorIconsRegular.listHeart, t?.translate('report') ?? 'Report'),
-            activeIcon: _buildGradientItem(PhosphorIconsFill.listHeart, t?.translate('report') ?? 'Report'),
-            label: t?.translate('report') ?? 'Report',
-          ),
-          BottomNavigationBarItem(
-            icon: _buildInactiveItem(PhosphorIconsRegular.chatCircleDots, t?.translate('chat') ?? 'Chat'),
-            activeIcon: _buildGradientItem(PhosphorIconsFill.chatCircleDots, t?.translate('chat') ?? 'Chat'),
-            label: t?.translate('chat') ?? 'Chat',
-          ),
-          BottomNavigationBarItem(
-            icon: _buildInactiveItem(PhosphorIconsRegular.storefront, t?.translate('profile') ?? 'Profile'),
-            activeIcon: _buildGradientItem(PhosphorIconsFill.storefront, t?.translate('profile') ?? 'Profile'),
-            label: t?.translate('profile') ?? 'Profile',
-          ),
-        ],
+            setState(() {
+              _currentIndex = index;
+              _visited[index] = true;
+            });
+          },
+          backgroundColor: Colors.white,
+          selectedItemColor: const Color(0xFFED3973),
+          unselectedItemColor: const Color(0xFF94A3B8),
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          selectedFontSize: 0,
+          unselectedFontSize: 0,
+          type: BottomNavigationBarType.fixed,
+          elevation: 8,
+          items: [
+            BottomNavigationBarItem(
+              icon: _buildInactiveItem(PhosphorIconsRegular.cookingPot, t?.translate('order') ?? 'Order'),
+              activeIcon: _buildGradientItem(PhosphorIconsFill.cookingPot, t?.translate('order') ?? 'Order'),
+              label: t?.translate('order') ?? 'Order',
+            ),
+            BottomNavigationBarItem(
+              icon: _buildInactiveItem(PhosphorIconsRegular.forkKnife, t?.translate('menu') ?? 'Menu'),
+              activeIcon: _buildGradientItem(PhosphorIconsFill.forkKnife, t?.translate('menu') ?? 'Menu'),
+              label: t?.translate('menu') ?? 'Menu',
+            ),
+            BottomNavigationBarItem(
+              icon: _buildInactiveItem(PhosphorIconsRegular.listHeart, t?.translate('report') ?? 'Report'),
+              activeIcon: _buildGradientItem(PhosphorIconsFill.listHeart, t?.translate('report') ?? 'Report'),
+              label: t?.translate('report') ?? 'Report',
+            ),
+            BottomNavigationBarItem(
+              icon: _buildInactiveItem(PhosphorIconsRegular.chatCircleDots, t?.translate('chat') ?? 'Chat'),
+              activeIcon: _buildGradientItem(PhosphorIconsFill.chatCircleDots, t?.translate('chat') ?? 'Chat'),
+              label: t?.translate('chat') ?? 'Chat',
+            ),
+            BottomNavigationBarItem(
+              icon: _buildInactiveItem(PhosphorIconsRegular.storefront, t?.translate('profile') ?? 'Profile'),
+              activeIcon: _buildGradientItem(PhosphorIconsFill.storefront, t?.translate('profile') ?? 'Profile'),
+              label: t?.translate('profile') ?? 'Profile',
+            ),
+          ],
+        ),
       ),
     );
   }
