@@ -115,9 +115,22 @@
       document.getElementById("splash-branding")?.remove();
       document.body.style.background = "transparent";
     }
-    
+
+    // Remove splash as soon as Flutter paints (do not wait only on Dart).
+    window.addEventListener("flutter-first-frame", removeSplashFromWeb);
+
     // JS Safety net: guarantee splash removal after max 4 seconds
     setTimeout(removeSplashFromWeb, 4000);
+  </script>
+  <script>
+    // Clear legacy service workers that reload the page on activate.
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        registrations.forEach(function (registration) {
+          registration.unregister();
+        });
+      });
+    }
   </script>
 </head>
 
