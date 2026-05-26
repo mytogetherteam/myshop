@@ -64,11 +64,13 @@ class ProfileService {
     try {
       debugPrint('PUT REQUEST: $_profilePath, Data: $payload');
       
-      final formData = FormData();
+       final formData = FormData();
       
       for (final entry in payload.entries) {
         final value = entry.value;
-        if (value is MultipartFile) {
+        if (value == null) {
+          continue;
+        } else if (value is MultipartFile) {
           formData.files.add(MapEntry(entry.key, value));
         } else if (value is List || value is Map) {
           formData.fields.add(MapEntry(entry.key, jsonEncode(value)));

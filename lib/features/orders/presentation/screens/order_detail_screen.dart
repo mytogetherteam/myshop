@@ -46,7 +46,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isFormValid = false;
   String _deliveryOption = 'PREPAID'; // 'PREPAID' or 'NORMAL'
-  String _selectedWaitingTime = '1';
 
   @override
   void initState() {
@@ -68,9 +67,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _waitingTimeMinutesController.text = _currentOrder.waitingTimeMinutes > 0 
         ? _currentOrder.waitingTimeMinutes.toString() 
         : '';
-    _selectedWaitingTime = _currentOrder.waitingTimeMinutes > 0 
-        ? _currentOrder.waitingTimeMinutes.toString() 
-        : '1';
     _deliveryOption = _currentOrder.deliveryType == 'NORMAL' ? 'NORMAL' : 'PREPAID';
     _validateFormState();
   }
@@ -191,21 +187,38 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
             Image.asset('assets/images/app_logo.png', width: 24, height: 24),
             const SizedBox(width: 8),
-            Text('MyTogether', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 16)),
+            Text(
+              'MyTogether',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+                color: const Color(0xFF1E293B),
+              ),
+            ),
           ],
         ),
         content: Text(
           'This feature is currently unavailable in demo app.',
-          style: GoogleFonts.poppins(fontSize: 14),
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            color: const Color(0xFF475569),
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('OK', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: AppColors.primary)),
+            child: Text(
+              'OK',
+              style: GoogleFonts.poppins(
+                color: const Color(0xFFED3973),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -288,18 +301,32 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
             Image.asset('assets/images/app_logo.png', width: 24, height: 24),
             const SizedBox(width: 8),
-            Text('Revise Payment', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 16)),
+            Text(
+              'Revise Payment',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+                color: const Color(0xFF1E293B),
+              ),
+            ),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Please provide a reason for requesting a new payment slip.', style: GoogleFonts.poppins(fontSize: 14)),
+            Text(
+              'Please provide a reason for requesting a new payment slip.',
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: const Color(0xFF475569),
+              ),
+            ),
             const SizedBox(height: 16),
             TextField(
               controller: reasonController,
@@ -328,8 +355,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context), 
-            child: Text('Cancel', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontWeight: FontWeight.w500))
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.poppins(
+                color: const Color(0xFF475569),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () {
@@ -337,7 +370,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 Navigator.pop(context, reasonController.text.trim());
               }
             },
-            child: GradientText('Submit', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+            child: Text(
+              'Submit',
+              style: GoogleFonts.poppins(
+                color: const Color(0xFFED3973),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -2219,50 +2258,6 @@ Widget _buildAnimatedProgress() {
               borderSide: const BorderSide(color: Colors.red, width: 2),
             ),
             errorStyle: GoogleFonts.poppins(fontSize: 11, color: Colors.red),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDropdownField(String label, String value, List<String> items, Function(String?) onChanged) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF64748B),
-          ),
-        ),
-        const SizedBox(height: 6),
-        DropdownButtonFormField<String>(
-          initialValue: value,
-          icon: const Icon(PhosphorIconsRegular.caretDown, size: 16),
-          items: items.map((i) => DropdownMenuItem(
-            value: i,
-            child: Text('$i mins', style: GoogleFonts.poppins(fontSize: 14)),
-          )).toList(),
-          onChanged: onChanged,
-          dropdownColor: Colors.white,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: AppColors.primary),
-            ),
           ),
         ),
       ],

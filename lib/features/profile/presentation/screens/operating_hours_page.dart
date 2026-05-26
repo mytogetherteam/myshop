@@ -8,7 +8,6 @@ import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/features/main_navigation/presentation/screens/main_navigation_screen.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
-import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 
 class OperatingHoursPage extends StatefulWidget {
@@ -183,44 +182,14 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
   Future<bool> _onWillPop() async {
     if (!_hasChanges) return true;
     final t = AppLocalizations.of(context);
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Image.asset('assets/images/app_logo.png', width: 24, height: 24),
-            const SizedBox(width: 8),
-            Text(
-              t?.translate('discard_changes_title') ?? 'Discard changes?',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 16),
-            ),
-          ],
-        ),
-        content: Text(
-          t?.translate('discard_changes_content') ?? 'You have unsaved changes. Do you want to discard them?',
-          style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF475569)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(
-              t?.translate('continue_editing') ?? 'Continue Editing',
-              style: GoogleFonts.poppins(color: const Color(0xFF475569), fontWeight: FontWeight.w500),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: GradientText(
-              t?.translate('discard') ?? 'Discard',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
+    return AppDialog.showConfirm(
+      context,
+      title: t?.translate('discard_changes_title') ?? 'Discard changes?',
+      message: t?.translate('discard_changes_content') ??
+          'You have unsaved changes. Do you want to discard them?',
+      confirmLabel: t?.translate('discard') ?? 'Discard',
+      cancelLabel: t?.translate('continue_editing') ?? 'Continue Editing',
     );
-    return result ?? false;
   }
 
   Future<void> _save() async {

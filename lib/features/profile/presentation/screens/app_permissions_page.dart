@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
+import 'package:my_shop/core/presentation/widgets/back_title_app_bar.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 
 class AppPermissionsPage extends StatefulWidget {
@@ -70,23 +71,8 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
     final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          t?.translate('app_permissions') ?? 'App Permissions',
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
-          ),
-        ),
-        centerTitle: false,
+      appBar: BackTitleAppBar(
+        title: t?.translate('app_permissions') ?? 'App Permissions',
       ),
       body: _isLoading 
         ? const Center(child: CupertinoActivityIndicator())

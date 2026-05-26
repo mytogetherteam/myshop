@@ -16,6 +16,7 @@ import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:my_shop/features/notifications/presentation/widgets/notification_badge_icon.dart';
 import 'package:flutter/services.dart';
 import 'package:my_shop/core/presentation/widgets/app_bar_title_with_logo.dart';
+import 'package:my_shop/core/utils/app_logger.dart';
 import 'dart:async';
 import 'package:my_shop/core/localization/app_localizations.dart';
 
@@ -65,10 +66,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 
   void _setupWebSocketListener() {
-    debugPrint('🚀 [MainNavigation] SETTING UP LISTENER...');
+    AppLogger.realtime('MainNavigation: setting up listener');
     _socketSubscription = WebSocketService().orderUpdates.listen((event) {
-      debugPrint(
-        '🔔 [MainNavigation] EVENT: ${event['type']}, MSG: ${event['message']}',
+      AppLogger.realtime(
+        'MainNavigation event: ${event['type']}, msg: ${event['message']}',
       );
 
       final dynamic rawOrder = event['order'];
@@ -85,14 +86,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               lowerMsg != null &&
               (lowerMsg.contains('2 min') || lowerMsg.contains('2 မိနစ်'));
 
-          debugPrint(
-            '🧪 [MainNavigation] LOGIC CHECK -> Status: $status, isTwoMin: $isTwoMinWarning, Msg: $msg',
+          AppLogger.realtime(
+            'MainNavigation logic check -> status: $status, isTwoMin: $isTwoMinWarning',
           );
 
           if (isTwoMinWarning) {
-            debugPrint(
-              '⚠️ [MainNavigation] TRIGGERING OrderWarningDialog (2-min alert)',
-            );
+            AppLogger.realtime('MainNavigation: triggering OrderWarningDialog (2-min)');
             HapticFeedback.vibrate();
             showDialog(
               context: context,
@@ -109,7 +108,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           } else if (status == 'PENDING' ||
               status == 'NEW' ||
               event['type'] == 'NEW_ORDER') {
-            debugPrint('📦 [MainNavigation] TRIGGERING NewOrderDialog');
+            AppLogger.realtime('MainNavigation: triggering NewOrderDialog');
             HapticFeedback.heavyImpact();
             showDialog(
               context: context,
@@ -124,9 +123,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             );
           } else if (msg != null && msg.trim().isNotEmpty) {
             // Generic warning for other status updates with messages
-            debugPrint(
-              '⚠️ [MainNavigation] TRIGGERING OrderWarningDialog (Generic message)',
-            );
+            AppLogger.realtime('MainNavigation: triggering OrderWarningDialog (generic)');
             HapticFeedback.vibrate();
             showDialog(
               context: context,
@@ -159,7 +156,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     });
 
     if (isAlreadyOnThisOrder) {
-      debugPrint('Already viewing order ${order.id}, skipping navigation.');
+      AppLogger.realtime('Already viewing order ${order.id}, skipping navigation.');
       return;
     }
 

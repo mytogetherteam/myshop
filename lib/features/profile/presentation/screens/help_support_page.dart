@@ -6,6 +6,7 @@ import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import '../../../profile/data/models/support_info_model.dart';
 
+import 'package:my_shop/core/presentation/widgets/back_title_app_bar.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 
 class HelpSupportPage extends StatefulWidget {
@@ -58,23 +59,8 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
     final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          t?.translate('help_support') ?? 'Help & Support',
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
-          ),
-        ),
-        centerTitle: false,
+      appBar: BackTitleAppBar(
+        title: t?.translate('help_support') ?? 'Help & Support',
       ),
       body: _buildContent(),
     );

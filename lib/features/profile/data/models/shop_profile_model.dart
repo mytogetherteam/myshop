@@ -45,6 +45,8 @@ class ShopProfileModel {
   final String? cityEn;
   final String? cityMm;
   final String? cityTh;
+  final int? cityId;
+  final int? districtId;
   final double? latitude;
   final double? longitude;
 
@@ -71,7 +73,7 @@ class ShopProfileModel {
   final String? slug;
   final List<int> cuisineTypeIds;
 
-  ShopProfileModel({
+   ShopProfileModel({
     required this.id,
     this.coverUrl,
     this.logoUrl,
@@ -110,6 +112,8 @@ class ShopProfileModel {
     this.cityEn,
     this.cityMm,
     this.cityTh,
+    this.cityId,
+    this.districtId,
     this.latitude,
     this.longitude,
     this.pricePreference,
@@ -163,15 +167,17 @@ class ShopProfileModel {
       email: json['email'],
       isOpen: json['isOpen'] ?? false,
 
-      addressEn: json['addressEn'],
+       addressEn: json['addressEn'],
       addressMm: json['addressMm'],
       addressTh: json['addressTh'],
-      districtEn: json['districtEn'],
-      districtMm: json['districtMm'],
-      districtTh: json['districtTh'],
-      cityEn: json['cityEn'],
-      cityMm: json['cityMm'],
-      cityTh: json['cityTh'],
+      districtEn: json['district']?['nameEn'] ?? json['districtEn'],
+      districtMm: json['district']?['nameMm'] ?? json['districtMm'],
+      districtTh: json['district']?['nameTh'] ?? json['districtTh'],
+      cityEn: json['city']?['nameEn'] ?? json['cityEn'],
+      cityMm: json['city']?['nameMm'] ?? json['cityMm'],
+      cityTh: json['city']?['nameTh'] ?? json['cityTh'],
+      cityId: json['cityId'],
+      districtId: json['districtId'],
       latitude: json['latitude'] != null ? (json['latitude'] as num).toDouble() : null,
       longitude: json['longitude'] != null ? (json['longitude'] as num).toDouble() : null,
 

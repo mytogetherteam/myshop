@@ -4,6 +4,7 @@ import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import '../widgets/menu_item_card.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/utils/app_logger.dart';
 import '../../data/services/menu_service.dart';
 import '../../data/models/menu_item_model.dart';
 import 'add_new_item_screen.dart';
@@ -74,9 +75,9 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
         _menuService.getMasterCategories(forceRefresh: false),
         _menuService.getMenuTags(),
       ]);
-      debugPrint('[ManageShopMenuPage] Master data pre-fetched successfully');
+      AppLogger.lifecycle('ManageShopMenuPage: master data pre-fetched');
     } catch (e) {
-      debugPrint('[ManageShopMenuPage] Error pre-fetching master data: $e');
+      AppLogger.error('ManageShopMenuPage: failed to pre-fetch master data', e);
     }
   }
 
@@ -104,12 +105,6 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
           }
           if (fetchedItems != null) {
             _items.addAll(fetchedItems);
-            
-            // Debug logging
-            for (var item in fetchedItems) {
-              debugPrint('DEBUG: ManageShop: Item: ${item.nameEn}, Status: ${item.pendingStatus}');
-            }
-
             _hasMore = fetchedItems.length == _limit;
             if (_hasMore) _page++;
           } else {
@@ -121,7 +116,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
         });
       }
     } catch (e) {
-      debugPrint('[ManageShopMenuPage] Error fetching items: $e');
+      AppLogger.error('ManageShopMenuPage: failed to fetch items', e);
       if (mounted) {
         setState(() {
           _isLoading = false;

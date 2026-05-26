@@ -12,7 +12,11 @@ import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/features/profile/data/services/rider_service.dart';
 import 'package:my_shop/features/profile/data/models/rider_model.dart';
+import 'package:my_shop/core/presentation/widgets/back_title_app_bar.dart';
+import 'package:my_shop/core/presentation/widgets/empty_state.dart';
 import 'package:my_shop/core/presentation/widgets/image_picker_widget.dart';
+import 'package:my_shop/core/presentation/widgets/skeleton.dart';
+import 'package:my_shop/core/presentation/widgets/skeleton_list.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 
 class RiderManagementPage extends StatefulWidget {
@@ -66,32 +70,22 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
     );
   }
 
-  Future<void> _deleteRider(int riderId) async {
+  Future<void> _deleteRider(Rider rider) async {
     final t = AppLocalizations.of(context);
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(t?.translate('delete_rider') ?? 'Delete Rider'),
-        content: Text(t?.translate('delete_rider_confirm') ?? 'Are you sure you want to delete this rider?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(t?.translate('cancel') ?? 'Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(
-              t?.translate('delete') ?? 'Delete',
-              style: const TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
+    final confirm = await AppDialog.showConfirm(
+      context,
+      title: t?.translate('delete_rider') ?? 'Delete Rider',
+      message: t
+              ?.translate('delete_rider_confirm')
+              .replaceAll('{name}', rider.name) ??
+          'Are you sure you want to delete "${rider.name}"? This action cannot be undone.',
+      confirmLabel: t?.translate('delete') ?? 'Delete',
+      cancelLabel: t?.translate('cancel') ?? 'Cancel',
     );
 
     if (confirm == true) {
       setState(() => _isLoading = true);
-      final success = await _riderService.deleteRider(riderId);
+      final success = await _riderService.deleteRider(rider.id);
       if (success) {
         if (mounted) {
           AppDialog.showToast(context, t?.translate('rider_deleted') ?? 'Rider deleted successfully');
@@ -111,38 +105,31 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
     final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          t?.translate('rider_management') ?? 'Rider Management',
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
-          ),
-        ),
-        centerTitle: false,
-        actions: [
-          IconButton(
-            icon: PhosphorIcon(PhosphorIconsRegular.plus, color: AppColors.primary),
-            onPressed: () => _showRiderForm(),
-          ),
-        ],
+      appBar: BackTitleAppBar(
+        title: t?.translate('rider_management') ?? 'Rider Management',
+        actions: [GradientAddIconButton(onPressed: () => _showRiderForm())],
       ),
-      body: _isLoading
-          ? const Center(child: CupertinoActivityIndicator())
-          : _riders.isEmpty
-              ? _buildEmptyState(t)
-              : RefreshIndicator(
-                  onRefresh: _loadData,
-                  color: AppColors.primary,
-                  child: ListView.builder(
+      body: RefreshIndicator(
+        onRefresh: _loadData,
+        color: AppColors.primary,
+        child: _isLoading
+            ? SkeletonList(
+                itemCount: 6,
+                itemBuilder: (_, _) => _buildRiderSkeletonCard(),
+              )
+            : _riders.isEmpty
+                ? EmptyState(
+                    icon: PhosphorIcon(
+                      PhosphorIconsRegular.users,
+                      size: 64,
+                      color: AppColors.iconDisabled,
+                    ),
+                    title: t?.translate('no_riders_found') ?? 'No riders found',
+                    subtitle: t?.translate('add_rider_desc') ??
+                        'Add a rider to manage deliveries.',
+                  )
+                : ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.all(16),
                     itemCount: _riders.length,
                     itemBuilder: (context, index) {
@@ -150,37 +137,39 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
                       return _buildRiderCard(rider);
                     },
                   ),
-                ),
+      ),
     );
   }
 
-  Widget _buildEmptyState(AppLocalizations? t) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildRiderSkeletonCard() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
         children: [
-          PhosphorIcon(
-            PhosphorIconsRegular.users,
-            size: 64,
-            color: const Color(0xFFCBD5E1),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            t?.translate('no_riders_found') ?? 'No riders found',
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF475569),
+          const Skeleton.circle(width: 40, height: 40),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Skeleton(height: 14, width: 140),
+                SizedBox(height: 8),
+                Skeleton(height: 12, width: 100),
+                SizedBox(height: 6),
+                Skeleton(height: 12, width: 80),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            t?.translate('add_rider_desc') ?? 'Add a rider to manage deliveries.',
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              color: const Color(0xFF94A3B8),
-            ),
-          ),
+          const SizedBox(width: 12),
+          const Skeleton(width: 20, height: 20, borderRadius: 4),
+          const SizedBox(width: 12),
+          const Skeleton(width: 20, height: 20, borderRadius: 4),
         ],
       ),
     );
@@ -242,7 +231,7 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
             ),
             IconButton(
               icon: const PhosphorIcon(PhosphorIconsRegular.trash, color: Colors.red, size: 20),
-              onPressed: () => _deleteRider(rider.id),
+              onPressed: () => _deleteRider(rider),
             ),
           ],
         ),

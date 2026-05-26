@@ -5,6 +5,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/features/auth/data/models/auth_models.dart';
 import 'package:my_shop/features/auth/data/services/auth_service.dart';
+import 'package:my_shop/core/presentation/widgets/back_title_app_bar.dart';
 import 'package:my_shop/core/presentation/widgets/global_modal.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/network/websocket_service.dart';
@@ -44,7 +45,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
     if (_userInfo?.email == null) return;
     GlobalModal.show(
       context: context,
-      child: _DeleteAccountFrictionSheet(email: _userInfo!.email!),
+      child: _DeleteAccountFrictionSheet(email: _userInfo!.email),
     );
   }
 
@@ -53,23 +54,8 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
     final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          t?.translate('account_settings') ?? 'Account Settings',
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
-          ),
-        ),
-        centerTitle: false,
+      appBar: BackTitleAppBar(
+        title: t?.translate('account_settings') ?? 'Account Settings',
       ),
       body: _isLoading
           ? const Center(child: CupertinoActivityIndicator())

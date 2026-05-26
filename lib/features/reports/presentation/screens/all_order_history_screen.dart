@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
+import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/features/reports/presentation/widgets/order_history_item.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 
@@ -330,9 +331,7 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
               onRefresh: _loadInitialData,
               color: const Color(0xFFED3973),
               child: _isLoading
-                  ? const Center(
-                      child: CustomLoadingIndicator(size: 40),
-                    )
+                  ? _buildSkeletonList()
                   : ListView.builder(
                       controller: _scrollController,
                       padding: const EdgeInsets.symmetric(
@@ -393,6 +392,58 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
                     ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSkeletonList() {
+    return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      itemCount: 3,
+      itemBuilder: (_, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Skeleton(height: 16, width: 120),
+          ),
+          ...List.generate(
+            3,
+            (i) => Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Row(
+                    children: [
+                      const Skeleton.circle(width: 8, height: 8),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Skeleton(height: 14, width: 140),
+                            SizedBox(height: 6),
+                            Skeleton(height: 10, width: 70),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Skeleton(height: 14, width: 60),
+                    ],
+                  ),
+                ),
+                if (i < 2)
+                  const Divider(
+                    color: Color(0xFFF1F5F9),
+                    height: 1,
+                    thickness: 1,
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
         ],
       ),
     );

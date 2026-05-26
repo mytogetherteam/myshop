@@ -59,6 +59,78 @@ class AppDialog {
       builder: (context) => _SuccessDialog(message: message, onDone: onDone),
     );
   }
+
+  /// Canonical app-wide confirmation dialog.
+  ///
+  /// Matches the design used by Edit Shop Profile → "Discard changes?":
+  /// rounded white card, app-logo title row, slate content, slate Cancel,
+  /// pink Confirm. Use everywhere you need a confirm/cancel question so the
+  /// app stays visually consistent.
+  static Future<bool> showConfirm(
+    BuildContext context, {
+    required String title,
+    required String message,
+    String? confirmLabel,
+    String? cancelLabel,
+    bool barrierDismissible = true,
+  }) async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: barrierDismissible,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Image.asset('assets/images/app_logo.png', width: 24, height: 24),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                title,
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          message,
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            color: const Color(0xFF475569),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(
+              cancelLabel ?? 'Cancel',
+              style: GoogleFonts.poppins(
+                color: const Color(0xFF475569),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              confirmLabel ?? 'Confirm',
+              style: GoogleFonts.poppins(
+                color: const Color(0xFFED3973),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
 }
 
 class _SuccessDialog extends StatefulWidget {

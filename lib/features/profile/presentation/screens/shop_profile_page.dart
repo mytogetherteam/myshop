@@ -538,7 +538,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
               ),
               const SizedBox(width: 4),
               Text(
-                t?.translate('reviews_count')?.replaceAll('{count}', '${_shopProfile?.ratingCount ?? 0}') ?? '(${_shopProfile?.ratingCount ?? 0} reviews)',
+                t?.translate('reviews_count').replaceAll('{count}', '${_shopProfile?.ratingCount ?? 0}') ?? '(${_shopProfile?.ratingCount ?? 0} reviews)',
                 style: GoogleFonts.poppins(
                   fontSize: 13,
                   color: const Color(0xFF94A3B8),
@@ -1057,7 +1057,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    AppLocalizations.of(context)?.translate('reviews_count')?.replaceAll('{count}', '128') ?? '128 reviews',
+                    AppLocalizations.of(context)?.translate('reviews_count').replaceAll('{count}', '128') ?? '128 reviews',
                     style: GoogleFonts.poppins(
                       fontSize: 11,
                       color: const Color(0xFF94A3B8),

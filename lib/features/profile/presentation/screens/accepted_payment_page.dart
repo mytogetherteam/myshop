@@ -10,6 +10,8 @@ import '../../../../core/presentation/widgets/global_modal.dart';
 
 import '../widgets/password_confirmation_sheet.dart';
 import '../../../../core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/presentation/widgets/back_title_app_bar.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 
 import 'edit_payment_page.dart';
@@ -65,51 +67,18 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
 
   Future<void> _handleDelete(PaymentMethod pm) async {
     final t = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Image.asset('assets/images/app_logo.png', width: 24, height: 24),
-            const SizedBox(width: 8),
-            Text(
-              t?.translate('delete_payment_method') ?? 'Delete Payment Method',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 16),
-            ),
-          ],
-        ),
-        content: Text(
-          t?.translate('delete_payment_confirm').replaceAll('{name}', pm.paymentMethodName) ?? 'Are you sure you want to delete "${pm.paymentMethodName}"? This action cannot be undone.',
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            color: const Color(0xFF475569),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              t?.translate('cancel') ?? 'Cancel',
-              style: GoogleFonts.poppins(color: const Color(0xFF64748B)),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              t?.translate('delete') ?? 'Delete',
-              style: GoogleFonts.poppins(
-                color: Colors.red,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
+    final confirmed = await AppDialog.showConfirm(
+      context,
+      title: t?.translate('delete_payment_method') ?? 'Delete Payment Method',
+      message: t
+              ?.translate('delete_payment_confirm')
+              .replaceAll('{name}', pm.paymentMethodName) ??
+          'Are you sure you want to delete "${pm.paymentMethodName}"? This action cannot be undone.',
+      confirmLabel: t?.translate('delete') ?? 'Delete',
+      cancelLabel: t?.translate('cancel') ?? 'Cancel',
     );
 
-    if (confirmed != true || !mounted) return;
+    if (!confirmed || !mounted) return;
 
     GlobalModal.show(
       context: context,
@@ -149,25 +118,12 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
     final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          t?.translate('accepted_payment') ?? 'Accepted payment',
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Colors.black,
-          ),
-        ),
+      appBar: BackTitleAppBar(
+        title: t?.translate('accepted_payment') ?? 'Accepted payment',
       ),
       body: RefreshIndicator(
         onRefresh: _handleRefresh,
-        color: const Color(0xFFED3973),
+        color: AppColors.primary,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(24),

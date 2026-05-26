@@ -6,8 +6,12 @@ import 'package:my_shop/core/localization/app_localizations.dart';
 import '../../data/models/shop_model.dart';
 import '../../data/services/shop_service.dart';
 import 'accepted_payment_page.dart';
-import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
-import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
+import 'package:my_shop/core/presentation/widgets/back_title_app_bar.dart';
+import 'package:my_shop/core/presentation/widgets/empty_state.dart';
+import 'package:my_shop/core/presentation/widgets/error_retry_state.dart';
+import 'package:my_shop/core/presentation/widgets/skeleton.dart';
+import 'package:my_shop/core/presentation/widgets/skeleton_list.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 
 class ShopSelectionPage extends StatefulWidget {
   const ShopSelectionPage({super.key});
@@ -66,41 +70,72 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
     final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          t?.translate('choose_shop') ?? 'Choose Shop',
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Colors.black,
-          ),
-        ),
+      appBar: BackTitleAppBar(title: t?.translate('choose_shop') ?? 'Choose Shop'),
+      body: RefreshIndicator(
+        onRefresh: _loadShops,
+        color: AppColors.primary,
+        child: _isLoading
+            ? SkeletonList(
+                itemCount: 5,
+                padding: const EdgeInsets.all(24),
+                separatorHeight: 16,
+                itemBuilder: (_, _) => _buildShopSkeletonCard(),
+              )
+            : _error != null
+                ? ErrorRetryState(
+                    message: _error!,
+                    onRetry: _loadShops,
+                    scrollable: true,
+                  )
+                : _shops.isEmpty
+                    ? EmptyState(
+                        icon: Icon(
+                          PhosphorIconsRegular.storefront,
+                          size: 64,
+                          color: AppColors.iconDisabled,
+                        ),
+                        title: 'No shops found',
+                      )
+                    : _buildShopList(),
       ),
-      body: _isLoading
-          ? const Center(child: CustomLoadingIndicator())
-          : _error != null
-          ? _buildErrorState()
-          : _shops.isEmpty
-          ? _buildEmptyState()
-          : _buildShopList(),
     );
   }
 
   Widget _buildShopList() {
-    return RefreshIndicator(
-      onRefresh: _loadShops,
-      color: const Color(0xFFED3973),
-      child: ListView.separated(
-        padding: const EdgeInsets.all(24),
-        itemCount: _shops.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 16),
-        itemBuilder: (context, index) => _buildShopCard(_shops[index]),
+    return ListView.separated(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(24),
+      itemCount: _shops.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 16),
+      itemBuilder: (context, index) => _buildShopCard(_shops[index]),
+    );
+  }
+
+  Widget _buildShopSkeletonCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: Row(
+        children: [
+          const Skeleton(width: 60, height: 60, borderRadius: 12),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Skeleton(height: 14, width: 160),
+                SizedBox(height: 8),
+                Skeleton(height: 12, width: 200),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Skeleton(width: 20, height: 20, borderRadius: 4),
+        ],
       ),
     );
   }
@@ -192,54 +227,4 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            PhosphorIconsRegular.storefront,
-            size: 64,
-            color: Colors.grey[300],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No shops found',
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF1E293B),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildErrorState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: Color(0xFFEF4444)),
-            const SizedBox(height: 16),
-            Text(
-              _error!,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(color: const Color(0xFF1E293B)),
-            ),
-            const SizedBox(height: 24),
-            PrimaryGradientButton(
-              onPressed: _loadShops,
-              text: 'Retry',
-              height: 48,
-              borderRadius: 12,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

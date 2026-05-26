@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
+import 'package:my_shop/core/utils/app_logger.dart';
 import 'package:my_shop/features/main_navigation/presentation/screens/main_navigation_screen.dart';
 import 'package:my_shop/features/auth/presentation/screens/login_page.dart';
 import 'package:my_shop/core/network/websocket_service.dart';
@@ -29,25 +30,25 @@ class _AuthWrapperState extends State<AuthWrapper> {
     if (!hasToken) return const LoginPage();
 
     var shopId = await StorageService.instance.getSelectedShopId();
-    debugPrint('📍 [AuthWrapper] Current shopId in storage: $shopId');
+    AppLogger.lifecycle('AuthWrapper: shopId in storage: $shopId');
 
     if (shopId == null) {
       try {
         final shops = await ShopService().getShops();
-        debugPrint('📍 [AuthWrapper] Found ${shops.length} shops for user');
+        AppLogger.lifecycle('AuthWrapper: found ${shops.length} shops for user');
 
         if (shops.isEmpty) {
-          debugPrint('📍 [AuthWrapper] No shops found, proceeding to home');
+          AppLogger.lifecycle('AuthWrapper: no shops, proceeding to home');
           // No shops available, continue to home
         } else {
           // ALWAYS pick the first one to avoid asking user
           final firstShop = shops.first;
-          debugPrint('📍 [AuthWrapper] Auto-selecting first shop: ${firstShop.name}');
+          AppLogger.lifecycle('AuthWrapper: auto-selecting first shop: ${firstShop.name}');
           await StorageService.instance.saveSelectedShopId(firstShop.id);
           shopId = firstShop.id;
         }
       } catch (e) {
-        debugPrint('📍 [AuthWrapper] Error fetching shops: $e');
+        AppLogger.error('AuthWrapper: failed to fetch shops', e);
         return const GlobalShopSelectionPage(isInitialFlow: true);
       }
     }

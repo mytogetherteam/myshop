@@ -6,8 +6,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:my_shop/core/data/services/image_upload_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
-import 'package:google_fonts/google_fonts.dart';
-
 /// Shape of the image picker preview area.
 enum ImagePickerShape {
   /// Circular — great for avatars and profile photos.
@@ -172,37 +170,18 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
     }
   }
 
-  void _showPermissionDialog() {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        title: Row(
-          children: [
-            Image.asset('assets/images/app_logo.png', width: 24, height: 24),
-            const SizedBox(width: 8),
-            Text('Permission Required', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
-          ],
-        ),
-        content: const Text(
+  Future<void> _showPermissionDialog() async {
+    final shouldOpenSettings = await AppDialog.showConfirm(
+      context,
+      title: 'Permission Required',
+      message:
           'Camera and photo library access is required to upload images. '
           'Please enable it in your device Settings.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              openAppSettings();
-            },
-            child: const Text('Open Settings'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Open Settings',
     );
+    if (shouldOpenSettings) {
+      await openAppSettings();
+    }
   }
 
   // ── Image content ─────────────────────────────────────────────────────────

@@ -442,7 +442,7 @@
   "add_rider": "Add Rider",
   "edit_rider": "Edit Rider",
   "delete_rider": "Delete Rider",
-  "delete_rider_confirm": "Are you sure you want to delete this rider?",
+  "delete_rider_confirm": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
   "rider_deleted": "Rider deleted successfully",
   "failed_delete_rider": "Failed to delete rider",
   "failed_save_rider": "Failed to save rider",
@@ -452,6 +452,12 @@
   "enter_rider_name": "Enter rider name",
   "phone_number": "Phone Number",
   "enter_phone_number": "Enter phone number",
-  "license_plate": "License Plate",
-  "enter_license_plate": "Enter license plate"
+   "license_plate": "License Plate",
+  "enter_license_plate": "Enter license plate",
+  "feedback": "Feedback",
+  "no_feedback_yet": "No feedback yet",
+  "submit_feedback": "Submit Feedback",
+  "feedback_submitted": "Feedback submitted successfully",
+  "failed_submit_feedback": "Failed to submit feedback",
+  "feedback_hint": "Tell us what you think..."
 }

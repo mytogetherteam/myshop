@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:my_shop/core/presentation/widgets/back_title_app_bar.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import '../../data/models/review_model.dart';
 import '../../data/services/review_service.dart';
@@ -89,24 +90,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
     final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          t?.translate('reviews') ?? 'Reviews',
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
-          ),
-        ),
-        centerTitle: false,
-      ),
+      appBar: BackTitleAppBar(title: t?.translate('reviews') ?? 'Reviews'),
       body: _isLoading 
         ? const ReviewSkeleton()
         : _buildContent(),

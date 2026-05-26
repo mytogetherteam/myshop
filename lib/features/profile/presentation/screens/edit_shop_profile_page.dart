@@ -158,7 +158,14 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     } catch (_) {}
 
     try {
-      if (_currentProfile!.cityEn != null &&
+      if (_currentProfile!.cityId != null) {
+        _selectedCity = _cities.firstWhere(
+          (c) => c.id == _currentProfile!.cityId,
+        );
+        if (_selectedCity != null) {
+          _fetchDistricts(_selectedCity!.id);
+        }
+      } else if (_currentProfile!.cityEn != null &&
           _currentProfile!.cityEn!.isNotEmpty) {
         _selectedCity = _cities.firstWhere(
           (c) => c.nameEn == _currentProfile!.cityEn,
@@ -178,12 +185,18 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     } catch (_) {}
   }
 
-  Future<void> _fetchDistricts(int cityId) async {
+   Future<void> _fetchDistricts(int cityId) async {
     final fetched = await _masterDataService.getDistricts(cityId);
     if (mounted) {
       setState(() {
         _districts = fetched ?? [];
-        if (_currentProfile?.districtEn != null &&
+        if (_currentProfile?.districtId != null) {
+          try {
+            _selectedDistrict = _districts.firstWhere(
+              (d) => d.id == _currentProfile!.districtId,
+            );
+          } catch (_) {}
+        } else if (_currentProfile?.districtEn != null &&
             _currentProfile!.districtEn!.isNotEmpty) {
           try {
             _selectedDistrict = _districts.firstWhere(
@@ -881,23 +894,24 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             ),
             const SizedBox(height: 32),
 
-            AmenitiesAndDietarySection(
-              hasParking: _hasParking,
-              hasWifi: _hasWifi,
-              deliveryEnabled: _deliveryEnabled,
-              isHalal: _isHalal,
-              isVegetarian: _isVegetarian,
-              onChanged: (parking, wifi, delivery, halal, vegetarian) {
-                _hasParking = parking;
-                _hasWifi = wifi;
-                _deliveryEnabled = delivery;
-                _isHalal = halal;
-                _isVegetarian = vegetarian;
-                _markChanged();
-              },
-            ),
+             AmenitiesAndDietarySection(
+               hasParking: _hasParking,
+               hasWifi: _hasWifi,
+               deliveryEnabled: _deliveryEnabled,
+               isHalal: _isHalal,
+               isVegetarian: _isVegetarian,
+               onChanged: (parking, wifi, delivery, halal, vegetarian) {
+                 _hasParking = parking;
+                 _hasWifi = wifi;
+                 _deliveryEnabled = delivery;
+                 _isHalal = halal;
+                 _isVegetarian = vegetarian;
+                 _markChanged();
+               },
+             ),
+             const SizedBox(height: 32),
 
-            PriceRangeSection(
+             PriceRangeSection(
               initialPriceRange: _priceRange,
               onChanged: (v) {
                 _priceRange = v;

@@ -3,6 +3,7 @@ import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
+import 'package:my_shop/core/utils/app_logger.dart';
 import '../models/menu_item_model.dart';
 import '../models/menu_category_model.dart';
 import 'package:my_shop/core/data/models/master_data_model.dart';
@@ -26,25 +27,14 @@ class MenuService {
       '/api/menu/master/categories';
   static const String _masterTagsPath = '/api/master/menu-tags';
 
-  // Static cache variables to store data across the app session
-  static List<MenuCategoryModel>? _categoriesCache;
-  static List<MasterDataModel>? _masterCategoriesCache;
-  static List<MasterDataModel>? _menuTagsCache;
-
-  static void clearCache() {
-    _categoriesCache = null;
-    _masterCategoriesCache = null;
-    _menuTagsCache = null;
-  }
+  /// Retained for callers that previously invalidated the in-memory cache.
+  /// Real HTTP caching is now handled by `ApiClient.cacheOptions` (Dio), so
+  /// this is a no-op kept for source compatibility.
+  static void clearCache() {}
 
   Future<List<MenuCategoryModel>?> getCategories({bool forceRefresh = false}) async {
-    // if (!forceRefresh && _categoriesCache != null) {
-    //   debugPrint('CACHE HIT: $_categoriesPath');
-    //   return _categoriesCache;
-    // }
-
     try {
-      debugPrint('GET REQUEST: $_categoriesPath, forceRefresh: $forceRefresh');
+      AppLogger.network('GET $_categoriesPath, forceRefresh: $forceRefresh');
       final response = await ApiClient().dio.get(
         _categoriesPath,
         options: forceRefresh
@@ -66,8 +56,6 @@ class MenuService {
           } else {
             list = [];
           }
-          // _categoriesCache = list.map((json) => MenuCategoryModel.fromJson(json)).toList();
-          // return _categoriesCache;
           return await compute(_parseMenuCategories, list);
         }
       }
@@ -76,13 +64,13 @@ class MenuService {
     } catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.getCategories');
     }
-    return forceRefresh ? null : _categoriesCache;
+    return null;
   }
 
   Future<List<MenuCategoryModel>?> searchCategories(String query) async {
     try {
       final url = '$_categoriesPath/search';
-      debugPrint('GET REQUEST: $url, Query: {q: $query}');
+      AppLogger.network('GET $url, Query: {q: $query}');
       final response = await ApiClient().dio.get(url, queryParameters: {'q': query});
 
       if (response.statusCode != null &&
@@ -113,7 +101,7 @@ class MenuService {
   Future<List<Map<String, dynamic>>?> getCategoryGallery() async {
     try {
       final url = '$_categoriesPath/gallery';
-      debugPrint('GET REQUEST: $url');
+      AppLogger.network('GET $url');
       final response = await ApiClient().dio.get(url);
 
       if (response.statusCode != null &&
@@ -144,7 +132,7 @@ class MenuService {
   Future<MenuCategoryModel?> getMenuCategoryDetail(int categoryId) async {
     try {
       final url = '$_categoriesPath/$categoryId';
-      debugPrint('GET REQUEST: $url');
+      AppLogger.network('GET $url');
       final response = await ApiClient().dio.get(url);
 
       if (response.statusCode != null &&
@@ -174,7 +162,7 @@ class MenuService {
       if (categoryId != null) {
         queryParams['categoryId'] = categoryId;
       }
-      debugPrint('GET REQUEST: $_menuItemsPath, Params: $queryParams, forceRefresh: $forceRefresh');
+      AppLogger.network('GET $_menuItemsPath, Params: $queryParams, forceRefresh: $forceRefresh');
       
       final response = await ApiClient().dio.get(
         _menuItemsPath,
@@ -212,7 +200,7 @@ class MenuService {
   Future<List<MenuItemModel>?> searchMenuItems(String query) async {
     try {
       final url = '$_menuItemsPath/search';
-      debugPrint('GET REQUEST: $url, Query: {q: $query}');
+      AppLogger.network('GET $url, Query: {q: $query}');
       final response = await ApiClient().dio.get(url, queryParameters: {'q': query});
 
       if (response.statusCode != null &&
@@ -243,7 +231,7 @@ class MenuService {
   Future<MenuItemModel?> getMenuItemDetail(int itemId) async {
     try {
       final url = '$_menuItemsPath/$itemId';
-      debugPrint('GET REQUEST: $url');
+      AppLogger.network('GET $url');
       final response = await ApiClient().dio.get(url);
 
       if (response.statusCode != null &&
@@ -263,29 +251,22 @@ class MenuService {
   }
 
   Future<List<MasterDataModel>?> getMasterCategories({bool forceRefresh = false}) async {
-    // if (!forceRefresh && _masterCategoriesCache != null) {
-    //   debugPrint('CACHE HIT: $_masterCategoriesPath');
-    //   return _masterCategoriesCache;
-    // }
-
     try {
-      debugPrint('GET REQUEST: $_masterCategoriesPath');
+      AppLogger.network('GET $_masterCategoriesPath');
       final response = await ApiClient().dio.get(_masterCategoriesPath);
-      // _masterCategoriesCache = _parseMasterDataList(response);
-      // return _masterCategoriesCache;
       return await _parseMasterDataList(response);
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.getMasterCategories');
     } catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.getMasterCategories');
     }
-    return forceRefresh ? null : _masterCategoriesCache;
+    return null;
   }
 
   Future<MenuCategoryModel?> getMasterCategoryDetail(int id) async {
     try {
       final url = '$_masterCategoriesPath/$id';
-      debugPrint('GET REQUEST: $url');
+      AppLogger.network('GET $url');
       final response = await ApiClient().dio.get(url);
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
@@ -302,29 +283,22 @@ class MenuService {
   }
 
   Future<List<MasterDataModel>?> getMenuTags({bool forceRefresh = false}) async {
-    // if (!forceRefresh && _menuTagsCache != null) {
-    //   debugPrint('CACHE HIT: $_masterTagsPath');
-    //   return _menuTagsCache;
-    // }
-
     try {
-      debugPrint('GET REQUEST: $_masterTagsPath');
+      AppLogger.network('GET $_masterTagsPath');
       final response = await ApiClient().dio.get(_masterTagsPath);
-      // _menuTagsCache = _parseMasterDataList(response);
-      // return _menuTagsCache;
       return await _parseMasterDataList(response);
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.getMenuTags');
     } catch (e) {
       ApiHelper.handleError(e, context: 'MenuService.getMenuTags');
     }
-    return forceRefresh ? null : _menuTagsCache;
+    return null;
   }
 
   Future<MasterDataModel?> getMenuTagDetail(int id) async {
     try {
       final url = '$_masterTagsPath/$id';
-      debugPrint('GET REQUEST: $url');
+      AppLogger.network('GET $url');
       final response = await ApiClient().dio.get(url);
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
@@ -364,7 +338,7 @@ class MenuService {
 
   Future<bool> createMenuItem(Map<String, dynamic> payload) async {
     try {
-      debugPrint('POST REQUEST: $_menuItemsPath, Data: $payload');
+      AppLogger.network('POST $_menuItemsPath, Data: $payload');
 
       final response = await ApiClient().dio.post(
         _menuItemsPath,
@@ -388,7 +362,7 @@ class MenuService {
   Future<bool> updateMenuItem(int itemId, Map<String, dynamic> payload) async {
     try {
       final url = '$_menuItemsPath/$itemId';
-      debugPrint('PUT REQUEST: $url, Data: $payload');
+      AppLogger.network('PUT $url, Data: $payload');
 
       final response = await ApiClient().dio.put(
         url,
@@ -412,7 +386,7 @@ class MenuService {
   Future<bool> deleteMenuItem(int itemId) async {
     try {
       final url = '$_menuItemsPath/$itemId';
-      debugPrint('DELETE REQUEST: $url');
+      AppLogger.network('DELETE $url');
       final response = await ApiClient().dio.delete(url);
 
       if (response.statusCode != null &&
@@ -432,7 +406,7 @@ class MenuService {
   Future<bool> toggleAvailability(int itemId, bool available) async {
     try {
       final url = '$_menuItemsPath/$itemId/availability';
-      debugPrint('PUT REQUEST: $url, Query: {available: $available}');
+      AppLogger.network('PUT $url, Query: {available: $available}');
       final response = await ApiClient().dio.put(
         url,
         queryParameters: {'available': available},
@@ -454,7 +428,7 @@ class MenuService {
   Future<bool> toggleMenuItemPublishStatus(int itemId, String status) async {
     try {
       final url = '$_menuItemsPath/$itemId/publish';
-      debugPrint('PATCH REQUEST: $url, Data: {status: $status}');
+      AppLogger.network('PATCH $url, Data: {status: $status}');
       final response = await ApiClient().dio.patch(
             url,
             data: {'status': status},
@@ -476,7 +450,7 @@ class MenuService {
   Future<List<String>?> getPublishStatuses() async {
     try {
       const url = '/api/shop/menu/publish-statuses';
-      debugPrint('GET REQUEST: $url');
+      AppLogger.network('GET $url');
       final response = await ApiClient().dio.get(url);
 
       if (response.statusCode != null &&

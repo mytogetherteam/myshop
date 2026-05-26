@@ -7,6 +7,11 @@ import 'package:my_shop/features/notifications/data/repositories/notification_re
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:my_shop/features/orders/data/services/order_service.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
+import 'package:my_shop/core/presentation/widgets/back_title_app_bar.dart';
+import 'package:my_shop/core/presentation/widgets/empty_state.dart';
+import 'package:my_shop/core/presentation/widgets/skeleton.dart';
+import 'package:my_shop/core/presentation/widgets/skeleton_list.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 
@@ -171,75 +176,74 @@ class _NotificationPageState extends State<NotificationPage> {
     final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context, true), // Return true to refresh parent count
-        ),
-        title: Text(
-          t?.translate('notifications') ?? 'Notifications',
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
-          ),
-        ),
-        actions: const [],
-        centerTitle: false,
+      appBar: BackTitleAppBar(
+        title: t?.translate('notifications') ?? 'Notifications',
+        onBack: () => Navigator.pop(context, true),
       ),
-      body: (_isLoading && _showLoadingThreshold)
-          ? const Center(child: CustomLoadingIndicator(color: Colors.white))
-          : RefreshIndicator(
-              onRefresh: () => _fetchNotifications(refresh: true),
-              child: _notifications.isEmpty
-                  ? _buildEmptyState()
-                  : ListView.builder(
-                      controller: _scrollController,
-                      itemCount: _notifications.length + (_isMoreLoading ? 1 : 0),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      itemBuilder: (context, index) {
-                        if (index == _notifications.length) {
-                          return const Padding(
-                            padding: EdgeInsets.all(16.0),
-                            child: Center(
-                              child: CustomLoadingIndicator(size: 20, color: Colors.white),
+      body: RefreshIndicator(
+        onRefresh: () => _fetchNotifications(refresh: true),
+        color: AppColors.primary,
+        child: (_isLoading && _showLoadingThreshold)
+            ? SkeletonList(
+                itemCount: 8,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                itemBuilder: (_, _) => Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    border: Border(bottom: BorderSide(color: AppColors.surfaceVariant, width: 1)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Skeleton.circle(width: 40, height: 40),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(child: Skeleton(height: 14, width: 160)),
+                                SizedBox(width: 12),
+                                Skeleton(height: 10, width: 40),
+                              ],
                             ),
-                          );
-                        }
-                        return _buildNotificationItem(_notifications[index]);
-                      },
-                    ),
-            ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    final t = AppLocalizations.of(context);
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(PhosphorIconsRegular.bellSlash, size: 48, color: Color(0xFF94A3B8)),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            t?.translate('no_notifications_yet') ?? 'No notifications yet',
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF64748B),
-            ),
-          ),
-        ],
+                            SizedBox(height: 8),
+                            Skeleton(height: 12, width: double.infinity),
+                            SizedBox(height: 6),
+                            Skeleton(height: 12, width: 200),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            : _notifications.isEmpty
+                ? EmptyState(
+                    circleBackground: true,
+                    icon: const Icon(PhosphorIconsRegular.bellSlash, size: 48, color: AppColors.outline),
+                    title: t?.translate('no_notifications_yet') ?? 'No notifications yet',
+                  )
+                : ListView.builder(
+                    controller: _scrollController,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    itemCount: _notifications.length + (_isMoreLoading ? 1 : 0),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    itemBuilder: (context, index) {
+                      if (index == _notifications.length) {
+                        return const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Center(
+                            child: CustomLoadingIndicator(size: 20, color: Colors.white),
+                          ),
+                        );
+                      }
+                      return _buildNotificationItem(_notifications[index]);
+                    },
+                  ),
       ),
     );
   }

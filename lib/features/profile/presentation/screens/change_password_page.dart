@@ -5,6 +5,7 @@ import '../../data/services/profile_service.dart';
 import '../../../../core/presentation/widgets/skeleton.dart';
 import '../../../../core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/presentation/widgets/back_title_app_bar.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 
 class ChangePasswordPage extends StatefulWidget {
@@ -25,7 +26,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   bool _isNewPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _isLoading = false;
-  bool _isPageLoading = false;
+  final bool _isPageLoading = false;
 
   @override
   void initState() {
@@ -80,23 +81,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          t?.translate('change_password') ?? 'Change Password',
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
-          ),
-        ),
-        centerTitle: false,
+      appBar: BackTitleAppBar(
+        title: t?.translate('change_password') ?? 'Change Password',
       ),
       body: SafeArea(
         child: SingleChildScrollView(

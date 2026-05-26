@@ -442,7 +442,7 @@
   "add_rider": "เพิ่มไรเดอร์",
   "edit_rider": "แก้ไขไรเดอร์",
   "delete_rider": "ลบไรเดอร์",
-  "delete_rider_confirm": "คุณแน่ใจหรือไม่ว่าต้องการลบไรเดอร์นี้?",
+  "delete_rider_confirm": "คุณแน่ใจหรือไม่ว่าต้องการลบ \"{name}\"? การกระทำนี้ไม่สามารถยกเลิกได้",
   "rider_deleted": "ลบไรเดอร์เรียบร้อยแล้ว",
   "failed_delete_rider": "ลบไรเดอร์ไม่สำเร็จ",
   "failed_save_rider": "บันทึกไรเดอร์ไม่สำเร็จ",
@@ -452,6 +452,12 @@
   "enter_rider_name": "กรอกชื่อไรเดอร์",
   "phone_number": "เบอร์โทรศัพท์",
   "enter_phone_number": "กรอกเบอร์โทรศัพท์",
-  "license_plate": "ทะเบียนรถ",
-  "enter_license_plate": "กรอกทะเบียนรถ"
+   "license_plate": "ทะเบียนรถ",
+  "enter_license_plate": "กรอกทะเบียนรถ",
+  "feedback": "ความคิดเห็น",
+  "no_feedback_yet": "ยังไม่มีความคิดเห็น",
+  "submit_feedback": "ส่งความคิดเห็น",
+  "feedback_submitted": "ส่งความคิดเห็นสำเร็จแล้ว",
+  "failed_submit_feedback": "ส่งความคิดเห็นไม่สำเร็จ",
+  "feedback_hint": "บอกเราสิ่งที่คุณคิด..."
 }
