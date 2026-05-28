@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:my_shop/features/notifications/data/models/notification_model.dart';
 import 'package:my_shop/features/notifications/data/repositories/notification_repository.dart';
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';

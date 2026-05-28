@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../data/models/review_model.dart';
 import '../../data/services/review_service.dart';
 

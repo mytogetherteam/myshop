@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:my_shop/features/notifications/data/repositories/notification_repository.dart';
 import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:my_shop/features/notifications/presentation/screens/notification_page.dart';

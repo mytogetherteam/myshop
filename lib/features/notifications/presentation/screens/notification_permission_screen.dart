@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:my_shop/core/notifications/notification_service.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';

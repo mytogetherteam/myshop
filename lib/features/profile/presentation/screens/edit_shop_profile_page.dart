@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/core/data/services/image_upload_service.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
