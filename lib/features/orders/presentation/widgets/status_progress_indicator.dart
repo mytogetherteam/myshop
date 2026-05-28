@@ -34,16 +34,15 @@ class _StatusProgressIndicatorState extends State<StatusProgressIndicator> with 
     int activeStep = 0;
     switch (widget.status) {
       case 'PENDING':
-      case 'CONFIRMED':
-      case 'AWAITING_APPROVAL':
+      case 'REVISED':
         activeStep = 0;
         break;
       case 'PAYMENT_SLIP_REQUESTED':
-      case 'PAYMENT_UPLOADED':
+      case 'AWAITING_APPROVAL':
       case 'PAYMENT_VERIFIED':
         activeStep = 1;
         break;
-      case 'PREPARING':
+      case 'COOKING':
         activeStep = 2;
         break;
       case 'ON_THE_WAY':
@@ -51,6 +50,9 @@ class _StatusProgressIndicatorState extends State<StatusProgressIndicator> with 
         break;
       case 'DELIVERED':
         activeStep = 4;
+        break;
+      case 'CANCELED':
+        activeStep = 0;
         break;
     }
 
@@ -75,7 +77,7 @@ class _StatusProgressIndicatorState extends State<StatusProgressIndicator> with 
 
   Widget _buildStep(int step, int activeStep, IconData icon, IconData activeIcon, String label) {
     final bool isActive = step <= activeStep;
-    final bool isCurrent = step == activeStep && widget.status != 'DELIVERED' && widget.status != 'CANCELLED';
+    final bool isCurrent = step == activeStep && widget.status != 'DELIVERED' && widget.status != 'CANCELED';
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -137,7 +139,7 @@ class _StatusProgressIndicatorState extends State<StatusProgressIndicator> with 
 
   Widget _buildLine(int step, int activeStep) {
     final bool isCompleted = step < activeStep;
-    final bool isProcessing = step == activeStep && widget.status != 'DELIVERED' && widget.status != 'CANCELLED';
+    final bool isProcessing = step == activeStep && widget.status != 'DELIVERED' && widget.status != 'CANCELED';
     
     return Expanded(
       child: Padding(

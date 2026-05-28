@@ -18,7 +18,7 @@ class OrderWarningDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isPaymentUploaded = order.status == 'PAYMENT_UPLOADED';
+    final bool isPaymentUploaded = order.status == 'AWAITING_APPROVAL';
 
     // Theme values
     final Color primaryColor = isPaymentUploaded ? const Color(0xFFED3973) : const Color(0xFFED3973);

@@ -5,6 +5,8 @@ import 'package:my_shop/core/network/api_helper.dart';
 import '../models/notification_model.dart';
 
 class NotificationRepository {
+  static const String _basePath = '/api/shop/notifications';
+
   static final NotificationRepository _instance =
       NotificationRepository._internal();
   factory NotificationRepository() => _instance;
@@ -20,7 +22,7 @@ class NotificationRepository {
   }) async {
     try {
       final response = await _dio.get(
-        '/api/notifications',
+        _basePath,
         queryParameters: {'page': page, 'size': size},
       );
 
@@ -28,9 +30,11 @@ class NotificationRepository {
           response.statusCode! >= 200 &&
           response.statusCode! < 300 &&
           response.data != null) {
-        final data = response.data;
-        if (data['success'] == true && data['data'] != null) {
-          return NotificationListResponse.fromJson(data['data']);
+        final body = Map<String, dynamic>.from(response.data as Map);
+        if (body['success'] == true && body['data'] != null) {
+          return NotificationListResponse.fromJson(
+            Map<String, dynamic>.from(body['data'] as Map),
+          );
         }
       }
       return null;
@@ -51,15 +55,15 @@ class NotificationRepository {
 
   Future<int> getUnreadCount() async {
     try {
-      debugPrint('Fetching unread count from API...');
-      final response = await _dio.get('/api/notifications/unread-count');
+      final response = await _dio.get('$_basePath/unread-count');
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300 &&
           response.data != null) {
-        final data = response.data;
+        final data = Map<String, dynamic>.from(response.data as Map);
         if (data['success'] == true && data['data'] != null) {
-          final count = data['data']['count'] as int;
+          final payload = Map<String, dynamic>.from(data['data'] as Map);
+          final count = payload['count'] as int? ?? 0;
           unreadCount.value = count;
           return count;
         }
@@ -94,13 +98,15 @@ class NotificationRepository {
 
   Future<bool> markAsRead(int id) async {
     try {
-      final response = await _dio.put('/api/notifications/$id/read');
+      final response = await _dio.put('$_basePath/$id/read');
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
-          response.statusCode! < 300 &&
-          response.data['success'] == true) {
-        decrementCount();
-        return true;
+          response.statusCode! < 300) {
+        final data = Map<String, dynamic>.from(response.data as Map);
+        if (data['success'] == true) {
+          decrementCount();
+          return true;
+        }
       }
       return false;
     } on DioException catch (e) {
@@ -114,13 +120,15 @@ class NotificationRepository {
 
   Future<bool> markAllAsRead() async {
     try {
-      final response = await _dio.put('/api/notifications/read-all');
+      final response = await _dio.put('$_basePath/read-all');
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
-          response.statusCode! < 300 &&
-          response.data['success'] == true) {
-        unreadCount.value = 0;
-        return true;
+          response.statusCode! < 300) {
+        final data = Map<String, dynamic>.from(response.data as Map);
+        if (data['success'] == true) {
+          unreadCount.value = 0;
+          return true;
+        }
       }
       return false;
     } on DioException catch (e) {
@@ -128,6 +136,21 @@ class NotificationRepository {
       return false;
     } catch (e) {
       ApiHelper.handleError(e, context: 'NotificationRepository.markAllAsRead');
+      return false;
+    }
+  }
+
+  Future<bool> deleteNotification(int id) async {
+    try {
+      final response = await _dio.delete('$_basePath/$id');
+      return response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300;
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'NotificationRepository.deleteNotification');
+      return false;
+    } catch (e) {
+      ApiHelper.handleError(e, context: 'NotificationRepository.deleteNotification');
       return false;
     }
   }

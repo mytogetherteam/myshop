@@ -119,19 +119,9 @@ class NotificationService {
   }
 
   Future<void> _sendTokenToServer(String token) async {
-    try {
-      String deviceId = await _getDeviceId();
-      await ApiClient().dio.post(
-        '/api/notifications/register-device',
-        data: {
-          'token': token,
-          'deviceType': Platform.isAndroid ? 'ANDROID' : 'IOS',
-          'deviceId': deviceId,
-        },
-      );
-    } catch (e) {
-      debugPrint('Error registering device token: $e');
-    }
+    // TODO: Wire when backend exposes shop FCM device-token registration endpoint.
+    debugPrint('FCM token ready (local only until register-device API exists): $token');
+    await _getDeviceId();
   }
 
   Future<void> _showLocalNotification(RemoteMessage message) async {

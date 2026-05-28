@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 import 'package:my_shop/features/auth/data/services/auth_service.dart';
 import 'package:my_shop/core/config/env_config.dart';
+import 'package:my_shop/core/data/services/storage_service.dart';
 
 class WebSocketService {
   static final WebSocketService _instance = WebSocketService._internal();
@@ -32,16 +33,17 @@ class WebSocketService {
   int _reconnectAttempts = 0;
   static const int _maxReconnectAttempts = 5;
   Timer? _reconnectTimer;
+  int? _subscribedShopId;
 
   void connect({bool force = false}) async {
     if (_isConnecting && !force) return;
-
     if (isConnected && !force) return;
 
     if (_stompClient != null) {
       if (force) {
         _stompClient?.deactivate();
         _stompClient = null;
+        _subscribedShopId = null;
       } else {
         _stompClient?.activate();
         return;
@@ -104,7 +106,7 @@ class WebSocketService {
     });
   }
 
-  void onConnect(dynamic frame) async {
+  Future<void> onConnect(dynamic frame) async {
     _isConnecting = false;
     _reconnectAttempts = 0;
     connectionStatus.value = true;
@@ -113,32 +115,57 @@ class WebSocketService {
     final token = await AuthService.instance.getAccessToken();
     final headers = {if (token != null) 'Authorization': 'Bearer $token'};
 
-    const destination = '/user/queue/shop-order-updates';
+    final shopId = await StorageService.instance.getSelectedShopId();
+    if (shopId == null) {
+      _log('⚠️ [WS] No shop selected — skipping order topic subscription');
+      return;
+    }
+
+    _subscribedShopId = shopId;
+    final destination = '/topic/shop/$shopId/orders';
 
     _stompClient?.subscribe(
       destination: destination,
-      headers: {...headers, 'receipt': 'rcpt-shop-order-updates'},
+      headers: {...headers, 'receipt': 'rcpt-shop-orders'},
       callback: (StompFrame frame) {
         if (frame.body == null) return;
         try {
           final Map<String, dynamic> raw = json.decode(frame.body!);
           final String type = raw['type'] ?? 'UNKNOWN';
 
-          if (type == 'MENU_ITEM_UPDATE') {
-            return; // Shop app currently doesn't need to react to its own menu updates from other instances
+          if (type == 'MENU_ITEM_UPDATE' || type == 'MENU_UPDATE') {
+            return;
           }
 
-          final String orderId = raw['orderId']?.toString() ?? 'unknown';
-          final String status =
-              raw['order']?['status'] ?? raw['status'] ?? 'unknown';
+          if (type == 'NEW_ORDER' || type == 'ORDER_UPDATE') {
+            final String orderId = raw['orderId']?.toString() ?? 'unknown';
+            final String status =
+                raw['order']?['status'] ?? raw['status'] ?? 'unknown';
 
-          _log('📥 [WS] Message: $type | Order: $orderId | Status: $status');
-          _orderUpdateController.add(raw);
+            _log('📥 [WS] $type | Order: $orderId | Status: $status');
+            _orderUpdateController.add(raw);
+          }
         } catch (e) {
           _log('⚠️ Error parsing socket message: $e');
         }
       },
     );
+
+    _log('📡 [WS] Subscribed to $destination');
+  }
+
+  /// Re-subscribe when the user switches shops.
+  Future<void> resubscribeForShop() async {
+    if (!isConnected) {
+      await connect(force: true);
+      return;
+    }
+    final shopId = await StorageService.instance.getSelectedShopId();
+    if (shopId != null && shopId != _subscribedShopId) {
+      disconnect();
+      await Future.delayed(const Duration(milliseconds: 300));
+      connect(force: true);
+    }
   }
 
   void disconnect() {
@@ -146,6 +173,11 @@ class WebSocketService {
     _reconnectTimer?.cancel();
     _stompClient?.deactivate();
     _stompClient = null;
+    _subscribedShopId = null;
     connectionStatus.value = false;
+  }
+
+  void enableReconnect() {
+    _shouldReconnect = true;
   }
 }

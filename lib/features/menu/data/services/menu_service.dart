@@ -69,9 +69,11 @@ class MenuService {
 
   Future<List<MenuCategoryModel>?> searchCategories(String query) async {
     try {
-      final url = '$_categoriesPath/search';
-      AppLogger.network('GET $url, Query: {q: $query}');
-      final response = await ApiClient().dio.get(url, queryParameters: {'q': query});
+      AppLogger.network('GET $_categoriesPath, Query: {q: $query}');
+      final response = await ApiClient().dio.get(
+        _categoriesPath,
+        queryParameters: {'q': query},
+      );
 
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
@@ -199,9 +201,11 @@ class MenuService {
 
   Future<List<MenuItemModel>?> searchMenuItems(String query) async {
     try {
-      final url = '$_menuItemsPath/search';
-      AppLogger.network('GET $url, Query: {q: $query}');
-      final response = await ApiClient().dio.get(url, queryParameters: {'q': query});
+      AppLogger.network('GET $_menuItemsPath, Query: {q: $query}');
+      final response = await ApiClient().dio.get(
+        _menuItemsPath,
+        queryParameters: {'q': query},
+      );
 
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
@@ -425,14 +429,15 @@ class MenuService {
     return false;
   }
 
+  /// PATCH /api/shop/menu-items/{id}/publish — body `{ status }` (DRAFT | PUBLISHED | …).
   Future<bool> toggleMenuItemPublishStatus(int itemId, String status) async {
     try {
       final url = '$_menuItemsPath/$itemId/publish';
       AppLogger.network('PATCH $url, Data: {status: $status}');
       final response = await ApiClient().dio.patch(
-            url,
-            data: {'status': status},
-          );
+        url,
+        data: {'status': status},
+      );
 
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
@@ -447,35 +452,44 @@ class MenuService {
     return false;
   }
 
-  Future<List<String>?> getPublishStatuses() async {
+  /// PUT /api/shop/menu-items/{id}/recommended?enabled=true|false
+  Future<bool> toggleRecommended(int itemId, bool enabled) async {
     try {
-      const url = '/api/shop/menu/publish-statuses';
-      AppLogger.network('GET $url');
-      final response = await ApiClient().dio.get(url);
-
-      if (response.statusCode != null &&
+      final url = '$_menuItemsPath/$itemId/recommended';
+      AppLogger.network('PUT $url, Query: {enabled: $enabled}');
+      final response = await ApiClient().dio.put(
+        url,
+        queryParameters: {'enabled': enabled},
+      );
+      return response.statusCode != null &&
           response.statusCode! >= 200 &&
-          response.statusCode! < 300) {
-        final Map<String, dynamic> data = response.data;
-        if (data['success'] == true && data['data'] != null) {
-          final dynamic rawData = data['data'];
-          List list;
-          if (rawData is List) {
-            list = rawData;
-          } else if (rawData is Map && rawData['content'] is List) {
-            list = rawData['content'];
-          } else {
-            list = [];
-          }
-          return list.map((e) => e.toString()).toList();
-        }
-      }
+          response.statusCode! < 300;
     } on DioException catch (e) {
-      ApiHelper.handleError(e, context: 'MenuService.getPublishStatuses');
+      ApiHelper.handleError(e, context: 'MenuService.toggleRecommended');
     } catch (e) {
-      ApiHelper.handleError(e, context: 'MenuService.getPublishStatuses');
+      ApiHelper.handleError(e, context: 'MenuService.toggleRecommended');
     }
-    return null;
+    return false;
+  }
+
+  /// PUT /api/shop/menu-items/{id}/hot-deal?enabled=true|false
+  Future<bool> toggleHotDeal(int itemId, bool enabled) async {
+    try {
+      final url = '$_menuItemsPath/$itemId/hot-deal';
+      AppLogger.network('PUT $url, Query: {enabled: $enabled}');
+      final response = await ApiClient().dio.put(
+        url,
+        queryParameters: {'enabled': enabled},
+      );
+      return response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300;
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'MenuService.toggleHotDeal');
+    } catch (e) {
+      ApiHelper.handleError(e, context: 'MenuService.toggleHotDeal');
+    }
+    return false;
   }
 }
 

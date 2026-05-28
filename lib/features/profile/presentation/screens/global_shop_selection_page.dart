@@ -14,6 +14,7 @@ import 'package:my_shop/features/categories/data/services/category_service.dart'
 import 'package:my_shop/features/menu/data/services/menu_service.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
+import 'package:my_shop/core/network/websocket_service.dart';
 
 class GlobalShopSelectionPage extends StatefulWidget {
   final bool isInitialFlow;
@@ -85,6 +86,8 @@ class _GlobalShopSelectionPageState extends State<GlobalShopSelectionPage> {
 
   Future<void> _selectShop(Shop shop) async {
     await StorageService.instance.saveSelectedShopId(shop.id);
+    WebSocketService().enableReconnect();
+    await WebSocketService().resubscribeForShop();
     CategoryService.clearCache();
     MenuService.clearCache();
     if (!mounted) return;

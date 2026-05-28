@@ -190,6 +190,25 @@ class CategoryService {
     return false;
   }
 
+  /// PATCH /api/shop/menu-categories/{id}/publish — body `{ status }`.
+  Future<bool> toggleCategoryPublishStatus(int categoryId, String status) async {
+    try {
+      final url = '$_categoriesPath/$categoryId/publish';
+      final response = await ApiClient().dio.patch(
+        url,
+        data: {'status': status},
+      );
+      return response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300;
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'CategoryService.toggleCategoryPublishStatus');
+    } catch (e) {
+      ApiHelper.handleError(e, context: 'CategoryService.toggleCategoryPublishStatus');
+    }
+    return false;
+  }
+
   Future<bool> reorderCategories(List<int> orderedIds) async {
     try {
       final url = '$_categoriesPath/reorder';

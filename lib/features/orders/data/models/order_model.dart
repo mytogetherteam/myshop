@@ -4,13 +4,30 @@ String? _resolveUrl(dynamic value) {
   if (value == null) return null;
   final str = value.toString();
   if (str.isEmpty) return null;
-  // Already an absolute URL — return as-is
   if (str.startsWith('http://') || str.startsWith('https://')) return str;
-  // Base64 data URI (e.g. customer-uploaded receipt) — return as-is
   if (str.startsWith('data:')) return str;
-  // Relative path — prepend the API base URL
   final path = str.startsWith('/') ? str : '/$str';
   return '${EnvConfig.apiBaseUrl}$path';
+}
+
+String _normalizeStatus(String? raw) {
+  final s = (raw ?? '').toUpperCase();
+  switch (s) {
+    case 'PREPARING':
+      return 'COOKING';
+    case 'CANCELLED':
+      return 'CANCELED';
+    case 'CONFIRMED':
+      return 'PENDING';
+    case 'PAYMENT_UPLOADED':
+      return 'AWAITING_APPROVAL';
+    case 'READY_FOR_PICKUP':
+      return 'COOKING';
+    case 'REJECTED':
+      return 'CANCELED';
+    default:
+      return s;
+  }
 }
 
 class OrderModel {
@@ -19,17 +36,13 @@ class OrderModel {
   final String status;
   final bool ongoing;
   final String? statusLabel;
-  final String? statusLabelMm;
-  final String? statusLabelTh;
-  final String deliveryType;
-  final String deliveryTier;
-  final String? deliveryTierLabel;
-  final String? deliveryTierLabelMm;
-  final String? deliveryTierLabelTh;
+  final String orderType;
+  final String? orderDeliveryType;
   final bool isScheduled;
   final DateTime? scheduledDeliveryTime;
   final double deliveryFee;
   final String displayDeliveryFee;
+  final double itemPrice;
   final double totalAmount;
   final String displayTotalAmount;
   final double previousTotalAmount;
@@ -39,12 +52,16 @@ class OrderModel {
   final String? paymentSlipUrl;
   final String? riderName;
   final String? riderPhone;
-  final List<OrderModificationModel> modifications;
+  final String? vehicleNo;
+  final int? driverId;
+  final String? trackingUrl;
+  final String? proofPhotoUrl;
+  final List<OrderReviseItemModel> reviseItems;
+  final List<OrderDriverModel> shopDeliveryDrivers;
   final int queueNo;
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  // New fields from latest API
   final int shopOwnerId;
   final String shopName;
   final String? shopLogo;
@@ -60,10 +77,8 @@ class OrderModel {
   final String? shopOwnerEmail;
   final String? shopOwnerUsername;
   final String? estimatedDeliveryTime;
-  final String? deliveryCycleNo;
-  final String? deliveryTrackingUrl;
-  final String? proofPhotoUrl;
   final String? cancelReason;
+  final String? reviseReason;
   final String? shopPaymentQrUrl;
   final int waitingTimeMinutes;
 
@@ -73,17 +88,13 @@ class OrderModel {
     required this.status,
     this.ongoing = false,
     this.statusLabel,
-    this.statusLabelMm,
-    this.statusLabelTh,
-    required this.deliveryType,
-    this.deliveryTier = 'NORMAL',
-    this.deliveryTierLabel,
-    this.deliveryTierLabelMm,
-    this.deliveryTierLabelTh,
+    this.orderType = 'DELIVERY',
+    this.orderDeliveryType,
     this.isScheduled = false,
     this.scheduledDeliveryTime,
     this.deliveryFee = 0.0,
     this.displayDeliveryFee = '',
+    this.itemPrice = 0.0,
     this.totalAmount = 0.0,
     this.displayTotalAmount = '',
     this.previousTotalAmount = 0.0,
@@ -93,7 +104,12 @@ class OrderModel {
     this.paymentSlipUrl,
     this.riderName,
     this.riderPhone,
-    this.modifications = const [],
+    this.vehicleNo,
+    this.driverId,
+    this.trackingUrl,
+    this.proofPhotoUrl,
+    this.reviseItems = const [],
+    this.shopDeliveryDrivers = const [],
     this.queueNo = 0,
     required this.createdAt,
     required this.updatedAt,
@@ -112,88 +128,217 @@ class OrderModel {
     this.shopOwnerEmail,
     this.shopOwnerUsername,
     this.estimatedDeliveryTime,
-    this.deliveryCycleNo,
-    this.deliveryTrackingUrl,
-    this.proofPhotoUrl,
     this.cancelReason,
+    this.reviseReason,
     this.shopPaymentQrUrl,
     this.waitingTimeMinutes = 0,
   });
 
+  /// Legacy alias for delivery tier UI (FAST = prepaid, FLEXIBLE = flexible).
+  String get deliveryType {
+    if (orderDeliveryType == 'FLEXIBLE') return 'NORMAL';
+    if (orderDeliveryType == 'FAST') return 'PREPAID';
+    return orderDeliveryType ?? 'PREPAID';
+  }
+
+  String? get deliveryCycleNo => vehicleNo;
+  String? get deliveryTrackingUrl => trackingUrl;
+
+  List<OrderModificationModel> get modifications {
+    return reviseItems
+        .map(
+          (r) => OrderModificationModel(
+            id: r.id,
+            modificationType: 'REVISED',
+            modifiedBy: r.revisedByName ?? 'Shop',
+            itemName: r.itemName ?? 'Item #${r.orderItemId}',
+            reason: r.reason,
+            createdAt: r.createdAt,
+          ),
+        )
+        .toList();
+  }
+
   factory OrderModel.fromJson(Map<String, dynamic> json) {
+    final status = _normalizeStatus(json['status']?.toString());
+    final driver = json['driver'] is Map
+        ? Map<String, dynamic>.from(json['driver'] as Map)
+        : null;
+
+    final user = json['user'] is Map
+        ? Map<String, dynamic>.from(json['user'] as Map)
+        : null;
+
+    final deliveryFee = (json['deliveryFee'] as num?)?.toDouble() ?? 0.0;
+    final itemPrice = (json['itemPrice'] as num?)?.toDouble() ??
+        (json['items'] is List
+            ? (json['items'] as List).fold<double>(
+                0,
+                (sum, item) =>
+                    sum +
+                    ((item['price'] as num?)?.toDouble() ?? 0) *
+                        ((item['quantity'] as num?)?.toInt() ?? 0),
+              )
+            : 0.0);
+    final totalAmount = (json['totalAmount'] as num?)?.toDouble() ?? 0.0;
+
+    List<OrderReviseItemModel> reviseItemsList = [];
+    if (json['reviseItems'] is List) {
+      reviseItemsList = (json['reviseItems'] as List)
+          .map((e) => OrderReviseItemModel.fromJson(
+                Map<String, dynamic>.from(e as Map),
+              ))
+          .toList();
+    }
+
+    List<OrderDriverModel> driversList = [];
+    if (json['shopDeliveryDrivers'] is List) {
+      driversList = (json['shopDeliveryDrivers'] as List)
+          .map((e) => OrderDriverModel.fromJson(
+                Map<String, dynamic>.from(e as Map),
+              ))
+          .toList();
+    }
+
+    DeliveryAddressModel? address;
+    if (json['deliveryAddress'] is Map) {
+      address = DeliveryAddressModel.fromJson(
+        Map<String, dynamic>.from(json['deliveryAddress'] as Map),
+      );
+    } else if (json['address'] != null) {
+      address = DeliveryAddressModel(
+        latitude: (json['lat'] as num?)?.toDouble() ?? 0.0,
+        longitude: (json['lon'] as num?)?.toDouble() ?? 0.0,
+        address: json['address']?.toString() ?? '',
+        addressMm: json['addressMm']?.toString(),
+        buildingName: json['buildingName']?.toString(),
+        floor: json['floor']?.toString(),
+        note: json['note']?.toString(),
+      );
+    }
+
+    final waitingMins = json['waitingTimeMinutes'] as int? ?? 0;
+
     return OrderModel(
       id: (json['id'] ?? '').toString(),
       lastOrderNo: json['lastOrderNo']?.toString() ?? json['id']?.toString() ?? '',
-      status: json['status']?.toString() ?? '',
-      ongoing: json['ongoing'] ?? false,
-      statusLabel: json['statusLabel']?.toString(),
-      statusLabelMm: json['statusLabelMm']?.toString(),
-      statusLabelTh: json['statusLabelTh']?.toString(),
-      deliveryType: json['deliveryType']?.toString() ?? 'DELIVERY',
-      deliveryTier: json['deliveryTier']?.toString() ?? 'NORMAL',
-      deliveryTierLabel: json['deliveryTierLabel']?.toString(),
-      deliveryTierLabelMm: json['deliveryTierLabelMm']?.toString(),
-      deliveryTierLabelTh: json['deliveryTierLabelTh']?.toString(),
-      isScheduled: json['isScheduled'] ?? false,
+      status: status,
+      ongoing: json['ongoing'] == true,
+      statusLabel: json['statusLabel']?.toString() ?? _statusLabelFor(status),
+      orderType: json['orderType']?.toString() ?? 'DELIVERY',
+      orderDeliveryType: json['orderDeliveryType']?.toString(),
+      isScheduled: json['isScheduled'] == true,
       scheduledDeliveryTime: json['scheduledDeliveryTime'] != null
-          ? DateTime.parse(json['scheduledDeliveryTime'])
+          ? DateTime.tryParse(json['scheduledDeliveryTime'].toString())
           : null,
-      deliveryFee: (json['deliveryFee'] as num?)?.toDouble() ?? 0.0,
-      displayDeliveryFee: json['displayDeliveryFee']?.toString() ?? '',
-      totalAmount: (json['totalAmount'] as num?)?.toDouble() ?? 0.0,
-      displayTotalAmount: json['displayTotalAmount']?.toString() ?? '',
+      deliveryFee: deliveryFee,
+      displayDeliveryFee: json['displayDeliveryFee']?.toString() ??
+          (deliveryFee > 0 ? '฿${deliveryFee.toInt()}' : '฿ 0'),
+      itemPrice: itemPrice,
+      totalAmount: totalAmount,
+      displayTotalAmount: json['displayTotalAmount']?.toString() ??
+          '฿${totalAmount.toInt()}',
       previousTotalAmount: (json['previousTotalAmount'] as num?)?.toDouble() ?? 0.0,
-      displayPreviousTotalAmount: json['displayPreviousTotalAmount']?.toString() ?? '',
+      displayPreviousTotalAmount:
+          json['displayPreviousTotalAmount']?.toString() ?? '',
       items: (json['items'] as List?)
-              ?.map((item) => OrderItemModel.fromJson(item))
+              ?.map((item) => OrderItemModel.fromJson(
+                    Map<String, dynamic>.from(item as Map),
+                  ))
               .toList() ??
           [],
-      deliveryAddress: json['deliveryAddress'] != null
-          ? DeliveryAddressModel.fromJson(json['deliveryAddress'])
-          : null,
+      deliveryAddress: address,
       paymentSlipUrl: _resolveUrl(json['paymentSlipUrl']),
-      riderName: json['deliveryRiderName']?.toString(),
-      riderPhone: json['deliveryPhoneNo']?.toString(),
-      modifications: (json['modifications'] as List?)
-              ?.map((m) => OrderModificationModel.fromJson(m))
-              .toList() ??
-          [],
-      queueNo: json['queueNo'] ?? 0,
+      riderName: driver?['name']?.toString() ?? json['deliveryRiderName']?.toString(),
+      riderPhone: driver?['phone']?.toString() ?? json['deliveryPhoneNo']?.toString(),
+      vehicleNo: driver?['vehicleNo']?.toString() ?? json['deliveryCycleNo']?.toString(),
+      driverId: json['driverId'] as int? ?? driver?['id'] as int?,
+      trackingUrl: json['trackingUrl']?.toString() ?? json['deliveryTrackingUrl']?.toString(),
+      proofPhotoUrl: _resolveUrl(json['proofPhotoUrl']),
+      reviseItems: reviseItemsList,
+      shopDeliveryDrivers: driversList,
+      queueNo: json['queueNo'] as int? ?? 0,
       createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
+          ? DateTime.parse(json['createdAt'].toString())
           : DateTime.now(),
       updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'])
+          ? DateTime.parse(json['updatedAt'].toString())
           : DateTime.now(),
-      shopOwnerId: json['shopOwnerId'] ?? 0,
-      shopName: json['shopName'] ?? '',
-      shopLogo: _resolveUrl(json['shopLogo']),
-      shopAddress: json['shopAddress'],
+      shopOwnerId: json['shopOwnerId'] as int? ?? 0,
+      shopName: json['shopName']?.toString() ?? json['shop']?['nameEn']?.toString() ?? '',
+      shopLogo: _resolveUrl(json['shopLogo'] ?? json['shop']?['logoUrl']),
+      shopAddress: json['shopAddress']?.toString(),
       lat: (json['lat'] as num?)?.toDouble(),
       lon: (json['lon'] as num?)?.toDouble(),
-      shopPhone: json['shopPhone'],
-      customerName: json['customerName'] ?? 'Customer',
-      customerPhone: json['customerPhone'] ?? '-',
-      customerEmail: json['customerEmail'],
-      customerAvatar: _resolveUrl(json['customerAvatar']),
-      customerUsername: json['customerUsername'],
-      shopOwnerEmail: json['shopOwnerEmail'],
-      shopOwnerUsername: json['shopOwnerUsername'],
-      estimatedDeliveryTime: json['estimatedDeliveryTime']?.toString() ?? json['estimatedTime']?.toString() ?? ((json['waitingTimeMinutes'] != null && json['waitingTimeMinutes'] > 0) ? '${json['waitingTimeMinutes']} mins' : null),
-      deliveryCycleNo: json['deliveryCycleNo'],
-      deliveryTrackingUrl: json['deliveryTrackingUrl'],
-      proofPhotoUrl: _resolveUrl(json['proofPhotoUrl']),
-      cancelReason: json['cancelReason'],
-      shopPaymentQrUrl: json['shopPaymentQrUrl'],
-      waitingTimeMinutes: json['waitingTimeMinutes'] ?? 0,
+      shopPhone: json['shopPhone']?.toString(),
+      customerName: json['customerName']?.toString() ?? user?['name']?.toString() ?? 'Customer',
+      customerPhone: json['customerPhone']?.toString() ?? user?['phone']?.toString() ?? '-',
+      customerEmail: json['customerEmail']?.toString() ?? user?['email']?.toString(),
+      customerAvatar: _resolveUrl(json['customerAvatar'] ?? user?['profileUrl']),
+      customerUsername: json['customerUsername']?.toString(),
+      shopOwnerEmail: json['shopOwnerEmail']?.toString(),
+      shopOwnerUsername: json['shopOwnerUsername']?.toString(),
+      estimatedDeliveryTime: json['estimatedDeliveryTime']?.toString() ??
+          (waitingMins > 0 ? '$waitingMins mins' : null),
+      cancelReason: json['cancelReason']?.toString(),
+      reviseReason: json['reviseReason']?.toString(),
+      shopPaymentQrUrl: json['shopPaymentQrUrl']?.toString(),
+      waitingTimeMinutes: waitingMins,
     );
   }
 
-  // Helper for UI
-  double get foodPrice => items.fold(0.0, (sum, item) => sum + (item.price * item.quantity));
+  static String _statusLabelFor(String status) {
+    const labels = {
+      'PENDING': 'Pending',
+      'CANCELED': 'Canceled',
+      'PAYMENT_SLIP_REQUESTED': 'Waiting for Payment',
+      'AWAITING_APPROVAL': 'Awaiting Approval',
+      'PAYMENT_VERIFIED': 'Payment Verified',
+      'COOKING': 'Cooking',
+      'ON_THE_WAY': 'On the Way',
+      'DELIVERED': 'Delivered',
+      'REVISED': 'Revised',
+    };
+    return labels[status] ?? status;
+  }
+
+  double get foodPrice =>
+      itemPrice > 0
+          ? itemPrice
+          : items.fold(0.0, (sum, item) => sum + (item.price * item.quantity));
+
   String get deliveryAddressDetail => deliveryAddress?.address ?? '-';
   String get deliveryAddressTitle => 'Delivery Address';
-  String get statusName => statusLabel ?? statusLabelMm ?? status;
+  String get statusName => statusLabel ?? status;
+}
+
+class OrderDriverModel {
+  final int id;
+  final String name;
+  final String? phone;
+  final String? vehicleNo;
+  final String? profileUrl;
+  final bool isActive;
+
+  OrderDriverModel({
+    required this.id,
+    required this.name,
+    this.phone,
+    this.vehicleNo,
+    this.profileUrl,
+    this.isActive = true,
+  });
+
+  factory OrderDriverModel.fromJson(Map<String, dynamic> json) {
+    return OrderDriverModel(
+      id: json['id'] as int,
+      name: json['name']?.toString() ?? '',
+      phone: json['phone']?.toString(),
+      vehicleNo: json['vehicleNo']?.toString(),
+      profileUrl: _resolveUrl(json['profileUrl']),
+      isActive: json['isActive'] as bool? ?? true,
+    );
+  }
 }
 
 class OrderItemModel {
@@ -224,23 +369,48 @@ class OrderItemModel {
   });
 
   factory OrderItemModel.fromJson(Map<String, dynamic> json) {
+    final menuItem = json['menuItem'] is Map
+        ? Map<String, dynamic>.from(json['menuItem'] as Map)
+        : null;
+
+    List<OrderItemOptionModel> optionsList = [];
+    if (json['selectedOptions'] is List) {
+      optionsList = (json['selectedOptions'] as List).map((opt) {
+        final o = Map<String, dynamic>.from(opt as Map);
+        final menuOpt = o['menuItemOption'] is Map
+            ? Map<String, dynamic>.from(o['menuItemOption'] as Map)
+            : null;
+        return OrderItemOptionModel(
+          name: menuOpt?['nameEn']?.toString() ?? '',
+          displayPrice: '฿${(o['price'] as num?)?.toString() ?? '0'}',
+        );
+      }).toList();
+    }
+
+    final price = (json['price'] as num?)?.toDouble() ?? 0.0;
+
     return OrderItemModel(
-      id: json['id'] ?? 0,
-      menuItemId: json['menuItemId'] ?? 0,
-      menuItemName: json['menuItemName'] ?? '',
-      menuItemNameMm: json['menuItemNameMm'],
-      menuItemImageUrl: _resolveUrl(json['imageUrl'] ?? json['menuItemImageUrl']),
-      quantity: json['quantity'] ?? 0,
-      price: (json['price'] as num?)?.toDouble() ?? 0.0,
-      displayPrice: json['displayPrice'] ?? '',
-      specialInstructions: json['specialInstructions'],
+      id: json['id'] as int? ?? 0,
+      menuItemId: json['menuItemId'] as int? ?? menuItem?['id'] as int? ?? 0,
+      menuItemName: json['menuItemName']?.toString() ?? menuItem?['nameEn']?.toString() ?? '',
+      menuItemNameMm: json['menuItemNameMm']?.toString() ?? menuItem?['nameMm']?.toString(),
+      menuItemImageUrl: _resolveUrl(json['imageUrl'] ?? json['menuItemImageUrl'] ?? menuItem?['imageUrl']),
+      quantity: json['quantity'] as int? ?? 0,
+      price: price,
+      displayPrice: json['displayPrice']?.toString() ?? '฿${price.toInt()}',
+      specialInstructions: json['specialInstructions']?.toString(),
       optionsString: json['options']?.toString(),
-      options: [], // Legacy or structured options
+      options: optionsList,
     );
   }
 
-  String get displayName => menuItemName.isNotEmpty ? menuItemName : (menuItemNameMm ?? '-');
-  String? get secondaryName => (menuItemName.isNotEmpty && menuItemNameMm != null && menuItemNameMm != menuItemName) ? menuItemNameMm : null;
+  String get displayName =>
+      menuItemName.isNotEmpty ? menuItemName : (menuItemNameMm ?? '-');
+
+  String? get secondaryName =>
+      (menuItemName.isNotEmpty && menuItemNameMm != null && menuItemNameMm != menuItemName)
+          ? menuItemNameMm
+          : null;
 }
 
 class OrderItemOptionModel {
@@ -280,11 +450,55 @@ class DeliveryAddressModel {
     return DeliveryAddressModel(
       latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
       longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
-      address: json['address'] ?? '',
-      addressMm: json['addressMm'],
-      buildingName: json['buildingName'],
-      floor: json['floor'],
-      note: json['note'],
+      address: json['address']?.toString() ?? '',
+      addressMm: json['addressMm']?.toString(),
+      buildingName: json['buildingName']?.toString(),
+      floor: json['floor']?.toString(),
+      note: json['note']?.toString(),
+    );
+  }
+}
+
+class OrderReviseItemModel {
+  final int id;
+  final int orderItemId;
+  final int revisedById;
+  final String? reason;
+  final String? itemName;
+  final String? revisedByName;
+  final DateTime createdAt;
+
+  OrderReviseItemModel({
+    required this.id,
+    required this.orderItemId,
+    required this.revisedById,
+    this.reason,
+    this.itemName,
+    this.revisedByName,
+    required this.createdAt,
+  });
+
+  factory OrderReviseItemModel.fromJson(Map<String, dynamic> json) {
+    final orderItem = json['orderItem'] is Map
+        ? Map<String, dynamic>.from(json['orderItem'] as Map)
+        : null;
+    final menuItem = orderItem?['menuItem'] is Map
+        ? Map<String, dynamic>.from(orderItem!['menuItem'] as Map)
+        : null;
+    final revisedBy = json['revisedBy'] is Map
+        ? Map<String, dynamic>.from(json['revisedBy'] as Map)
+        : null;
+
+    return OrderReviseItemModel(
+      id: json['id'] as int? ?? 0,
+      orderItemId: json['orderItemId'] as int? ?? 0,
+      revisedById: json['revisedById'] as int? ?? 0,
+      reason: json['reason']?.toString(),
+      itemName: menuItem?['nameEn']?.toString(),
+      revisedByName: revisedBy?['name']?.toString(),
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'].toString())
+          : DateTime.now(),
     );
   }
 }
@@ -324,4 +538,22 @@ class OrderModificationModel {
           : DateTime.now(),
     );
   }
+}
+
+class OrderListResult {
+  final List<OrderModel> orders;
+  final int currentPage;
+  final int lastPage;
+  final int total;
+  final int perPage;
+
+  OrderListResult({
+    required this.orders,
+    required this.currentPage,
+    required this.lastPage,
+    required this.total,
+    required this.perPage,
+  });
+
+  bool get hasMore => currentPage < lastPage;
 }

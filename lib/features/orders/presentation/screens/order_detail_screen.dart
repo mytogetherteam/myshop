@@ -18,6 +18,9 @@ import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
+import 'package:my_shop/features/profile/data/models/rider_model.dart';
+import 'package:my_shop/features/profile/data/services/rider_service.dart';
+import 'package:image_picker/image_picker.dart';
 
 
 class OrderDetailScreen extends StatefulWidget {
@@ -45,7 +48,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   final _cancelReasonController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isFormValid = false;
-  String _deliveryOption = 'PREPAID'; // 'PREPAID' or 'NORMAL'
+  String _deliveryOption = 'PREPAID'; // 'PREPAID' (FAST) or 'NORMAL' (FLEXIBLE)
+  int? _selectedDriverId;
+  List<Rider> _availableDrivers = [];
+  XFile? _proofImage;
 
   @override
   void initState() {
@@ -55,6 +61,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _fetchOrderDetails();
     _initControllers();
     _addFormListeners();
+  }
+
+  Future<void> _loadDrivers() async {
+    final riders = await RiderService().getActiveRiders();
+    if (mounted) {
+      setState(() => _availableDrivers = riders);
+    }
   }
 
   void _initControllers() {
@@ -77,6 +90,22 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     if (updatedOrder != null && mounted) {
       setState(() {
         _currentOrder = updatedOrder;
+        _selectedDriverId = updatedOrder.driverId;
+        if (updatedOrder.shopDeliveryDrivers.isNotEmpty) {
+          _availableDrivers = updatedOrder.shopDeliveryDrivers
+              .map((d) => Rider(
+                    id: d.id,
+                    name: d.name,
+                    phone: d.phone,
+                    vehicleNo: d.vehicleNo,
+                    profileUrl: d.profileUrl,
+                    shopId: 0,
+                    isActive: d.isActive,
+                  ))
+              .toList();
+        } else {
+          _loadDrivers();
+        }
         _initControllers();
         _isFirstLoading = false;
       });
@@ -129,21 +158,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           waiting.isNotEmpty &&
           int.tryParse(waiting) != null;
       }
-    } else if (_currentOrder.status == 'PAYMENT_UPLOADED' && _currentOrder.deliveryType == 'PREPAID') {
-      // Fast Delivery payment state: need rider details
-      isValid = rider.isNotEmpty &&
-        phone.isNotEmpty &&
-        thaiPhoneRegex.hasMatch(phone) &&
-        cycle.isNotEmpty;
-    } else if (_currentOrder.status == 'PREPARING' && _currentOrder.deliveryType == 'NORMAL') {
-      isValid = fee.isNotEmpty &&
-        double.tryParse(fee) != null &&
-        rider.isNotEmpty &&
-        phone.isNotEmpty &&
-        thaiPhoneRegex.hasMatch(phone) &&
-        cycle.isNotEmpty &&
-        waiting.isNotEmpty &&
-        int.tryParse(waiting) != null;
+    } else if (_currentOrder.status == 'AWAITING_APPROVAL') {
+      isValid = true;
+    } else if (_currentOrder.status == 'COOKING') {
+      isValid = _selectedDriverId != null;
     } else {
       isValid = true;
     }
@@ -180,6 +198,137 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         });
       }
     });
+  }
+
+  Future<void> _showReviseItemsSheet() async {
+    final selectedIds = <int>{};
+    final reasonController = TextEditingController();
+
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Revise unavailable items',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ..._currentOrder.items.map((item) {
+                  return CheckboxListTile(
+                    value: selectedIds.contains(item.id),
+                    onChanged: (v) {
+                      setModalState(() {
+                        if (v == true) {
+                          selectedIds.add(item.id);
+                        } else {
+                          selectedIds.remove(item.id);
+                        }
+                      });
+                    },
+                    title: Text('${item.quantity}x ${item.displayName}'),
+                  );
+                }),
+                TextField(
+                  controller: reasonController,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: 'Reason',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                PrimaryGradientButton(
+                  onPressed: selectedIds.isEmpty || reasonController.text.trim().isEmpty
+                      ? null
+                      : () => Navigator.pop(ctx, true),
+                  text: 'Submit revision',
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await _runOrderAction(
+        action: () => OrderService().reviseOrder(
+          _currentOrder.id.toString(),
+          reviseReason: reasonController.text.trim(),
+          unavailableItems: selectedIds.toList(),
+        ),
+        errorMessage: 'Failed to revise order.',
+      );
+    }
+    reasonController.dispose();
+  }
+
+  Widget _buildDriverPicker({bool required = true}) {
+    if (_availableDrivers.isEmpty) {
+      return TextButton(
+        onPressed: _loadDrivers,
+        child: const Text('Load delivery drivers'),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          required ? 'Delivery driver *' : 'Delivery driver',
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF64748B),
+          ),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<int>(
+          value: _selectedDriverId,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+          hint: const Text('Select driver'),
+          items: _availableDrivers
+              .map((r) => DropdownMenuItem(
+                    value: r.id,
+                    child: Text('${r.name} (${r.vehicleNo ?? r.phone ?? ''})'),
+                  ))
+              .toList(),
+          onChanged: (v) {
+            setState(() {
+              _selectedDriverId = v;
+              if (v != null) {
+                final rider = _availableDrivers.firstWhere((r) => r.id == v);
+                _deliveryRiderNameController.text = rider.name;
+                _deliveryPhoneNoController.text = rider.phone ?? '';
+                _deliveryCycleNoController.text = rider.vehicleNo ?? '';
+              }
+              _validateFormState();
+            });
+          },
+        ),
+      ],
+    );
   }
 
   void _showDemoDialog() {
@@ -265,18 +414,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Future<void> _handleConfirmOrder() async {
     if (_deliveryOption == 'PREPAID' && !_formKey.currentState!.validate()) return;
 
-    final payload = {
-      "deliveryType": _deliveryOption,
-      "deliveryFee": double.tryParse(_deliveryFeeController.text.replaceAll(',', '')) ?? 0,
-      "deliveryCycleNo": _deliveryOption == 'NORMAL' ? '' : _deliveryCycleNoController.text,
-      "deliveryRiderName": _deliveryOption == 'NORMAL' ? '' : _deliveryRiderNameController.text,
-      "deliveryPhoneNo": _deliveryOption == 'NORMAL' ? '' : _deliveryPhoneNoController.text,
-      "deliveryTrackingUrl": _deliveryOption == 'NORMAL' ? '' : _deliveryTrackingUrlController.text,
-      "waitingTimeMinutes": int.tryParse(_waitingTimeMinutesController.text) ?? 0,
-    };
+    final orderDeliveryType = _deliveryOption == 'NORMAL' ? 'FLEXIBLE' : 'FAST';
 
     await _runOrderAction(
-      action: () => OrderService().confirmOrder(_currentOrder.id.toString(), payload),
+      action: () => OrderService().confirmOrder(
+        _currentOrder.id.toString(),
+        orderDeliveryType: orderDeliveryType,
+        deliveryFee: double.tryParse(_deliveryFeeController.text.replaceAll(',', '')) ?? 0,
+        waitingTimeMinutes: int.tryParse(_waitingTimeMinutesController.text) ?? 0,
+        driverId: _selectedDriverId,
+      ),
       errorMessage: 'Failed to confirm order. Please try again.',
     );
   }
@@ -523,27 +670,32 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Future<void> _handleDispatchOrder() async {
-    final payload = {
-      "deliveryFee": double.tryParse(_deliveryFeeController.text.replaceAll(',', '')) ?? 0,
-      "deliveryCycleNo": _deliveryCycleNoController.text,
-      "deliveryRiderName": _deliveryRiderNameController.text,
-      "deliveryPhoneNo": _deliveryPhoneNoController.text,
-      "deliveryTrackingUrl": _deliveryTrackingUrlController.text,
-      "waitingTimeMinutes": int.tryParse(_waitingTimeMinutesController.text) ?? 0,
-    };
+    if (_selectedDriverId == null) {
+      AppDialog.showToast(context, 'Please select a delivery driver', isError: true);
+      return;
+    }
+
+    File? proofFile;
+    if (_proofImage != null) {
+      proofFile = File(_proofImage!.path);
+    }
 
     await _runOrderAction(
-      action: () => OrderService().dispatchOrder(_currentOrder.id.toString(), payload),
+      action: () => OrderService().dispatchOrder(
+        _currentOrder.id.toString(),
+        driverId: _selectedDriverId!,
+        trackingUrl: _deliveryTrackingUrlController.text.isNotEmpty
+            ? _deliveryTrackingUrlController.text
+            : null,
+        proofImage: proofFile,
+      ),
       errorMessage: 'Failed to dispatch order. Please try again.',
     );
   }
 
   Future<void> _handleCompleteDelivery() async {
     await _runOrderAction(
-      action: () => OrderService().completeOrder(
-        _currentOrder.id.toString(),
-        'test',
-      ),
+      action: () => OrderService().completeOrder(_currentOrder.id.toString()),
       errorMessage: 'Failed to complete delivery. Please try again.',
       onSuccess: () {
         AppDialog.showSuccessDialog(
@@ -591,7 +743,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 color: const Color(0xFF1E293B),
               ),
             ),
-            _currentOrder.status == 'CANCELLED' 
+            _currentOrder.status == 'CANCELED' 
                 ? Text(
                     _currentOrder.statusName,
                     style: GoogleFonts.poppins(
@@ -666,13 +818,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
                     // Confirmation Form (Full Width - it has its own internal padding)
                     if (_currentOrder.status == 'PENDING' ||
-                        (_currentOrder.status == 'PREPARING' && _currentOrder.deliveryType == 'NORMAL')) ...[
+                        (_currentOrder.status == 'COOKING' && _currentOrder.deliveryType == 'NORMAL')) ...[
                       _buildConfirmationForm(),
                       const SizedBox(height: 8),
                     ],
 
                     // Waiting Time Update (PREPARING state only for Fast Delivery)
-                    if (_currentOrder.status == 'PREPARING' && _currentOrder.deliveryType == 'PREPAID') ...[
+                    if (_currentOrder.status == 'COOKING' && _currentOrder.deliveryType == 'PREPAID') ...[
                       _buildWaitingTimeUpdate(),
                       const SizedBox(height: 8),
                     ],
@@ -688,12 +840,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           // Rider Section if applicable
                           if (_currentOrder.riderName != null && _currentOrder.riderName!.trim().isNotEmpty) _buildRiderSection(),
                           
-                          if (_currentOrder.status == 'CANCELLED')
+                          if (_currentOrder.status == 'CANCELED')
                             _buildCancelReasonBox(),
                           
                           if (_currentOrder.isScheduled || 
                               (_currentOrder.riderName != null && _currentOrder.riderName!.trim().isNotEmpty) ||
-                              _currentOrder.status == 'CANCELLED')
+                              _currentOrder.status == 'CANCELED')
                             const SizedBox(height: 16),
 
                           // Payment Slip Section
@@ -703,7 +855,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           ],
 
                           // Rider Info Form — shown below slip for Fast Delivery payment state
-                          if (_currentOrder.status == 'PAYMENT_UPLOADED' && _currentOrder.deliveryType == 'PREPAID') ...[
+                          if (_currentOrder.status == 'AWAITING_APPROVAL') ...[
                             _buildConfirmationForm(),
                             const SizedBox(height: 16),
                           ],
@@ -715,7 +867,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           ],
                           
                           // Estimated Time
-                          if (_currentOrder.estimatedDeliveryTime != null && _currentOrder.estimatedDeliveryTime!.isNotEmpty && _currentOrder.status != 'CANCELLED') ...[
+                          if (_currentOrder.estimatedDeliveryTime != null && _currentOrder.estimatedDeliveryTime!.isNotEmpty && _currentOrder.status != 'CANCELED') ...[
                             _buildEstimatedTimeBox(),
                             const SizedBox(height: 24),
                           ],
@@ -725,7 +877,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           const SizedBox(height: 32),
 
                           // Calculate delivery fee box (hidden for DELIVERED & CANCELLED)
-                          if (_currentOrder.status != 'CANCELLED' && _currentOrder.status != 'DELIVERED') ...[
+                          if (_currentOrder.status != 'CANCELED' && _currentOrder.status != 'DELIVERED') ...[
                             _buildDeliveryCalculator(),
                             const SizedBox(height: 40),
                           ],
@@ -801,7 +953,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Widget _buildStickyProgress() {
     final t = AppLocalizations.of(context);
-    if (_currentOrder.status == 'CANCELLED') {
+    if (_currentOrder.status == 'CANCELED') {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
@@ -1344,12 +1496,30 @@ Widget _buildAnimatedProgress() {
                 color: const Color(0xFF1E293B),
               ),
             ),
-            if (_currentOrder.status == 'PENDING' || 
-                _currentOrder.status == 'CONFIRMED' || 
+            if (_currentOrder.status == 'PENDING' ||
                 _currentOrder.status == 'PAYMENT_SLIP_REQUESTED' ||
-                _currentOrder.status == 'PAYMENT_UPLOADED')
-              TextButton.icon(
-                onPressed: _showDemoDialog,
+                _currentOrder.status == 'AWAITING_APPROVAL')
+              Row(
+                children: [
+                  TextButton.icon(
+                    onPressed: _showReviseItemsSheet,
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    icon: const GradientWidget(child: Icon(PhosphorIconsRegular.warning, size: 16)),
+                    label: GradientText(
+                      'Revise items',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  TextButton.icon(
+                    onPressed: _showDemoDialog,
                 style: TextButton.styleFrom(
                   padding: EdgeInsets.zero,
                   minimumSize: Size.zero,
@@ -1363,6 +1533,8 @@ Widget _buildAnimatedProgress() {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+                  ),
+                ],
               ),
           ],
         ),
@@ -1667,14 +1839,9 @@ Widget _buildAnimatedProgress() {
         onPressed = (_isUpdating || !_isFormValid) ? null : _handleConfirmOrder;
         isCancelable = true;
         break;
-      case 'PAYMENT_UPLOADED':
-        // Fast Delivery: rename button and gate on form validity for rider fields
-        mainButtonText = _currentOrder.deliveryType == 'PREPAID'
-            ? 'Confirm Payment'
-            : 'Accept order & Send bill';
-        onPressed = (_isUpdating || (_currentOrder.deliveryType == 'PREPAID' && !_isFormValid))
-            ? null
-            : _handleVerifyPayment;
+      case 'AWAITING_APPROVAL':
+        mainButtonText = 'Confirm Payment';
+        onPressed = _isUpdating ? null : _handleVerifyPayment;
         isCancelable = false;
         break;
       case 'PAYMENT_VERIFIED':
@@ -1682,16 +1849,14 @@ Widget _buildAnimatedProgress() {
         onPressed = _isUpdating ? null : _handlePrepareOrder;
         isCancelable = false;
         break;
-
-      case 'CONFIRMED':
       case 'PAYMENT_SLIP_REQUESTED':
         mainButtonText = 'Waiting for payment';
-        onPressed = null; // Disabled
+        onPressed = null;
         isCancelable = false;
         break;
-      case 'PREPARING':
+      case 'COOKING':
         mainButtonText = 'Picked Up by Rider';
-        onPressed = (_isUpdating || _waitingTimeMinutesController.text.isEmpty || (_currentOrder.deliveryType == 'NORMAL' && !_isFormValid))
+        onPressed = (_isUpdating || _selectedDriverId == null)
             ? null
             : _handleDispatchOrder;
         isCancelable = false;
@@ -1701,16 +1866,15 @@ Widget _buildAnimatedProgress() {
         onPressed = _isUpdating ? null : _handleCompleteDelivery;
         isCancelable = false;
         break;
-      case 'READY_FOR_PICKUP':
-        mainButtonText = 'Mark as Delivered';
-        nextStatus = 'DELIVERED';
-        onPressed = _isUpdating ? null : () => _handleStatusUpdate(nextStatus!);
-        isCancelable = false;
-        break;
       case 'DELIVERED':
         return _buildDeliveredBanner();
-      case 'CANCELLED':
+      case 'CANCELED':
         return const SizedBox.shrink();
+      case 'REVISED':
+        mainButtonText = 'View Details';
+        onPressed = null;
+        isCancelable = false;
+        break;
     }
 
     return Container(
@@ -1744,7 +1908,7 @@ Widget _buildAnimatedProgress() {
                 ),
                 const SizedBox(width: 12),
               ],
-              if (_currentOrder.status == 'PAYMENT_VERIFIED' || _currentOrder.status == 'PAYMENT_UPLOADED') ...[
+              if (_currentOrder.status == 'PAYMENT_VERIFIED' || _currentOrder.status == 'AWAITING_APPROVAL') ...[
                 Expanded(
                   child: PrimaryGradientButton(
                     onPressed: _isUpdating ? null : _handleRequestSlip,
@@ -1768,7 +1932,7 @@ Widget _buildAnimatedProgress() {
                 child: PrimaryGradientButton(
                   onPressed: onPressed,
                   isLoading: _isUpdating,
-                  child: (_currentOrder.status == 'CONFIRMED' || _currentOrder.status == 'PAYMENT_SLIP_REQUESTED')
+                  child: (_currentOrder.status == 'PAYMENT_SLIP_REQUESTED')
                       ? AnimatedEllipsisText(
                           text: mainButtonText,
                           style: GoogleFonts.poppins(
@@ -1957,11 +2121,13 @@ Widget _buildAnimatedProgress() {
               const SizedBox(height: 24),
             ],
             // ── Section header ──────────────────────────────────────────
-            if (_deliveryOption == 'PREPAID' || (_currentOrder.status == 'PREPARING' && _currentOrder.deliveryType == 'NORMAL')) ...[
+            if (_deliveryOption == 'PREPAID' ||
+                _currentOrder.status == 'COOKING' ||
+                _currentOrder.status == 'AWAITING_APPROVAL') ...[
               Text(
-                _currentOrder.status == 'PREPARING'
+                _currentOrder.status == 'COOKING'
                     ? 'Dispatch Information'
-                    : _currentOrder.status == 'PAYMENT_UPLOADED'
+                    : _currentOrder.status == 'AWAITING_APPROVAL'
                         ? 'Rider Information'
                         : 'Prepare to confirm',
                 style: GoogleFonts.poppins(
@@ -2082,68 +2248,26 @@ Widget _buildAnimatedProgress() {
                 ],
               ),
 
-            // ── Fast Delivery (PAYMENT_UPLOADED): rider details ─────────
-            ] else if (_currentOrder.status == 'PAYMENT_UPLOADED' && _currentOrder.deliveryType == 'PREPAID') ...[
-              // Info banner
-              Container(
-                padding: const EdgeInsets.all(14),
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Row(
-                  children: [
-                    const GradientWidget(
-                      child: Icon(PhosphorIconsRegular.info, size: 20),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Payment received. Please fill in the rider details before confirming.',
-                        style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          color: const Color(0xFF64748B),
-                          height: 1.5,
-                        ),
-                      ),
-                    ),
-                  ],
+            // ── COOKING / dispatch ────────────────────────────────────
+            ] else if (_currentOrder.status == 'COOKING') ...[
+              _buildDriverPicker(),
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.center,
+                child: ImagePickerWidget(
+                  shape: ImagePickerShape.rectangle,
+                  width: 120,
+                  height: 120,
+                  onImageSelected: (file) => setState(() => _proofImage = file),
                 ),
               ),
-              _buildInputField(
-                'Rider Name',
-                _deliveryRiderNameController,
-                validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
-              ),
-              const SizedBox(height: 12),
-              _buildInputField(
-                'Rider Phone',
-                _deliveryPhoneNoController,
-                keyboardType: TextInputType.phone,
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9+]')),
-                ],
-                validator: (value) {
-                  if (value == null || value.isEmpty || value == '+66') return 'Required';
-                  final thaiPhoneRegex = RegExp(r'^\+66[0-9]{9}$');
-                  if (!thaiPhoneRegex.hasMatch(value)) {
-                    return 'Invalid Thai number (+66xxxxxxxxx)';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildInputField(
-                'Cycle No / License',
-                _deliveryCycleNoController,
-                validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
+              const SizedBox(height: 8),
+              Text(
+                'Optional proof photo (COOKING → ON_THE_WAY)',
+                style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B)),
               ),
               const SizedBox(height: 12),
               _buildInputField('Tracking URL', _deliveryTrackingUrlController),
-
-            // ── Fast Delivery (PREPARING) / dispatch ────────────────────
             ] else ...[
               Row(
                 children: [

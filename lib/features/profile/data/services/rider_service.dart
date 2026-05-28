@@ -8,38 +8,81 @@ import '../models/rider_model.dart';
 class RiderService {
   static const String _basePath = '/api/shop/delivery-drivers';
 
-  Future<List<Rider>> getRiders() async {
+  List<Rider> _parseRiderList(dynamic rawData) {
+    if (rawData is List) {
+      return rawData
+          .map((e) => Rider.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
+    }
+    if (rawData is Map && rawData['content'] is List) {
+      return (rawData['content'] as List)
+          .map((e) => Rider.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
+    }
+    return [];
+  }
+
+  Future<RiderListResult> getRiders({
+    int page = 1,
+    int size = 100,
+    String? search,
+    bool? isActive,
+  }) async {
     try {
-      final response = await ApiClient().dio.get(_basePath);
+      final response = await ApiClient().dio.get(
+        _basePath,
+        queryParameters: {
+          'page': page,
+          'size': size,
+          if (search != null && search.isNotEmpty) 'search': search,
+          if (isActive != null) 'isActive': isActive,
+        },
+      );
 
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
-        final Map<String, dynamic> data = response.data;
-        if (data['success'] == true && data['data'] != null) {
-          final dynamic rawData = data['data'];
-          List jsonList;
-          if (rawData is List) {
-            jsonList = rawData;
-          } else if (rawData is Map && rawData['content'] is List) {
-            jsonList = rawData['content'];
-          } else {
-            jsonList = [];
+        final Map<String, dynamic> body = Map<String, dynamic>.from(
+          response.data as Map,
+        );
+        if (body['success'] == true && body['data'] != null) {
+          final rawData = body['data'];
+          final riders = _parseRiderList(rawData);
+          if (rawData is Map) {
+            return RiderListResult(
+              riders: riders,
+              totalElements: rawData['totalElements'] as int? ?? riders.length,
+              totalPages: rawData['totalPages'] as int? ?? 1,
+              page: rawData['page'] as int? ?? page,
+              size: rawData['size'] as int? ?? size,
+            );
           }
-          return jsonList.map((e) => Rider.fromJson(e)).toList();
-        } else if (data['data'] == null && data['success'] == null) {
-          if (data is List) {
-            return (data as List).map((e) => Rider.fromJson(e)).toList();
-          }
+          return RiderListResult(
+            riders: riders,
+            totalElements: riders.length,
+            totalPages: 1,
+            page: page,
+            size: size,
+          );
         }
       }
-
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'RiderService.getRiders');
     } catch (e) {
       ApiHelper.handleError(e, context: 'RiderService.getRiders');
     }
-    return [];
+    return RiderListResult(
+      riders: [],
+      totalElements: 0,
+      totalPages: 0,
+      page: page,
+      size: size,
+    );
+  }
+
+  Future<List<Rider>> getActiveRiders() async {
+    final result = await getRiders(page: 1, size: 100, isActive: true);
+    return result.riders;
   }
 
   Future<Rider?> createRider(Map<String, dynamic> riderData, {File? image}) async {
@@ -73,11 +116,12 @@ class RiderService {
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
-        final Map<String, dynamic> data = response.data;
+        final Map<String, dynamic> data = Map<String, dynamic>.from(
+          response.data as Map,
+        );
         if (data['success'] == true && data['data'] != null) {
-          return Rider.fromJson(data['data']);
+          return Rider.fromJson(Map<String, dynamic>.from(data['data'] as Map));
         }
-        return Rider.fromJson(data);
       }
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'RiderService.createRider');
@@ -118,11 +162,12 @@ class RiderService {
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
-        final Map<String, dynamic> data = response.data;
+        final Map<String, dynamic> data = Map<String, dynamic>.from(
+          response.data as Map,
+        );
         if (data['success'] == true && data['data'] != null) {
-          return Rider.fromJson(data['data']);
+          return Rider.fromJson(Map<String, dynamic>.from(data['data'] as Map));
         }
-        return Rider.fromJson(data);
       }
     } on DioException catch (e) {
       ApiHelper.handleError(e, context: 'RiderService.updateRider');
@@ -135,7 +180,7 @@ class RiderService {
   Future<bool> deleteRider(int id) async {
     try {
       final response = await ApiClient().dio.delete('$_basePath/$id');
-      
+
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {

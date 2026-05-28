@@ -122,7 +122,7 @@ class OrderCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                if (order.status == 'CANCELLED')
+                if (order.status == 'CANCELED')
                   _buildCancellationBox(context)
                 else
                   AnimatedSwitcher(
@@ -201,7 +201,7 @@ class OrderCard extends StatelessWidget {
 
   Widget _buildActionButtons(BuildContext context) {
     final t = AppLocalizations.of(context);
-    bool isInformational = order.status == 'DELIVERED' || order.status == 'CANCELLED';
+    bool isInformational = order.status == 'DELIVERED' || order.status == 'CANCELED';
     
     if (isInformational) {
       return SizedBox(
@@ -252,32 +252,33 @@ class OrderCard extends StatelessWidget {
     IconData? mainButtonIcon;
 
     switch (order.status) {
-      case 'PAYMENT_UPLOADED':
+      case 'AWAITING_APPROVAL':
         mainButtonText = t?.translate('check_payment') ?? 'Check Payment';
         break;
-      case 'CONFIRMED':
       case 'PAYMENT_SLIP_REQUESTED':
         mainButtonText = t?.translate('waiting_payment') ?? 'Waiting for payment';
         isMainButtonEnabled = false;
         mainButtonIcon = Icons.access_time_outlined;
         break;
-      case 'PREPARING':
+      case 'PAYMENT_VERIFIED':
+        mainButtonText = t?.translate('accept_order_to_cook') ?? 'Accept order to cook';
+        break;
+      case 'COOKING':
         mainButtonText = t?.translate('picked_up_rider') ?? 'Picked Up by Rider';
         break;
       case 'ON_THE_WAY':
         mainButtonText = isDeliveryTab ? (t?.translate('check_delivery') ?? 'Check Delivery') : (t?.translate('tab_delivered') ?? 'Delivered');
         break;
-      case 'READY_FOR_PICKUP':
-        mainButtonText = isDeliveryTab ? (t?.translate('check_delivery') ?? 'Check Delivery') : (t?.translate('mark_delivered') ?? 'Mark as Delivered');
+      case 'REVISED':
+        mainButtonText = t?.translate('view_details') ?? 'View Details';
         break;
     }
 
-    final bool canCancel = !isPaymentTab && 
-                          order.status != 'CONFIRMED' && 
-                          order.status != 'PREPARING' && 
-                          order.status != 'ON_THE_WAY' &&
-                          order.status != 'DELIVERED' &&
-                          order.status != 'CANCELLED';
+    final bool canCancel = !isPaymentTab &&
+        order.status != 'COOKING' &&
+        order.status != 'ON_THE_WAY' &&
+        order.status != 'DELIVERED' &&
+        order.status != 'CANCELED';
 
     return Row(
       children: [

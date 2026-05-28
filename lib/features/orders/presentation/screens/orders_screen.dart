@@ -37,7 +37,7 @@ class OrdersScreenState extends State<OrdersScreen>
     'PREPARING': 0,
     'DELIVERING': 0,
     'DELIVERED': 0,
-    'CANCELLED': 0,
+    'CANCELED': 0,
   };
   int? _selectedShopId;
 
@@ -54,19 +54,18 @@ class OrdersScreenState extends State<OrdersScreen>
 
   Future<void> _fetchInitialData() async {
     _selectedShopId = await StorageService.instance.getSelectedShopId();
-    final tabs = ['NEW', 'PAYMENT', 'PREPARING', 'DELIVERING', 'DELIVERED', 'CANCELLED'];
-    
-    // Fetch all in parallel
+    final tabs = ['NEW', 'PAYMENT', 'PREPARING', 'DELIVERING', 'DELIVERED', 'CANCELED'];
+
     final results = await Future.wait(
-      tabs.map((tab) => _orderService.getOrders(tab: tab, shopId: _selectedShopId))
+      tabs.map((tab) => _orderService.getOrders(tab: tab, page: 1, size: 1)),
     );
 
     if (mounted) {
       setState(() {
         for (int i = 0; i < tabs.length; i++) {
-          final orders = results[i];
-          if (orders != null) {
-            _tabCounts[tabs[i]] = orders.length;
+          final result = results[i];
+          if (result != null) {
+            _tabCounts[tabs[i]] = result.total;
           }
         }
       });
@@ -98,21 +97,21 @@ class OrdersScreenState extends State<OrdersScreen>
     int index = 0;
     final upperStatus = status.toUpperCase();
 
-    if (['PENDING', 'CONFIRMED', 'AWAITING_APPROVAL'].contains(upperStatus)) {
+    if (['PENDING', 'REVISED'].contains(upperStatus)) {
       index = 0;
     } else if ([
       'PAYMENT_SLIP_REQUESTED',
-      'PAYMENT_UPLOADED',
+      'AWAITING_APPROVAL',
       'PAYMENT_VERIFIED',
     ].contains(upperStatus)) {
       index = 1;
-    } else if (upperStatus == 'PREPARING') {
+    } else if (upperStatus == 'COOKING') {
       index = 2;
     } else if (upperStatus == 'ON_THE_WAY') {
       index = 3;
     } else if (upperStatus == 'DELIVERED') {
       index = 4;
-    } else if (upperStatus == 'CANCELLED') {
+    } else if (upperStatus == 'CANCELED') {
       index = 5;
     }
 
@@ -172,7 +171,7 @@ class OrdersScreenState extends State<OrdersScreen>
                 _buildTab(t?.translate('tab_preparing') ?? 'Preparing', 'PREPARING', 2),
                 _buildTab(t?.translate('tab_delivering') ?? 'Delivering', 'DELIVERING', 3),
                 _buildTab(t?.translate('tab_delivered') ?? 'Delivered', 'DELIVERED', 4),
-                _buildTab(t?.translate('tab_cancelled') ?? 'Cancelled', 'CANCELLED', 5),
+                _buildTab(t?.translate('tab_cancelled') ?? 'Cancelled', 'CANCELED', 5),
               ],
             ),
           ),
@@ -229,13 +228,13 @@ class OrdersScreenState extends State<OrdersScreen>
                   loadImmediately: true,
                 ),
                 OrderListTabView(
-                  tabStatus: 'CANCELLED',
+                  tabStatus: 'CANCELED',
                   orderService: _orderService,
                   shopId: _selectedShopId,
                   updateStream: _orderUpdatesController.stream,
                   refreshStream: _refreshController.stream,
                   onCountUpdated: (count) =>
-                      _updateTabCount('CANCELLED', count),
+                      _updateTabCount('CANCELED', count),
                   loadImmediately: true,
                 ),
 
@@ -328,7 +327,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
   bool _isLoadingMore = false;
   bool _hasMore = true;
   bool _hasError = false;
-  int _page = 0;
+  int _page = 1;
   final int _size = 20;
   final ScrollController _scrollController = ScrollController();
   StreamSubscription? _updateSub;
@@ -382,21 +381,17 @@ class _OrderListTabViewState extends State<OrderListTabView>
     final upperStatus = newOrder.status.toUpperCase();
     switch (widget.tabStatus) {
       case 'NEW':
-        belongsHere = [
-          'PENDING',
-          'CONFIRMED',
-          'AWAITING_APPROVAL',
-        ].contains(upperStatus);
+        belongsHere = upperStatus == 'PENDING';
         break;
       case 'PAYMENT':
         belongsHere = [
           'PAYMENT_SLIP_REQUESTED',
-          'PAYMENT_UPLOADED',
+          'AWAITING_APPROVAL',
           'PAYMENT_VERIFIED',
         ].contains(upperStatus);
         break;
       case 'PREPARING':
-        belongsHere = upperStatus == 'PREPARING';
+        belongsHere = ['COOKING', 'REVISED'].contains(upperStatus);
         break;
       case 'DELIVERING':
         belongsHere = upperStatus == 'ON_THE_WAY';
@@ -404,8 +399,8 @@ class _OrderListTabViewState extends State<OrderListTabView>
       case 'DELIVERED':
         belongsHere = upperStatus == 'DELIVERED';
         break;
-      case 'CANCELLED':
-        belongsHere = upperStatus == 'CANCELLED';
+      case 'CANCELED':
+        belongsHere = upperStatus == 'CANCELED';
         break;
     }
 
@@ -426,7 +421,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
 
   Future<void> _fetchOrders({bool isRefresh = false}) async {
     if (isRefresh) {
-      _page = 0;
+      _page = 1;
       _hasMore = true;
       if (mounted) {
         setState(() {
@@ -439,9 +434,8 @@ class _OrderListTabViewState extends State<OrderListTabView>
       if (mounted) setState(() => _isLoadingMore = true);
     }
 
-    final fetchedOrders = await widget.orderService.getOrders(
+    final result = await widget.orderService.getOrders(
       tab: widget.tabStatus,
-      shopId: widget.shopId,
       page: _page,
       size: _size,
     );
@@ -450,7 +444,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
 
     final t = AppLocalizations.of(context);
 
-    if (fetchedOrders == null) {
+    if (result == null) {
       setState(() {
         _hasError = isRefresh;
         _isLoading = false;
@@ -466,8 +460,8 @@ class _OrderListTabViewState extends State<OrderListTabView>
       if (isRefresh) {
         _orders.clear();
       }
-      _orders.addAll(fetchedOrders);
-      _hasMore = fetchedOrders.length == _size;
+      _orders.addAll(result.orders);
+      _hasMore = result.hasMore;
       if (_hasMore) _page++;
       _isLoading = false;
       _isLoadingMore = false;

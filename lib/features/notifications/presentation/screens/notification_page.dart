@@ -84,7 +84,7 @@ class _NotificationPageState extends State<NotificationPage> {
           } else {
             _notifications.addAll(response.content);
           }
-          _hasMore = !response.isEmpty && response.number < response.totalPages - 1;
+          _hasMore = !response.isEmpty && response.page < response.totalPages - 1;
         }
         _isLoading = false;
         _isMoreLoading = false;
@@ -108,14 +108,12 @@ class _NotificationPageState extends State<NotificationPage> {
             _notifications[index] = NotificationModel(
               id: noti.id,
               title: noti.title,
-              body: noti.body,
-              titleMm: noti.titleMm,
-              bodyMm: noti.bodyMm,
-              type: noti.type,
-              referenceId: noti.referenceId,
-              imageUrl: noti.imageUrl,
-              sentAt: noti.sentAt,
-              readAt: DateTime.now(),
+              message: noti.message,
+              mainType: noti.mainType,
+              subType: noti.subType,
+              orderId: noti.orderId,
+              data: noti.data,
+              createdAt: noti.createdAt,
               isRead: true,
             );
           }
@@ -124,9 +122,9 @@ class _NotificationPageState extends State<NotificationPage> {
     }
 
     // Deep Navigation Logic
-    if (mounted && noti.referenceId != null) {
-      if (noti.type == NotificationType.orderStatus || noti.type == NotificationType.newOrder) {
-        _navigateToOrder(noti.referenceId!);
+    if (mounted && noti.orderId != null) {
+      if (noti.subType.isOrderRelated || noti.mainType == NotificationMainType.order) {
+        _navigateToOrder(noti.orderId!);
       }
     }
   }
