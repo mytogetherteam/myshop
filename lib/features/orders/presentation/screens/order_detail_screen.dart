@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -21,6 +22,7 @@ import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/features/profile/data/models/rider_model.dart';
 import 'package:my_shop/features/profile/data/services/rider_service.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:my_shop/core/presentation/widgets/image_picker_widget.dart';
 
 
 class OrderDetailScreen extends StatefulWidget {

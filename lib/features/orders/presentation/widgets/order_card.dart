@@ -469,12 +469,19 @@ class OrderCard extends StatelessWidget {
                       onPressed: () async {
                         final reason = reasonController.text.trim();
                         Navigator.pop(context); // Close bottom sheet
-                        final success = await OrderService().cancelOrder(
-                          order.id, 
-                          reason.isEmpty ? null : reason
+                        final result = await OrderService().cancelOrder(
+                          order.id,
+                          reason.isEmpty ? null : reason,
                         );
+                        final success = result['success'] == true;
                         if (context.mounted) {
-                          AppDialog.showToast(context, success ? (t?.translate('order_cancelled_success') ?? 'Order cancelled') : (t?.translate('order_cancelled_fail') ?? 'Failed to cancel order'), isError: !success);
+                          AppDialog.showToast(
+                            context,
+                            success
+                                ? (t?.translate('order_cancelled_success') ?? 'Order cancelled')
+                                : (t?.translate('order_cancelled_fail') ?? 'Failed to cancel order'),
+                            isError: !success,
+                          );
                         }
                       },
                       style: ElevatedButton.styleFrom(

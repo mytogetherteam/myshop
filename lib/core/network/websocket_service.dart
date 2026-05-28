@@ -35,7 +35,7 @@ class WebSocketService {
   Timer? _reconnectTimer;
   int? _subscribedShopId;
 
-  void connect({bool force = false}) async {
+  Future<void> connect({bool force = false}) async {
     if (_isConnecting && !force) return;
     if (isConnected && !force) return;
 
