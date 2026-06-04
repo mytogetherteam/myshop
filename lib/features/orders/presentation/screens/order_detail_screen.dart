@@ -18,10 +18,14 @@ import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/presentation/widgets/global_modal.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
+import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/features/profile/data/models/rider_model.dart';
 import 'package:my_shop/features/profile/data/services/rider_service.dart';
+import 'package:my_shop/features/profile/presentation/screens/rider_management_page.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:my_shop/core/presentation/widgets/image_picker_widget.dart';
 
 
@@ -55,6 +59,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   List<Rider> _availableDrivers = [];
   XFile? _proofImage;
 
+  // Shop / user info needed to open the RiderFormSheet (add new driver)
+  int? _shopId;
+  int? _userId;
+  bool _isLoadingRiders = false;
+
   @override
   void initState() {
     super.initState();
@@ -63,12 +72,24 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _fetchOrderDetails();
     _initControllers();
     _addFormListeners();
+    _loadShopAndUser();
+  }
+
+  Future<void> _loadShopAndUser() async {
+    _shopId = await StorageService.instance.getSelectedShopId();
+    final userInfo = await StorageService.instance.getUserInfo();
+    _userId = userInfo?.id;
   }
 
   Future<void> _loadDrivers() async {
+    if (!mounted) return;
+    setState(() => _isLoadingRiders = true);
     final riders = await RiderService().getActiveRiders();
     if (mounted) {
-      setState(() => _availableDrivers = riders);
+      setState(() {
+        _availableDrivers = riders;
+        _isLoadingRiders = false;
+      });
     }
   }
 
@@ -283,51 +304,433 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     reasonController.dispose();
   }
 
-  Widget _buildDriverPicker({bool required = true}) {
-    if (_availableDrivers.isEmpty) {
-      return TextButton(
-        onPressed: _loadDrivers,
-        child: const Text('Load delivery drivers'),
+  void _applySelectedDriver(Rider rider) {
+    setState(() {
+      _selectedDriverId = rider.id;
+      _deliveryRiderNameController.text = rider.name;
+      final phone = rider.phone?.trim();
+      _deliveryPhoneNoController.text =
+          (phone == null || phone.isEmpty) ? '+66' : phone;
+      _deliveryCycleNoController.text = rider.vehicleNo ?? '';
+    });
+    _validateFormState();
+  }
+
+  void _clearSelectedDriver() {
+    setState(() {
+      _selectedDriverId = null;
+      _deliveryRiderNameController.clear();
+      _deliveryPhoneNoController.text = '+66';
+      _deliveryCycleNoController.clear();
+    });
+    _validateFormState();
+  }
+
+  void _openAddDriverSheet() {
+    if (_shopId == null || _userId == null) {
+      AppDialog.showToast(
+        context,
+        'Shop info is loading. Please try again in a moment.',
+        isError: true,
       );
+      return;
     }
+    GlobalModal.show(
+      context: context,
+      child: RiderFormSheet(
+        shopId: _shopId!,
+        userId: _userId!,
+        onSaved: (rider) {
+          Navigator.pop(context);
+          if (!mounted) return;
+          setState(() {
+            final idx = _availableDrivers.indexWhere((r) => r.id == rider.id);
+            if (idx >= 0) {
+              _availableDrivers[idx] = rider;
+            } else {
+              _availableDrivers = [rider, ..._availableDrivers];
+            }
+          });
+          _applySelectedDriver(rider);
+        },
+      ),
+    );
+  }
+
+  Future<void> _openDriverPicker() async {
+    if (_availableDrivers.isEmpty && !_isLoadingRiders) {
+      await _loadDrivers();
+    }
+    if (!mounted) return;
+
+    final selected = await showModalBottomSheet<Rider?>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Select Driver',
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1E293B),
+                        ),
+                      ),
+                      const Spacer(),
+                      TextButton.icon(
+                        onPressed: () {
+                          Navigator.pop(sheetContext);
+                          _openAddDriverSheet();
+                        },
+                        icon: const GradientWidget(
+                          child: Icon(PhosphorIconsRegular.plus, size: 16),
+                        ),
+                        label: GradientText(
+                          'Add new',
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (_isLoadingRiders)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 32),
+                    child: CustomLoadingIndicator(size: 24),
+                  )
+                else if (_availableDrivers.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                    child: Column(
+                      children: [
+                        const Icon(
+                          PhosphorIconsRegular.users,
+                          size: 48,
+                          color: Color(0xFFCBD5E1),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No saved drivers yet',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF475569),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Tap "Add new" to save a driver for next time.',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: const Color(0xFF94A3B8),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Flexible(
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                      itemCount: _availableDrivers.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 8),
+                      itemBuilder: (_, index) {
+                        final rider = _availableDrivers[index];
+                        final isSelected = _selectedDriverId == rider.id;
+                        return _buildDriverTile(
+                          rider,
+                          isSelected: isSelected,
+                          onTap: () => Navigator.pop(sheetContext, rider),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (selected != null) {
+      _applySelectedDriver(selected);
+    }
+  }
+
+  Widget _buildDriverTile(
+    Rider rider, {
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.06)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.primary.withValues(alpha: 0.5)
+                : const Color(0xFFE2E8F0),
+          ),
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 22,
+              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+              child: rider.profileUrl != null && rider.profileUrl!.isNotEmpty
+                  ? ClipOval(
+                      child: CachedNetworkImage(
+                        imageUrl: rider.profileUrl!,
+                        width: 44,
+                        height: 44,
+                        fit: BoxFit.cover,
+                        placeholder: (_, _) =>
+                            const Icon(PhosphorIconsRegular.user, size: 20),
+                        errorWidget: (_, _, _) => const Icon(
+                          PhosphorIconsRegular.user,
+                          size: 20,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    )
+                  : const Icon(
+                      PhosphorIconsRegular.user,
+                      size: 20,
+                      color: AppColors.primary,
+                    ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    rider.name,
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF1E293B),
+                    ),
+                  ),
+                  if (rider.phone != null && rider.phone!.isNotEmpty)
+                    Text(
+                      rider.phone!,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                  if (rider.vehicleNo != null && rider.vehicleNo!.isNotEmpty)
+                    Text(
+                      'Plate: ${rider.vehicleNo}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: const Color(0xFF94A3B8),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              const Icon(
+                PhosphorIconsRegular.checkCircle,
+                color: AppColors.primary,
+                size: 20,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDriverPicker({bool required = true}) {
+    final selected = _selectedDriverId == null
+        ? null
+        : _availableDrivers.firstWhere(
+            (r) => r.id == _selectedDriverId,
+            orElse: () => Rider(id: -1, name: '', shopId: 0),
+          );
+    final hasSelection = selected != null && selected.id != -1;
+    final displayName = hasSelection ? selected.name : 'Choose a saved driver';
+    final subtitle = hasSelection
+        ? [
+            (selected.phone ?? '').trim(),
+            (selected.vehicleNo ?? '').trim(),
+          ].where((s) => s.isNotEmpty).join(' • ')
+        : 'or add a new one';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          required ? 'Delivery driver *' : 'Delivery driver',
+          required ? 'Driver *' : 'Driver',
           style: GoogleFonts.poppins(
             fontSize: 12,
             fontWeight: FontWeight.w600,
             color: const Color(0xFF64748B),
           ),
         ),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<int>(
-          value: _selectedDriverId,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-          hint: const Text('Select driver'),
-          items: _availableDrivers
-              .map((r) => DropdownMenuItem(
-                    value: r.id,
-                    child: Text('${r.name} (${r.vehicleNo ?? r.phone ?? ''})'),
-                  ))
-              .toList(),
-          onChanged: (v) {
-            setState(() {
-              _selectedDriverId = v;
-              if (v != null) {
-                final rider = _availableDrivers.firstWhere((r) => r.id == v);
-                _deliveryRiderNameController.text = rider.name;
-                _deliveryPhoneNoController.text = rider.phone ?? '';
-                _deliveryCycleNoController.text = rider.vehicleNo ?? '';
-              }
-              _validateFormState();
-            });
-          },
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Expanded(
+              child: InkWell(
+                onTap: _openDriverPicker,
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: hasSelection
+                          ? AppColors.primary.withValues(alpha: 0.4)
+                          : const Color(0xFFE2E8F0),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const GradientWidget(
+                          child: Icon(PhosphorIconsFill.moped, size: 18),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              displayName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: hasSelection
+                                    ? const Color(0xFF1E293B)
+                                    : const Color(0xFF94A3B8),
+                              ),
+                            ),
+                            if (subtitle.isNotEmpty)
+                              Text(
+                                subtitle,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11,
+                                  color: const Color(0xFF94A3B8),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      if (hasSelection)
+                        GestureDetector(
+                          onTap: _clearSelectedDriver,
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 4),
+                            child: Icon(
+                              PhosphorIconsRegular.x,
+                              size: 16,
+                              color: Color(0xFF94A3B8),
+                            ),
+                          ),
+                        )
+                      else if (_isLoadingRiders)
+                        const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CustomLoadingIndicator(size: 16),
+                        )
+                      else
+                        const Icon(
+                          PhosphorIconsRegular.caretDown,
+                          size: 16,
+                          color: Color(0xFF94A3B8),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            InkWell(
+              onTap: _openAddDriverSheet,
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 12),
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      PhosphorIconsRegular.plus,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'New',
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -2303,6 +2706,8 @@ Widget _buildAnimatedProgress() {
                 ],
               ),
               const SizedBox(height: 20),
+              _buildDriverPicker(required: false),
+              const SizedBox(height: 16),
               _buildInputField(
                 'Rider Name',
                 _deliveryRiderNameController,

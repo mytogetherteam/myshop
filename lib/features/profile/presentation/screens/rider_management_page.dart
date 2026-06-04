@@ -59,11 +59,11 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
     if (_shopId == null || _userId == null) return;
     GlobalModal.show(
       context: context,
-      child: _RiderFormSheet(
+      child: RiderFormSheet(
         rider: rider,
         shopId: _shopId!,
         userId: _userId!,
-        onSaved: () {
+        onSaved: (_) {
           Navigator.pop(context);
           _loadData();
         },
@@ -241,13 +241,14 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
   }
 }
 
-class _RiderFormSheet extends StatefulWidget {
+class RiderFormSheet extends StatefulWidget {
   final Rider? rider;
   final int shopId;
   final int userId;
-  final VoidCallback onSaved;
+  final void Function(Rider rider) onSaved;
 
-  const _RiderFormSheet({
+  const RiderFormSheet({
+    super.key,
     this.rider,
     required this.shopId,
     required this.userId,
@@ -255,10 +256,10 @@ class _RiderFormSheet extends StatefulWidget {
   });
 
   @override
-  State<_RiderFormSheet> createState() => _RiderFormSheetState();
+  State<RiderFormSheet> createState() => _RiderFormSheetState();
 }
 
-class _RiderFormSheetState extends State<_RiderFormSheet> {
+class _RiderFormSheetState extends State<RiderFormSheet> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -298,19 +299,17 @@ class _RiderFormSheetState extends State<_RiderFormSheet> {
 
     final File? imageFile = _pickedImage != null ? File(_pickedImage!.path) : null;
 
-    bool success = false;
+    Rider? savedRider;
     if (widget.rider == null) {
-      final newRider = await _riderService.createRider(data, image: imageFile);
-      success = newRider != null;
+      savedRider = await _riderService.createRider(data, image: imageFile);
     } else {
-      final updatedRider = await _riderService.updateRider(widget.rider!.id, data, image: imageFile);
-      success = updatedRider != null;
+      savedRider = await _riderService.updateRider(widget.rider!.id, data, image: imageFile);
     }
 
     if (mounted) {
       setState(() => _isLoading = false);
-      if (success) {
-        widget.onSaved();
+      if (savedRider != null) {
+        widget.onSaved(savedRider);
       } else {
         final t = AppLocalizations.of(context);
         AppDialog.showToast(context, t?.translate('failed_save_rider') ?? 'Failed to save rider', isError: true);
