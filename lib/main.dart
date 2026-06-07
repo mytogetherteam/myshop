@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -16,12 +17,18 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp();
+  // Firebase & FCM push notifications are not configured for web (no web
+  // Firebase options / flutter_local_notifications has no web support), so we
+  // skip them on web to allow the app to boot in the browser.
+  if (!kIsWeb) {
+    await Firebase.initializeApp();
+
+    // Initialize notification service
+    NotificationService().initialize();
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  }
+
   await AppVersion.init();
-  
-  // Initialize notification service
-  NotificationService().initialize();
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   await LocalizationService.instance.init();
 

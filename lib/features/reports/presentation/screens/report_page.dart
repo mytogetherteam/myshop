@@ -67,9 +67,9 @@ class ReportPageState extends State<ReportPage>
         start = DateTime(end.year, end.month, end.day).subtract(const Duration(days: 1));
         end = DateTime(end.year, end.month, end.day).subtract(const Duration(seconds: 1));
         break;
-      case 2: // This Week
-        start = end.subtract(Duration(days: end.weekday - 1));
-        start = DateTime(start.year, start.month, start.day);
+      case 2: // This Week (rolling 7 days including today)
+        start = DateTime(end.year, end.month, end.day)
+            .subtract(const Duration(days: 6));
         break;
       case 3: // Custom
         if (_selectedDateRange != null) {
@@ -120,7 +120,10 @@ class ReportPageState extends State<ReportPage>
       builder: (context) {
         List<DateTime?> tempValues = _selectedDateRange != null
             ? [_selectedDateRange!.start, _selectedDateRange!.end]
-            : [DateTime.now(), DateTime.now().add(const Duration(days: 7))];
+            : [
+                DateTime.now().subtract(const Duration(days: 6)),
+                DateTime.now(),
+              ];
 
         return StatefulBuilder(
           builder: (context, setModalState) {
@@ -218,7 +221,7 @@ class ReportPageState extends State<ReportPage>
                         fontWeight: FontWeight.w600,
                       ),
                       firstDate: DateTime(2025, 1, 1),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                      lastDate: DateTime.now(),
                     ),
                     value: tempValues,
                     onValueChanged: (values) {
@@ -453,8 +456,8 @@ class ReportPageState extends State<ReportPage>
           end = DateTime(end.year, end.month, end.day).subtract(const Duration(seconds: 1));
           break;
         case 2:
-          start = end.subtract(Duration(days: end.weekday - 1));
-          start = DateTime(start.year, start.month, start.day);
+          start = DateTime(end.year, end.month, end.day)
+              .subtract(const Duration(days: 6));
           break;
         case 3:
           if (_selectedDateRange != null) {
@@ -516,9 +519,11 @@ class ReportPageState extends State<ReportPage>
               Expanded(
                 child: SummaryCard(
                   label: t?.translate('avg_wait_time') ?? "Avg Wait Time",
-                  value: _summary?.avgWaitTime.toString() ?? '15',
+                  value: (_summary?.avgWaitTime ?? 0).toString(),
                   unit: "min",
-                  trend: "Estimated",
+                  trend: _summary != null
+                      ? (t?.translate('period') ?? 'Period')
+                      : '-',
                   isPositive: true,
                 ),
               ),

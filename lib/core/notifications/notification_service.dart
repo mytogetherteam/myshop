@@ -21,7 +21,7 @@ class NotificationService {
   bool _isInitialized = false;
 
   Future<void> initialize() async {
-    if (_isInitialized) return;
+    if (_isInitialized || kIsWeb) return;
 
     // Initialize local notifications
     const AndroidInitializationSettings initializationSettingsAndroid =
@@ -91,6 +91,10 @@ class NotificationService {
   }
 
   Future<void> requestSystemPermission() async {
+    if (kIsWeb) {
+      await StorageService.instance.setNotificationHandled(true);
+      return;
+    }
     await _fcm.requestPermission(
       alert: true,
       announcement: false,
@@ -107,6 +111,7 @@ class NotificationService {
   }
 
   Future<void> registerDevice() async {
+    if (kIsWeb) return;
     try {
       String? token = await _fcm.getToken().timeout(const Duration(seconds: 5));
       if (token != null) {
@@ -144,6 +149,7 @@ class NotificationService {
   }
 
   Future<String> _getDeviceId() async {
+    if (kIsWeb) return 'web_device';
     if (Platform.isAndroid) {
       AndroidDeviceInfo androidInfo = await _deviceInfo.androidInfo;
       return androidInfo.id;

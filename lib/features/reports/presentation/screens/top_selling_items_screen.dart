@@ -4,11 +4,12 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
-import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/features/reports/presentation/widgets/best_seller_tile.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
+import '../../data/models/report_model.dart';
+import '../../data/services/report_service.dart';
 
 class TopSellingItemsScreen extends StatefulWidget {
   const TopSellingItemsScreen({super.key});
@@ -19,43 +20,18 @@ class TopSellingItemsScreen extends StatefulWidget {
 
 class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
   final ScrollController _scrollController = ScrollController();
-  final List<Map<String, dynamic>> _items = [];
+  final ReportService _reportService = ReportService();
+  List<BestSellerModel> _items = [];
   bool _isLoading = true;
-  bool _isLoadingMore = false;
   int _selectedFilterIndex = 0;
   final List<String> _filters = ["Today", "Yesterday", "This Week", "Custom"];
   final List<String> _filterKeys = ["today", "yesterday", "this_week", "custom"];
   DateTimeRange? _selectedDateRange;
 
-  // Dummy data generated for Infinite Scroll
-  final List<Map<String, dynamic>> _dummyData = [
-    {"name": "Kimchi Jigae", "soldCount": 38, "progress": 0.90},
-    {"name": "Traditional Mohinga", "soldCount": 29, "progress": 0.70},
-    {"name": "Green Tea Latte", "soldCount": 24, "progress": 0.60},
-    {"name": "Duck Egg Salad", "soldCount": 18, "progress": 0.40},
-    {"name": "Fired Gourd Soup", "soldCount": 12, "progress": 0.30},
-    {"name": "Spicy Pad Thai", "soldCount": 45, "progress": 0.85},
-    {"name": "Beef Tacos", "soldCount": 37, "progress": 0.80},
-    {"name": "Sushi Platter", "soldCount": 50, "progress": 0.50},
-    {"name": "Margherita Pizza", "soldCount": 60, "progress": 0.50},
-    {"name": "Chicken Biryani", "soldCount": 33, "progress": 0.50},
-    {"name": "Vegetable Stir Fry", "soldCount": 29, "progress": 0.50},
-    {"name": "Seafood Paella", "soldCount": 40, "progress": 0.50},
-    {"name": "Pork Schnitzel", "soldCount": 34, "progress": 0.50},
-    {"name": "Falafel Wrap", "soldCount": 28, "progress": 0.50},
-    {"name": "Beef Stroganoff", "soldCount": 22, "progress": 0.50},
-    {"name": "Lamb Gyro", "soldCount": 31, "progress": 0.50},
-    {"name": "Eggplant Parmesan", "soldCount": 26, "progress": 0.50},
-    {"name": "Shrimp Tacos", "soldCount": 35, "progress": 0.50},
-    {"name": "Quinoa Salad", "soldCount": 24, "progress": 0.50},
-    {"name": "Chicken Alfredo", "soldCount": 39, "progress": 0.50},
-  ];
-
   @override
   void initState() {
     super.initState();
     _loadInitialData();
-    _scrollController.addListener(_onScroll);
   }
 
   @override
@@ -64,38 +40,56 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
     super.dispose();
   }
 
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      _loadMoreData();
+  ({DateTime start, DateTime end}) _computeRange() {
+    DateTime end = DateTime.now();
+    DateTime start;
+    switch (_selectedFilterIndex) {
+      case 0: // Today
+        start = DateTime(end.year, end.month, end.day);
+        break;
+      case 1: // Yesterday
+        start = DateTime(end.year, end.month, end.day)
+            .subtract(const Duration(days: 1));
+        end = DateTime(end.year, end.month, end.day)
+            .subtract(const Duration(seconds: 1));
+        break;
+      case 2: // This Week (rolling 7 days including today)
+        start = DateTime(end.year, end.month, end.day)
+            .subtract(const Duration(days: 6));
+        break;
+      case 3: // Custom
+        if (_selectedDateRange != null) {
+          start = _selectedDateRange!.start;
+          end = _selectedDateRange!.end;
+        } else {
+          start = DateTime(end.year, end.month, end.day);
+        }
+        break;
+      default:
+        start = DateTime(end.year, end.month, end.day);
     }
+    return (start: start, end: end);
   }
 
   Future<void> _loadInitialData() async {
-    setState(() {
-      _isLoading = true;
-      _items.clear();
-    });
-
     if (mounted) {
       setState(() {
-        _items.addAll(_dummyData.take(10));
-        _isLoading = false;
+        _isLoading = true;
+        _items = [];
       });
     }
-  }
 
-  Future<void> _loadMoreData() async {
-    if (_isLoadingMore || _items.length >= _dummyData.length) return;
-
-    setState(() => _isLoadingMore = true);
+    final range = _computeRange();
+    final items = await _reportService.getBestSellers(
+      start: range.start,
+      end: range.end,
+      limit: 50,
+    );
 
     if (mounted) {
       setState(() {
-        final currentLength = _items.length;
-        final nextItems = _dummyData.skip(currentLength).take(10);
-        _items.addAll(nextItems);
-        _isLoadingMore = false;
+        _items = items;
+        _isLoading = false;
       });
     }
   }
@@ -112,7 +106,10 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
       builder: (context) {
         List<DateTime?> tempValues = _selectedDateRange != null
             ? [_selectedDateRange!.start, _selectedDateRange!.end]
-            : [DateTime.now(), DateTime.now().add(const Duration(days: 7))];
+            : [
+                DateTime.now().subtract(const Duration(days: 6)),
+                DateTime.now(),
+              ];
 
         return StatefulBuilder(
           builder: (context, setModalState) {
@@ -210,7 +207,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                         fontWeight: FontWeight.w600,
                       ),
                       firstDate: DateTime(2025, 1, 1),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                      lastDate: DateTime.now(),
                     ),
                     value: tempValues,
                     onValueChanged: (values) {
@@ -426,37 +423,45 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
               color: const Color(0xFFED3973),
               child: _isLoading
                   ? _buildSkeletons()
-                  : ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 8,
-                      ),
-                      itemCount: _items.length + (_isLoadingMore ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index == _items.length) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            child: Center(
-                              child: CustomLoadingIndicator(
-                                size: 24,
-                                color: Color(0xFFED3973),
+                  : _items.isEmpty
+                      ? ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: 80),
+                              child: Center(
+                                child: Text(
+                                  t?.translate('no_top_selling_items_yet') ??
+                                      "No sales data for this period",
+                                  style: GoogleFonts.poppins(
+                                    color: const Color(0xFF64748B),
+                                  ),
+                                ),
                               ),
                             ),
-                          );
-                        }
-                        final item = _items[index];
-                        // Display items accurately per screenshot design.
-                        return BestSellerTile(
-                          rank: index + 1,
-                          name: item['name'],
-                          soldCount: item['soldCount'],
-                          progress: item['progress'],
-                          // Make progress top three looking if rank is 1-3
-                          isTopThree: index < 3,
-                        );
-                      },
-                    ),
+                          ],
+                        )
+                      : ListView.builder(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 8,
+                          ),
+                          itemCount: _items.length,
+                          itemBuilder: (context, index) {
+                            final item = _items[index];
+                            final maxSold = _items.first.soldCount;
+                            return BestSellerTile(
+                              rank: index + 1,
+                              name: item.name,
+                              soldCount: item.soldCount,
+                              progress:
+                                  maxSold > 0 ? item.soldCount / maxSold : 0,
+                              // Make progress top three looking if rank is 1-3
+                              isTopThree: index < 3,
+                            );
+                          },
+                        ),
             ),
           ),
         ],
