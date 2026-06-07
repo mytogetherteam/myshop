@@ -161,12 +161,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   void _validateFormState() {
     final fee = _deliveryFeeController.text.replaceAll(',', '');
-    final rider = _deliveryRiderNameController.text;
-    final phone = _deliveryPhoneNoController.text;
-    final cycle = _deliveryCycleNoController.text;
     final waiting = _waitingTimeMinutesController.text;
-
-    final thaiPhoneRegex = RegExp(r'^\+66[0-9]{9}$');
 
     bool isValid = false;
 
@@ -809,12 +804,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
   }
 
-  Future<void> _handleStatusUpdate(String newStatus) async {
-    await _runOrderAction(
-      action: () => OrderService().updateOrderStatus(_currentOrder.id.toString(), newStatus),
-      errorMessage: 'Failed to update status. Please try again.',
-    );
-  }
+
 
   Future<void> _handleConfirmOrder() async {
     if (_deliveryOption == 'PREPAID' && !_formKey.currentState!.validate()) return;
@@ -2234,7 +2224,6 @@ Widget _buildAnimatedProgress() {
   Widget _buildBottomActionButtons() {
     final t = AppLocalizations.of(context);
     String mainButtonText = 'Accept order';
-    String? nextStatus;
     bool isCancelable = false;
     VoidCallback? onPressed;
 

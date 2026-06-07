@@ -8,10 +8,10 @@ class EnvConfig {
   );
 
   static const String _baseUrlStaging = 'http://localhost:3001';
-  static const String _baseUrlProduction = 'http://localhost:3001';
+  static const String _baseUrlProduction = 'https://api.mytogether.org';
 
   static const String _wsUrlStaging = 'ws://localhost:3001/ws/websocket';
-  static const String _wsUrlProduction = 'ws://localhost:3001/ws/websocket';
+  static const String _wsUrlProduction = 'wss://api.mytogether.org/ws/websocket';
 
   static String _localizeUrl(String url) {
     if (kIsWeb) return url;

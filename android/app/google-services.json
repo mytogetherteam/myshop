@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:972280179999:android:6c099d23d056302369542a",
+        "mobilesdk_app_id": "1:972280179999:android:680a653e80b1e74c69542a",
         "android_client_info": {
-          "package_name": "com.mytogether.myshop"
+          "package_name": "com.mytogether.app"
         }
       },
       "oauth_client": [],
@@ -26,9 +26,9 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:972280179999:android:680a653e80b1e74c69542a",
+        "mobilesdk_app_id": "1:972280179999:android:d9b33bdb3a146bee69542a",
         "android_client_info": {
-          "package_name": "com.mytogether.app"
+          "package_name": "com.mytogether.myshop"
         }
       },
       "oauth_client": [],

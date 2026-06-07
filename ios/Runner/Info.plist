@@ -54,5 +54,10 @@
 		<string>My Shop needs camera access to let you take photos for your shop and menu.</string>
 		<key>NSPhotoLibraryAddUsageDescription</key>
 		<string>My Shop needs permission to save photos to your library.</string>
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>fetch</string>
+			<string>remote-notification</string>
+		</array>
 	</dict>
 </plist>

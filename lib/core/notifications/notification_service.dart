@@ -3,7 +3,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/features/auth/data/services/auth_service.dart';
 import 'package:my_shop/app.dart';
 import 'package:my_shop/features/notifications/data/repositories/notification_repository.dart';
