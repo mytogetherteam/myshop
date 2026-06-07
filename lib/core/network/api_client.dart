@@ -91,12 +91,20 @@ class ApiClient {
   }
 
   bool _shouldRetry(DioException err) {
-    return err.type != DioExceptionType.cancel &&
-        err.type != DioExceptionType.badResponse &&
-        (err.error is SocketException ||
-            err.type == DioExceptionType.connectionTimeout ||
-            err.type == DioExceptionType.sendTimeout ||
-            err.type == DioExceptionType.receiveTimeout);
+    if (err.type == DioExceptionType.cancel ||
+        err.type == DioExceptionType.badResponse) {
+      return false;
+    }
+    if (err.type == DioExceptionType.connectionTimeout ||
+        err.type == DioExceptionType.sendTimeout ||
+        err.type == DioExceptionType.receiveTimeout) {
+      return true;
+    }
+    // SocketException is only available on native platforms (dart:io).
+    if (!kIsWeb && err.error is SocketException) {
+      return true;
+    }
+    return false;
   }
 
   Future<Response> _retry(RequestOptions requestOptions) {
