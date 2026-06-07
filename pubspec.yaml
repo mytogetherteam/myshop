@@ -113,6 +113,9 @@ flutter_launcher_icons:
     image_path: "assets/images/app_logo.png"
     background_color: "#ffffff"
     theme_color: "#ffffff"
+    app_title: "My Shop"
+    short_name: "MyShop"
+    description: "My Together Shop"
 
 flutter_native_splash:
   color: "#ffffff"
