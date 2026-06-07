@@ -302,7 +302,7 @@ class _RiderFormSheetState extends State<RiderFormSheet> {
       'vehicleNo': _licensePlateController.text,
     };
 
-    final File? imageFile = _pickedImage != null ? File(_pickedImage!.path) : null;
+    final XFile? imageFile = _pickedImage;
 
     Rider? savedRider;
     if (widget.rider == null) {

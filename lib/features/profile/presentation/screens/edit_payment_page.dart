@@ -176,10 +176,10 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
 
     debugPrint('PAYMENT UPDATE DATA: ${jsonEncode(requestData)}');
 
-    File? qrPhoto;
+    XFile? qrPhoto;
     final pickedFile = _pickedImages[_currentPayment?.id.toString()];
     if (pickedFile != null) {
-      qrPhoto = File(pickedFile.path);
+      qrPhoto = pickedFile;
     }
 
     final result = await _paymentService.updatePaymentMethod(

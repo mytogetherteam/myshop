@@ -1,6 +1,5 @@
-
-import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:my_shop/features/orders/data/models/order_model.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
@@ -122,7 +121,7 @@ class OrderService {
     double? deliveryFee,
     int? waitingTimeMinutes,
     int? driverId,
-    File? proofImage,
+    XFile? proofImage,
   }) async {
     try {
       final formData = FormData();
@@ -159,9 +158,9 @@ class OrderService {
       if (proofImage != null) {
         formData.files.add(MapEntry(
           'proofImage',
-          await MultipartFile.fromFile(
-            proofImage.path,
-            filename: proofImage.path.split('/').last,
+          MultipartFile.fromBytes(
+            await proofImage.readAsBytes(),
+            filename: proofImage.name,
           ),
         ));
       }
@@ -232,7 +231,7 @@ class OrderService {
     String orderId, {
     required int driverId,
     String? trackingUrl,
-    File? proofImage,
+    XFile? proofImage,
   }) {
     return updateStatus(
       orderId,

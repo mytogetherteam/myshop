@@ -1,5 +1,6 @@
-import 'dart:io';
 import 'dart:convert';
+import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
@@ -85,7 +86,7 @@ class RiderService {
     return result.riders;
   }
 
-  Future<Rider?> createRider(Map<String, dynamic> riderData, {File? image}) async {
+  Future<Rider?> createRider(Map<String, dynamic> riderData, {XFile? image}) async {
     try {
       final formData = FormData();
 
@@ -101,9 +102,9 @@ class RiderService {
       if (image != null) {
         formData.files.add(MapEntry(
           'profilePhoto',
-          await MultipartFile.fromFile(
-            image.path,
-            filename: image.path.split('/').last,
+          MultipartFile.fromBytes(
+            await image.readAsBytes(),
+            filename: image.name,
           ),
         ));
       }
@@ -131,7 +132,7 @@ class RiderService {
     return null;
   }
 
-  Future<Rider?> updateRider(int id, Map<String, dynamic> riderData, {File? image}) async {
+  Future<Rider?> updateRider(int id, Map<String, dynamic> riderData, {XFile? image}) async {
     try {
       final formData = FormData();
 
@@ -147,9 +148,9 @@ class RiderService {
       if (image != null) {
         formData.files.add(MapEntry(
           'profilePhoto',
-          await MultipartFile.fromFile(
-            image.path,
-            filename: image.path.split('/').last,
+          MultipartFile.fromBytes(
+            await image.readAsBytes(),
+            filename: image.name,
           ),
         ));
       }

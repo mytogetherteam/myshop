@@ -1073,9 +1073,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       return;
     }
 
-    File? proofFile;
+    XFile? proofFile;
     if (_proofImage != null) {
-      proofFile = File(_proofImage!.path);
+      proofFile = _proofImage;
     }
 
     await _runOrderAction(

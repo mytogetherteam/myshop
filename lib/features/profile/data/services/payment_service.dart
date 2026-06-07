@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:flutter/foundation.dart';
@@ -74,7 +74,7 @@ class PaymentService {
   Future<Map<String, dynamic>> updatePaymentMethod({
     required int paymentTypeId,
     required Map<String, dynamic> requestData,
-    File? qrPhoto,
+    XFile? qrPhoto,
   }) async {
     try {
       final String path = '$_paymentsPath/$paymentTypeId';
@@ -87,9 +87,9 @@ class PaymentService {
       );
 
       if (qrPhoto != null) {
-        formDataMap['paymentQrImage'] = await MultipartFile.fromFile(
-          qrPhoto.path,
-          filename: qrPhoto.path.split('/').last,
+        formDataMap['paymentQrImage'] = MultipartFile.fromBytes(
+          await qrPhoto.readAsBytes(),
+          filename: qrPhoto.name,
         );
       }
 
