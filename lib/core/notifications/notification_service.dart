@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:my_shop/features/auth/data/services/auth_service.dart';
 import 'package:my_shop/app.dart';
 import 'package:my_shop/features/notifications/data/repositories/notification_repository.dart';
@@ -14,7 +13,9 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  // Resolved lazily so constructing the singleton on web (where Firebase is
+  // not initialized) does not throw. All usages are guarded by `kIsWeb`.
+  FirebaseMessaging get _fcm => FirebaseMessaging.instance;
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
 
@@ -123,7 +124,7 @@ class NotificationService {
   }
 
   Future<void> _sendTokenToServer(String token) async {
-    // TODO: Wire when backend exposes shop FCM device-token registration endpoint.
+    // Wire when backend exposes shop FCM device-token registration endpoint.
     debugPrint('FCM token ready (local only until register-device API exists): $token');
     await _getDeviceId();
   }

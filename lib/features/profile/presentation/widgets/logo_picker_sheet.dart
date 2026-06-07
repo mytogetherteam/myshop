@@ -18,11 +18,11 @@ class LogoPickerSheet extends StatelessWidget {
     final t = AppLocalizations.of(context);
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-      decoration: BoxDecoration(
+      child: Material(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
+        clipBehavior: Clip.antiAlias,
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
@@ -94,6 +94,7 @@ class LogoPickerSheet extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

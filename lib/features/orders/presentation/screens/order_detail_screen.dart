@@ -250,18 +250,21 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 ),
                 const SizedBox(height: 16),
                 ..._currentOrder.items.map((item) {
-                  return CheckboxListTile(
-                    value: selectedIds.contains(item.id),
-                    onChanged: (v) {
-                      setModalState(() {
-                        if (v == true) {
-                          selectedIds.add(item.id);
-                        } else {
-                          selectedIds.remove(item.id);
-                        }
-                      });
-                    },
-                    title: Text('${item.quantity}x ${item.displayName}'),
+                  return Material(
+                    color: Colors.transparent,
+                    child: CheckboxListTile(
+                      value: selectedIds.contains(item.id),
+                      onChanged: (v) {
+                        setModalState(() {
+                          if (v == true) {
+                            selectedIds.add(item.id);
+                          } else {
+                            selectedIds.remove(item.id);
+                          }
+                        });
+                      },
+                      title: Text('${item.quantity}x ${item.displayName}'),
+                    ),
                   );
                 }),
                 TextField(

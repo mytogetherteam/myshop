@@ -184,7 +184,11 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
-      child: ListTile(
+      child: Material(
+        color: Colors.transparent,
+        clipBehavior: Clip.antiAlias,
+        borderRadius: BorderRadius.circular(12),
+        child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
           backgroundColor: AppColors.primary.withValues(alpha: 0.1),
@@ -236,6 +240,7 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

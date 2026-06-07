@@ -207,11 +207,11 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-        decoration: BoxDecoration(
+        child: Material(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
+          clipBehavior: Clip.antiAlias,
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
@@ -290,6 +290,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );

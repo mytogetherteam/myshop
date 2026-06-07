@@ -35,7 +35,7 @@ class RiderService {
           'page': page,
           'size': size,
           if (search != null && search.isNotEmpty) 'search': search,
-          if (isActive != null) 'isActive': isActive,
+          'isActive': ?isActive,
         },
       );
 
