@@ -72,7 +72,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   List<int> _selectedTagIds = [];
 
   // Meal Types
-  final List<String> _mealTypeOptions = ['BREAKFAST', 'LUNCH', 'DINNER', 'OTHER'];
+  final List<String> _mealTypeOptions = ['Breakfast', 'Lunch', 'Dinner', 'Other'];
   List<String> _selectedMealTypes = [];
 
   // Boolean Properties mapped to Tags
