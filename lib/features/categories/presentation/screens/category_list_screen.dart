@@ -293,7 +293,7 @@ class _CategoryCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: _getCategoryColor(category.nameEn),
+                color: _getCategoryColor(category.displayName),
                 borderRadius: BorderRadius.circular(16),
               ),
               child:

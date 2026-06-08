@@ -1,3 +1,5 @@
+import 'package:my_shop/core/utils/localized_display_name.dart';
+
 class MenuCategoryModel {
   final int id;
   final String? nameEn;
@@ -91,6 +93,7 @@ class MenuCategoryModel {
   }
 
 
-  String get displayName => nameEn ?? nameMm ?? nameTh ?? '';
+  String get displayName =>
+      localizedDisplayName(nameEn: nameEn, nameMm: nameMm, nameTh: nameTh);
 }
 

@@ -1,3 +1,5 @@
+import 'package:my_shop/core/utils/localized_display_name.dart';
+
 class MenuItemModel {
   final int id;
   final int? menuCategoryId;
@@ -298,8 +300,13 @@ class MenuItemModel {
 
   }
 
-  String get displayName => nameEn ?? nameMm ?? nameTh ?? '';
-  String get displayDescription => descriptionEn ?? descriptionMm ?? descriptionTh ?? description ?? '';
+  String get displayName =>
+      localizedDisplayName(nameEn: nameEn, nameMm: nameMm, nameTh: nameTh);
+  String get displayDescription => localizedDisplayName(
+        nameEn: descriptionEn ?? description,
+        nameMm: descriptionMm,
+        nameTh: descriptionTh,
+      );
 }
 
 class MenuItemVariantModel {
@@ -349,7 +356,8 @@ class MenuItemVariantModel {
     };
   }
 
-  String get displayName => nameEn ?? nameMm ?? nameTh ?? '';
+  String get displayName =>
+      localizedDisplayName(nameEn: nameEn, nameMm: nameMm, nameTh: nameTh);
 }
 
 class MenuItemOptionGroupModel {
@@ -442,7 +450,8 @@ class MenuItemOptionGroupModel {
     };
   }
 
-  String get displayName => nameEn ?? nameMm ?? nameTh ?? '';
+  String get displayName =>
+      localizedDisplayName(nameEn: nameEn, nameMm: nameMm, nameTh: nameTh);
 }
 
 class MenuItemOptionModel {
@@ -514,7 +523,8 @@ class MenuItemOptionModel {
     };
   }
 
-  String get displayName => nameEn ?? nameMm ?? nameTh ?? '';
+  String get displayName =>
+      localizedDisplayName(nameEn: nameEn, nameMm: nameMm, nameTh: nameTh);
 }
 
 class MenuComboComponentModel {

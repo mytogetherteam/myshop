@@ -1,3 +1,5 @@
+import 'package:my_shop/core/utils/localized_display_name.dart';
+
 class MasterDataModel {
   final int id;
   final String? nameEn;
@@ -20,7 +22,8 @@ class MasterDataModel {
     );
   }
 
-  String get displayName => nameEn ?? nameMm ?? nameTh ?? '';
+  String get displayName =>
+      localizedDisplayName(nameEn: nameEn, nameMm: nameMm, nameTh: nameTh);
 
   // override equality to compare by id for dropdowns
   @override

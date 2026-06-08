@@ -351,6 +351,7 @@
   "photo_library_permission_msg": "จำเป็นต้องเข้าถึงคลังภาพ โปรดเปิดใช้งานในการตั้งค่า",
   "open_settings": "เปิดตั้งค่า",
   "shop_name_en_required": "จำเป็นต้องระบุชื่อร้านค้า (EN)",
+  "shop_name_required": "กรุณากรอกชื่อร้านค้าอย่างน้อยหนึ่งช่อง",
   "category_required": "จำเป็นต้องระบุหมวดหมู่",
   "subcategory_required": "จำเป็นต้องระบุหมวดหมู่ย่อย",
   "cuisine_type_required": "จำเป็นต้องเลือกประเภทอาหารอย่างน้อยหนึ่งประเภท",

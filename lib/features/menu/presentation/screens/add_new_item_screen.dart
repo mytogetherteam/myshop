@@ -1538,7 +1538,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     String labelFor(T item) {
       if (item is MasterDataModel) return item.displayName;
       if (item is MenuCategoryModel) return item.displayName;
-      if (item is MenuItemModel) return item.nameEn ?? item.displayName;
+      if (item is MenuItemModel) return item.displayName;
       return item.toString();
     }
 
