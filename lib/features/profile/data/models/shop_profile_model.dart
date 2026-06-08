@@ -1,3 +1,5 @@
+import 'package:my_shop/core/utils/localized_display_name.dart';
+
 import 'operating_hours_model.dart';
 
 class ShopProfileModel {
@@ -207,4 +209,7 @@ class ShopProfileModel {
               : [],
     );
   }
+
+  String get displayName =>
+      localizedDisplayName(nameEn: nameEn, nameMm: nameMm, nameTh: nameTh);
 }

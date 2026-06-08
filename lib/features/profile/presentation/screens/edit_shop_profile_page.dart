@@ -484,9 +484,11 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
 
   bool _validate() {
     final t = AppLocalizations.of(context);
-    if (_nameEnCtrl.text.trim().isEmpty) {
+    if (_nameEnCtrl.text.trim().isEmpty &&
+        _nameMmCtrl.text.trim().isEmpty &&
+        _nameThCtrl.text.trim().isEmpty) {
       _scrollToKey(_nameKey);
-      _showError(t?.translate('shop_name_en_required') ?? 'Shop Name (EN) is required');
+      _showError(t?.translate('shop_name_required') ?? 'Please enter at least one shop name');
       return false;
     }
     if (_selectedCategory == null) {

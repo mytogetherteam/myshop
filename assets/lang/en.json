@@ -351,6 +351,7 @@
   "photo_library_permission_msg": "Photo library access is required. Please enable it in Settings.",
   "open_settings": "Open Settings",
   "shop_name_en_required": "Shop Name (EN) is required",
+  "shop_name_required": "Please enter at least one shop name",
   "category_required": "Category is required",
   "subcategory_required": "Sub-category is required",
   "cuisine_type_required": "At least one Cuisine Type is required",

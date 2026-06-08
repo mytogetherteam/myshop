@@ -340,7 +340,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                       duration: const Duration(milliseconds: 300),
                       opacity: _isScrolled ? 1.0 : 0.0,
                       child: Text(
-                        _shopProfile?.nameEn ?? '',
+                        _shopProfile?.displayName ?? '',
                         style: GoogleFonts.poppins(
                           color: Colors.black,
                           fontSize: 18,
@@ -440,9 +440,9 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                         imageUrl: _shopProfile!.logoUrl!,
                         fit: BoxFit.cover,
                         placeholder: (context, url) => const ImageSkeletonLoader(),
-                        errorWidget: (context, url, error) => _buildLogoFallback(_shopProfile?.nameEn ?? ''),
+                        errorWidget: (context, url, error) => _buildLogoFallback(_shopProfile?.displayName ?? ''),
                       )
-                    : _buildLogoFallback(_shopProfile?.nameEn ?? ''),
+                    : _buildLogoFallback(_shopProfile?.displayName ?? ''),
               ),
             ),
             const SizedBox(width: 16),
@@ -457,7 +457,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                       children: [
                         Flexible(
                           child: Text(
-                            _shopProfile?.nameEn ?? '',
+                            _shopProfile?.displayName ?? '',
                             style: GoogleFonts.poppins(
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
