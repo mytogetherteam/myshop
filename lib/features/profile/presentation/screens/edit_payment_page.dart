@@ -192,7 +192,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
       setState(() => _isSaving = false);
       final t = AppLocalizations.of(context);
       if (result['success'] == true) {
-        AppDialog.showToast(context, t?.translate('successfully_requested') ?? 'Successfully requested');
+        AppDialog.showToast(context, t?.translate('successfully_uploaded') ?? 'Successfully Uploaded');
         Navigator.of(context).pop(true);
       } else {
         AppDialog.showToast(context, result['message'] ?? (t?.translate('failed_update_payment') ?? 'Failed to update payment method'), isError: true);

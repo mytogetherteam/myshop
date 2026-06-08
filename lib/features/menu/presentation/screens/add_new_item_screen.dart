@@ -411,7 +411,11 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     if (mounted) {
       setState(() => _isSaving = false);
       if (success) {
-        AppDialog.showToast(context, 'Successfully requested');
+        AppDialog.showToast(
+          context,
+          AppLocalizations.of(context)?.translate('successfully_uploaded') ??
+              'Successfully Uploaded',
+        );
         Navigator.of(context).pop(true);
       } else {
         AppDialog.showToast(context, 'Failed to save item', isError: true);

@@ -124,7 +124,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
 
     if (mounted) {
       if (success) {
-        AppDialog.showToast(context, AppLocalizations.of(context)?.translate('successfully_requested') ?? 'Successfully requested');
+        AppDialog.showToast(context, AppLocalizations.of(context)?.translate('successfully_uploaded') ?? 'Successfully Uploaded');
         Navigator.of(context).pop(true);
       } else {
         setState(() => _isSaving = false);
