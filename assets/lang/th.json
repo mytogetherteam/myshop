@@ -287,6 +287,8 @@
   "delete_menu_item": "ลบรายการเมนู",
   "recent_reviews": "รีวิวล่าสุด",
   "no_more_reviews": "ไม่มีรีวิวเพิ่มเติม",
+  "no_reviews_yet": "ยังไม่มีรีวิว",
+  "no_reviews_desc": "รีวิวจากลูกค้าจะแสดงที่นี่เมื่อคุณได้รับรีวิว",
   "customer_ratings_reviews": "คะแนนและรีวิวจากลูกค้า",
   "out_of_5": "จาก 5 คะแนน",
   "ratings_label": "การให้คะแนน",
