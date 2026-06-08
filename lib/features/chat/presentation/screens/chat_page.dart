@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/features/chat/data/models/chat_model.dart';
-import 'package:my_shop/features/chat/data/demo_chat_data.dart';
 import 'package:my_shop/features/chat/presentation/screens/chat_detail_screen.dart';
 
 class ChatPage extends StatefulWidget {
@@ -24,7 +23,7 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
   @override
   void initState() {
     super.initState();
-    _conversations = List.from(DemoChatData.conversations);
+    _conversations = [];
     _filteredConversations = _conversations;
     _searchController.addListener(_onSearchChanged);
   }
@@ -37,7 +36,6 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
 
   void refresh() {
     setState(() {
-      _conversations = List.from(DemoChatData.conversations);
       _onSearchChanged();
     });
   }
@@ -150,9 +148,24 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
           Text(
             t?.translate('no_chats_yet') ?? 'No chats yet',
             style: GoogleFonts.poppins(
-              color: const Color(0xFF94A3B8),
+              color: const Color(0xFF475569),
               fontSize: 16,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Text(
+              t?.translate('no_chats_yet_subtitle') ??
+                  'When customers message you, their conversations will appear here.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                color: const Color(0xFF94A3B8),
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                height: 1.4,
+              ),
             ),
           ),
         ],

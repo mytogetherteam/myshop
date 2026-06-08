@@ -438,6 +438,7 @@
   "chat": "Chat",
   "type_a_message": "Type a message...",
   "no_chats_yet": "No chats yet",
+  "no_chats_yet_subtitle": "When customers message you, their conversations will appear here.",
   "rider_management": "Rider Management",
   "add_rider": "Add Rider",
   "edit_rider": "Edit Rider",

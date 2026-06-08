@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/features/menu/presentation/screens/menu_page.dart';
 import 'package:my_shop/features/orders/presentation/screens/orders_screen.dart';
+import 'package:my_shop/features/chat/presentation/screens/chat_page.dart';
 
 import 'package:my_shop/features/profile/presentation/screens/profile_page.dart';
 import 'package:my_shop/features/reports/presentation/screens/report_page.dart';
@@ -36,8 +37,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       GlobalKey<OrdersScreenState>();
   final GlobalKey<MenuPageState> _menuKey = GlobalKey<MenuPageState>();
   final GlobalKey<ReportPageState> _reportKey = GlobalKey<ReportPageState>();
+  final GlobalKey<ChatPageState> _chatKey = GlobalKey<ChatPageState>();
   final GlobalKey<ProfilePageState> _profileKey = GlobalKey<ProfilePageState>();
-  final List<bool> _visited = [false, false, false, false];
+  final List<bool> _visited = [false, false, false, false, false];
 
 
   @override
@@ -49,6 +51,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       OrdersScreen(key: _ordersKey),
       MenuPage(key: _menuKey),
       ReportPage(key: _reportKey),
+      ChatPage(key: _chatKey),
       ProfilePage(key: _profileKey),
     ];
     _setupWebSocketListener();
@@ -243,6 +246,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       t?.translate('order') ?? 'Order',
       t?.translate('menu') ?? 'Menu',
       t?.translate('report') ?? 'Report',
+      t?.translate('chat') ?? 'Chat',
       t?.translate('profile') ?? 'Profile',
     ];
     return Scaffold(
@@ -279,6 +283,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 _reportKey.currentState?.refresh();
                 break;
               case 3:
+                _chatKey.currentState?.refresh();
+                break;
+              case 4:
                 _profileKey.currentState?.refresh();
                 break;
             }
@@ -312,6 +319,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             icon: _buildInactiveItem(PhosphorIconsRegular.listHeart, t?.translate('report') ?? 'Report'),
             activeIcon: _buildGradientItem(PhosphorIconsFill.listHeart, t?.translate('report') ?? 'Report'),
             label: t?.translate('report') ?? 'Report',
+          ),
+          BottomNavigationBarItem(
+            icon: _buildInactiveItem(PhosphorIconsRegular.chatCircle, t?.translate('chat') ?? 'Chat'),
+            activeIcon: _buildGradientItem(PhosphorIconsFill.chatCircle, t?.translate('chat') ?? 'Chat'),
+            label: t?.translate('chat') ?? 'Chat',
           ),
           BottomNavigationBarItem(
             icon: _buildInactiveItem(PhosphorIconsRegular.storefront, t?.translate('profile') ?? 'Profile'),
