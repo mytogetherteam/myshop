@@ -140,7 +140,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
     return ReorderableListView.builder(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 20),
       itemCount: _categories.length,
-      onReorderItem: _onReorderItem,
+      onReorder: _onReorderItem,
       buildDefaultDragHandles: false,
       proxyDecorator: (child, index, animation) {
         return AnimatedBuilder(
