@@ -5,7 +5,6 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import '../../../../core/presentation/widgets/custom_loading_indicator.dart';
-import 'package:my_shop/features/main_navigation/presentation/screens/main_navigation_screen.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
