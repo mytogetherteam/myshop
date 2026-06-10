@@ -59,10 +59,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       if (!mounted) return;
 
       if (result['success'] == true) {
-        AppDialog.showToast(context, result['message'] ?? (t?.translate('password_changed_success') ?? 'Password changed successfully'));
+        AppDialog.showToast(context, result['message'] ?? (t?.translate('password_changed_success') ?? 'Password Changed Successfully'));
         Navigator.pop(context);
       } else {
-        AppDialog.showToast(context, result['message'] ?? (t?.translate('failed_change_password') ?? 'Failed to change password'), isError: true);
+        AppDialog.showToast(context, result['message'] ?? (t?.translate('failed_change_password') ?? 'Failed to Change Password'), isError: true);
       }
     } catch (e) {
       if (!mounted) return;
@@ -103,7 +103,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                         },
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return t?.translate('please_enter_current_password') ?? 'Please enter your current password';
+                            return t?.translate('please_enter_current_password') ?? 'Please Enter Your Current Password';
                           }
                           return null;
                         },
@@ -118,10 +118,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                         },
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return t?.translate('please_enter_new_password') ?? 'Please enter a new password';
+                            return t?.translate('please_enter_new_password') ?? 'Please Enter a New Password';
                           }
                           if (value.length < 8) {
-                            return t?.translate('password_min_length') ?? 'Password must be at least 8 characters';
+                            return t?.translate('password_min_length') ?? 'Password Must Be at Least 8 Characters';
                           }
                           return null;
                         },
@@ -136,10 +136,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                         },
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return t?.translate('please_confirm_new_password') ?? 'Please confirm your new password';
+                            return t?.translate('please_confirm_new_password') ?? 'Please Confirm Your New Password';
                           }
                           if (value != _newPasswordController.text) {
-                            return t?.translate('passwords_do_not_match') ?? 'Passwords do not match';
+                            return t?.translate('passwords_do_not_match') ?? 'Passwords Do Not Match';
                           }
                           return null;
                         },
@@ -205,7 +205,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             fontWeight: FontWeight.w500,
           ),
           decoration: InputDecoration(
-            hintText: t?.translate('enter_password_hint') ?? 'Enter your password',
+            hintText: t?.translate('enter_password_hint') ?? 'Enter Your Password',
             hintStyle: GoogleFonts.poppins(
               fontSize: 14,
               color: const Color(0xFFCBD5E1),

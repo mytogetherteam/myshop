@@ -106,10 +106,10 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
     Navigator.pop(context); // Remove loading overlay
 
     if (result['success'] == true) {
-      AppDialog.showToast(context, result['message'] ?? (t?.translate('payment_deleted_success') ?? 'Payment method deleted successfully'));
+      AppDialog.showToast(context, result['message'] ?? (t?.translate('payment_deleted_success') ?? 'Payment Method Deleted Successfully'));
       _loadPaymentMethods();
     } else {
-      AppDialog.showToast(context, result['message'] ?? (t?.translate('failed_delete_payment') ?? 'Failed to delete payment method'), isError: true);
+      AppDialog.showToast(context, result['message'] ?? (t?.translate('failed_delete_payment') ?? 'Failed to Delete Payment Method'), isError: true);
     }
   }
 
@@ -374,7 +374,7 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
           ),
           const SizedBox(height: 24),
           Text(
-            t?.translate('no_payment_methods') ?? 'No payment methods yet',
+            t?.translate('no_payment_methods') ?? 'No Payment Methods Yet',
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w600,

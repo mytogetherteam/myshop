@@ -100,7 +100,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                       size: 64,
                       color: AppColors.iconDisabled,
                     ),
-                    title: t?.translate('no_feedback_yet') ?? 'No feedback yet',
+                    title: t?.translate('no_feedback_yet') ?? 'No Feedback Yet',
                   )
                 : ListView.separated(
                     physics: const AlwaysScrollableScrollPhysics(),
@@ -179,13 +179,13 @@ class _SubmitFeedbackDialogState extends State<SubmitFeedbackDialog> {
     if (success) {
       AppDialog.showToast(
         context,
-        t?.translate('feedback_submitted') ?? 'Feedback submitted successfully',
+        t?.translate('feedback_submitted') ?? 'Feedback Submitted Successfully',
       );
       Navigator.pop(context, true);
     } else {
       AppDialog.showToast(
         context,
-        t?.translate('failed_submit_feedback') ?? 'Failed to submit feedback',
+        t?.translate('failed_submit_feedback') ?? 'Failed to Submit Feedback',
         isError: true,
       );
     }

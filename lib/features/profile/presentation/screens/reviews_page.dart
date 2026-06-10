@@ -119,7 +119,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            t?.translate('no_reviews_yet') ?? 'No reviews yet',
+            t?.translate('no_reviews_yet') ?? 'No Reviews Yet',
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -198,7 +198,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
                     ),
                   )
                 : Text(
-                    t?.translate('no_more_reviews') ?? 'No more reviews',
+                    t?.translate('no_more_reviews') ?? 'No More Reviews',
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       color: const Color(0xFF64748B),

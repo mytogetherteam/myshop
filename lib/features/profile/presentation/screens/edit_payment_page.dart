@@ -116,19 +116,19 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
 
     if (!hasImage) {
       _scrollToKey(_qrImageKey);
-      AppDialog.showToast(context, t?.translate('qr_image_required') ?? 'QR Image is required', isError: true);
+      AppDialog.showToast(context, t?.translate('qr_image_required') ?? 'QR Image Is Required', isError: true);
       return false;
     }
 
     if (accountName.isEmpty) {
       _scrollToKey(_accountNameKey);
-      AppDialog.showToast(context, t?.translate('account_name_required') ?? 'Account Name is required', isError: true);
+      AppDialog.showToast(context, t?.translate('account_name_required') ?? 'Account Name Is Required', isError: true);
       return false;
     }
 
     if (accountNumber.isEmpty) {
       _scrollToKey(_accountNumberKey);
-      AppDialog.showToast(context, t?.translate('account_number_required') ?? 'Account Number is required', isError: true);
+      AppDialog.showToast(context, t?.translate('account_number_required') ?? 'Account Number Is Required', isError: true);
       return false;
     }
 
@@ -195,7 +195,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
         AppDialog.showToast(context, t?.translate('successfully_uploaded') ?? 'Successfully Uploaded');
         Navigator.of(context).pop(true);
       } else {
-        AppDialog.showToast(context, result['message'] ?? (t?.translate('failed_update_payment') ?? 'Failed to update payment method'), isError: true);
+        AppDialog.showToast(context, result['message'] ?? (t?.translate('failed_update_payment') ?? 'Failed to Update Payment Method'), isError: true);
       }
     }
   }
@@ -247,7 +247,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                 final result = await ImageUploadService().pickFromGallery();
                 if (result.isTooLarge) {
                   if (mounted) {
-                    AppDialog.showToast(context, t?.translate('image_size_limit_msg') ?? 'Image size must be less than 1MB', isError: true);
+                    AppDialog.showToast(context, t?.translate('image_size_limit_msg') ?? 'Image Size Must Be Less Than 1MB', isError: true);
                   }
                   return;
                 }
@@ -269,7 +269,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                 final result = await ImageUploadService().pickFromCamera();
                 if (result.isTooLarge) {
                   if (mounted) {
-                    AppDialog.showToast(context, t?.translate('image_size_limit_msg') ?? 'Image size must be less than 1MB', isError: true);
+                    AppDialog.showToast(context, t?.translate('image_size_limit_msg') ?? 'Image Size Must Be Less Than 1MB', isError: true);
                   }
                   return;
                 }
@@ -551,7 +551,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            AppLocalizations.of(context)?.translate('tap_to_upload_qr') ?? 'Tap to upload QR Code',
+            AppLocalizations.of(context)?.translate('tap_to_upload_qr') ?? 'Tap to Upload QR Code',
             style: GoogleFonts.poppins(
               fontSize: 12,
               color: const Color(0xFF94A3B8),

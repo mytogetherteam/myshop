@@ -26,7 +26,7 @@ class ReviewSummaryWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            t?.translate('customer_ratings_reviews') ?? 'Customer ratings & reviews',
+            t?.translate('customer_ratings_reviews') ?? 'Customer Ratings & Reviews',
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -61,7 +61,7 @@ class ReviewSummaryWidget extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              t?.translate('out_of_5') ?? 'out of 5',
+              t?.translate('out_of_5') ?? 'Out of 5',
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,

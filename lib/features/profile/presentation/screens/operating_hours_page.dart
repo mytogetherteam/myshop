@@ -441,8 +441,8 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                                     },
                                     child: Text(
                                       h.isClosed
-                                          ? (t?.translate('set_hours_this_day') ?? 'Set hours for this day')
-                                          : (t?.translate('mark_as_closed') ?? 'Mark as closed'),
+                                          ? (t?.translate('set_hours_this_day') ?? 'Set Hours for This Day')
+                                          : (t?.translate('mark_as_closed') ?? 'Mark as Closed'),
                                       style: GoogleFonts.poppins(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w500,
@@ -461,7 +461,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                                           const PhosphorIcon(PhosphorIconsRegular.copy, size: 14, color: Color(0xFF64748B)),
                                           const SizedBox(width: 4),
                                           Text(
-                                            t?.translate('copy_to_all') ?? 'Copy to all',
+                                            t?.translate('copy_to_all') ?? 'Copy to All',
                                             style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B)),
                                           ),
                                         ],

@@ -166,7 +166,7 @@ class OrdersScreenState extends State<OrdersScreen>
                 fontWeight: FontWeight.w500,
               ),
               tabs: [
-                _buildTab(t?.translate('tab_new') ?? 'New order', 'NEW', 0),
+                _buildTab(t?.translate('tab_new') ?? 'New Order', 'NEW', 0),
                 _buildTab(t?.translate('tab_payment') ?? 'Payment', 'PAYMENT', 1),
                 _buildTab(t?.translate('tab_preparing') ?? 'Preparing', 'PREPARING', 2),
                 _buildTab(t?.translate('tab_delivering') ?? 'Delivering', 'DELIVERING', 3),
@@ -496,7 +496,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
             const Icon(Icons.error_outline, size: 64, color: Color(0xFFCBD5E1)),
             const SizedBox(height: 16),
             Text(
-              t?.translate('failed_load_orders') ?? 'Failed to load orders',
+              t?.translate('failed_load_orders') ?? 'Failed to Load Orders',
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -528,7 +528,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
             ),
             const SizedBox(height: 16),
             Text(
-              t?.translate('no_orders_yet') ?? 'No orders yet',
+              t?.translate('no_orders_yet') ?? 'No Orders Yet',
               style: GoogleFonts.poppins(
                 color: const Color(0xFF94A3B8),
                 fontSize: 16,

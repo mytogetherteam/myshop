@@ -62,7 +62,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
     if (_nameEnController.text.isEmpty &&
         _nameMmController.text.isEmpty &&
         _nameThController.text.isEmpty) {
-      AppDialog.showToast(context, AppLocalizations.of(context)?.translate('please_enter_category_name') ?? 'Please enter at least one category name', isError: true);
+      AppDialog.showToast(context, AppLocalizations.of(context)?.translate('please_enter_category_name') ?? 'Please Enter at Least One Category Name', isError: true);
       return;
     }
 
@@ -88,7 +88,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
         Navigator.of(context).pop(true);
       } else {
         setState(() => _isSaving = false);
-        AppDialog.showToast(context, AppLocalizations.of(context)?.translate('failed_create_category') ?? 'Failed to create category', isError: true);
+        AppDialog.showToast(context, AppLocalizations.of(context)?.translate('failed_create_category') ?? 'Failed to Create Category', isError: true);
       }
     }
   }
@@ -152,7 +152,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
 
                       // Icon Gallery
                       Text(
-                        AppLocalizations.of(context)?.translate('choose_icon') ?? 'Choose icon',
+                        AppLocalizations.of(context)?.translate('choose_icon') ?? 'Choose Icon',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -165,7 +165,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
 
                       // Name Lang Switcher
                       Text(
-                        AppLocalizations.of(context)?.translate('category_name') ?? 'Category name',
+                        AppLocalizations.of(context)?.translate('category_name') ?? 'Category Name',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -181,7 +181,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
                             : _nameLang == 'MM'
                             ? _nameMmController
                             : _nameThController,
-                        hint: AppLocalizations.of(context)?.translate('enter_category_name') ?? 'Enter category name',
+                        hint: AppLocalizations.of(context)?.translate('enter_category_name') ?? 'Enter Category Name',
                       ),
                     ],
                   ),
@@ -215,7 +215,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
   Widget _buildIconGallery() {
     if (_gallery.isEmpty) {
       return Text(
-        AppLocalizations.of(context)?.translate('no_icons_available') ?? 'No icons available',
+        AppLocalizations.of(context)?.translate('no_icons_available') ?? 'No Icons Available',
         style: const TextStyle(fontSize: 12, color: Colors.grey),
       );
     }

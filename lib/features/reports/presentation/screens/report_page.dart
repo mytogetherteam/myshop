@@ -482,7 +482,7 @@ class ReportPageState extends State<ReportPage>
         title: getRevenueCardTitle(),
         dateRange: getDateRangeText(),
         revenue: currencyFormat.format(_summary?.revenue ?? 0),
-        trend: "${_summary?.revenueTrend ?? '0%'} ${t?.translate('from_last_period') ?? 'from last period'}",
+        trend: "${_summary?.revenueTrend ?? '0%'} ${t?.translate('from_last_period') ?? 'From Last Period'}",
         orders: _summary?.orders.toString() ?? '0', // This is Total Orders
         cancelled: _summary?.cancelledCount.toString() ?? '0',
       ),

@@ -172,7 +172,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
         _items[globalIndex] = revertedItem;
       });
       final t = AppLocalizations.of(context);
-      AppDialog.showToast(context, t?.translate('failed_update_availability') ?? 'Failed to update availability', isError: true);
+      AppDialog.showToast(context, t?.translate('failed_update_availability') ?? 'Failed to Update Availability', isError: true);
     }
   }
 
@@ -204,7 +204,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
         _items[globalIndex] = revertedItem;
       });
       final t = AppLocalizations.of(context);
-      AppDialog.showToast(context, t?.translate('failed_update_publish') ?? 'Failed to update publish status', isError: true);
+      AppDialog.showToast(context, t?.translate('failed_update_publish') ?? 'Failed to Update Publish Status', isError: true);
     }
   }
 
@@ -407,8 +407,8 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
           const SizedBox(height: 8),
           Text(
             _searchCtrl.text.isNotEmpty
-                ? (t?.translate('try_different_search') ?? 'Try a different search query')
-                : (t?.translate('start_adding_items') ?? 'Start adding items to your shop menu'),
+                ? (t?.translate('try_different_search') ?? 'Try a Different Search Query')
+                : (t?.translate('start_adding_items') ?? 'Start Adding Items to Your Shop Menu'),
             style: GoogleFonts.poppins(
               fontSize: 14,
               color: const Color(0xFF94A3B8),

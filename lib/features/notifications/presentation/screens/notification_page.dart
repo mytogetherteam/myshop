@@ -223,7 +223,7 @@ class _NotificationPageState extends State<NotificationPage> {
                 ? EmptyState(
                     circleBackground: true,
                     icon: const Icon(PhosphorIconsRegular.bellSlash, size: 48, color: AppColors.outline),
-                    title: t?.translate('no_notifications_yet') ?? 'No notifications yet',
+                    title: t?.translate('no_notifications_yet') ?? 'No Notifications Yet',
                   )
                 : ListView.builder(
                     controller: _scrollController,

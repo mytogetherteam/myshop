@@ -146,7 +146,7 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
           ),
           const SizedBox(height: 16),
           Text(
-            t?.translate('no_chats_yet') ?? 'No chats yet',
+            t?.translate('no_chats_yet') ?? 'No Chats Yet',
             style: GoogleFonts.poppins(
               color: const Color(0xFF475569),
               fontSize: 16,

@@ -93,7 +93,7 @@ class _BestSellerTileState extends State<BestSellerTile>
                 ),
               ),
               Text(
-                "${widget.soldCount} ${AppLocalizations.of(context)?.translate('sold') ?? 'sold'}",
+                "${widget.soldCount} ${AppLocalizations.of(context)?.translate('sold') ?? 'Sold'}",
                 style: GoogleFonts.poppins(
                   color: const Color(0xFF94A3B8),
                   fontSize: 12,

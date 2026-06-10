@@ -114,7 +114,7 @@ class ShopProfileImageHeader extends StatelessWidget {
                               ),
                               const SizedBox(height: 10),
                               Text(
-                                t?.translate('tap_to_add_cover_photo') ?? 'Tap to add cover photo',
+                                t?.translate('tap_to_add_cover_photo') ?? 'Tap to Add Cover Photo',
                                 style: GoogleFonts.poppins(
                                   color: Colors.white,
                                   fontSize: 14,

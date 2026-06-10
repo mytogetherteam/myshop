@@ -256,7 +256,7 @@ class OrderCard extends StatelessWidget {
         mainButtonText = t?.translate('check_payment') ?? 'Check Payment';
         break;
       case 'PAYMENT_SLIP_REQUESTED':
-        mainButtonText = t?.translate('waiting_payment') ?? 'Waiting for payment';
+        mainButtonText = t?.translate('waiting_payment') ?? 'Waiting for Payment';
         isMainButtonEnabled = false;
         mainButtonIcon = Icons.access_time_outlined;
         break;
@@ -415,7 +415,7 @@ class OrderCard extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                t?.translate('cancel_reason') ?? 'Reason for cancellation',
+                t?.translate('cancel_reason') ?? 'Reason for Cancellation',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -478,8 +478,8 @@ class OrderCard extends StatelessWidget {
                           AppDialog.showToast(
                             context,
                             success
-                                ? (t?.translate('order_cancelled_success') ?? 'Order cancelled')
-                                : (t?.translate('order_cancelled_fail') ?? 'Failed to cancel order'),
+                                ? (t?.translate('order_cancelled_success') ?? 'Order Cancelled')
+                                : (t?.translate('order_cancelled_fail') ?? 'Failed to Cancel Order'),
                             isError: !success,
                           );
                         }
@@ -514,9 +514,9 @@ class OrderCard extends StatelessWidget {
   String _getTimeAgo(DateTime dateTime, BuildContext context) {
     final t = AppLocalizations.of(context);
     final difference = DateTime.now().difference(dateTime);
-    if (difference.inMinutes < 1) return t?.translate('just_now') ?? 'Just now';
-    if (difference.inMinutes < 60) return '${difference.inMinutes}${t?.translate('mins_ago') ?? 'm ago'}';
-    if (difference.inHours < 24) return '${difference.inHours}${t?.translate('hours_ago') ?? 'h ago'}';
+    if (difference.inMinutes < 1) return t?.translate('just_now') ?? 'Just Now';
+    if (difference.inMinutes < 60) return '${difference.inMinutes}${t?.translate('mins_ago') ?? 'M Ago'}';
+    if (difference.inHours < 24) return '${difference.inHours}${t?.translate('hours_ago') ?? 'H Ago'}';
     return DateFormat('dd MMM').format(dateTime);
   }
 }

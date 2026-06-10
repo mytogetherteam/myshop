@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:flutter/foundation.dart';
@@ -340,13 +342,20 @@ class MenuService {
   }
 
 
-  Future<bool> createMenuItem(Map<String, dynamic> payload) async {
+  Future<bool> createMenuItem(Map<String, dynamic> payload, {File? imageFile}) async {
     try {
       AppLogger.network('POST $_menuItemsPath, Data: $payload');
 
+      final formDataMap = <String, dynamic>{
+        'data': jsonEncode(payload),
+      };
+      if (imageFile != null) {
+        formDataMap['image'] = await MultipartFile.fromFile(imageFile.path);
+      }
+
       final response = await ApiClient().dio.post(
         _menuItemsPath,
-        data: payload,
+        data: FormData.fromMap(formDataMap),
       );
 
       if (response.statusCode != null &&
@@ -363,14 +372,21 @@ class MenuService {
     return false;
   }
 
-  Future<bool> updateMenuItem(int itemId, Map<String, dynamic> payload) async {
+  Future<bool> updateMenuItem(int itemId, Map<String, dynamic> payload, {File? imageFile}) async {
     try {
       final url = '$_menuItemsPath/$itemId';
       AppLogger.network('PUT $url, Data: $payload');
 
+      final formDataMap = <String, dynamic>{
+        'data': jsonEncode(payload),
+      };
+      if (imageFile != null) {
+        formDataMap['image'] = await MultipartFile.fromFile(imageFile.path);
+      }
+
       final response = await ApiClient().dio.put(
         url,
-        data: payload,
+        data: FormData.fromMap(formDataMap),
       );
 
       if (response.statusCode != null &&

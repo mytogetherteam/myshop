@@ -89,13 +89,13 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
       final success = await _riderService.deleteRider(rider.id);
       if (success) {
         if (mounted) {
-          AppDialog.showToast(context, t?.translate('rider_deleted') ?? 'Rider deleted successfully');
+          AppDialog.showToast(context, t?.translate('rider_deleted') ?? 'Rider Deleted Successfully');
           _loadData();
         }
       } else {
         if (mounted) {
           setState(() => _isLoading = false);
-          AppDialog.showToast(context, t?.translate('failed_delete_rider') ?? 'Failed to delete rider', isError: true);
+          AppDialog.showToast(context, t?.translate('failed_delete_rider') ?? 'Failed to Delete Rider', isError: true);
         }
       }
     }
@@ -125,7 +125,7 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
                       size: 64,
                       color: AppColors.iconDisabled,
                     ),
-                    title: t?.translate('no_riders_found') ?? 'No riders found',
+                    title: t?.translate('no_riders_found') ?? 'No Riders Found',
                     subtitle: t?.translate('add_rider_desc') ??
                         'Add a rider to manage deliveries.',
                   )
@@ -317,7 +317,7 @@ class _RiderFormSheetState extends State<RiderFormSheet> {
         widget.onSaved(savedRider);
       } else {
         final t = AppLocalizations.of(context);
-        AppDialog.showToast(context, t?.translate('failed_save_rider') ?? 'Failed to save rider', isError: true);
+        AppDialog.showToast(context, t?.translate('failed_save_rider') ?? 'Failed to Save Rider', isError: true);
       }
     }
   }
@@ -376,21 +376,21 @@ class _RiderFormSheetState extends State<RiderFormSheet> {
             _buildTextField(
               controller: _nameController,
               label: t?.translate('name') ?? 'Name',
-              hint: t?.translate('enter_rider_name') ?? 'Enter rider name',
+              hint: t?.translate('enter_rider_name') ?? 'Enter Rider Name',
               validator: (value) => value == null || value.isEmpty ? 'Required field' : null,
             ),
             const SizedBox(height: 16),
             _buildTextField(
               controller: _phoneController,
               label: t?.translate('phone_number') ?? 'Phone Number',
-              hint: t?.translate('enter_phone_number') ?? 'Enter phone number',
+              hint: t?.translate('enter_phone_number') ?? 'Enter Phone Number',
               keyboardType: TextInputType.phone,
             ),
             const SizedBox(height: 16),
             _buildTextField(
               controller: _licensePlateController,
               label: t?.translate('license_plate') ?? 'License Plate',
-              hint: t?.translate('enter_license_plate') ?? 'Enter license plate',
+              hint: t?.translate('enter_license_plate') ?? 'Enter License Plate',
             ),
             const SizedBox(height: 32),
             SizedBox(

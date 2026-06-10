@@ -49,7 +49,7 @@ class _SuccessSheetState extends State<SuccessSheet> {
         ),
         const SizedBox(height: 24),
         Text(
-          t?.translate('successfully_requested') ?? 'Successfully requested',
+          t?.translate('successfully_requested') ?? 'Successfully Requested',
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.w700,
@@ -83,7 +83,7 @@ class _SuccessSheetState extends State<SuccessSheet> {
                 nav.pop(true);
               }
             },
-            text: t?.translate('got_it') ?? 'Got it',
+            text: t?.translate('got_it') ?? 'Got It',
             height: 56,
             borderRadius: 12,
           ),

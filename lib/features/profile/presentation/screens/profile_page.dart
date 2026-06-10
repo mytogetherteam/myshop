@@ -100,7 +100,7 @@ class ProfilePageState extends State<ProfilePage>
         });
       } else if (mounted) {
         setState(() => _isTogglingDelivery = false);
-        AppDialog.showToast(context, t?.translate('failed_update_delivery') ?? 'Failed to update delivery status', isError: true);
+        AppDialog.showToast(context, t?.translate('failed_update_delivery') ?? 'Failed to Update Delivery Status', isError: true);
       }
     } catch (e) {
       if (mounted) {
@@ -144,12 +144,12 @@ class ProfilePageState extends State<ProfilePage>
       final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (!launched && mounted) {
         final t = AppLocalizations.of(context);
-        AppDialog.showToast(context, t?.translate('could_not_open_link') ?? 'Could not open this link', isError: true);
+        AppDialog.showToast(context, t?.translate('could_not_open_link') ?? 'Could Not Open This Link', isError: true);
       }
     } catch (e) {
       if (mounted) {
         final t = AppLocalizations.of(context);
-        AppDialog.showToast(context, t?.translate('could_not_open_link') ?? 'Could not open this link', isError: true);
+        AppDialog.showToast(context, t?.translate('could_not_open_link') ?? 'Could Not Open This Link', isError: true);
       }
     }
   }
@@ -253,15 +253,20 @@ class ProfilePageState extends State<ProfilePage>
 
   Widget _buildProfileHeader() {
     final t = AppLocalizations.of(context);
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border.symmetric(
-          horizontal: BorderSide(color: Color(0xFFE2E8F0), width: 1),
+    return InkWell(
+      onTap: () => Navigator.push(
+        context,
+        CupertinoPageRoute(builder: (_) => const EditShopProfilePage()),
+      ).then((_) => _loadUserInfo()),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border.symmetric(
+            horizontal: BorderSide(color: Color(0xFFE2E8F0), width: 1),
+          ),
         ),
-      ),
       child: Row(
         children: [
           Container(
@@ -334,6 +339,7 @@ class ProfilePageState extends State<ProfilePage>
           ),
         ],
       ),
+    ),
     );
   }
 
@@ -382,7 +388,7 @@ class ProfilePageState extends State<ProfilePage>
         ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.storefront,
-          title: t?.translate('edit_shop_profile') ?? 'Edit shop profile',
+          title: t?.translate('edit_shop_profile') ?? 'Edit Shop Profile',
           onTap: () => Navigator.push(
             context,
             CupertinoPageRoute(builder: (_) => const EditShopProfilePage()),
@@ -390,7 +396,7 @@ class ProfilePageState extends State<ProfilePage>
         ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.clock,
-          title: t?.translate('operating_hours') ?? 'Operating hours',
+          title: t?.translate('operating_hours') ?? 'Operating Hours',
           onTap: () => Navigator.push(
             context,
             CupertinoPageRoute(builder: (_) => const OperatingHoursPage()),
@@ -398,7 +404,7 @@ class ProfilePageState extends State<ProfilePage>
         ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.creditCard,
-          title: t?.translate('accepted_payment') ?? 'Accepted payment',
+          title: t?.translate('accepted_payment') ?? 'Accepted Payment',
           onTap: () => Navigator.push(
             context,
             CupertinoPageRoute(builder: (_) => const AcceptedPaymentPage()),
