@@ -28,6 +28,14 @@ class WebSocketService {
   Stream<Map<String, dynamic>> get orderUpdates =>
       _orderUpdateController.stream;
 
+  final StreamController<Map<String, dynamic>> _chatUpdateController =
+      StreamController<Map<String, dynamic>>.broadcast();
+
+  /// Realtime chat events for the current shop: `CHAT_MESSAGE`,
+  /// `CHAT_MESSAGE_EDIT`, `CHAT_MESSAGE_DELETE`.
+  Stream<Map<String, dynamic>> get chatUpdates =>
+      _chatUpdateController.stream;
+
   bool _isConnecting = false;
   bool _shouldReconnect = true;
   int _reconnectAttempts = 0;
@@ -122,10 +130,10 @@ class WebSocketService {
     }
 
     _subscribedShopId = shopId;
-    final destination = '/topic/shop/$shopId/orders';
+    final orderDestination = '/topic/shop/$shopId/orders';
 
     _stompClient?.subscribe(
-      destination: destination,
+      destination: orderDestination,
       headers: {...headers, 'receipt': 'rcpt-shop-orders'},
       callback: (StompFrame frame) {
         if (frame.body == null) return;
@@ -151,7 +159,32 @@ class WebSocketService {
       },
     );
 
-    _log('📡 [WS] Subscribed to $destination');
+    _log('📡 [WS] Subscribed to $orderDestination');
+
+    final chatDestination = '/topic/shop/$shopId/chat';
+
+    _stompClient?.subscribe(
+      destination: chatDestination,
+      headers: {...headers, 'receipt': 'rcpt-shop-chat'},
+      callback: (StompFrame frame) {
+        if (frame.body == null) return;
+        try {
+          final Map<String, dynamic> raw = json.decode(frame.body!);
+          final String type = raw['type'] ?? 'UNKNOWN';
+
+          if (type == 'CHAT_MESSAGE' ||
+              type == 'CHAT_MESSAGE_EDIT' ||
+              type == 'CHAT_MESSAGE_DELETE') {
+            _log('💬 [WS] $type | Conversation: ${raw['conversationId']}');
+            _chatUpdateController.add(raw);
+          }
+        } catch (e) {
+          _log('⚠️ Error parsing chat socket message: $e');
+        }
+      },
+    );
+
+    _log('📡 [WS] Subscribed to $chatDestination');
   }
 
   /// Re-subscribe when the user switches shops.

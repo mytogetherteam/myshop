@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../data/models/review_model.dart';
@@ -18,6 +19,9 @@ class ReviewCard extends StatefulWidget {
 
 class _ReviewCardState extends State<ReviewCard>
     with SingleTickerProviderStateMixin {
+  // Backed by PUT /api/shop/reviews/{id}/reply.
+  static const bool _replyEnabled = true;
+
   final ReviewService _reviewService = ReviewService();
   final TextEditingController _replyController = TextEditingController();
   final FocusNode _replyFocusNode = FocusNode();
@@ -120,24 +124,29 @@ class _ReviewCardState extends State<ReviewCard>
     setState(() => _isSending = true);
     _replyFocusNode.unfocus();
 
-    try {
-      await _reviewService.replyReview(widget.review.id, text);
-      if (mounted) {
-        // Close the input panel, show the reply inline
-        _replyAnimController.reverse().then((_) {
-          if (mounted) {
-            setState(() {
-              _localReply = text;
-              _isReplyOpen = false;
-              _isSending = false;
-              _selectedQuickReply = null;
-              _replyController.clear();
-            });
-          }
-        });
-      }
-    } catch (_) {
-      if (mounted) setState(() => _isSending = false);
+    final success = await _reviewService.replyReview(widget.review.id, text);
+    if (!mounted) return;
+
+    if (success) {
+      _replyAnimController.reverse().then((_) {
+        if (mounted) {
+          setState(() {
+            _localReply = text;
+            _isReplyOpen = false;
+            _isSending = false;
+            _selectedQuickReply = null;
+            _replyController.clear();
+          });
+        }
+      });
+    } else {
+      setState(() => _isSending = false);
+      final t = AppLocalizations.of(context);
+      AppDialog.showToast(
+        context,
+        t?.translate('reply_failed') ?? 'Failed to send reply. Please try again.',
+        isError: true,
+      );
     }
   }
 
@@ -162,7 +171,7 @@ class _ReviewCardState extends State<ReviewCard>
           if (_hasReply && !_isReplyOpen) ...[
             const SizedBox(height: 12),
             _buildReplyDisplay(context),
-          ] else if (!_hasReply) ...[
+          ] else if (!_hasReply && _replyEnabled) ...[
             const SizedBox(height: 12),
             if (!_isReplyOpen) _buildReplyButton(context),
             if (_isReplyOpen)

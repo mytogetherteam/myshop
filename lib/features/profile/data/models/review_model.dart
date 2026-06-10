@@ -22,18 +22,21 @@ class ReviewModel {
   });
 
   factory ReviewModel.fromJson(Map<String, dynamic> json) {
+    // Backend exposes the shop reply as `shopReply` / `shopRepliedAt`.
+    // Older keys (`reply` / `replyCreatedAt`) are kept as a fallback.
+    final replyText = (json['shopReply'] ?? json['reply']) as String?;
+    final replyAt = json['shopRepliedAt'] ?? json['replyCreatedAt'];
     return ReviewModel(
       id: json['id'].toString(),
       userName: json['user']?['name'] ?? json['userName'] ?? 'Anonymous',
       userProfileUrl: json['userProfileUrl'] as String?,
       rating: (json['rating'] as num).toDouble(),
-      comment: json['comment'] as String,
+      comment: json['comment'] as String? ?? '',
       createdAt: DateTime.parse(json['createdAt'] as String),
       isVerified: json['isVerified'] as bool? ?? false,
-      reply: json['reply'] as String?,
-      replyCreatedAt: json['replyCreatedAt'] != null
-          ? DateTime.parse(json['replyCreatedAt'] as String)
-          : null,
+      reply: (replyText != null && replyText.isEmpty) ? null : replyText,
+      replyCreatedAt:
+          replyAt != null ? DateTime.parse(replyAt as String) : null,
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/app_logo.dart';
+import 'package:my_shop/core/notifications/notification_service.dart';
 import 'package:my_shop/features/auth/data/services/auth_service.dart';
 import '../../../../core/network/websocket_service.dart';
 import '../../../../core/presentation/widgets/primary_gradient_button.dart';
@@ -67,6 +68,8 @@ class _LoginPageState extends State<LoginPage>
 
       if (response.success) {
         WebSocketService().connect();
+        await NotificationService().registerDevice();
+        if (!mounted) return;
         Navigator.of(context).pushReplacementNamed('/home');
       } else {
         _showError(response.details ?? response.message ?? 'Login failed');

@@ -1,8 +1,13 @@
+import 'dart:async';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/features/chat/data/models/chat_model.dart';
+import 'package:my_shop/features/chat/data/services/chat_service.dart';
 import 'package:my_shop/features/chat/presentation/screens/chat_detail_screen.dart';
 
 class ChatPage extends StatefulWidget {
@@ -14,8 +19,18 @@ class ChatPage extends StatefulWidget {
 
 class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+
   List<ChatConversation> _conversations = [];
   List<ChatConversation> _filteredConversations = [];
+
+  bool _isLoading = true;
+  bool _hasError = false;
+  bool _isLoadingMore = false;
+  int _currentPage = 1;
+  int _lastPage = 1;
+
+  StreamSubscription<Map<String, dynamic>>? _chatSub;
 
   @override
   bool get wantKeepAlive => true;
@@ -23,36 +38,142 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
   @override
   void initState() {
     super.initState();
-    _conversations = [];
-    _filteredConversations = _conversations;
     _searchController.addListener(_onSearchChanged);
+    _scrollController.addListener(_onScroll);
+    _chatSub = WebSocketService().chatUpdates.listen(_onChatEvent);
+    _loadConversations();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
+    _chatSub?.cancel();
     super.dispose();
   }
 
-  void refresh() {
+  Future<void> _loadConversations() async {
     setState(() {
-      _onSearchChanged();
+      _isLoading = true;
+      _hasError = false;
+    });
+
+    final result = await ChatService.instance.getConversations(page: 1);
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+      if (result == null) {
+        _hasError = true;
+      } else {
+        _hasError = false;
+        _conversations = result.items;
+        _currentPage = result.currentPage;
+        _lastPage = result.lastPage;
+      }
+      _applyFilter();
     });
   }
 
-  void _onSearchChanged() {
-    final query = _searchController.text.toLowerCase().trim();
+  Future<void> _refresh() async {
+    final result = await ChatService.instance.getConversations(page: 1);
+    if (!mounted) return;
     setState(() {
-      if (query.isEmpty) {
-        _filteredConversations = _conversations;
-      } else {
-        _filteredConversations = _conversations
-            .where((c) =>
-                c.name.toLowerCase().contains(query) ||
-                c.lastMessage.toLowerCase().contains(query))
-            .toList();
+      _isLoading = false;
+      if (result != null) {
+        _hasError = false;
+        _conversations = result.items;
+        _currentPage = result.currentPage;
+        _lastPage = result.lastPage;
       }
+      _applyFilter();
     });
+  }
+
+  /// Called by the parent navigation when the chat tab is re-tapped.
+  void refresh() {
+    _refresh();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
+        !_isLoadingMore &&
+        _currentPage < _lastPage &&
+        _searchController.text.trim().isEmpty) {
+      _loadMore();
+    }
+  }
+
+  Future<void> _loadMore() async {
+    setState(() => _isLoadingMore = true);
+    final result =
+        await ChatService.instance.getConversations(page: _currentPage + 1);
+    if (!mounted) return;
+    setState(() {
+      _isLoadingMore = false;
+      if (result != null) {
+        _conversations = [..._conversations, ...result.items];
+        _currentPage = result.currentPage;
+        _lastPage = result.lastPage;
+      }
+      _applyFilter();
+    });
+  }
+
+  void _onChatEvent(Map<String, dynamic> event) {
+    final conversationId = (event['conversationId'] as num?)?.toInt();
+    if (conversationId == null || !mounted) return;
+
+    final index = _conversations.indexWhere((c) => c.id == conversationId);
+    final message = (event['message'] as Map?)?.cast<String, dynamic>();
+    final preview = ChatConversation.previewFor(message);
+    final unread = (event['shopUnreadCount'] as num?)?.toInt();
+
+    if (index == -1) {
+      // New conversation we don't know about yet — reload the inbox.
+      _refresh();
+      return;
+    }
+
+    final existing = _conversations[index];
+    final updated = existing.copyWith(
+      lastMessage: preview.isNotEmpty ? preview : existing.lastMessage,
+      timestamp: DateTime.now(),
+      unreadCount: unread ?? existing.unreadCount,
+    );
+
+    setState(() {
+      _conversations
+        ..removeAt(index)
+        ..insert(0, updated);
+      _applyFilter();
+    });
+  }
+
+  void _markConversationRead(int conversationId) {
+    final index = _conversations.indexWhere((c) => c.id == conversationId);
+    if (index == -1) return;
+    setState(() {
+      _conversations[index] = _conversations[index].copyWith(unreadCount: 0);
+      _applyFilter();
+    });
+  }
+
+  void _onSearchChanged() => setState(_applyFilter);
+
+  void _applyFilter() {
+    final query = _searchController.text.toLowerCase().trim();
+    if (query.isEmpty) {
+      _filteredConversations = _conversations;
+    } else {
+      _filteredConversations = _conversations
+          .where((c) =>
+              c.name.toLowerCase().contains(query) ||
+              c.lastMessage.toLowerCase().contains(query) ||
+              (c.orderNo?.toLowerCase().contains(query) ?? false))
+          .toList();
+    }
   }
 
   String _formatTimestamp(DateTime timestamp) {
@@ -88,7 +209,8 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
               ),
               child: TextField(
                 controller: _searchController,
-                style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B)),
+                style: GoogleFonts.poppins(
+                    fontSize: 14, color: const Color(0xFF1E293B)),
                 decoration: InputDecoration(
                   hintText: t?.translate('search_hint') ?? 'Search...',
                   hintStyle: GoogleFonts.poppins(
@@ -107,19 +229,87 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
             ),
           ),
 
-          // Conversation list
-          Expanded(
-            child: _filteredConversations.isEmpty
-                ? _buildEmptyState(t)
-                : ListView.builder(
-                    padding: const EdgeInsets.only(top: 8, bottom: 20),
-                    itemCount: _filteredConversations.length,
-                    itemBuilder: (context, index) {
-                      return _buildConversationTile(
-                        _filteredConversations[index],
-                      );
-                    },
-                  ),
+          Expanded(child: _buildBody(t)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBody(AppLocalizations? t) {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          strokeWidth: 2.5,
+          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+        ),
+      );
+    }
+
+    if (_hasError) {
+      return _buildErrorState(t);
+    }
+
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: _refresh,
+      child: _filteredConversations.isEmpty
+          ? ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.6,
+                    child: _buildEmptyState(t)),
+              ],
+            )
+          : ListView.builder(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.only(top: 8, bottom: 20),
+              itemCount: _filteredConversations.length + (_isLoadingMore ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (index >= _filteredConversations.length) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Center(
+                      child: SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  );
+                }
+                return _buildConversationTile(_filteredConversations[index]);
+              },
+            ),
+    );
+  }
+
+  Widget _buildErrorState(AppLocalizations? t) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.cloud_off_rounded, size: 44, color: Color(0xFFCBD5E1)),
+          const SizedBox(height: 12),
+          Text(
+            t?.translate('something_went_wrong') ?? 'Something went wrong',
+            style: GoogleFonts.poppins(
+              color: const Color(0xFF475569),
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: _loadConversations,
+            child: Text(
+              t?.translate('retry') ?? 'Retry',
+              style: GoogleFonts.poppins(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -174,11 +364,12 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
   }
 
   Widget _buildConversationTile(ChatConversation conversation) {
+    final hasUnread = conversation.unreadCount > 0;
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () {
-          Navigator.push(
+        onTap: () async {
+          await Navigator.push(
             context,
             PageRouteBuilder(
               pageBuilder: (context, animation, secondaryAnimation) =>
@@ -198,6 +389,8 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
               reverseTransitionDuration: Duration.zero,
             ),
           );
+          // Detail screen marks the conversation as read on open.
+          _markConversationRead(conversation.id);
         },
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -208,66 +401,37 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
           ),
           child: Row(
             children: [
-              // Avatar with online indicator
-              Stack(
-                children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      gradient: conversation.unreadCount > 0
-                          ? AppColors.primaryGradient
-                          : null,
-                      color: conversation.unreadCount > 0
-                          ? null
-                          : const Color(0xFFE2E8F0),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        conversation.name[0].toUpperCase(),
-                        style: GoogleFonts.poppins(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: conversation.unreadCount > 0
-                              ? Colors.white
-                              : const Color(0xFF64748B),
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (conversation.isOnline)
-                    Positioned(
-                      right: 2,
-                      bottom: 2,
-                      child: Container(
-                        width: 14,
-                        height: 14,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF22C55E),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2.5),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+              _buildAvatar(conversation, hasUnread),
               const SizedBox(width: 14),
-
-              // Name + last message
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      conversation.name,
-                      style: GoogleFonts.poppins(
-                        fontSize: 15,
-                        fontWeight: conversation.unreadCount > 0
-                            ? FontWeight.w600
-                            : FontWeight.w500,
-                        color: const Color(0xFF1E293B),
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            conversation.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.poppins(
+                              fontSize: 15,
+                              fontWeight:
+                                  hasUnread ? FontWeight.w600 : FontWeight.w500,
+                              color: const Color(0xFF1E293B),
+                            ),
+                          ),
+                        ),
+                        if (conversation.orderNo != null)
+                          Text(
+                            conversation.orderNo!,
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFF94A3B8),
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 3),
                     Text(
@@ -276,10 +440,9 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.poppins(
                         fontSize: 13,
-                        fontWeight: conversation.unreadCount > 0
-                            ? FontWeight.w500
-                            : FontWeight.w400,
-                        color: conversation.unreadCount > 0
+                        fontWeight:
+                            hasUnread ? FontWeight.w500 : FontWeight.w400,
+                        color: hasUnread
                             ? const Color(0xFF475569)
                             : const Color(0xFF94A3B8),
                       ),
@@ -288,8 +451,6 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
                 ),
               ),
               const SizedBox(width: 10),
-
-              // Timestamp + unread badge
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -297,16 +458,15 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
                     _formatTimestamp(conversation.timestamp),
                     style: GoogleFonts.poppins(
                       fontSize: 12,
-                      fontWeight: conversation.unreadCount > 0
-                          ? FontWeight.w600
-                          : FontWeight.w400,
-                      color: conversation.unreadCount > 0
+                      fontWeight:
+                          hasUnread ? FontWeight.w600 : FontWeight.w400,
+                      color: hasUnread
                           ? AppColors.primary
                           : const Color(0xFF94A3B8),
                     ),
                   ),
                   const SizedBox(height: 4),
-                  if (conversation.unreadCount > 0)
+                  if (hasUnread)
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 7,
@@ -331,6 +491,47 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatar(ChatConversation conversation, bool hasUnread) {
+    final url = conversation.avatarUrl;
+    final initial =
+        conversation.name.isNotEmpty ? conversation.name[0].toUpperCase() : '?';
+    return Container(
+      width: 52,
+      height: 52,
+      decoration: BoxDecoration(
+        gradient: hasUnread && (url == null || url.isEmpty)
+            ? AppColors.primaryGradient
+            : null,
+        color: (url == null || url.isEmpty) && !hasUnread
+            ? const Color(0xFFE2E8F0)
+            : null,
+        shape: BoxShape.circle,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: (url != null && url.isNotEmpty)
+          ? CachedNetworkImage(
+              imageUrl: url,
+              fit: BoxFit.cover,
+              placeholder: (_, _) => const ColoredBox(color: Color(0xFFE2E8F0)),
+              errorWidget: (_, _, _) => _avatarInitial(initial, hasUnread),
+            )
+          : _avatarInitial(initial, hasUnread),
+    );
+  }
+
+  Widget _avatarInitial(String initial, bool hasUnread) {
+    return Center(
+      child: Text(
+        initial,
+        style: GoogleFonts.poppins(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: hasUnread ? Colors.white : const Color(0xFF64748B),
         ),
       ),
     );
