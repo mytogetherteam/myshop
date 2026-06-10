@@ -131,7 +131,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
     if (_categories.isEmpty) {
       return Center(
         child: Text(
-          AppLocalizations.of(context)?.translate('no_categories_found') ?? 'No categories found',
+          AppLocalizations.of(context)?.translate('no_categories_found') ?? 'No Categories Found',
           style: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
         ),
       );
@@ -337,7 +337,7 @@ class _CategoryCard extends StatelessWidget {
                     ],
                   ),
                   Text(
-                    '${category.itemCount} ${t?.translate('items_count_suffix') ?? 'items'}',
+                    '${category.itemCount} ${t?.translate('items_count_suffix') ?? 'Items'}',
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,

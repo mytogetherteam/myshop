@@ -488,22 +488,22 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         _nameMmCtrl.text.trim().isEmpty &&
         _nameThCtrl.text.trim().isEmpty) {
       _scrollToKey(_nameKey);
-      _showError(t?.translate('shop_name_required') ?? 'Please enter at least one shop name');
+      _showError(t?.translate('shop_name_required') ?? 'Please Enter at Least One Shop Name');
       return false;
     }
     if (_selectedCategory == null) {
       _scrollToKey(_categoryKey);
-      _showError(t?.translate('category_required') ?? 'Category is required');
+      _showError(t?.translate('category_required') ?? 'Category Is Required');
       return false;
     }
     if (_selectedSubcategory == null) {
       _scrollToKey(_subCategoryKey);
-      _showError(t?.translate('subcategory_required') ?? 'Sub-category is required');
+      _showError(t?.translate('subcategory_required') ?? 'SubCategory Is Required');
       return false;
     }
     if (_selectedCuisineTypes.isEmpty) {
       _scrollToKey(_cuisineTypeKey);
-      _showError(t?.translate('cuisine_type_required') ?? 'At least one Cuisine Type is required');
+      _showError(t?.translate('cuisine_type_required') ?? 'At Least One Cuisine Type Is Required');
       return false;
     }
     final validPhones = _phoneControllers
@@ -511,19 +511,19 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         .toList();
     if (validPhones.isEmpty) {
       _scrollToKey(_phoneKey);
-      _showError(t?.translate('phone_number_required') ?? 'At least one Phone Number is required');
+      _showError(t?.translate('phone_number_required') ?? 'At Least One Phone Number Is Required');
       return false;
     }
     if (_addressEnCtrl.text.trim().isEmpty) {
       // Switch to EN tab if not already on it so the user sees the empty field
       if (_addressLang != 'EN') setState(() => _addressLang = 'EN');
       _scrollToKey(_addressKey);
-      _showError(t?.translate('street_address_en_required') ?? 'Street Address (EN) is required');
+      _showError(t?.translate('street_address_en_required') ?? 'Street Address (EN) Is Required');
       return false;
     }
     final minAmount = double.tryParse(_minAmountCtrl.text.trim());
     if (minAmount != null && minAmount > 999999.9) {
-      _showError(t?.translate('min_order_amount_too_large') ?? 'Minimum Order Amount is too large');
+      _showError(t?.translate('min_order_amount_too_large') ?? 'Minimum Order Amount Is Too Large');
       return false;
     }
     return true;
@@ -669,7 +669,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 value: null,
                 enabled: false,
                 child: Text(
-                  t?.translate('no_data_found') ?? 'No data found',
+                  t?.translate('no_data_found') ?? 'No Data Found',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     color: const Color(0xFF94A3B8),
@@ -793,7 +793,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 t?.translate('select_category') ?? 'Select Category',
                 _selectedCategory,
                 _categories,
-                t?.translate('choose_category') ?? 'Choose category',
+                t?.translate('choose_category') ?? 'Choose Category',
                 (v) => setState(() {
                   _selectedCategory = v;
                   _markChanged();
@@ -803,13 +803,13 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             const SizedBox(height: 32),
             FormSection(
               key: _subCategoryKey,
-              label: t?.translate('subcategory') ?? 'Sub-category',
+              label: t?.translate('sub_category') ?? 'SubCategory',
               required: true,
               child: _buildDropdown(
-                t?.translate('select_subcategory') ?? 'Select Sub-category',
+                t?.translate('select_subcategory') ?? 'Select SubCategory',
                 _selectedSubcategory,
                 _subcategories,
-                t?.translate('choose_subcategory') ?? 'Choose sub-category',
+                t?.translate('choose_subcategory') ?? 'Choose SubCategory',
                 (v) => setState(() {
                   _selectedSubcategory = v;
                   _markChanged();
@@ -838,7 +838,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                     : _descLang == 'MM'
                     ? _descMmCtrl
                     : _descThCtrl,
-                hint: t?.translate('enter_description_hint') ?? 'Enter description',
+                hint: t?.translate('enter_description_hint') ?? 'Enter Description',
                 maxLines: 3,
                 maxLength: 500,
                 onChanged: _markChanged,
@@ -1015,7 +1015,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       if (!mounted) return;
       AppDialog.showToast(
         context,
-        t?.translate('image_size_limit_msg') ?? 'Image size must be less than 1MB',
+        t?.translate('image_size_limit_msg') ?? 'Image Size Must Be Less Than 1MB',
         isError: true,
       );
       return;
@@ -1059,7 +1059,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             if (!mounted) return;
             AppDialog.showToast(
               context,
-              t?.translate('image_size_limit_msg') ?? 'Image size must be less than 1MB',
+              t?.translate('image_size_limit_msg') ?? 'Image Size Must Be Less Than 1MB',
               isError: true,
             );
             return;
@@ -1078,7 +1078,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             if (!mounted) return;
             AppDialog.showToast(
               context,
-              t?.translate('image_size_limit_msg') ?? 'Image size must be less than 1MB',
+              t?.translate('image_size_limit_msg') ?? 'Image Size Must Be Less Than 1MB',
               isError: true,
             );
             return;

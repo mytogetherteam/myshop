@@ -70,7 +70,7 @@ class ShopLocationSection extends StatelessWidget {
                 value: null,
                 enabled: false,
                 child: Text(
-                  t?.translate('no_data_found') ?? 'No data found',
+                  t?.translate('no_data_found') ?? 'No Data Found',
                   style: const TextStyle(
                     fontSize: 14,
                     color: Color(0xFF94A3B8),
@@ -111,7 +111,7 @@ class ShopLocationSection extends StatelessWidget {
                 : addressLang == 'MM'
                 ? addressMmCtrl
                 : addressThCtrl,
-            hint: t?.translate('enter_street_address') ?? 'Enter street address',
+            hint: t?.translate('enter_street_address') ?? 'Enter Street Address',
             requiredLang: 'EN',
             maxLength: 255,
             onChanged: onMarkChanged,
@@ -131,7 +131,7 @@ class ShopLocationSection extends StatelessWidget {
                     t?.translate('select_city') ?? 'Select City',
                     selectedCity,
                     cities,
-                    t?.translate('choose_city') ?? 'Choose city',
+                    t?.translate('choose_city') ?? 'Choose City',
                     onCityChanged,
                   ),
                 ),
@@ -146,7 +146,7 @@ class ShopLocationSection extends StatelessWidget {
                     t?.translate('select_district') ?? 'Select District',
                     selectedDistrict,
                     districts,
-                    t?.translate('choose_district') ?? 'Choose district',
+                    t?.translate('choose_district') ?? 'Choose District',
                     onDistrictChanged,
                   ),
                 ),

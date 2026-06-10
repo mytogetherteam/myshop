@@ -30,12 +30,12 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
       final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (!launched && mounted) {
         final t = AppLocalizations.of(context);
-        AppDialog.showToast(context, t?.translate('could_not_open_link') ?? 'Could not open this link', isError: true);
+        AppDialog.showToast(context, t?.translate('could_not_open_link') ?? 'Could Not Open This Link', isError: true);
       }
     } catch (e) {
       if (mounted) {
         final t = AppLocalizations.of(context);
-        AppDialog.showToast(context, t?.translate('could_not_open_link') ?? 'Could not open this link', isError: true);
+        AppDialog.showToast(context, t?.translate('could_not_open_link') ?? 'Could Not Open This Link', isError: true);
       }
     }
   }
@@ -112,7 +112,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      info?.workingHours ?? (t?.translate('contact_us_anytime') ?? 'Contact us anytime'),
+                      info?.workingHours ?? (t?.translate('contact_us_anytime') ?? 'Contact Us Anytime'),
                       style: GoogleFonts.poppins(
                         fontSize: 13,
                         color: Colors.white.withValues(alpha: 0.85),
@@ -279,7 +279,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
         ),
         const SizedBox(height: 16),
         Text(
-          t?.translate('support_not_configured') ?? 'Support info not configured yet',
+          t?.translate('support_not_configured') ?? 'Support Info Not Configured Yet',
           style: GoogleFonts.poppins(
             fontSize: 15,
             fontWeight: FontWeight.w500,

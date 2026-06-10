@@ -556,18 +556,18 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               "${orders['total']} ${t?.translate('orders') ?? 'Orders'}",
               orders['trend'],
               orders['trendPositive'],
-              subtitle: t?.translate('from_previous_30_days') ?? "from previous 30 days",
+              subtitle: t?.translate('from_previous_30_days') ?? "From Previous 30 Days",
             ),
             const SizedBox(height: 24),
             ProgressBarItem(
-              label: t?.translate('last_30_days') ?? "Last 30 days",
+              label: t?.translate('last_30_days') ?? "Last 30 Days",
               value: "2,764",
               percentage: 0.9,
               barGradient: AppColors.primaryGradient,
             ),
             const SizedBox(height: 16),
             ProgressBarItem(
-              label: t?.translate('previous_30_days') ?? "Previous 30 days",
+              label: t?.translate('previous_30_days') ?? "Previous 30 Days",
               value: "2,003",
               percentage: 0.65,
               barGradient: AppColors.primaryGradient,
@@ -583,7 +583,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               "${revenue['total']} ${t?.translate('total_sales') ?? 'Total Sales'}",
               revenue['trend'],
               revenue['trendPositive'],
-              subtitle: t?.translate('from_previous_30_days') ?? "from previous 30 days",
+              subtitle: t?.translate('from_previous_30_days') ?? "From Previous 30 Days",
             ),
             const SizedBox(height: 32),
             AnalyticsLineChart(
@@ -603,10 +603,10 @@ class _AnalyticsPageState extends State<AnalyticsPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(
-              "${newCustomers['total']} ${t?.translate('new_customers') ?? 'New customers'}",
+              "${newCustomers['total']} ${t?.translate('new_customers') ?? 'New Customers'}",
               newCustomers['trend'],
               newCustomers['trendPositive'],
-              subtitle: t?.translate('from_previous_28_days') ?? "from previous 28 days",
+              subtitle: t?.translate('from_previous_28_days') ?? "From Previous 28 Days",
             ),
             const SizedBox(height: 24),
             AnalyticsDonutChart(
@@ -650,7 +650,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               t?.translate('order_status_breakdown') ?? "Order Status Breakdown",
               orderStatus['trend'],
               orderStatus['trendPositive'],
-              subtitle: t?.translate('from_previous_28_days') ?? "from previous 28 days",
+              subtitle: t?.translate('from_previous_28_days') ?? "From Previous 28 Days",
             ),
             const SizedBox(height: 24),
             AnalyticsDonutChart(
@@ -694,7 +694,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               "${interactions['total']} ${t?.translate('customer_interaction') ?? 'Interactions'}",
               interactions['trend'],
               interactions['trendPositive'],
-              subtitle: t?.translate('from_previous_30_days') ?? "from previous 30 days",
+              subtitle: t?.translate('from_previous_30_days') ?? "From Previous 30 Days",
             ),
             const SizedBox(height: 24),
             ...List.generate(interactions['items'].length, (index) {
@@ -720,18 +720,18 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               "${totalCustomers['total']} ${t?.translate('new_customers') ?? 'Total customers'}", // Wait, "total_customers" or just "Total customers". Since totalCustomers maps returning vs new, let's fallback to "Total customers".
               totalCustomers['trend'],
               totalCustomers['trendPositive'],
-              subtitle: t?.translate('from_previous_30_days') ?? "from previous 30 days",
+              subtitle: t?.translate('from_previous_30_days') ?? "From Previous 30 Days",
             ),
             const SizedBox(height: 24),
             Row(
               children: [
                 _buildSimpleLegendDot(
-                  t?.translate('returning_customers') ?? "Returning customers",
+                  t?.translate('returning_customers') ?? "Returning Customers",
                   AppColors.primary,
                   useGradient: true,
                 ),
                 const SizedBox(width: 16),
-                _buildSimpleLegendDot(t?.translate('new_customers') ?? "New customers", const Color(0xFF22C55E)),
+                _buildSimpleLegendDot(t?.translate('new_customers') ?? "New Customers", const Color(0xFF22C55E)),
               ],
             ),
             const SizedBox(height: 24),

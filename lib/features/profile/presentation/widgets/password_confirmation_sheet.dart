@@ -49,7 +49,7 @@ class _PasswordConfirmationSheetState extends State<PasswordConfirmationSheet> {
       if (!authResponse.success) {
         setState(() {
           _isLoading = false;
-          _errorMessage = t?.translate('incorrect_password') ?? 'Incorrect password';
+          _errorMessage = t?.translate('incorrect_password') ?? 'Incorrect Password';
         });
         return;
       }
@@ -57,7 +57,7 @@ class _PasswordConfirmationSheetState extends State<PasswordConfirmationSheet> {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = t?.translate('user_info_not_found') ?? 'User info not found';
+        _errorMessage = t?.translate('user_info_not_found') ?? 'User Info Not Found';
       });
       return;
     }
@@ -96,7 +96,7 @@ class _PasswordConfirmationSheetState extends State<PasswordConfirmationSheet> {
         const SizedBox(height: 32),
         Center(
           child: Text(
-            t?.translate('enter_your_password') ?? 'Enter your password',
+            t?.translate('enter_your_password') ?? 'Enter Your Password',
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w700,

@@ -208,7 +208,7 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
               GestureDetector(
                 onTap: _handleResend,
                 child: Text(
-                  t?.translate('send_again') ?? 'Send again',
+                  t?.translate('send_again') ?? 'Send Again',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,

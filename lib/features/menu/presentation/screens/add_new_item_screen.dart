@@ -403,9 +403,13 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       success = await _menuService.updateMenuItem(
         widget.item!.id,
         payload,
+        imageFile: _pickedImage != null ? File(_pickedImage!.path) : null,
       );
     } else {
-      success = await _menuService.createMenuItem(payload);
+      success = await _menuService.createMenuItem(
+        payload,
+        imageFile: _pickedImage != null ? File(_pickedImage!.path) : null,
+      );
     }
 
     if (mounted) {
@@ -669,10 +673,10 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                                     bool success = await _deleteItem();
                                     if (!context.mounted) return;
                                     if (success) {
-                                      AppDialog.showToast(context, t?.translate('successfully_deleted') ?? 'Successfully deleted');
+                                      AppDialog.showToast(context, t?.translate('successfully_deleted') ?? 'Successfully Deleted');
                                       Navigator.of(context).pop(true);
                                     } else {
-                                      AppDialog.showToast(context, t?.translate('failed_delete') ?? 'Failed to delete', isError: true);
+                                      AppDialog.showToast(context, t?.translate('failed_delete') ?? 'Failed to Delete', isError: true);
                                     }
                                   },
                                 ),
@@ -683,7 +687,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                               color: Color(0xFFEF4444),
                             ),
                             label: Text(
-                              t?.translate('delete_menu_item') ?? 'Delete menu item',
+                              t?.translate('delete_menu_item') ?? 'Delete Menu Item',
                               style: GoogleFonts.poppins(
                                 color: const Color(0xFFEF4444),
                                 fontSize: 14,
@@ -963,7 +967,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         _buildTextField(
           '${t?.translate('item_name') ?? 'Item Name'} ($_selectedItemInfoLang)',
           nameCtrl,
-          hint: t?.translate('enter_item_name') ?? 'Enter item name',
+          hint: t?.translate('enter_item_name') ?? 'Enter Item Name',
           isRequired: _selectedItemInfoLang == 'EN',
           maxLength: 100,
         ),
@@ -971,7 +975,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         _buildTextField(
           '${t?.translate('description') ?? 'Description'} ($_selectedItemInfoLang)',
           descCtrl,
-          hint: t?.translate('enter_description') ?? 'Enter description',
+          hint: t?.translate('enter_description') ?? 'Enter Description',
           isMultiline: true,
           maxLength: 500,
         ),

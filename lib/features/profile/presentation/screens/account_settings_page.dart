@@ -273,7 +273,7 @@ class _DeleteAccountFrictionSheetState extends State<_DeleteAccountFrictionSheet
           setState(() => _isLoading = false);
           AppDialog.showToast(
             context,
-            t?.translate('incorrect_password') ?? 'Incorrect password',
+            t?.translate('incorrect_password') ?? 'Incorrect Password',
             isError: true,
           );
         }
@@ -350,7 +350,7 @@ class _DeleteAccountFrictionSheetState extends State<_DeleteAccountFrictionSheet
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              t?.translate('delete_confirm_password') ?? 'To confirm, please enter your password:',
+              t?.translate('delete_confirm_password') ?? 'To Confirm, Please Enter Your Password:',
               style: GoogleFonts.poppins(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -368,7 +368,7 @@ class _DeleteAccountFrictionSheetState extends State<_DeleteAccountFrictionSheet
               fontWeight: FontWeight.w500,
             ),
             decoration: InputDecoration(
-              hintText: t?.translate('enter_your_password') ?? 'Enter your password',
+              hintText: t?.translate('enter_your_password') ?? 'Enter Your Password',
               hintStyle: GoogleFonts.poppins(
                 fontSize: 14,
                 color: const Color(0xFFCBD5E1),

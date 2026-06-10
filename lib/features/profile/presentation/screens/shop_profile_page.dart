@@ -590,7 +590,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                 _infoStat(
                   PhosphorIconsRegular.tag,
                   _shopProfile?.displayBaseDeliveryFee ?? '฿ ${_shopProfile?.baseDeliveryFee ?? 0}',
-                  t?.translate('delivery_fee_label') ?? 'Delivery fee',
+                  t?.translate('delivery_fee_label') ?? 'Delivery Fee',
                 ),
                 _infoStatDivider(),
                 _infoStat(
@@ -700,7 +700,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _shopProfile?.phone ?? (t?.translate('no_phone_added') ?? 'No phone added'),
+                        _shopProfile?.phone ?? (t?.translate('no_phone_added') ?? 'No Phone Added'),
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -1221,7 +1221,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
   // -------------------------------------------------------------------------
   Widget _buildInfoTab() {
     final address = _shopProfile?.addressEn ?? 'No address added';
-    final phone = _shopProfile?.phone ?? 'No phone added';
+    final phone = _shopProfile?.phone ?? 'No Phone Added';
     final email = _shopProfile?.email ?? 'No email added';
     final lat = _shopProfile?.latitude?.toStringAsFixed(4) ?? '0.0000';
     final lng = _shopProfile?.longitude?.toStringAsFixed(4) ?? '0.0000';
@@ -1274,7 +1274,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
         _sectionLabel(t?.translate('operating_hours') ?? 'Operating Hours'),
         _infoCard([
           if (_shopProfile?.operatingHours.isEmpty ?? true)
-            _infoRow(PhosphorIconsRegular.clock, t?.translate('hours') ?? 'Hours', t?.translate('not_set') ?? 'Not set'),
+            _infoRow(PhosphorIconsRegular.clock, t?.translate('hours') ?? 'Hours', t?.translate('not_set') ?? 'Not Set'),
           for (final opHour in _shopProfile?.operatingHours ?? [])
             _infoRow(
               opHour.isClosed

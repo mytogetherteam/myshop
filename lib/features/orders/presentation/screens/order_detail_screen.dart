@@ -985,7 +985,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
               const SizedBox(height: 24),
               Text(
-                t?.translate('cancel_reason') ?? 'Reason for cancellation',
+                t?.translate('cancel_reason') ?? 'Reason for Cancellation',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,

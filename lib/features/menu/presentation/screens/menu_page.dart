@@ -161,7 +161,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
       final t = AppLocalizations.of(context);
       AppDialog.showToast(
         context,
-        t?.translate('failed_update_availability') ?? 'Failed to update availability',
+        t?.translate('failed_update_availability') ?? 'Failed to Update Availability',
         isError: true,
       );
       // Revert if failed
@@ -182,7 +182,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
       final t = AppLocalizations.of(context);
       AppDialog.showToast(
         context,
-        t?.translate('failed_update_publish') ?? 'Failed to update publish status',
+        t?.translate('failed_update_publish') ?? 'Failed to Update Publish Status',
         isError: true,
       );
       // Revert if failed
@@ -229,7 +229,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
                           child: Padding(
                             padding: const EdgeInsets.all(40.0),
                             child: Text(
-                              AppLocalizations.of(context)?.translate('no_items_found') ?? 'No items found',
+                              AppLocalizations.of(context)?.translate('no_items_found') ?? 'No Items Found',
                               style: GoogleFonts.poppins(
                                 color: const Color(0xFF94A3B8),
                               ),
