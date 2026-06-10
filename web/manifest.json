@@ -1,11 +1,12 @@
 {
-    "name": "my_shop",
-    "short_name": "my_shop",
-    "start_url": ".",
+    "name": "My Shop",
+    "short_name": "MyShop",
+    "start_url": "/",
+    "scope": "/",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#ffffff",
-    "description": "A new Flutter project.",
+    "description": "My Together Shop",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

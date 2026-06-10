@@ -1,10 +1,11 @@
-import 'dart:io';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
+import 'package:my_shop/core/network/multipart_file_helper.dart';
 import 'package:my_shop/core/utils/app_logger.dart';
 import '../models/menu_item_model.dart';
 import '../models/menu_category_model.dart';
@@ -342,7 +343,7 @@ class MenuService {
   }
 
 
-  Future<bool> createMenuItem(Map<String, dynamic> payload, {File? imageFile}) async {
+  Future<bool> createMenuItem(Map<String, dynamic> payload, {XFile? imageFile}) async {
     try {
       AppLogger.network('POST $_menuItemsPath, Data: $payload');
 
@@ -350,7 +351,7 @@ class MenuService {
         'data': jsonEncode(payload),
       };
       if (imageFile != null) {
-        formDataMap['image'] = await MultipartFile.fromFile(imageFile.path);
+        formDataMap['image'] = await multipartFileFromXFile(imageFile);
       }
 
       final response = await ApiClient().dio.post(
@@ -372,7 +373,7 @@ class MenuService {
     return false;
   }
 
-  Future<bool> updateMenuItem(int itemId, Map<String, dynamic> payload, {File? imageFile}) async {
+  Future<bool> updateMenuItem(int itemId, Map<String, dynamic> payload, {XFile? imageFile}) async {
     try {
       final url = '$_menuItemsPath/$itemId';
       AppLogger.network('PUT $url, Data: $payload');
@@ -381,7 +382,7 @@ class MenuService {
         'data': jsonEncode(payload),
       };
       if (imageFile != null) {
-        formDataMap['image'] = await MultipartFile.fromFile(imageFile.path);
+        formDataMap['image'] = await multipartFileFromXFile(imageFile);
       }
 
       final response = await ApiClient().dio.put(

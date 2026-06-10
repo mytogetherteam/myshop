@@ -1,5 +1,3 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -20,6 +18,7 @@ import '../../data/services/menu_service.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/core/data/models/master_data_model.dart';
 import 'package:my_shop/core/presentation/widgets/confirmation_sheet.dart';
+import 'package:my_shop/core/presentation/widgets/xfile_image.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 
@@ -403,12 +402,12 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       success = await _menuService.updateMenuItem(
         widget.item!.id,
         payload,
-        imageFile: _pickedImage != null ? File(_pickedImage!.path) : null,
+        imageFile: _pickedImage,
       );
     } else {
       success = await _menuService.createMenuItem(
         payload,
-        imageFile: _pickedImage != null ? File(_pickedImage!.path) : null,
+        imageFile: _pickedImage,
       );
     }
 
@@ -1904,9 +1903,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
           child: _pickedImage != null
-              ? (kIsWeb
-                  ? Image.network(_pickedImage!.path, fit: BoxFit.cover)
-                  : Image.file(File(_pickedImage!.path), fit: BoxFit.cover))
+              ? xFileImage(_pickedImage!, fit: BoxFit.cover)
               : (existingUrl != null && existingUrl.isNotEmpty
                   ? CachedNetworkImage(
                       imageUrl: existingUrl,

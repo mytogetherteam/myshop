@@ -1,7 +1,6 @@
-import 'dart:io';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:my_shop/core/presentation/widgets/xfile_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:my_shop/core/data/services/image_upload_service.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -194,8 +193,8 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
     Widget image;
 
     if (_localFile != null) {
-      image = Image.file(
-        File(_localFile!.path),
+      image = xFileImage(
+        _localFile!,
         fit: BoxFit.cover,
         width: widget.width,
         height: widget.height,
