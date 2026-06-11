@@ -35,7 +35,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   StreamSubscription<Map<String, dynamic>>? _chatSub;
 
-  int get _conversationId => widget.conversation.id;
+  /// Mutable: a conversation opened from an order may not exist on the server
+  /// yet (id 0). It's assigned once the first message creates it.
+  late int _conversationId = widget.conversation.id;
   int get _orderId => widget.conversation.orderId;
 
   @override
@@ -55,6 +57,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   Future<void> _loadMessages() async {
+    // Fresh conversation started from an order — nothing on the server yet.
+    if (_conversationId <= 0) {
+      setState(() {
+        _isLoading = false;
+        _hasError = false;
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _hasError = false;
@@ -193,6 +204,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     setState(() {
       _isSending = false;
       if (sent != null) {
+        // First message on a brand-new conversation: adopt the server id so
+        // realtime events and reads target the right conversation.
+        if (_conversationId <= 0 && sent.conversationId != null) {
+          _conversationId = sent.conversationId!;
+        }
         _messages.add(sent);
       }
     });
