@@ -169,7 +169,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                               ),
                               style: GoogleFonts.poppins(
                                 fontSize: 13,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ] else if (widget.item.price > 0)
@@ -179,7 +179,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                               ),
                               style: GoogleFonts.poppins(
                                 fontSize: 13,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w700,
                               ),
                             )
                           else if (widget.item.originalPrice != null &&
@@ -190,7 +190,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                               ),
                               style: GoogleFonts.poppins(
                                 fontSize: 13,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                         ],

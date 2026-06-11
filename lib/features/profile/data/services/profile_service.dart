@@ -101,27 +101,11 @@ class ProfileService {
     return false;
   }
 
+  /// Toggling delivery now goes through the shared shop-profile endpoint
+  /// (PUT /api/shop/shop-profile) so the toggle and the Edit Shop Profile
+  /// page write to the same source of truth.
   Future<bool> toggleDeliveryStatus(bool enabled) async {
-    try {
-      const url = '/api/profile/delivery-status';
-      debugPrint('PUT REQUEST: $url, Body: {enabled: $enabled}');
-      final response = await ApiClient().dio.put(
-        url,
-        data: {'enabled': enabled},
-      );
-
-      if (response.statusCode != null &&
-          response.statusCode! >= 200 &&
-          response.statusCode! < 300) {
-        final Map<String, dynamic> data = response.data;
-        return data['success'] == true;
-      }
-    } on DioException catch (e) {
-      ApiHelper.handleError(e, context: 'ProfileService.toggleDeliveryStatus');
-    } catch (e) {
-      ApiHelper.handleError(e, context: 'ProfileService.toggleDeliveryStatus');
-    }
-    return false;
+    return updateShopProfile({'deliveryEnabled': enabled});
   }
 
   Future<Map<String, dynamic>> updateOperatingHours(
