@@ -97,7 +97,7 @@ class OrdersScreenState extends State<OrdersScreen>
     int index = 0;
     final upperStatus = status.toUpperCase();
 
-    if (['PENDING', 'REVISED'].contains(upperStatus)) {
+    if (upperStatus == 'PENDING') {
       index = 0;
     } else if ([
       'PAYMENT_SLIP_REQUESTED',
@@ -105,7 +105,7 @@ class OrdersScreenState extends State<OrdersScreen>
       'PAYMENT_VERIFIED',
     ].contains(upperStatus)) {
       index = 1;
-    } else if (upperStatus == 'COOKING') {
+    } else if (['COOKING', 'REVISED'].contains(upperStatus)) {
       index = 2;
     } else if (upperStatus == 'ON_THE_WAY') {
       index = 3;

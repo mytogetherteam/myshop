@@ -131,8 +131,12 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       text: item?.descriptionTh ?? '',
     );
 
+    final hasDiscount =
+        (item?.discountAmount ?? 0) > 0 || (item?.discountPercentage ?? 0) > 0;
     _priceController = TextEditingController(
-      text: (item?.price == null || item?.price == 0.0) ? '' : item?.price.toString(),
+      text: (!hasDiscount || item?.price == null || item?.price == 0.0)
+          ? ''
+          : item?.price.toString(),
     );
     _originalPriceController = TextEditingController(
       text: (item?.originalPrice == null || item?.originalPrice == 0.0) ? '' : item?.originalPrice.toString(),
@@ -355,6 +359,14 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
 
     setState(() => _isSaving = true);
 
+    // "Discount Price" is the final selling price. The backend has no price
+    // column; it derives the selling price from originalPrice - discountAmount.
+    // Convert the entered selling price into a fixed discount amount.
+    final computedDiscountAmount =
+        (priceVal > 0 && priceVal < originalPriceVal)
+        ? originalPriceVal - priceVal
+        : 0.0;
+
     final payload = {
       'nameEn': _nameController.text,
       'nameMm': _nameMmController.text,
@@ -367,11 +379,8 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       'originalPrice': double.tryParse(
         _originalPriceController.text.replaceAll(',', ''),
       ),
-      'discountAmount':
-          double.tryParse(_discountAmountController.text.replaceAll(',', '')) ??
-          0.0,
-      'discountPercentage':
-          double.tryParse(_discountPercentController.text) ?? 0.0,
+      'discountAmount': computedDiscountAmount,
+      'discountPercentage': 0.0,
       'currency': _currency,
       'stockQuantity': int.tryParse(_stockQuantityController.text) ?? 0,
       'displayOrder': int.tryParse(_displayOrderController.text) ?? 0,

@@ -49,6 +49,26 @@ class ChatService {
     }
   }
 
+  /// Fetches the existing conversation for an order, if one has been started.
+  ///
+  /// Returns `null` when there is no conversation yet (no messages exchanged)
+  /// or on a network/server error.
+  Future<ChatConversation?> getConversationByOrder(int orderId) async {
+    try {
+      final response = await _dio.get('$_basePath/orders/$orderId');
+      final body = _body(response);
+      if (body != null && body['success'] == true && body['data'] is Map) {
+        return ChatConversation.fromJson(
+          (body['data'] as Map).cast<String, dynamic>(),
+        );
+      }
+      return null;
+    } catch (e) {
+      ApiHelper.handleError(e, context: 'ChatService.getConversationByOrder');
+      return null;
+    }
+  }
+
   /// Messages in a conversation, returned newest-first by the backend.
   ///
   /// Returns `null` on a network/server error.

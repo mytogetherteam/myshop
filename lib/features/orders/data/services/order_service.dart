@@ -10,25 +10,29 @@ List<OrderModel> _parseOrders(List<dynamic> jsonList) {
       .toList();
 }
 
-/// Maps UI tab keys to backend `tab` query values (lowercase).
-String _tabQueryParam(String tab) {
-  switch (tab.toUpperCase()) {
-    case 'NEW':
-      return 'new';
-    case 'PAYMENT':
-      return 'payment';
-    case 'PREPARING':
-      return 'preparing';
-    case 'DELIVERING':
-      return 'delivering';
-    case 'DELIVERED':
-      return 'delivered';
-    case 'CANCELLED':
-    case 'CANCELED':
-      return 'canceled';
-    default:
-      return tab.toLowerCase();
-  }
+/// Maps each UI tab to the backend [OrderStatus] values it should contain.
+///
+/// The backend `GET /api/shop/orders` filters by `?status=` (a comma-separated
+/// `OrderStatus[]`); it has no `tab` param. This mapping is the single source of
+/// truth and must stay in sync with `_OrderListTabViewState._onOrderUpdated` so
+/// a live socket update lands in the same tab the initial fetch placed it in.
+const Map<String, List<String>> kOrderTabStatuses = {
+  'NEW': ['PENDING'],
+  'PAYMENT': [
+    'PAYMENT_SLIP_REQUESTED',
+    'AWAITING_APPROVAL',
+    'PAYMENT_VERIFIED',
+  ],
+  'PREPARING': ['COOKING', 'REVISED'],
+  'DELIVERING': ['ON_THE_WAY'],
+  'DELIVERED': ['DELIVERED'],
+  'CANCELED': ['CANCELED'],
+};
+
+/// Resolves the backend `status` filter list for a UI tab key.
+List<String> _statusesForTab(String tab) {
+  final key = tab.toUpperCase() == 'CANCELLED' ? 'CANCELED' : tab.toUpperCase();
+  return kOrderTabStatuses[key] ?? const [];
 }
 
 class OrderService {
@@ -44,7 +48,12 @@ class OrderService {
         'page': page,
         'size': size,
       };
-      if (tab != null) queryParams['tab'] = _tabQueryParam(tab);
+      if (tab != null) {
+        final statuses = _statusesForTab(tab);
+        if (statuses.isNotEmpty) {
+          queryParams['status'] = statuses.join(',');
+        }
+      }
 
       final response = await ApiClient().dio.get(
         _ordersPath,

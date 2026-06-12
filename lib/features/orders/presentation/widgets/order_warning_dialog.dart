@@ -70,7 +70,7 @@ class OrderWarningDialog extends StatelessWidget {
                   'URGENT ALERT',
                   style: GoogleFonts.poppins(
                     fontSize: 22,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w700,
                     color: Colors.white,
                     letterSpacing: 1.5,
                   ),

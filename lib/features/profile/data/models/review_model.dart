@@ -29,7 +29,9 @@ class ReviewModel {
     return ReviewModel(
       id: json['id'].toString(),
       userName: json['user']?['name'] ?? json['userName'] ?? 'Anonymous',
-      userProfileUrl: json['userProfileUrl'] as String?,
+      userProfileUrl: (json['user']?['profileUrl'] ??
+          json['user']?['profileImage'] ??
+          json['userProfileUrl']) as String?,
       rating: (json['rating'] as num).toDouble(),
       comment: json['comment'] as String? ?? '',
       createdAt: DateTime.parse(json['createdAt'] as String),

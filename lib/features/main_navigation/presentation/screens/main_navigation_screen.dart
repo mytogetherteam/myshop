@@ -54,9 +54,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ChatPage(key: _chatKey),
       ProfilePage(key: _profileKey),
     ];
+    WebSocketService().connect();
     _setupWebSocketListener();
-
-
   }
 
   @override
@@ -197,43 +196,49 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
 
   Widget _buildGradientItem(IconData icon, String label) {
-    return ShaderMask(
-      shaderCallback: (Rect bounds) {
-        return AppColors.primaryGradient.createShader(bounds);
-      },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          PhosphorIcon(icon, size: 28, color: Colors.white),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: ShaderMask(
+        shaderCallback: (Rect bounds) {
+          return AppColors.primaryGradient.createShader(bounds);
+        },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            PhosphorIcon(icon, size: 28, color: Colors.white),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildInactiveItem(IconData icon, String label) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        PhosphorIcon(icon, size: 28, color: const Color(0xFF94A3B8)),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: const Color(0xFF94A3B8),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          PhosphorIcon(icon, size: 28, color: const Color(0xFF94A3B8)),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF94A3B8),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

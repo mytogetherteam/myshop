@@ -198,19 +198,34 @@ class _ReviewCardState extends State<ReviewCard>
             color: AppColors.primary.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
-          child: widget.review.userProfileUrl != null
+          child: (widget.review.userProfileUrl != null &&
+                  widget.review.userProfileUrl!.isNotEmpty)
               ? ClipRRect(
                   borderRadius: BorderRadius.circular(24),
-                  child: Image.network(widget.review.userProfileUrl!,
-                      fit: BoxFit.cover),
-                )
-              : Center(
-                  child: PhosphorIcon(
-                    PhosphorIconsRegular.user,
-                    color: AppColors.primary,
-                    size: 24,
+                  child: Image.network(
+                    widget.review.userProfileUrl!,
+                    fit: BoxFit.cover,
+                    width: 48,
+                    height: 48,
+                    loadingBuilder: (context, child, progress) {
+                      if (progress == null) return child;
+                      return Center(
+                        child: SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.primary),
+                          ),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) =>
+                        _buildAvatarFallback(),
                   ),
-                ),
+                )
+              : _buildAvatarFallback(),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -229,6 +244,16 @@ class _ReviewCardState extends State<ReviewCard>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildAvatarFallback() {
+    return Center(
+      child: PhosphorIcon(
+        PhosphorIconsRegular.user,
+        color: AppColors.primary,
+        size: 24,
+      ),
     );
   }
 

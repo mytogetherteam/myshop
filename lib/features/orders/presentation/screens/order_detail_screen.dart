@@ -26,6 +26,10 @@ import 'package:my_shop/features/profile/presentation/screens/rider_management_p
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:my_shop/core/presentation/widgets/image_picker_widget.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:my_shop/features/chat/data/models/chat_model.dart';
+import 'package:my_shop/features/chat/data/services/chat_service.dart';
+import 'package:my_shop/features/chat/presentation/screens/chat_detail_screen.dart';
 
 
 class OrderDetailScreen extends StatefulWidget {
@@ -1545,9 +1549,10 @@ Widget _buildAnimatedProgress() {
             ],
           ),
         ),
-        _buildCircularIcon(PhosphorIconsFill.phone),
+        _buildCircularIcon(PhosphorIconsFill.phone, onTap: _callCustomer),
         const SizedBox(width: 12),
-        _buildCircularIcon(PhosphorIconsFill.chatCircleDots),
+        _buildCircularIcon(PhosphorIconsFill.chatCircleDots,
+            onTap: _openCustomerChat),
         const SizedBox(width: 12),
         GestureDetector(
           onTap: () {
@@ -1570,9 +1575,59 @@ Widget _buildAnimatedProgress() {
     );
   }
 
-  Widget _buildCircularIcon(IconData icon) {
+  Future<void> _callCustomer() async {
+    final phone = _currentOrder.customerPhone.trim();
+    if (phone.isEmpty || phone == '-') {
+      AppDialog.showToast(context, 'No phone number available', isError: true);
+      return;
+    }
+    final uri = Uri(scheme: 'tel', path: phone);
+    try {
+      final launched =
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && mounted) {
+        AppDialog.showToast(context, 'Could not open dialer', isError: true);
+      }
+    } catch (_) {
+      if (mounted) {
+        AppDialog.showToast(context, 'Could not open dialer', isError: true);
+      }
+    }
+  }
+
+  Future<void> _openCustomerChat() async {
+    final orderId = int.tryParse(_currentOrder.id) ?? 0;
+    if (orderId <= 0) {
+      AppDialog.showToast(context, 'Chat unavailable for this order',
+          isError: true);
+      return;
+    }
+
+    var conversation = await ChatService.instance.getConversationByOrder(orderId);
+    if (!mounted) return;
+
+    // No conversation yet — open a fresh one; the first message creates it.
+    conversation ??= ChatConversation(
+      id: 0,
+      orderId: orderId,
+      name: _currentOrder.customerName,
+      orderNo: _currentOrder.lastOrderNo,
+      orderStatus: _currentOrder.status,
+      lastMessage: '',
+      timestamp: DateTime.now(),
+    );
+
+    if (!mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ChatDetailScreen(conversation: conversation!),
+      ),
+    );
+  }
+
+  Widget _buildCircularIcon(IconData icon, {VoidCallback? onTap}) {
     return GestureDetector(
-      onTap: _showDemoDialog,
+      onTap: onTap ?? _showDemoDialog,
       child: Container(
         width: 44,
         height: 44,
