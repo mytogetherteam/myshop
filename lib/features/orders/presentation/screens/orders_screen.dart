@@ -180,6 +180,7 @@ class OrdersScreenState extends State<OrdersScreen>
               controller: _tabController,
               children: [
                 OrderListTabView(
+                  key: const ValueKey('NEW'),
                   tabStatus: 'NEW',
                   orderService: _orderService,
                   shopId: _selectedShopId,
@@ -189,6 +190,7 @@ class OrdersScreenState extends State<OrdersScreen>
                   loadImmediately: true,
                 ),
                 OrderListTabView(
+                  key: const ValueKey('PAYMENT'),
                   tabStatus: 'PAYMENT',
                   orderService: _orderService,
                   shopId: _selectedShopId,
@@ -198,6 +200,7 @@ class OrdersScreenState extends State<OrdersScreen>
                   loadImmediately: true,
                 ),
                 OrderListTabView(
+                  key: const ValueKey('PREPARING'),
                   tabStatus: 'PREPARING',
                   orderService: _orderService,
                   shopId: _selectedShopId,
@@ -208,6 +211,7 @@ class OrdersScreenState extends State<OrdersScreen>
                   loadImmediately: true,
                 ),
                 OrderListTabView(
+                  key: const ValueKey('DELIVERING'),
                   tabStatus: 'DELIVERING',
                   orderService: _orderService,
                   shopId: _selectedShopId,
@@ -218,6 +222,7 @@ class OrdersScreenState extends State<OrdersScreen>
                   loadImmediately: true,
                 ),
                 OrderListTabView(
+                  key: const ValueKey('DELIVERED'),
                   tabStatus: 'DELIVERED',
                   orderService: _orderService,
                   shopId: _selectedShopId,
@@ -228,6 +233,7 @@ class OrdersScreenState extends State<OrdersScreen>
                   loadImmediately: true,
                 ),
                 OrderListTabView(
+                  key: const ValueKey('CANCELED'),
                   tabStatus: 'CANCELED',
                   orderService: _orderService,
                   shopId: _selectedShopId,
@@ -474,10 +480,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
   Widget build(BuildContext context) {
     super.build(context);
 
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
-      child: _buildContent(),
-    );
+    return _buildContent();
   }
 
   Widget _buildContent() {

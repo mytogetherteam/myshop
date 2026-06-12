@@ -49,9 +49,14 @@ class WebSocketService {
 
     if (_stompClient != null) {
       if (force) {
+        // Pause reconnect so deactivate() doesn't trigger another reconnect loop
+        _shouldReconnect = false;
+        _reconnectTimer?.cancel();
         _stompClient?.deactivate();
         _stompClient = null;
         _subscribedShopId = null;
+        // Re-enable reconnect for the new client
+        _shouldReconnect = true;
       } else {
         _stompClient?.activate();
         return;
@@ -59,6 +64,7 @@ class WebSocketService {
     }
 
     _isConnecting = true;
+    _reconnectAttempts = 0;
     _log('⏳ [WS] Connecting to WebSocket...');
 
     final token = await AuthService.instance.getAccessToken();
@@ -84,7 +90,7 @@ class WebSocketService {
         onDisconnect: (frame) {
           connectionStatus.value = false;
           _log('🔌 [WS] Disconnected');
-          _scheduleReconnect();
+          if (_shouldReconnect) _scheduleReconnect();
         },
         heartbeatOutgoing: const Duration(milliseconds: 10000),
         heartbeatIncoming: const Duration(milliseconds: 10000),
@@ -96,6 +102,7 @@ class WebSocketService {
 
   void _scheduleReconnect() {
     if (!_shouldReconnect) return;
+    if (_isConnecting) return; // Already trying to connect
     if (_reconnectAttempts >= _maxReconnectAttempts) {
       _log('🚫 [WS] Max reconnection attempts reached');
       return;
@@ -110,7 +117,9 @@ class WebSocketService {
 
     _reconnectTimer?.cancel();
     _reconnectTimer = Timer(delay, () {
-      connect(force: true);
+      if (_shouldReconnect && !_isConnecting) {
+        connect(force: true);
+      }
     });
   }
 
