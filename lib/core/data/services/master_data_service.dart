@@ -39,10 +39,11 @@ class MasterDataService {
     return null;
   }
 
-  Future<List<MasterDataModel>?> getShopSubcategories() async {
+  Future<List<MasterDataModel>?> getShopSubcategories({int? categoryId}) async {
     try {
       final response = await ApiClient().dio.get(
         '/api/master/shop-subcategories',
+        queryParameters: categoryId != null ? {'categoryId': categoryId} : null,
       );
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&

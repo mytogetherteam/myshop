@@ -114,7 +114,6 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   Future<void> _fetchMasterData() async {
     final futures = await Future.wait([
       _masterDataService.getShopCategories(),
-      _masterDataService.getShopSubcategories(),
       _masterDataService.getCities(),
       _masterDataService.getCuisineTypes(),
     ]);
@@ -122,9 +121,8 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     if (mounted) {
       setState(() {
         _categories = futures[0] ?? [];
-        _subcategories = futures[1] ?? [];
-        _cities = futures[2] ?? [];
-        _cuisineTypes = futures[3] ?? [];
+        _cities = futures[1] ?? [];
+        _cuisineTypes = futures[2] ?? [];
         _setSelectedMasterData();
       });
     }
@@ -143,17 +141,8 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
           (c) => c.nameEn == _currentProfile!.categoryEn,
         );
       }
-    } catch (_) {}
-
-    try {
-      if (_currentProfile!.subCategoryId != null) {
-        _selectedSubcategory = _subcategories.firstWhere(
-          (c) => c.id == _currentProfile!.subCategoryId,
-        );
-      } else if (_currentProfile!.subCategoryEn != null) {
-        _selectedSubcategory = _subcategories.firstWhere(
-          (c) => c.nameEn == _currentProfile!.subCategoryEn,
-        );
+      if (_selectedCategory != null) {
+        _fetchSubcategories(_selectedCategory!.id);
       }
     } catch (_) {}
 
@@ -183,6 +172,35 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             .toList();
       }
     } catch (_) {}
+  }
+
+  Future<void> _fetchSubcategories(int categoryId) async {
+    final fetched = await _masterDataService.getShopSubcategories(
+      categoryId: categoryId,
+    );
+    if (mounted) {
+      setState(() {
+        _subcategories = fetched ?? [];
+        if (_currentProfile?.subCategoryId != null) {
+          try {
+            _selectedSubcategory = _subcategories.firstWhere(
+              (s) => s.id == _currentProfile!.subCategoryId,
+            );
+          } catch (_) {
+            _selectedSubcategory = null;
+          }
+        } else if (_currentProfile?.subCategoryEn != null &&
+            _currentProfile!.subCategoryEn!.isNotEmpty) {
+          try {
+            _selectedSubcategory = _subcategories.firstWhere(
+              (s) => s.nameEn == _currentProfile!.subCategoryEn,
+            );
+          } catch (_) {
+            _selectedSubcategory = null;
+          }
+        }
+      });
+    }
   }
 
    Future<void> _fetchDistricts(int cityId) async {
@@ -796,6 +814,11 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 t?.translate('choose_category') ?? 'Choose Category',
                 (v) => setState(() {
                   _selectedCategory = v;
+                  _selectedSubcategory = null;
+                  _subcategories = [];
+                  if (v != null) {
+                    _fetchSubcategories(v.id);
+                  }
                   _markChanged();
                 }),
               ),
