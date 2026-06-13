@@ -81,8 +81,11 @@ class RiderService {
   }
 
   Future<List<Rider>> getActiveRiders() async {
-    final result = await getRiders(page: 1, size: 100, isActive: true);
-    return result.riders;
+    // Fetch with the same unfiltered call Rider Management uses (which works),
+    // then keep only active riders client-side. This avoids depending on the
+    // server `isActive` query filter for the order driver picker.
+    final result = await getRiders(page: 1, size: 100);
+    return result.riders.where((r) => r.isActive).toList();
   }
 
   Future<Rider?> createRider(Map<String, dynamic> riderData, {XFile? image}) async {
