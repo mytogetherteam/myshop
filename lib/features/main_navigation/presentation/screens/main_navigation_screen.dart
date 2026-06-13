@@ -13,6 +13,7 @@ import 'package:my_shop/features/orders/presentation/widgets/new_order_dialog.da
 import 'package:my_shop/features/orders/presentation/widgets/order_warning_dialog.dart';
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:my_shop/core/network/websocket_service.dart';
+import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
 import 'package:my_shop/features/notifications/presentation/widgets/notification_badge_icon.dart';
 import 'package:flutter/services.dart';
 import 'package:my_shop/core/presentation/widgets/app_bar_title_with_logo.dart';
@@ -56,6 +57,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     ];
     WebSocketService().connect();
     _setupWebSocketListener();
+    ChatUnreadController.instance.start();
   }
 
   @override
@@ -244,6 +246,47 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
 
 
+  /// Overlays the live unread-chat count on top of the Chat tab icon.
+  Widget _withChatBadge(Widget child) {
+    return ValueListenableBuilder<int>(
+      valueListenable: ChatUnreadController.instance.unread,
+      builder: (context, count, _) {
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            child,
+            if (count > 0)
+              Positioned(
+                right: -2,
+                top: 4,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFED3973),
+                    shape: BoxShape.circle,
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: Text(
+                    count > 99 ? '99+' : '$count',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      height: 1.2,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
@@ -326,8 +369,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             label: t?.translate('report') ?? 'Report',
           ),
           BottomNavigationBarItem(
-            icon: _buildInactiveItem(PhosphorIconsRegular.chatCircle, t?.translate('chat') ?? 'Chat'),
-            activeIcon: _buildGradientItem(PhosphorIconsFill.chatCircle, t?.translate('chat') ?? 'Chat'),
+            icon: _withChatBadge(_buildInactiveItem(PhosphorIconsRegular.chatCircle, t?.translate('chat') ?? 'Chat')),
+            activeIcon: _withChatBadge(_buildGradientItem(PhosphorIconsFill.chatCircle, t?.translate('chat') ?? 'Chat')),
             label: t?.translate('chat') ?? 'Chat',
           ),
           BottomNavigationBarItem(

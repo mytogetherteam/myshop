@@ -25,6 +25,25 @@ class ChatService {
     return (response.data as Map).cast<String, dynamic>();
   }
 
+  /// Total unread chat messages across all of this shop's conversations.
+  ///
+  /// Returns `null` on a network/server error so callers can keep the last
+  /// known value instead of resetting the badge to zero.
+  Future<int?> getUnreadCount() async {
+    try {
+      final response = await _dio.get('$_basePath/unread-count');
+      final body = _body(response);
+      if (body != null && body['success'] == true && body['data'] is Map) {
+        final data = (body['data'] as Map).cast<String, dynamic>();
+        return (data['count'] as num?)?.toInt() ?? 0;
+      }
+      return null;
+    } catch (e) {
+      ApiHelper.handleError(e, context: 'ChatService.getUnreadCount');
+      return null;
+    }
+  }
+
   /// Inbox: conversations for the current shop, newest activity first.
   ///
   /// Returns `null` on a network/server error so callers can distinguish a

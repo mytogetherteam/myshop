@@ -223,8 +223,12 @@ class OrderCard extends StatelessWidget {
                 reverseTransitionDuration: Duration.zero,
               ),
             );
-            if (result != null && result is String && context.mounted) {
-              context.findAncestorStateOfType<OrdersScreenState>()?.switchToStatus(result);
+            if (context.mounted) {
+              final state = context.findAncestorStateOfType<OrdersScreenState>();
+              state?.refreshAll();
+              if (result != null && result is String) {
+                state?.switchToStatus(result);
+              }
             }
           },
           style: ElevatedButton.styleFrom(
@@ -325,8 +329,12 @@ class OrderCard extends StatelessWidget {
                   reverseTransitionDuration: Duration.zero,
                 ),
               );
-              if (result != null && result is String && context.mounted) {
-                context.findAncestorStateOfType<OrdersScreenState>()?.switchToStatus(result);
+              if (context.mounted) {
+                final state = context.findAncestorStateOfType<OrdersScreenState>();
+                state?.refreshAll();
+                if (result != null && result is String) {
+                  state?.switchToStatus(result);
+                }
               }
             } : null,
             height: 54,

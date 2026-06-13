@@ -29,7 +29,7 @@ import 'package:my_shop/core/presentation/widgets/image_picker_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:my_shop/features/chat/data/models/chat_model.dart';
 import 'package:my_shop/features/chat/data/services/chat_service.dart';
-import 'package:my_shop/features/chat/presentation/screens/chat_detail_screen.dart';
+import 'package:my_shop/features/chat/presentation/chat_navigation.dart';
 
 
 class OrderDetailScreen extends StatefulWidget {
@@ -76,6 +76,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _initControllers();
     _addFormListeners();
     _loadShopAndUser();
+    // Eagerly load the saved drivers so the picker is always populated,
+    // regardless of whether the order payload carried any.
+    _loadDrivers();
   }
 
   Future<void> _loadShopAndUser() async {
@@ -90,7 +93,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final riders = await RiderService().getActiveRiders();
     if (mounted) {
       setState(() {
-        _availableDrivers = riders;
+        // Merge so any driver already known from the order (e.g. the assigned
+        // one) is preserved even if it isn't in the active list.
+        final byId = <int, Rider>{for (final r in _availableDrivers) r.id: r};
+        for (final r in riders) {
+          byId[r.id] = r;
+        }
+        _availableDrivers = byId.values.toList();
         _isLoadingRiders = false;
       });
     }
@@ -359,7 +368,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Future<void> _openDriverPicker() async {
-    if (_availableDrivers.isEmpty && !_isLoadingRiders) {
+    // Always ensure the list is loaded before opening so the sheet never shows
+    // an empty/blank state due to a skipped or in-flight load.
+    if (_availableDrivers.isEmpty) {
       await _loadDrivers();
     }
     if (!mounted) return;
@@ -1219,7 +1230,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
                     // Confirmation Form (Full Width - it has its own internal padding)
                     if (_currentOrder.status == 'PENDING' ||
-                        (_currentOrder.status == 'COOKING' && _currentOrder.deliveryType == 'NORMAL')) ...[
+                        _currentOrder.status == 'COOKING') ...[
                       _buildConfirmationForm(),
                       const SizedBox(height: 8),
                     ],
@@ -1607,7 +1618,7 @@ Widget _buildAnimatedProgress() {
     if (!mounted) return;
 
     // No conversation yet — open a fresh one; the first message creates it.
-    conversation ??= ChatConversation(
+    final chatConversation = conversation ?? ChatConversation(
       id: 0,
       orderId: orderId,
       name: _currentOrder.customerName,
@@ -1618,11 +1629,7 @@ Widget _buildAnimatedProgress() {
     );
 
     if (!mounted) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ChatDetailScreen(conversation: conversation!),
-      ),
-    );
+    await ChatNavigation.open(context, chatConversation);
   }
 
   Widget _buildCircularIcon(IconData icon, {VoidCallback? onTap}) {

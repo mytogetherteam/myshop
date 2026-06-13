@@ -8,7 +8,8 @@ import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/features/chat/data/models/chat_model.dart';
 import 'package:my_shop/features/chat/data/services/chat_service.dart';
-import 'package:my_shop/features/chat/presentation/screens/chat_detail_screen.dart';
+import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
+import 'package:my_shop/features/chat/presentation/chat_navigation.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -158,6 +159,8 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
       _conversations[index] = _conversations[index].copyWith(unreadCount: 0);
       _applyFilter();
     });
+    // The detail screen marked the thread read on the backend; sync the badge.
+    ChatUnreadController.instance.refresh();
   }
 
   void _onSearchChanged() => setState(_applyFilter);
@@ -369,26 +372,7 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
       color: Colors.transparent,
       child: InkWell(
         onTap: () async {
-          await Navigator.push(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) =>
-                  ChatDetailScreen(conversation: conversation),
-              transitionsBuilder:
-                  (context, animation, secondaryAnimation, child) {
-                const begin = Offset(1.0, 0.0);
-                const end = Offset.zero;
-                const curve = Curves.easeOut;
-                var tween = Tween(begin: begin, end: end)
-                    .chain(CurveTween(curve: curve));
-                return SlideTransition(
-                  position: animation.drive(tween),
-                  child: child,
-                );
-              },
-              reverseTransitionDuration: Duration.zero,
-            ),
-          );
+          await ChatNavigation.open(context, conversation);
           // Detail screen marks the conversation as read on open.
           _markConversationRead(conversation.id);
         },
