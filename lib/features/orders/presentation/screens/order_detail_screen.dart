@@ -119,8 +119,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _validateFormState();
   }
 
-  Future<void> _fetchOrderDetails() async {
-    setState(() => _isFirstLoading = true);
+  Future<void> _fetchOrderDetails({bool showLoading = true}) async {
+    if (showLoading) setState(() => _isFirstLoading = true);
     final updatedOrder = await OrderService().getOrderDetail(_currentOrder.id);
     if (updatedOrder != null && mounted) {
       setState(() {
@@ -219,11 +219,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         setState(() {
           _isUpdating = true;
           // If the event contains a full order object, we can reconstruct it
+          // for an instant status/items refresh.
           if (event['order'] != null) {
             _currentOrder = OrderModel.fromJson(event['order']);
             _initControllers();
           }
         });
+
+        // The WebSocket payload bypasses the API's URL-transform interceptor,
+        // so its file fields (paymentSlipUrl, proofPhotoUrl, images) are raw
+        // storage keys that don't resolve. Re-fetch over HTTP to get the
+        // properly-built absolute URLs (otherwise the receipt fails to load).
+        _fetchOrderDetails(showLoading: false);
 
         // Small delay to show the "updated" flash or animation
         Future.delayed(const Duration(milliseconds: 500), () {
@@ -1253,6 +1260,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       _buildDeliveryProofSection(),
                       const SizedBox(height: 8),
                     ],
+
+                    // Once Delivered, show the captured proof photo (read-only).
+                    if (_currentOrder.status == 'DELIVERED' &&
+                        _currentOrder.proofPhotoUrl != null &&
+                        _currentOrder.proofPhotoUrl!.isNotEmpty) ...[
+                      _buildDeliveryProofView(_currentOrder.proofPhotoUrl!),
+                      const SizedBox(height: 8),
+                    ],
                     
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -1969,44 +1984,22 @@ Widget _buildAnimatedProgress() {
               ),
             ),
             if (_currentOrder.status == 'PENDING' ||
-                _currentOrder.status == 'PAYMENT_SLIP_REQUESTED' ||
                 _currentOrder.status == 'AWAITING_APPROVAL')
-              Row(
-                children: [
-                  TextButton.icon(
-                    onPressed: _showReviseItemsSheet,
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    icon: const GradientWidget(child: Icon(PhosphorIconsRegular.warning, size: 16)),
-                    label: GradientText(
-                      'Revise items',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  TextButton.icon(
-                    onPressed: _showDemoDialog,
+              TextButton.icon(
+                onPressed: _showReviseItemsSheet,
                 style: TextButton.styleFrom(
                   padding: EdgeInsets.zero,
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                icon: const GradientWidget(child: Icon(PhosphorIconsRegular.pencilSimple, size: 16)),
+                icon: const GradientWidget(child: Icon(PhosphorIconsRegular.warning, size: 16)),
                 label: GradientText(
-                  'Edit order',
+                  'Revise items',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                  ),
-                ],
               ),
           ],
         ),
@@ -2553,6 +2546,45 @@ Widget _buildAnimatedProgress() {
             style: GoogleFonts.poppins(
               fontSize: 12,
               color: const Color(0xFF64748B),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Read-only proof-of-delivery photo shown once the order is DELIVERED.
+  Widget _buildDeliveryProofView(String url) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      color: const Color(0xFFF8FAFC),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Delivery Proof',
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1E293B),
+            ),
+          ),
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.network(
+              url,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  height: 200,
+                  color: const Color(0xFFF1F5F9),
+                  child: Center(child: CustomLoadingIndicator(size: 24)),
+                );
+              },
+              errorBuilder: (_, _, _) => _buildReceiptError(),
             ),
           ),
         ],

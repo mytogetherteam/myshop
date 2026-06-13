@@ -235,7 +235,8 @@ class WebSocketService {
 
           if (type == 'CHAT_MESSAGE' ||
               type == 'CHAT_MESSAGE_EDIT' ||
-              type == 'CHAT_MESSAGE_DELETE') {
+              type == 'CHAT_MESSAGE_DELETE' ||
+              type == 'CONVERSATION_READ') {
             AppLogger.realtime(
               '[WS] $type | conversation=${raw['conversationId']}',
             );

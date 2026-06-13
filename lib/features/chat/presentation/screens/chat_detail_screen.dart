@@ -157,6 +157,20 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     if (conversationId != _conversationId) return;
 
     final type = event['type'] as String?;
+
+    // The customer read this conversation → flip our sent messages to ✅✅.
+    if (type == 'CONVERSATION_READ') {
+      setState(() {
+        for (var i = 0; i < _messages.length; i++) {
+          final m = _messages[i];
+          if (m.isMe && !m.isRead) {
+            _messages[i] = m.copyWith(isRead: true);
+          }
+        }
+      });
+      return;
+    }
+
     final raw = (event['message'] as Map?)?.cast<String, dynamic>();
     if (raw == null) return;
     final incoming = ChatMessage.fromJson(raw);
@@ -828,7 +842,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           Icon(
             message.isRead ? Icons.done_all_rounded : Icons.done_rounded,
             size: 14,
-            color: mutedColor,
+            color: message.isRead ? AppColors.primary : mutedColor,
           ),
         ],
       ],
