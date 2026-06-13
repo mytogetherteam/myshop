@@ -16,6 +16,9 @@ class MasterDataService {
       } else if (payload is Map && payload.containsKey('content')) {
         final List list = payload['content'];
         return list.map((json) => MasterDataModel.fromJson(json)).toList();
+      } else if (payload is Map && payload.containsKey('items')) {
+        final List list = payload['items'];
+        return list.map((json) => MasterDataModel.fromJson(json)).toList();
       }
     }
     return null;
@@ -24,7 +27,7 @@ class MasterDataService {
   Future<List<MasterDataModel>?> getShopCategories() async {
     try {
       final response = await ApiClient().dio.get(
-        '/api/master/shop-categories',
+        '/api/shop/shop-categories',
       );
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
@@ -42,8 +45,9 @@ class MasterDataService {
   Future<List<MasterDataModel>?> getShopSubcategories({int? categoryId}) async {
     try {
       final response = await ApiClient().dio.get(
-        '/api/master/shop-subcategories',
-        queryParameters: categoryId != null ? {'categoryId': categoryId} : null,
+        categoryId != null
+            ? '/api/shop/shop-categories/$categoryId/sub-categories'
+            : '/api/shop/shop-sub-categories',
       );
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
