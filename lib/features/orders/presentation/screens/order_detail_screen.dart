@@ -90,7 +90,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Future<void> _loadDrivers() async {
     if (!mounted) return;
     setState(() => _isLoadingRiders = true);
-    final riders = await RiderService().getActiveRiders();
+    final riders = await RiderService().getSelectableRiders();
     if (mounted) {
       setState(() {
         // Merge so any driver already known from the order (e.g. the assigned
@@ -126,24 +126,31 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       setState(() {
         _currentOrder = updatedOrder;
         _selectedDriverId = updatedOrder.driverId;
+        // Merge any drivers carried on the order (e.g. the already-assigned
+        // one) into the roster instead of replacing it — replacing with the
+        // order's active-only list could wipe out riders loaded elsewhere and
+        // leave the picker empty.
         if (updatedOrder.shopDeliveryDrivers.isNotEmpty) {
-          _availableDrivers = updatedOrder.shopDeliveryDrivers
-              .map((d) => Rider(
-                    id: d.id,
-                    name: d.name,
-                    phone: d.phone,
-                    vehicleNo: d.vehicleNo,
-                    profileUrl: d.profileUrl,
-                    shopId: 0,
-                    isActive: d.isActive,
-                  ))
-              .toList();
-        } else {
-          _loadDrivers();
+          final byId = <int, Rider>{for (final r in _availableDrivers) r.id: r};
+          for (final d in updatedOrder.shopDeliveryDrivers) {
+            byId[d.id] = Rider(
+              id: d.id,
+              name: d.name,
+              phone: d.phone,
+              vehicleNo: d.vehicleNo,
+              profileUrl: d.profileUrl,
+              shopId: 0,
+              isActive: d.isActive,
+            );
+          }
+          _availableDrivers = byId.values.toList();
         }
         _initControllers();
         _isFirstLoading = false;
       });
+      // Always (re)load the shop's full rider roster so the picker shows every
+      // saved rider, regardless of what the order payload carried.
+      _loadDrivers();
     } else if (mounted) {
       setState(() => _isFirstLoading = false);
     }
@@ -1087,11 +1094,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       return;
     }
 
-    XFile? proofFile;
-    if (_proofImage != null) {
-      proofFile = _proofImage;
-    }
-
     await _runOrderAction(
       action: () => OrderService().dispatchOrder(
         _currentOrder.id.toString(),
@@ -1099,7 +1101,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         trackingUrl: _deliveryTrackingUrlController.text.isNotEmpty
             ? _deliveryTrackingUrlController.text
             : null,
-        proofImage: proofFile,
       ),
       errorMessage: 'Failed to dispatch order. Please try again.',
     );
@@ -1107,7 +1108,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Future<void> _handleCompleteDelivery() async {
     await _runOrderAction(
-      action: () => OrderService().completeOrder(_currentOrder.id.toString()),
+      action: () => OrderService().completeOrder(
+        _currentOrder.id.toString(),
+        proofImage: _proofImage,
+      ),
       errorMessage: 'Failed to complete delivery. Please try again.',
       onSuccess: () {
         AppDialog.showSuccessDialog(
@@ -1238,6 +1242,15 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     // Waiting Time Update (PREPARING state only for Fast Delivery)
                     if (_currentOrder.status == 'COOKING' && _currentOrder.deliveryType == 'PREPAID') ...[
                       _buildWaitingTimeUpdate(),
+                      const SizedBox(height: 8),
+                    ],
+
+                    // Delivery proof photo — captured while the order is on the
+                    // way so the shop can attach a photo when marking it
+                    // Delivered. The image is shown to the customer as proof
+                    // the food was successfully delivered.
+                    if (_currentOrder.status == 'ON_THE_WAY') ...[
+                      _buildDeliveryProofSection(),
                       const SizedBox(height: 8),
                     ],
                     
@@ -2506,6 +2519,47 @@ Widget _buildAnimatedProgress() {
     );
   }
 
+  /// Proof-of-delivery photo, shown while the order is ON_THE_WAY. The chosen
+  /// image is sent on the "Delivered" action so the customer can see proof the
+  /// food was successfully delivered.
+  Widget _buildDeliveryProofSection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      color: const Color(0xFFF8FAFC),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Delivery Proof',
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1E293B),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.center,
+            child: ImagePickerWidget(
+              shape: ImagePickerShape.rectangle,
+              width: 120,
+              height: 120,
+              onImageSelected: (file) => setState(() => _proofImage = file),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Optional photo proving the food was delivered. Shown to the customer once the order is marked Delivered.',
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              color: const Color(0xFF64748B),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildConfirmationForm() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -2709,21 +2763,6 @@ Widget _buildAnimatedProgress() {
             // ── COOKING / dispatch ────────────────────────────────────
             ] else if (_currentOrder.status == 'COOKING') ...[
               _buildDriverPicker(),
-              const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.center,
-                child: ImagePickerWidget(
-                  shape: ImagePickerShape.rectangle,
-                  width: 120,
-                  height: 120,
-                  onImageSelected: (file) => setState(() => _proofImage = file),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Optional proof photo (COOKING → ON_THE_WAY)',
-                style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B)),
-              ),
               const SizedBox(height: 12),
               _buildInputField('Tracking URL', _deliveryTrackingUrlController),
             ] else ...[

@@ -80,12 +80,17 @@ class RiderService {
     );
   }
 
-  Future<List<Rider>> getActiveRiders() async {
-    // Fetch with the same unfiltered call Rider Management uses (which works),
-    // then keep only active riders client-side. This avoids depending on the
-    // server `isActive` query filter for the order driver picker.
+  /// Riders shown in the order driver picker.
+  ///
+  /// Returns the shop's full roster (same unfiltered call Rider Management
+  /// uses), NOT just `isActive` ones. Filtering by `isActive` here made the
+  /// picker show "no drivers" whenever the saved riders happened to be flagged
+  /// inactive, even though the shop clearly has riders to assign. The backend
+  /// accepts any of the shop's `driverId`s when dispatching, so the full list
+  /// is the correct, predictable set to choose from.
+  Future<List<Rider>> getSelectableRiders() async {
     final result = await getRiders(page: 1, size: 100);
-    return result.riders.where((r) => r.isActive).toList();
+    return result.riders;
   }
 
   Future<Rider?> createRider(Map<String, dynamic> riderData, {XFile? image}) async {

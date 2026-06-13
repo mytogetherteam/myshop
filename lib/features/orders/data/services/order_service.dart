@@ -240,14 +240,12 @@ class OrderService {
     String orderId, {
     required int driverId,
     String? trackingUrl,
-    XFile? proofImage,
   }) {
     return updateStatus(
       orderId,
       status: 'ON_THE_WAY',
       driverId: driverId,
       trackingUrl: trackingUrl,
-      proofImage: proofImage,
     );
   }
 
@@ -259,8 +257,15 @@ class OrderService {
     );
   }
 
-  Future<Map<String, dynamic>> completeOrder(String orderId) {
-    return updateStatus(orderId, status: 'DELIVERED');
+  Future<Map<String, dynamic>> completeOrder(
+    String orderId, {
+    XFile? proofImage,
+  }) {
+    return updateStatus(
+      orderId,
+      status: 'DELIVERED',
+      proofImage: proofImage,
+    );
   }
 
   Future<Map<String, dynamic>> reviseOrder(
