@@ -228,11 +228,23 @@ class OrderService {
     return updateStatus(orderId, status: 'COOKING');
   }
 
-  Future<Map<String, dynamic>> requestSlip(String orderId, String reason) {
+  Future<Map<String, dynamic>> requestSlip(
+    String orderId,
+    String reason, {
+    required String orderDeliveryType,
+    required double deliveryFee,
+    required int waitingTimeMinutes,
+  }) {
+    // The backend's status endpoint requires the delivery fields whenever the
+    // status is PAYMENT_SLIP_REQUESTED. The order was already confirmed, so we
+    // resend its existing values to keep them (and the total) unchanged.
     return updateStatus(
       orderId,
       status: 'PAYMENT_SLIP_REQUESTED',
       reviseReason: reason,
+      orderDeliveryType: orderDeliveryType,
+      deliveryFee: deliveryFee,
+      waitingTimeMinutes: waitingTimeMinutes,
     );
   }
 

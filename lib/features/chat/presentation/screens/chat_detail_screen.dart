@@ -9,6 +9,7 @@ import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/features/chat/data/models/chat_model.dart';
 import 'package:my_shop/features/chat/data/services/chat_service.dart';
+import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
 
 class ChatDetailScreen extends StatefulWidget {
   final ChatConversation conversation;
@@ -114,8 +115,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   void _markAsRead() {
     if (widget.conversation.unreadCount > 0 || _hasUnreadCustomerMessages()) {
-      ChatService.instance.markAsRead(_conversationId);
+      _markConversationRead();
     }
+  }
+
+  /// Clears the conversation's unread state on the backend and broadcasts the
+  /// read so every badge surface (chat list, order-detail chat icon, the Chat
+  /// tab) clears immediately — a shop-side read emits no realtime event.
+  void _markConversationRead() {
+    if (_conversationId <= 0) return;
+    ChatService.instance.markAsRead(_conversationId);
+    ChatUnreadController.instance.notifyConversationRead(_conversationId);
   }
 
   bool _hasUnreadCustomerMessages() {
@@ -201,7 +211,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             .addPostFrameCallback((_) => _scrollToBottom());
       }
       // We're viewing the conversation, so clear unread on the server.
-      ChatService.instance.markAsRead(_conversationId);
+      _markConversationRead();
     }
   }
 

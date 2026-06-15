@@ -16,6 +16,16 @@ class ChatUnreadController {
   /// Total unread messages for the current shop.
   final ValueNotifier<int> unread = ValueNotifier<int>(0);
 
+  /// Emits a conversation id whenever the shop reads (opens) that conversation.
+  ///
+  /// Unlike new-message events, a shop-side read produces no realtime WebSocket
+  /// event that other screens can consume, so each badge surface (chat list,
+  /// order-detail chat icon, etc.) would otherwise keep showing a stale count.
+  /// Listen to this to clear the badge for the read conversation everywhere.
+  Stream<int> get conversationRead => _conversationRead.stream;
+  final StreamController<int> _conversationRead =
+      StreamController<int>.broadcast();
+
   StreamSubscription<Map<String, dynamic>>? _chatSub;
   bool _started = false;
 
@@ -35,9 +45,19 @@ class ChatUnreadController {
     }
   }
 
+  /// Broadcasts that [conversationId] was read by the shop and re-syncs the
+  /// total. Call this from any screen that marks a conversation as read.
+  void notifyConversationRead(int conversationId) {
+    if (conversationId > 0) {
+      _conversationRead.add(conversationId);
+    }
+    refresh();
+  }
+
   void dispose() {
     _chatSub?.cancel();
     _chatSub = null;
+    _conversationRead.close();
     _started = false;
   }
 }

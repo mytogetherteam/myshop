@@ -29,6 +29,7 @@ import 'package:my_shop/core/presentation/widgets/image_picker_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:my_shop/features/chat/data/models/chat_model.dart';
 import 'package:my_shop/features/chat/data/services/chat_service.dart';
+import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
 import 'package:my_shop/features/chat/presentation/chat_navigation.dart';
 
 
@@ -44,6 +45,10 @@ class OrderDetailScreen extends StatefulWidget {
 class _OrderDetailScreenState extends State<OrderDetailScreen> {
   late OrderModel _currentOrder;
   StreamSubscription? _wsSubscription;
+  StreamSubscription? _chatSubscription;
+  StreamSubscription<int>? _chatReadSubscription;
+  int _chatUnreadCount = 0;
+  int _chatConversationId = 0;
   bool _isUpdating = false;
   bool _isFirstLoading = true;
 
@@ -72,13 +77,45 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     super.initState();
     _currentOrder = widget.order;
     _setupWebSocketListener();
+    _setupChatListener();
     _fetchOrderDetails();
+    _fetchChatUnreadCount();
     _initControllers();
     _addFormListeners();
     _loadShopAndUser();
     // Eagerly load the saved drivers so the picker is always populated,
     // regardless of whether the order payload carried any.
     _loadDrivers();
+  }
+
+  /// Loads the unread customer-message count for this order so the chat icon
+  /// can show a badge. Backed by GET /api/shop/chat/orders/{orderId}, which
+  /// returns `shopUnreadCount` without marking the thread read.
+  Future<void> _fetchChatUnreadCount() async {
+    final orderId = int.tryParse(_currentOrder.id) ?? 0;
+    if (orderId <= 0) return;
+    final conversation =
+        await ChatService.instance.getConversationByOrder(orderId);
+    if (!mounted) return;
+    setState(() {
+      _chatUnreadCount = conversation?.unreadCount ?? 0;
+      if (conversation != null) _chatConversationId = conversation.id;
+    });
+  }
+
+  /// Refreshes the badge whenever a realtime chat event arrives for this shop,
+  /// and clears it immediately when the thread is read from another screen
+  /// (e.g. the chat inbox) — a shop-side read emits no realtime event.
+  void _setupChatListener() {
+    _chatSubscription =
+        WebSocketService().chatUpdates.listen((_) => _fetchChatUnreadCount());
+    _chatReadSubscription =
+        ChatUnreadController.instance.conversationRead.listen((conversationId) {
+      if (!mounted || _chatUnreadCount == 0) return;
+      if (conversationId == _chatConversationId) {
+        setState(() => _chatUnreadCount = 0);
+      }
+    });
   }
 
   Future<void> _loadShopAndUser() async {
@@ -159,6 +196,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   @override
   void dispose() {
     _wsSubscription?.cancel();
+    _chatSubscription?.cancel();
+    _chatReadSubscription?.cancel();
     _deliveryFeeController.dispose();
     _deliveryCycleNoController.dispose();
     _deliveryRiderNameController.dispose();
@@ -976,8 +1015,19 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
 
     if (reason != null && reason.isNotEmpty) {
+      // Resend the order's existing delivery details: the backend status
+      // endpoint mandates them for PAYMENT_SLIP_REQUESTED and recomputes the
+      // total from them, so omitting them would fail validation / wipe the fee.
+      final orderDeliveryType = _currentOrder.orderDeliveryType ??
+          (_currentOrder.deliveryType == 'NORMAL' ? 'FLEXIBLE' : 'FAST');
       await _runOrderAction(
-        action: () => OrderService().requestSlip(_currentOrder.id.toString(), reason),
+        action: () => OrderService().requestSlip(
+          _currentOrder.id.toString(),
+          reason,
+          orderDeliveryType: orderDeliveryType,
+          deliveryFee: _currentOrder.deliveryFee,
+          waitingTimeMinutes: _currentOrder.waitingTimeMinutes,
+        ),
         errorMessage: 'Failed to request new slip. Please try again.',
       );
     }
@@ -1606,7 +1656,7 @@ Widget _buildAnimatedProgress() {
         _buildCircularIcon(PhosphorIconsFill.phone, onTap: _callCustomer),
         const SizedBox(width: 12),
         _buildCircularIcon(PhosphorIconsFill.chatCircleDots,
-            onTap: _openCustomerChat),
+            onTap: _openCustomerChat, badgeCount: _chatUnreadCount),
         const SizedBox(width: 12),
         GestureDetector(
           onTap: () {
@@ -1659,6 +1709,7 @@ Widget _buildAnimatedProgress() {
 
     var conversation = await ChatService.instance.getConversationByOrder(orderId);
     if (!mounted) return;
+    if (conversation != null) _chatConversationId = conversation.id;
 
     // No conversation yet — open a fresh one; the first message creates it.
     final chatConversation = conversation ?? ChatConversation(
@@ -1673,19 +1724,57 @@ Widget _buildAnimatedProgress() {
 
     if (!mounted) return;
     await ChatNavigation.open(context, chatConversation);
+
+    // Opening the thread marks the customer's messages as read on the backend,
+    // so clear the badge and re-sync with the server on return.
+    if (!mounted) return;
+    setState(() => _chatUnreadCount = 0);
+    _fetchChatUnreadCount();
   }
 
-  Widget _buildCircularIcon(IconData icon, {VoidCallback? onTap}) {
+  Widget _buildCircularIcon(IconData icon,
+      {VoidCallback? onTap, int badgeCount = 0}) {
     return GestureDetector(
       onTap: onTap ?? _showDemoDialog,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          color: AppColors.surfaceVariant,
-        ),
-        child: Icon(icon, color: AppColors.onSurface, size: 20),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.surfaceVariant,
+            ),
+            child: Icon(icon, color: AppColors.onSurface, size: 20),
+          ),
+          if (badgeCount > 0)
+            Positioned(
+              right: -2,
+              top: -2,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFED3973),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 1.5),
+                ),
+                constraints: const BoxConstraints(
+                  minWidth: 18,
+                  minHeight: 18,
+                ),
+                child: Text(
+                  badgeCount > 99 ? '99+' : '$badgeCount',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -2561,7 +2650,9 @@ Widget _buildAnimatedProgress() {
               shape: ImagePickerShape.rectangle,
               width: 120,
               height: 120,
+              pickedFile: _proofImage,
               onImageSelected: (file) => setState(() => _proofImage = file),
+              onImageRemoved: () => setState(() => _proofImage = null),
             ),
           ),
           const SizedBox(height: 8),

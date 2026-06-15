@@ -32,6 +32,7 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
   int _lastPage = 1;
 
   StreamSubscription<Map<String, dynamic>>? _chatSub;
+  StreamSubscription<int>? _readSub;
 
   @override
   bool get wantKeepAlive => true;
@@ -42,6 +43,9 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
     _searchController.addListener(_onSearchChanged);
     _scrollController.addListener(_onScroll);
     _chatSub = WebSocketService().chatUpdates.listen(_onChatEvent);
+    // A read elsewhere (e.g. from the order-detail chat icon) clears the badge.
+    _readSub = ChatUnreadController.instance.conversationRead
+        .listen(_onConversationRead);
     _loadConversations();
   }
 
@@ -50,7 +54,18 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
     _searchController.dispose();
     _scrollController.dispose();
     _chatSub?.cancel();
+    _readSub?.cancel();
     super.dispose();
+  }
+
+  void _onConversationRead(int conversationId) {
+    final index = _conversations.indexWhere((c) => c.id == conversationId);
+    if (index == -1 || _conversations[index].unreadCount == 0) return;
+    setState(() {
+      _conversations[index] =
+          _conversations[index].copyWith(unreadCount: 0);
+      _applyFilter();
+    });
   }
 
   Future<void> _loadConversations() async {
