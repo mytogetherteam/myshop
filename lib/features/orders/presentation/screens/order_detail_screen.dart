@@ -350,6 +350,26 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _validateFormState();
   }
 
+  /// The driver assigned to this order, resolved from the loaded roster by
+  /// `driverId`. The driver is chosen once at the COOKING (dispatch) step, so
+  /// later steps display it read-only instead of offering another picker.
+  Rider? get _assignedRider {
+    final id = _currentOrder.driverId;
+    if (id == null) return null;
+    for (final r in _availableDrivers) {
+      if (r.id == id) return r;
+    }
+    return null;
+  }
+
+  /// Whether to show the read-only assigned-rider card (after dispatch).
+  bool get _showAssignedRider =>
+      (_currentOrder.status == 'ON_THE_WAY' ||
+          _currentOrder.status == 'DELIVERED') &&
+      (_assignedRider != null ||
+          (_currentOrder.riderName != null &&
+              _currentOrder.riderName!.trim().isNotEmpty));
+
   void _openAddDriverSheet() {
     if (_shopId == null || _userId == null) {
       AppDialog.showToast(
@@ -1277,26 +1297,21 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           // Scheduled Info if applicable
                           if (_currentOrder.isScheduled) _buildScheduledInfo(),
                           
-                          // Rider Section if applicable
-                          if (_currentOrder.riderName != null && _currentOrder.riderName!.trim().isNotEmpty) _buildRiderSection(),
+                          // Assigned rider (read-only) — the driver is selected
+                          // once at the dispatch step, so here we only display it.
+                          if (_showAssignedRider) _buildRiderSection(),
                           
                           if (_currentOrder.status == 'CANCELED')
                             _buildCancelReasonBox(),
                           
                           if (_currentOrder.isScheduled || 
-                              (_currentOrder.riderName != null && _currentOrder.riderName!.trim().isNotEmpty) ||
+                              _showAssignedRider ||
                               _currentOrder.status == 'CANCELED')
                             const SizedBox(height: 16),
 
                           // Payment Slip Section
                           if (_currentOrder.paymentSlipUrl != null) ...[
                             _buildPaymentSlipSection(),
-                            const SizedBox(height: 16),
-                          ],
-
-                          // Rider Info Form — shown below slip for Fast Delivery payment state
-                          if (_currentOrder.status == 'AWAITING_APPROVAL') ...[
-                            _buildConfirmationForm(),
                             const SizedBox(height: 16),
                           ],
                           
@@ -1821,8 +1836,17 @@ Widget _buildAnimatedProgress() {
   }
 
   Widget _buildRiderSection() {
-    final name = _currentOrder.riderName ?? 'Assigning Rider...';
-    final phone = _currentOrder.riderPhone;
+    final rider = _assignedRider;
+    final name = _currentOrder.riderName?.trim().isNotEmpty == true
+        ? _currentOrder.riderName!
+        : (rider?.name ?? 'Assigning Rider...');
+    final phone = (_currentOrder.riderPhone?.trim().isNotEmpty == true)
+        ? _currentOrder.riderPhone
+        : rider?.phone;
+    final vehicleNo =
+        (_currentOrder.deliveryCycleNo?.trim().isNotEmpty == true)
+            ? _currentOrder.deliveryCycleNo
+            : rider?.vehicleNo;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -1876,11 +1900,11 @@ Widget _buildAnimatedProgress() {
                       color: AppColors.onSurfaceVariant,
                     ),
                   ),
-                if (_currentOrder.deliveryCycleNo != null && _currentOrder.deliveryCycleNo!.isNotEmpty)
+                if (vehicleNo != null && vehicleNo.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
                     child: GradientText(
-                      'Vehicle No: ${_currentOrder.deliveryCycleNo!}',
+                      'Vehicle No: $vehicleNo',
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -2666,14 +2690,11 @@ Widget _buildAnimatedProgress() {
             ],
             // ── Section header ──────────────────────────────────────────
             if (_deliveryOption == 'PREPAID' ||
-                _currentOrder.status == 'COOKING' ||
-                _currentOrder.status == 'AWAITING_APPROVAL') ...[
+                _currentOrder.status == 'COOKING') ...[
               Text(
                 _currentOrder.status == 'COOKING'
                     ? 'Dispatch Information'
-                    : _currentOrder.status == 'AWAITING_APPROVAL'
-                        ? 'Rider Information'
-                        : 'Prepare to confirm',
+                    : 'Prepare to confirm',
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -2792,74 +2813,9 @@ Widget _buildAnimatedProgress() {
                 ],
               ),
 
-            // ── COOKING / dispatch ────────────────────────────────────
+            // ── COOKING / dispatch (single driver selection point) ─────
             ] else if (_currentOrder.status == 'COOKING') ...[
               _buildDriverPicker(),
-              const SizedBox(height: 12),
-              _buildInputField('Tracking URL', _deliveryTrackingUrlController),
-            ] else ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildInputField(
-                      'Delivery Fee',
-                      _deliveryFeeController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        ThousandsSeparatorInputFormatter()
-                      ],
-                      validator: (value) {
-                        if (value == null || value.isEmpty) return 'Required';
-                        final numValue = value.replaceAll(',', '');
-                        if (double.tryParse(numValue) == null) return 'Invalid number';
-                        return null;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildInputField(
-                      'Est Waiting Time (mins)',
-                      _waitingTimeMinutesController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              _buildDriverPicker(required: false),
-              const SizedBox(height: 16),
-              _buildInputField(
-                'Rider Name',
-                _deliveryRiderNameController,
-                validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
-              ),
-              const SizedBox(height: 12),
-              _buildInputField(
-                'Rider Phone',
-                _deliveryPhoneNoController,
-                keyboardType: TextInputType.phone,
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9+]')),
-                ],
-                validator: (value) {
-                  if (value == null || value.isEmpty || value == '+66') return 'Required';
-                  final thaiPhoneRegex = RegExp(r'^\+66[0-9]{9}$');
-                  if (!thaiPhoneRegex.hasMatch(value)) {
-                    return 'Invalid Thai number (+66xxxxxxxxx)';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildInputField(
-                'Cycle No / License',
-                _deliveryCycleNoController,
-                validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
-              ),
               const SizedBox(height: 12),
               _buildInputField('Tracking URL', _deliveryTrackingUrlController),
             ],

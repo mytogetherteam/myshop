@@ -142,7 +142,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         );
       }
       if (_selectedCategory != null) {
-        _fetchSubcategories(_selectedCategory!.id);
+        _applySubcategories(_selectedCategory);
       }
     } catch (_) {}
 
@@ -174,32 +174,30 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     } catch (_) {}
   }
 
-  Future<void> _fetchSubcategories(int categoryId) async {
-    final fetched = await _masterDataService.getShopSubcategories(
-      categoryId: categoryId,
-    );
-    if (mounted) {
-      setState(() {
-        _subcategories = fetched ?? [];
-        if (_currentProfile?.subCategoryId != null) {
-          try {
-            _selectedSubcategory = _subcategories.firstWhere(
-              (s) => s.id == _currentProfile!.subCategoryId,
-            );
-          } catch (_) {
-            _selectedSubcategory = null;
-          }
-        } else if (_currentProfile?.subCategoryEn != null &&
-            _currentProfile!.subCategoryEn!.isNotEmpty) {
-          try {
-            _selectedSubcategory = _subcategories.firstWhere(
-              (s) => s.nameEn == _currentProfile!.subCategoryEn,
-            );
-          } catch (_) {
-            _selectedSubcategory = null;
-          }
-        }
-      });
+  /// Subcategories now arrive nested within each shop category from
+  /// `GET /api/shop/shop-categories`, so we read them directly from the
+  /// selected category instead of issuing a separate request.
+  ///
+  /// Callers must invoke this inside a `setState` block.
+  void _applySubcategories(MasterDataModel? category) {
+    _subcategories = category?.subCategories ?? [];
+    if (_currentProfile?.subCategoryId != null) {
+      try {
+        _selectedSubcategory = _subcategories.firstWhere(
+          (s) => s.id == _currentProfile!.subCategoryId,
+        );
+      } catch (_) {
+        _selectedSubcategory = null;
+      }
+    } else if (_currentProfile?.subCategoryEn != null &&
+        _currentProfile!.subCategoryEn!.isNotEmpty) {
+      try {
+        _selectedSubcategory = _subcategories.firstWhere(
+          (s) => s.nameEn == _currentProfile!.subCategoryEn,
+        );
+      } catch (_) {
+        _selectedSubcategory = null;
+      }
     }
   }
 
@@ -815,10 +813,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 (v) => setState(() {
                   _selectedCategory = v;
                   _selectedSubcategory = null;
-                  _subcategories = [];
-                  if (v != null) {
-                    _fetchSubcategories(v.id);
-                  }
+                  _subcategories = v?.subCategories ?? [];
                   _markChanged();
                 }),
               ),

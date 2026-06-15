@@ -42,32 +42,6 @@ class MasterDataService {
     return null;
   }
 
-  Future<List<MasterDataModel>?> getShopSubcategories({int? categoryId}) async {
-    try {
-      final response = await ApiClient().dio.get(
-        categoryId != null
-            ? '/api/shop/shop-categories/$categoryId/sub-categories'
-            : '/api/shop/shop-sub-categories',
-      );
-      if (response.statusCode != null &&
-          response.statusCode! >= 200 &&
-          response.statusCode! < 300) {
-        return _parseResponse(response.data);
-      }
-    } on DioException catch (e) {
-      ApiHelper.handleError(
-        e,
-        context: 'MasterDataService.getShopSubcategories',
-      );
-    } catch (e) {
-      ApiHelper.handleError(
-        e,
-        context: 'MasterDataService.getShopSubcategories',
-      );
-    }
-    return null;
-  }
-
   Future<List<MasterDataModel>?> getCities() async {
     try {
       final response = await ApiClient().dio.get('/api/master/cities');
