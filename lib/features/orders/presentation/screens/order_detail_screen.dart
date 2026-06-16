@@ -1072,11 +1072,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       return;
     }
 
-    XFile? proofFile;
-    if (_proofImage != null) {
-      proofFile = _proofImage;
-    }
-
     await _runOrderAction(
       action: () => OrderService().dispatchOrder(
         _currentOrder.id.toString(),
@@ -1084,7 +1079,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         trackingUrl: _deliveryTrackingUrlController.text.isNotEmpty
             ? _deliveryTrackingUrlController.text
             : null,
-        proofImage: proofFile,
       ),
       errorMessage: 'Failed to dispatch order. Please try again.',
     );
@@ -1092,7 +1086,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Future<void> _handleCompleteDelivery() async {
     await _runOrderAction(
-      action: () => OrderService().completeOrder(_currentOrder.id.toString()),
+      action: () => OrderService().completeOrder(
+        _currentOrder.id.toString(),
+        proofImage: _proofImage,
+      ),
       errorMessage: 'Failed to complete delivery. Please try again.',
       onSuccess: () {
         AppDialog.showSuccessDialog(
@@ -1254,6 +1251,23 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           // Rider Info Form — shown below slip for Fast Delivery payment state
                           if (_currentOrder.status == 'AWAITING_APPROVAL') ...[
                             _buildConfirmationForm(),
+                            const SizedBox(height: 16),
+                          ],
+
+                          // Delivery proof photo — attached when marking the
+                          // order Delivered (backend accepts proofImage only on
+                          // ON_THE_WAY → DELIVERED).
+                          if (_currentOrder.status == 'ON_THE_WAY') ...[
+                            _buildProofPhotoSection(),
+                            const SizedBox(height: 16),
+                          ],
+
+                          // Once delivered, show the proof photo that was sent
+                          // so the admin can confirm what the customer received.
+                          if (_currentOrder.status == 'DELIVERED' &&
+                              _currentOrder.proofPhotoUrl != null &&
+                              _currentOrder.proofPhotoUrl!.isNotEmpty) ...[
+                            _buildDeliveredProofSection(),
                             const SizedBox(height: 16),
                           ],
                           
@@ -1896,42 +1910,21 @@ Widget _buildAnimatedProgress() {
             if (_currentOrder.status == 'PENDING' ||
                 _currentOrder.status == 'PAYMENT_SLIP_REQUESTED' ||
                 _currentOrder.status == 'AWAITING_APPROVAL')
-              Row(
-                children: [
-                  TextButton.icon(
-                    onPressed: _showReviseItemsSheet,
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    icon: const GradientWidget(child: Icon(PhosphorIconsRegular.warning, size: 16)),
-                    label: GradientText(
-                      'Revise items',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  TextButton.icon(
-                    onPressed: _showDemoDialog,
+              TextButton.icon(
+                onPressed: _showReviseItemsSheet,
                 style: TextButton.styleFrom(
                   padding: EdgeInsets.zero,
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                icon: const GradientWidget(child: Icon(PhosphorIconsRegular.pencilSimple, size: 16)),
+                icon: const GradientWidget(child: Icon(PhosphorIconsRegular.warning, size: 16)),
                 label: GradientText(
-                  'Edit order',
+                  'Revise items',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                  ),
-                ],
               ),
           ],
         ),
@@ -2444,6 +2437,104 @@ Widget _buildAnimatedProgress() {
     );
   }
 
+  Widget _buildProofPhotoSection() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Delivery Proof Photo',
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1E293B),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Optional. Attach a photo as proof before marking the order delivered.',
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              color: const Color(0xFF64748B),
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.center,
+            child: ImagePickerWidget(
+              shape: ImagePickerShape.rectangle,
+              width: 120,
+              height: 120,
+              onImageSelected: (file) => setState(() => _proofImage = file),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Shows the delivery proof photo after the order is delivered so the shop
+  /// admin can review the image that was captured at hand-off.
+  Widget _buildDeliveredProofSection() {
+    final url = _currentOrder.proofPhotoUrl!;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const GradientWidget(
+                child: Icon(PhosphorIconsRegular.checkCircle, size: 20),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Delivery Proof Photo',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              url,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  height: 200,
+                  color: const Color(0xFFF1F5F9),
+                  child: Center(child: CustomLoadingIndicator(size: 24)),
+                );
+              },
+              errorBuilder: (_, _, _) => _buildReceiptError(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildConfirmationForm() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -2647,21 +2738,6 @@ Widget _buildAnimatedProgress() {
             // ── COOKING / dispatch ────────────────────────────────────
             ] else if (_currentOrder.status == 'COOKING') ...[
               _buildDriverPicker(),
-              const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.center,
-                child: ImagePickerWidget(
-                  shape: ImagePickerShape.rectangle,
-                  width: 120,
-                  height: 120,
-                  onImageSelected: (file) => setState(() => _proofImage = file),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Optional proof photo (COOKING → ON_THE_WAY)',
-                style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B)),
-              ),
               const SizedBox(height: 12),
               _buildInputField('Tracking URL', _deliveryTrackingUrlController),
             ] else ...[

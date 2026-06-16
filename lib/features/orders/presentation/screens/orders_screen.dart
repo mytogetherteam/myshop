@@ -381,7 +381,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
     final upperStatus = newOrder.status.toUpperCase();
     switch (widget.tabStatus) {
       case 'NEW':
-        belongsHere = upperStatus == 'PENDING';
+        belongsHere = ['PENDING', 'REVISED'].contains(upperStatus);
         break;
       case 'PAYMENT':
         belongsHere = [
@@ -391,7 +391,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
         ].contains(upperStatus);
         break;
       case 'PREPARING':
-        belongsHere = ['COOKING', 'REVISED'].contains(upperStatus);
+        belongsHere = upperStatus == 'COOKING';
         break;
       case 'DELIVERING':
         belongsHere = upperStatus == 'ON_THE_WAY';

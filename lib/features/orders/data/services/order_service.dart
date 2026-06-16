@@ -10,24 +10,33 @@ List<OrderModel> _parseOrders(List<dynamic> jsonList) {
       .toList();
 }
 
-/// Maps UI tab keys to backend `tab` query values (lowercase).
-String _tabQueryParam(String tab) {
+/// Maps a UI tab key to the backend `OrderStatus` values it represents.
+///
+/// The shop orders endpoint (`GET /api/shop/orders`) filters by
+/// `?status=A,B,C` (validated against the `OrderStatus` enum), not by a `tab`
+/// group, so each tab is expanded to its concrete statuses here. Keep this in
+/// sync with the tab logic in `orders_screen.dart`.
+List<String> _tabStatuses(String tab) {
   switch (tab.toUpperCase()) {
     case 'NEW':
-      return 'new';
+      return const ['PENDING', 'REVISED'];
     case 'PAYMENT':
-      return 'payment';
+      return const [
+        'PAYMENT_SLIP_REQUESTED',
+        'AWAITING_APPROVAL',
+        'PAYMENT_VERIFIED',
+      ];
     case 'PREPARING':
-      return 'preparing';
+      return const ['COOKING'];
     case 'DELIVERING':
-      return 'delivering';
+      return const ['ON_THE_WAY'];
     case 'DELIVERED':
-      return 'delivered';
+      return const ['DELIVERED'];
     case 'CANCELLED':
     case 'CANCELED':
-      return 'canceled';
+      return const ['CANCELED'];
     default:
-      return tab.toLowerCase();
+      return const [];
   }
 }
 
@@ -44,7 +53,12 @@ class OrderService {
         'page': page,
         'size': size,
       };
-      if (tab != null) queryParams['tab'] = _tabQueryParam(tab);
+      if (tab != null) {
+        final statuses = _tabStatuses(tab);
+        if (statuses.isNotEmpty) {
+          queryParams['status'] = statuses.join(',');
+        }
+      }
 
       final response = await ApiClient().dio.get(
         _ordersPath,
@@ -231,14 +245,12 @@ class OrderService {
     String orderId, {
     required int driverId,
     String? trackingUrl,
-    XFile? proofImage,
   }) {
     return updateStatus(
       orderId,
       status: 'ON_THE_WAY',
       driverId: driverId,
       trackingUrl: trackingUrl,
-      proofImage: proofImage,
     );
   }
 
@@ -250,8 +262,15 @@ class OrderService {
     );
   }
 
-  Future<Map<String, dynamic>> completeOrder(String orderId) {
-    return updateStatus(orderId, status: 'DELIVERED');
+  Future<Map<String, dynamic>> completeOrder(
+    String orderId, {
+    XFile? proofImage,
+  }) {
+    return updateStatus(
+      orderId,
+      status: 'DELIVERED',
+      proofImage: proofImage,
+    );
   }
 
   Future<Map<String, dynamic>> reviseOrder(
