@@ -59,7 +59,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   final _deliveryPhoneNoController = TextEditingController();
   final _deliveryTrackingUrlController = TextEditingController();
   final _waitingTimeMinutesController = TextEditingController();
-  final _cancelReasonController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isFormValid = false;
   String _deliveryOption = 'PREPAID'; // 'PREPAID' (FAST) or 'NORMAL' (FLEXIBLE)
@@ -204,7 +203,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _deliveryPhoneNoController.dispose();
     _deliveryTrackingUrlController.dispose();
     _waitingTimeMinutesController.dispose();
-    _cancelReasonController.dispose();
     super.dispose();
   }
 
@@ -886,7 +884,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       await _fetchOrderDetails();
       if (onSuccess != null) onSuccess();
     } else if (mounted) {
-      AppDialog.showToast(context, errorDetails ?? errorMessage ?? 'Operation failed. Please try again.', isError: true);
+      AppDialog.showToast(
+        context,
+        errorDetails ?? errorMessage ??
+            (AppLocalizations.of(context)?.translate('operation_failed') ??
+                'Operation failed. Please try again.'),
+        isError: true,
+      );
     }
     
     if (mounted) {
@@ -1033,17 +1037,27 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
   }
 
+  bool _isOrderCancelable(String status) {
+    return status == 'PENDING' ||
+        status == 'REVISED' ||
+        status == 'AWAITING_APPROVAL' ||
+        status == 'PAYMENT_SLIP_REQUESTED' ||
+        status == 'PAYMENT_VERIFIED';
+  }
+
   Future<void> _handleCancelOrder() async {
     final t = AppLocalizations.of(context);
-    _cancelReasonController.clear();
-    
-    final result = await showModalBottomSheet<bool>(
+    final reasonController = TextEditingController();
+
+    await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
+      builder: (sheetContext) => Container(
         padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
+          bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
         ),
         decoration: const BoxDecoration(
           color: Colors.white,
@@ -1076,7 +1090,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                t?.translate('cancel_order_confirm') ?? 'Are you sure you want to cancel this order? This action cannot be undone.',
+                t?.translate('cancel_order_confirm') ??
+                    'Are you sure you want to cancel this order? This action cannot be undone.',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   color: const Color(0xFF64748B),
@@ -1093,12 +1108,15 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
               const SizedBox(height: 8),
               TextField(
-                controller: _cancelReasonController,
+                controller: reasonController,
                 maxLines: 3,
+                autofocus: true,
                 style: GoogleFonts.poppins(fontSize: 14),
                 decoration: InputDecoration(
-                  hintText: t?.translate('cancel_reason_hint') ?? 'Enter reason here...',
-                  hintStyle: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[400]),
+                  hintText:
+                      t?.translate('cancel_reason_hint') ?? 'Enter reason here...',
+                  hintStyle:
+                      GoogleFonts.poppins(fontSize: 14, color: Colors.grey[400]),
                   filled: true,
                   fillColor: const Color(0xFFF8FAFC),
                   border: OutlineInputBorder(
@@ -1111,41 +1129,69 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               const SizedBox(height: 32),
               Row(
                 children: [
-                Expanded(
-                  child: PrimaryGradientButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    height: 52,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFF8FAFC), Color(0xFFF8FAFC)],
-                    ),
-                    child: Text(
-                      t?.translate('no_go_back') ?? 'No, Go Back',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF64748B),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(sheetContext),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        side: const BorderSide(color: Color(0xFFE2E8F0)),
+                      ),
+                      child: Text(
+                        t?.translate('no_go_back') ?? 'No, Go Back',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF64748B),
+                        ),
                       ),
                     ),
                   ),
-                ),
                   const SizedBox(width: 12),
-                Expanded(
-                  child: PrimaryGradientButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    height: 52,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFEF4444), Color(0xFFEF4444)],
-                    ),
-                    child: Text(
-                      t?.translate('yes_cancel_order') ?? 'Yes, Cancel Order',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        FocusScope.of(sheetContext).unfocus();
+                        final reason = reasonController.text.trim();
+                        Navigator.pop(sheetContext);
+
+                        await _runOrderAction(
+                          action: () => OrderService().cancelOrder(
+                            _currentOrder.id.toString(),
+                            reason.isEmpty ? null : reason,
+                          ),
+                          errorMessage: t?.translate('order_cancelled_fail') ??
+                              'Failed to cancel order. Please try again.',
+                          onSuccess: () {
+                            if (!mounted) return;
+                            AppDialog.showToast(
+                              context,
+                              t?.translate('order_cancelled_success') ??
+                                  'Order Cancelled',
+                            );
+                          },
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFEF4444),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        t?.translate('yes_cancel_order') ?? 'Yes, Cancel Order',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
-                ),
                 ],
               ),
             ],
@@ -1154,15 +1200,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       ),
     );
 
-    if (result == true) {
-      await _runOrderAction(
-        action: () => OrderService().cancelOrder(
-          _currentOrder.id.toString(),
-          _cancelReasonController.text.isEmpty ? null : _cancelReasonController.text,
-        ),
-        errorMessage: 'Failed to cancel order. Please try again.',
-      );
-    }
+    reasonController.dispose();
   }
 
   Future<void> _handleDispatchOrder() async {
@@ -2414,34 +2452,28 @@ Widget _buildAnimatedProgress() {
       case 'PENDING':
         mainButtonText = 'Accept order & Send bill';
         onPressed = (_isUpdating || !_isFormValid) ? null : _handleConfirmOrder;
-        isCancelable = true;
         break;
       case 'AWAITING_APPROVAL':
         mainButtonText = 'Confirm Payment';
         onPressed = _isUpdating ? null : _handleVerifyPayment;
-        isCancelable = false;
         break;
       case 'PAYMENT_VERIFIED':
         mainButtonText = 'Accept order to cook';
         onPressed = _isUpdating ? null : _handlePrepareOrder;
-        isCancelable = false;
         break;
       case 'PAYMENT_SLIP_REQUESTED':
         mainButtonText = 'Waiting for payment';
         onPressed = null;
-        isCancelable = false;
         break;
       case 'COOKING':
         mainButtonText = 'Picked Up by Rider';
         onPressed = (_isUpdating || _selectedDriverId == null)
             ? null
             : _handleDispatchOrder;
-        isCancelable = false;
         break;
       case 'ON_THE_WAY':
         mainButtonText = 'Delivered';
         onPressed = _isUpdating ? null : _handleCompleteDelivery;
-        isCancelable = false;
         break;
       case 'DELIVERED':
         return _buildDeliveredBanner();
@@ -2450,9 +2482,10 @@ Widget _buildAnimatedProgress() {
       case 'REVISED':
         mainButtonText = 'View Details';
         onPressed = null;
-        isCancelable = false;
         break;
     }
+
+    isCancelable = _isOrderCancelable(_currentOrder.status);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),

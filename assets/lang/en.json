@@ -54,6 +54,7 @@
   "yes_cancel_order": "Yes, Cancel Order",
   "order_cancelled_success": "Order Cancelled",
   "order_cancelled_fail": "Failed to Cancel Order",
+  "operation_failed": "Operation failed. Please try again.",
   "order_id": "Order ID",
   "customer": "Customer",
   "address": "Address",

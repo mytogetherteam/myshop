@@ -54,6 +54,7 @@
   "yes_cancel_order": "ใช่ ยกเลิกคำสั่งซื้อ",
   "order_cancelled_success": "ยกเลิกคำสั่งซื้อแล้ว",
   "order_cancelled_fail": "ยกเลิกคำสั่งซื้อไม่สำเร็จ",
+  "operation_failed": "ดำเนินการไม่สำเร็จ กรุณาลองอีกครั้ง",
   "order_id": "หมายเลขคำสั่งซื้อ",
   "customer": "ลูกค้า",
   "address": "ที่อยู่",

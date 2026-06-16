@@ -278,8 +278,7 @@ class OrderCard extends StatelessWidget {
         break;
     }
 
-    final bool canCancel = !isPaymentTab &&
-        order.status != 'COOKING' &&
+    final bool canCancel = order.status != 'COOKING' &&
         order.status != 'ON_THE_WAY' &&
         order.status != 'DELIVERED' &&
         order.status != 'CANCELED';
