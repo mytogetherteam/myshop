@@ -44,7 +44,7 @@ class MasterDataService {
 
   Future<List<MasterDataModel>?> getCities() async {
     try {
-      final response = await ApiClient().dio.get('/api/master/cities');
+      final response = await ApiClient().dio.get('/api/shop/cities');
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
@@ -80,7 +80,7 @@ class MasterDataService {
   Future<List<MasterDataModel>?> getCuisineTypes() async {
     try {
       final response = await ApiClient().dio.get(
-        '/api/master/cuisine-types',
+        '/api/shop/cusine-types',
       );
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
@@ -97,7 +97,7 @@ class MasterDataService {
 
   Future<List<MasterDataModel>?> getMenuTags() async {
     try {
-      final response = await ApiClient().dio.get('/api/master/menu-tags');
+      final response = await ApiClient().dio.get('/api/shop/item-tags');
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
