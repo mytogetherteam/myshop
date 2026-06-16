@@ -1037,12 +1037,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
   }
 
+  /// Shop may cancel only before the customer has uploaded payment.
   bool _isOrderCancelable(String status) {
     return status == 'PENDING' ||
         status == 'REVISED' ||
-        status == 'AWAITING_APPROVAL' ||
-        status == 'PAYMENT_SLIP_REQUESTED' ||
-        status == 'PAYMENT_VERIFIED';
+        status == 'PAYMENT_SLIP_REQUESTED';
   }
 
   Future<void> _handleCancelOrder() async {
@@ -2551,12 +2550,16 @@ Widget _buildAnimatedProgress() {
                             color: Colors.white,
                           ),
                         )
-                      : Text(
-                          mainButtonText,
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                            color: Colors.white,
+                      : Flexible(
+                          child: Text(
+                            mainButtonText,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                 ),

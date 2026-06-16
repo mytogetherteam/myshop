@@ -1,14 +1,6 @@
-import 'package:my_shop/core/config/env_config.dart';
+import 'package:my_shop/core/utils/file_url_util.dart';
 
-String? _resolveUrl(dynamic value) {
-  if (value == null) return null;
-  final str = value.toString();
-  if (str.isEmpty) return null;
-  if (str.startsWith('http://') || str.startsWith('https://')) return str;
-  if (str.startsWith('data:')) return str;
-  final path = str.startsWith('/') ? str : '/$str';
-  return '${EnvConfig.apiBaseUrl}$path';
-}
+String? _resolveUrl(dynamic value) => FileUrlUtil.resolve(value);
 
 String _normalizeStatus(String? raw) {
   final s = (raw ?? '').toUpperCase();
@@ -140,6 +132,10 @@ class OrderModel {
     if (orderDeliveryType == 'FAST') return 'PREPAID';
     return orderDeliveryType ?? 'PREPAID';
   }
+
+  /// Whether the customer chose delivery vs pickup (`orderType` from API).
+  bool get isDeliveryFulfillment =>
+      orderType.toUpperCase() == 'DELIVERY';
 
   String? get deliveryCycleNo => vehicleNo;
   String? get deliveryTrackingUrl => trackingUrl;
