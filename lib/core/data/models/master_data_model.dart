@@ -6,19 +6,31 @@ class MasterDataModel {
   final String? nameMm;
   final String? nameTh;
 
+  /// Nested subcategories returned with a shop category. Empty for master
+  /// data types that do not have children (cities, cuisine types, etc.).
+  final List<MasterDataModel> subCategories;
+
   MasterDataModel({
     required this.id,
     this.nameEn,
     this.nameMm,
     this.nameTh,
+    this.subCategories = const [],
   });
 
   factory MasterDataModel.fromJson(Map<String, dynamic> json) {
+    final rawSubCategories = json['subCategories'];
     return MasterDataModel(
       id: json['id'] ?? 0,
       nameEn: json['nameEn'],
       nameMm: json['nameMm'],
       nameTh: json['nameTh'],
+      subCategories: rawSubCategories is List
+          ? rawSubCategories
+              .whereType<Map<String, dynamic>>()
+              .map((e) => MasterDataModel.fromJson(e))
+              .toList()
+          : const [],
     );
   }
 

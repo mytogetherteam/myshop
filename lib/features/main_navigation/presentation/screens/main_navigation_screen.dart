@@ -13,6 +13,7 @@ import 'package:my_shop/features/orders/presentation/widgets/new_order_dialog.da
 import 'package:my_shop/features/orders/presentation/widgets/order_warning_dialog.dart';
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:my_shop/core/network/websocket_service.dart';
+import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
 import 'package:my_shop/features/notifications/presentation/widgets/notification_badge_icon.dart';
 import 'package:flutter/services.dart';
 import 'package:my_shop/core/presentation/widgets/app_bar_title_with_logo.dart';
@@ -54,9 +55,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ChatPage(key: _chatKey),
       ProfilePage(key: _profileKey),
     ];
+    WebSocketService().connect();
     _setupWebSocketListener();
-
-
+    ChatUnreadController.instance.start();
   }
 
   @override
@@ -197,21 +198,45 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
 
   Widget _buildGradientItem(IconData icon, String label) {
-    return ShaderMask(
-      shaderCallback: (Rect bounds) {
-        return AppColors.primaryGradient.createShader(bounds);
-      },
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: ShaderMask(
+        shaderCallback: (Rect bounds) {
+          return AppColors.primaryGradient.createShader(bounds);
+        },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            PhosphorIcon(icon, size: 28, color: Colors.white),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInactiveItem(IconData icon, String label) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          PhosphorIcon(icon, size: 28, color: Colors.white),
+          PhosphorIcon(icon, size: 28, color: const Color(0xFF94A3B8)),
           const SizedBox(height: 2),
           Text(
             label,
             style: GoogleFonts.poppins(
               fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF94A3B8),
             ),
           ),
         ],
@@ -219,25 +244,48 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     );
   }
 
-  Widget _buildInactiveItem(IconData icon, String label) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        PhosphorIcon(icon, size: 28, color: const Color(0xFF94A3B8)),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: const Color(0xFF94A3B8),
-          ),
-        ),
-      ],
+
+
+  /// Overlays the live unread-chat count on top of the Chat tab icon.
+  Widget _withChatBadge(Widget child) {
+    return ValueListenableBuilder<int>(
+      valueListenable: ChatUnreadController.instance.unread,
+      builder: (context, count, _) {
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            child,
+            if (count > 0)
+              Positioned(
+                right: -2,
+                top: 4,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFED3973),
+                    shape: BoxShape.circle,
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: Text(
+                    count > 99 ? '99+' : '$count',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      height: 1.2,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -321,8 +369,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             label: t?.translate('report') ?? 'Report',
           ),
           BottomNavigationBarItem(
-            icon: _buildInactiveItem(PhosphorIconsRegular.chatCircle, t?.translate('chat') ?? 'Chat'),
-            activeIcon: _buildGradientItem(PhosphorIconsFill.chatCircle, t?.translate('chat') ?? 'Chat'),
+            icon: _withChatBadge(_buildInactiveItem(PhosphorIconsRegular.chatCircle, t?.translate('chat') ?? 'Chat')),
+            activeIcon: _withChatBadge(_buildGradientItem(PhosphorIconsFill.chatCircle, t?.translate('chat') ?? 'Chat')),
             label: t?.translate('chat') ?? 'Chat',
           ),
           BottomNavigationBarItem(

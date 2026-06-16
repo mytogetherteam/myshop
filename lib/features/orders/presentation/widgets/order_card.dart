@@ -223,8 +223,12 @@ class OrderCard extends StatelessWidget {
                 reverseTransitionDuration: Duration.zero,
               ),
             );
-            if (result != null && result is String && context.mounted) {
-              context.findAncestorStateOfType<OrdersScreenState>()?.switchToStatus(result);
+            if (context.mounted) {
+              final state = context.findAncestorStateOfType<OrdersScreenState>();
+              state?.refreshAll();
+              if (result != null && result is String) {
+                state?.switchToStatus(result);
+              }
             }
           },
           style: ElevatedButton.styleFrom(
@@ -274,11 +278,9 @@ class OrderCard extends StatelessWidget {
         break;
     }
 
-    final bool canCancel = !isPaymentTab &&
-        order.status != 'COOKING' &&
-        order.status != 'ON_THE_WAY' &&
-        order.status != 'DELIVERED' &&
-        order.status != 'CANCELED';
+    final bool canCancel = order.status == 'PENDING' ||
+        order.status == 'REVISED' ||
+        order.status == 'PAYMENT_SLIP_REQUESTED';
 
     return Row(
       children: [
@@ -325,8 +327,12 @@ class OrderCard extends StatelessWidget {
                   reverseTransitionDuration: Duration.zero,
                 ),
               );
-              if (result != null && result is String && context.mounted) {
-                context.findAncestorStateOfType<OrdersScreenState>()?.switchToStatus(result);
+              if (context.mounted) {
+                final state = context.findAncestorStateOfType<OrdersScreenState>();
+                state?.refreshAll();
+                if (result != null && result is String) {
+                  state?.switchToStatus(result);
+                }
               }
             } : null,
             height: 54,
@@ -339,12 +345,16 @@ class OrderCard extends StatelessWidget {
                   const SizedBox(width: 8),
                 ],
                 if (isMainButtonEnabled)
-                  Text(
-                    mainButtonText,
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                      color: Colors.white,
+                  Flexible(
+                    child: Text(
+                      mainButtonText,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
                     ),
                   )
                 else

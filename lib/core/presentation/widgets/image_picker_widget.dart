@@ -50,6 +50,11 @@ class ImagePickerWidget extends StatefulWidget {
   /// Called whenever the user successfully picks an image.
   final ValueChanged<XFile> onImageSelected;
 
+  /// Called when the user removes the currently selected image. When provided,
+  /// a small remove (✕) badge is shown while an image is displayed, letting the
+  /// user clear their selection. Useful for optional images.
+  final VoidCallback? onImageRemoved;
+
   /// Shape of the preview container.
   final ImagePickerShape shape;
 
@@ -86,6 +91,7 @@ class ImagePickerWidget extends StatefulWidget {
     this.imageUrl,
     this.pickedFile,
     required this.onImageSelected,
+    this.onImageRemoved,
     this.shape = ImagePickerShape.rectangle,
     this.width = 120,
     this.height = 120,
@@ -169,6 +175,11 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
     }
   }
 
+  void _removeImage() {
+    setState(() => _localFile = null);
+    widget.onImageRemoved?.call();
+  }
+
   Future<void> _showPermissionDialog() async {
     final shouldOpenSettings = await AppDialog.showConfirm(
       context,
@@ -235,6 +246,27 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
     );
   }
 
+  Widget _buildRemoveBadge() {
+    return Positioned(
+      top: -6,
+      right: -6,
+      child: GestureDetector(
+        onTap: _removeImage,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          width: 26,
+          height: 26,
+          decoration: BoxDecoration(
+            color: const Color(0xFFEF4444),
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 2),
+          ),
+          child: const Icon(Icons.close, size: 14, color: Colors.white),
+        ),
+      ),
+    );
+  }
+
   Widget _buildEditBadge() {
     return Positioned(
       bottom: 0,
@@ -258,6 +290,10 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
   Widget build(BuildContext context) {
     final borderColor = widget.borderColor ??
         Theme.of(context).colorScheme.outlineVariant;
+
+    final hasImage = _localFile != null ||
+        (widget.imageUrl != null && widget.imageUrl!.isNotEmpty);
+    final canRemove = widget.onImageRemoved != null && hasImage;
 
     final isCircle = widget.shape == ImagePickerShape.circle;
     final decoration = isCircle
@@ -283,6 +319,7 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
             child: _buildImage(),
           ),
           if (widget.showEditBadge) _buildEditBadge(),
+          if (canRemove) _buildRemoveBadge(),
         ],
       ),
     );

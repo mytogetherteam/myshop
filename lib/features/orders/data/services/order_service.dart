@@ -10,34 +10,29 @@ List<OrderModel> _parseOrders(List<dynamic> jsonList) {
       .toList();
 }
 
-/// Maps a UI tab key to the backend `OrderStatus` values it represents.
+/// Maps each UI tab to the backend [OrderStatus] values it should contain.
 ///
-/// The shop orders endpoint (`GET /api/shop/orders`) filters by
-/// `?status=A,B,C` (validated against the `OrderStatus` enum), not by a `tab`
-/// group, so each tab is expanded to its concrete statuses here. Keep this in
-/// sync with the tab logic in `orders_screen.dart`.
-List<String> _tabStatuses(String tab) {
-  switch (tab.toUpperCase()) {
-    case 'NEW':
-      return const ['PENDING', 'REVISED'];
-    case 'PAYMENT':
-      return const [
-        'PAYMENT_SLIP_REQUESTED',
-        'AWAITING_APPROVAL',
-        'PAYMENT_VERIFIED',
-      ];
-    case 'PREPARING':
-      return const ['COOKING'];
-    case 'DELIVERING':
-      return const ['ON_THE_WAY'];
-    case 'DELIVERED':
-      return const ['DELIVERED'];
-    case 'CANCELLED':
-    case 'CANCELED':
-      return const ['CANCELED'];
-    default:
-      return const [];
-  }
+/// The backend `GET /api/shop/orders` filters by `?status=` (a comma-separated
+/// `OrderStatus[]`); it has no `tab` param. This mapping is the single source of
+/// truth and must stay in sync with `_OrderListTabViewState._onOrderUpdated` so
+/// a live socket update lands in the same tab the initial fetch placed it in.
+const Map<String, List<String>> kOrderTabStatuses = {
+  'NEW': ['PENDING', 'REVISED'],
+  'PAYMENT': [
+    'PAYMENT_SLIP_REQUESTED',
+    'AWAITING_APPROVAL',
+    'PAYMENT_VERIFIED',
+  ],
+  'PREPARING': ['COOKING'],
+  'DELIVERING': ['ON_THE_WAY'],
+  'DELIVERED': ['DELIVERED'],
+  'CANCELED': ['CANCELED'],
+};
+
+/// Resolves the backend `status` filter list for a UI tab key.
+List<String> _statusesForTab(String tab) {
+  final key = tab.toUpperCase() == 'CANCELLED' ? 'CANCELED' : tab.toUpperCase();
+  return kOrderTabStatuses[key] ?? const [];
 }
 
 class OrderService {
@@ -54,7 +49,7 @@ class OrderService {
         'size': size,
       };
       if (tab != null) {
-        final statuses = _tabStatuses(tab);
+        final statuses = _statusesForTab(tab);
         if (statuses.isNotEmpty) {
           queryParams['status'] = statuses.join(',');
         }
@@ -233,11 +228,23 @@ class OrderService {
     return updateStatus(orderId, status: 'COOKING');
   }
 
-  Future<Map<String, dynamic>> requestSlip(String orderId, String reason) {
+  Future<Map<String, dynamic>> requestSlip(
+    String orderId,
+    String reason, {
+    required String orderDeliveryType,
+    required double deliveryFee,
+    required int waitingTimeMinutes,
+  }) {
+    // The backend's status endpoint requires the delivery fields whenever the
+    // status is PAYMENT_SLIP_REQUESTED. The order was already confirmed, so we
+    // resend its existing values to keep them (and the total) unchanged.
     return updateStatus(
       orderId,
       status: 'PAYMENT_SLIP_REQUESTED',
       reviseReason: reason,
+      orderDeliveryType: orderDeliveryType,
+      deliveryFee: deliveryFee,
+      waitingTimeMinutes: waitingTimeMinutes,
     );
   }
 

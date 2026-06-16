@@ -27,8 +27,8 @@ class MenuService {
   static const String _categoriesPath = '/api/shop/menu-categories';
   static const String _menuItemsPath = '/api/shop/menu-items';
   static const String _masterCategoriesPath =
-      '/api/menu/master/categories';
-  static const String _masterTagsPath = '/api/master/menu-tags';
+      '/api/shop/master-menu-categories';
+  static const String _masterTagsPath = '/api/shop/item-tags';
 
   /// Retained for callers that previously invalidated the in-memory cache.
   /// Real HTTP caching is now handled by `ApiClient.cacheOptions` (Dio), so

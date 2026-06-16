@@ -7,7 +7,7 @@ import 'package:my_shop/features/menu/data/models/menu_category_model.dart';
 class CategoryService {
   static const String _categoriesPath = '/api/shop/menu-categories';
   static const String _masterCategoriesPath =
-      '/api/menu/master/categories';
+      '/api/shop/master-menu-categories';
 
   // Static cache variables
   static List<MenuCategoryModel>? _categoriesCache;

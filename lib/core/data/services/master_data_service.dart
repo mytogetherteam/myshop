@@ -16,7 +16,7 @@ class MasterDataService {
       } else if (payload is Map && payload['content'] is List) {
         final List list = payload['content'];
         return list.map((json) => MasterDataModel.fromJson(json)).toList();
-      } else if (payload is Map && payload['items'] is List) {
+      } else if (payload is Map && payload.containsKey('items')) {
         final List list = payload['items'];
         return list.map((json) => MasterDataModel.fromJson(json)).toList();
       }
@@ -27,7 +27,7 @@ class MasterDataService {
   Future<List<MasterDataModel>?> getShopCategories() async {
     try {
       final response = await ApiClient().dio.get(
-        '/api/master/shop-categories',
+        '/api/shop/shop-categories',
       );
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
@@ -38,37 +38,13 @@ class MasterDataService {
       ApiHelper.handleError(e, context: 'MasterDataService.getShopCategories');
     } catch (e) {
       ApiHelper.handleError(e, context: 'MasterDataService.getShopCategories');
-    }
-    return null;
-  }
-
-  Future<List<MasterDataModel>?> getShopSubcategories() async {
-    try {
-      final response = await ApiClient().dio.get(
-        '/api/master/shop-subcategories',
-      );
-      if (response.statusCode != null &&
-          response.statusCode! >= 200 &&
-          response.statusCode! < 300) {
-        return _parseResponse(response.data);
-      }
-    } on DioException catch (e) {
-      ApiHelper.handleError(
-        e,
-        context: 'MasterDataService.getShopSubcategories',
-      );
-    } catch (e) {
-      ApiHelper.handleError(
-        e,
-        context: 'MasterDataService.getShopSubcategories',
-      );
     }
     return null;
   }
 
   Future<List<MasterDataModel>?> getCities() async {
     try {
-      final response = await ApiClient().dio.get('/api/master/cities');
+      final response = await ApiClient().dio.get('/api/shop/cities');
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
@@ -104,7 +80,7 @@ class MasterDataService {
   Future<List<MasterDataModel>?> getCuisineTypes() async {
     try {
       final response = await ApiClient().dio.get(
-        '/api/master/cuisine-types',
+        '/api/shop/cuisine-types',
       );
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
@@ -121,7 +97,7 @@ class MasterDataService {
 
   Future<List<MasterDataModel>?> getMenuTags() async {
     try {
-      final response = await ApiClient().dio.get('/api/master/menu-tags');
+      final response = await ApiClient().dio.get('/api/shop/item-tags');
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {

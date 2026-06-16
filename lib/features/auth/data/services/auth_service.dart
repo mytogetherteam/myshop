@@ -5,6 +5,7 @@ import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/core/network/api_helper.dart';
 import 'package:my_shop/features/auth/data/models/auth_models.dart';
 import 'package:my_shop/core/network/api_client.dart';
+import 'package:my_shop/core/notifications/notification_service.dart';
 
 class AuthService {
   static const String _authPath = '/api/shop/auth';
@@ -60,10 +61,11 @@ class AuthService {
 
   Future<void> logout() async {
     try {
+      await NotificationService().unregisterDevice();
       final refreshToken = await StorageService.instance.getRefreshToken();
       if (refreshToken != null && refreshToken.isNotEmpty) {
         await ApiClient().dio.post(
-          '/api/auth/logout',
+          '$_authPath/logout',
           data: {'refreshToken': refreshToken},
         );
       }
@@ -77,6 +79,7 @@ class AuthService {
   Future<bool> deleteAccount() async {
     try {
       await ApiClient().dio.delete('$_authPath/delete-account');
+      await NotificationService().unregisterDevice();
       await StorageService.instance.clearAll();
       return true;
     } on DioException catch (e) {
@@ -104,7 +107,7 @@ class AuthService {
 
     try {
       final response = await dio.post(
-        '/api/auth/refresh',
+        '$_authPath/refresh',
         data: {'refreshToken': refreshToken},
         options: Options(headers: {'Authorization': ''}),
       );

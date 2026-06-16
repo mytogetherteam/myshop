@@ -43,8 +43,11 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
   bool _isLoadingHours = true;
   String? _loadError;
 
-  // API uses 1-based dayOfWeek: 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat, 7=Sun
-  // _hours index 0 = dayOfWeek 1 (Monday) ... index 6 = dayOfWeek 7 (Sunday)
+  // The shop/shop-profile/operating-hours API uses 0-based dayOfWeek:
+  // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat.
+  // The UI lists Monday first, so _hours index 0 = Monday ... index 6 = Sunday.
+  //   page index → dayOfWeek: (index + 1) % 7
+  //   dayOfWeek  → page index: (dayOfWeek + 6) % 7
   final List<String> _days = [
     'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
   ];
@@ -88,8 +91,8 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
         );
 
         for (final h in hoursList) {
-          // dayOfWeek 1=Mon...7=Sun → index = dayOfWeek - 1
-          final idx = h.dayOfWeek - 1;
+          // dayOfWeek 0=Sun...6=Sat → Monday-first index
+          final idx = (h.dayOfWeek + 6) % 7;
           if (idx >= 0 && idx < 7) {
             newHours[idx] = _DayHours(
               isClosed: h.isClosed,
@@ -125,12 +128,6 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
     final hour = t.hour.toString().padLeft(2, '0');
     final minute = t.minute.toString().padLeft(2, '0');
     return '$hour:$minute';
-  }
-
-  String _toApiTimeString(TimeOfDay t) {
-    final h = t.hour.toString().padLeft(2, '0');
-    final m = t.minute.toString().padLeft(2, '0');
-    return '$h:$m:00';
   }
 
   Future<void> _pickTime(int dayIndex, bool isOpen) async {
@@ -194,38 +191,21 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
   Future<void> _save() async {
     setState(() => _isSaving = true);
 
-    // Build payload with 1-based dayOfWeek and multiple time formats for compatibility
-    final activeHours = <Map<String, dynamic>>[];
+    // shop/shop-profile/operating-hours expects:
+    // { operatingHours: [{ dayOfWeek (0=Sun..6=Sat), openTime "HH:mm",
+    //                       closeTime "HH:mm", isClosed }] }
+    final operatingHours = <Map<String, dynamic>>[];
     for (int i = 0; i < _hours.length; i++) {
       final oh = _hours[i];
-      final timeStrOpen = _toApiTimeString(oh.openTime);
-      final timeStrClose = _toApiTimeString(oh.closeTime);
-      final timeObjOpen = {
-        'hour': oh.openTime.hour,
-        'minute': oh.openTime.minute,
-        'second': 0,
-        'nano': 0
-      };
-      final timeObjClose = {
-        'hour': oh.closeTime.hour,
-        'minute': oh.closeTime.minute,
-        'second': 0,
-        'nano': 0
-      };
-
-      activeHours.add({
-        'dayOfWeek': i + 1, // 1=Mon...7=Sun
-        'openTime': timeStrOpen,
-        'openingTime': timeStrOpen, // Send both keys just in case
-        'closeTime': timeStrClose,
-        'closingTime': timeStrClose, // Send both keys just in case
-        'openTimeObj': timeObjOpen, // Some backends want the object
-        'closeTimeObj': timeObjClose,
+      operatingHours.add({
+        'dayOfWeek': (i + 1) % 7, // Monday-first index → 0-based dayOfWeek
+        'openTime': _formatTime(oh.openTime),
+        'closeTime': _formatTime(oh.closeTime),
         'isClosed': oh.isClosed,
       });
     }
 
-    final payload = {'activeHours': activeHours};
+    final payload = {'operatingHours': operatingHours};
 
     final response = await _profileService.updateOperatingHours(payload);
     final bool isSuccess = response['success'] == true;

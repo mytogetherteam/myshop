@@ -54,6 +54,7 @@
   "yes_cancel_order": "ဟုတ်ကဲ့၊ အော်ဒါပယ်ဖျက်မည်",
   "order_cancelled_success": "အော်ဒါ ပယ်ဖျက်ပြီးပါပြီ",
   "order_cancelled_fail": "အော်ဒါ ပယ်ဖျက်၍မရပါ",
+  "operation_failed": "လုပ်ဆောင်မှု မအောင်မြင်ပါ။ ကျေးဇူးပြု၍ ထပ်မံကြိုးစားပါ။",
   "order_id": "အော်ဒါနံပါတ်",
   "customer": "ဝယ်ယူသူ",
   "address": "လိပ်စာ",

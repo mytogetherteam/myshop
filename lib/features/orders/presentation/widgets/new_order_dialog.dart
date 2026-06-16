@@ -128,10 +128,16 @@ class NewOrderDialog extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Icon(PhosphorIconsRegular.car, size: 16, color: Color(0xFF64748B)),
+                    Icon(
+                      order.isDeliveryFulfillment
+                          ? PhosphorIconsRegular.moped
+                          : PhosphorIconsRegular.shoppingBag,
+                      size: 16,
+                      color: const Color(0xFF64748B),
+                    ),
                     const SizedBox(width: 4),
                     Text(
-                      order.deliveryType == 'DELIVERY' ? 'Delivery' : 'Pickup',
+                      order.isDeliveryFulfillment ? 'Delivery' : 'Pickup',
                       style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,

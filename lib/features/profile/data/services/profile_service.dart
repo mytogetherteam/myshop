@@ -8,7 +8,8 @@ import '../models/operating_hours_model.dart';
 
 class ProfileService {
   static const String _profilePath = '/api/shop/shop-profile';
-  static const String _operatingHoursPath = '/api/menu/operating-hours';
+  static const String _operatingHoursPath =
+      '/api/shop/shop-profile/operating-hours';
   static const String _changePasswordPath = '/api/shop/auth/change-password';
 
   Future<List<OperatingHoursModel>> getOperatingHours() async {
@@ -21,11 +22,13 @@ class ProfileService {
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
         if (data['success'] == true && data['data'] != null) {
-          final List<dynamic> activeHours = data['data']['activeHours'] ?? [];
-          return activeHours
+          // shop/shop-profile/operating-hours returns a flat list with
+          // 0-based dayOfWeek (0=Sun..6=Sat) and "HH:mm" time strings.
+          final List<dynamic> hours = data['data'] as List? ?? const [];
+          return hours
               .map(
-                (e) => OperatingHoursModel.fromActiveHoursJson(
-                  e as Map<String, dynamic>,
+                (e) => OperatingHoursModel.fromJson(
+                  Map<String, dynamic>.from(e as Map),
                 ),
               )
               .toList();
@@ -98,27 +101,11 @@ class ProfileService {
     return false;
   }
 
+  /// Toggling delivery now goes through the shared shop-profile endpoint
+  /// (PUT /api/shop/shop-profile) so the toggle and the Edit Shop Profile
+  /// page write to the same source of truth.
   Future<bool> toggleDeliveryStatus(bool enabled) async {
-    try {
-      const url = '/api/profile/delivery-status';
-      debugPrint('PUT REQUEST: $url, Body: {enabled: $enabled}');
-      final response = await ApiClient().dio.put(
-        url,
-        data: {'enabled': enabled},
-      );
-
-      if (response.statusCode != null &&
-          response.statusCode! >= 200 &&
-          response.statusCode! < 300) {
-        final Map<String, dynamic> data = response.data;
-        return data['success'] == true;
-      }
-    } on DioException catch (e) {
-      ApiHelper.handleError(e, context: 'ProfileService.toggleDeliveryStatus');
-    } catch (e) {
-      ApiHelper.handleError(e, context: 'ProfileService.toggleDeliveryStatus');
-    }
-    return false;
+    return updateShopProfile({'deliveryEnabled': enabled});
   }
 
   Future<Map<String, dynamic>> updateOperatingHours(
