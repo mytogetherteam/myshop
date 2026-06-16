@@ -17,13 +17,13 @@ List<OrderModel> _parseOrders(List<dynamic> jsonList) {
 /// truth and must stay in sync with `_OrderListTabViewState._onOrderUpdated` so
 /// a live socket update lands in the same tab the initial fetch placed it in.
 const Map<String, List<String>> kOrderTabStatuses = {
-  'NEW': ['PENDING'],
+  'NEW': ['PENDING', 'REVISED'],
   'PAYMENT': [
     'PAYMENT_SLIP_REQUESTED',
     'AWAITING_APPROVAL',
     'PAYMENT_VERIFIED',
   ],
-  'PREPARING': ['COOKING', 'REVISED'],
+  'PREPARING': ['COOKING'],
   'DELIVERING': ['ON_THE_WAY'],
   'DELIVERED': ['DELIVERED'],
   'CANCELED': ['CANCELED'],

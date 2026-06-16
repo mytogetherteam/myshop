@@ -97,7 +97,7 @@ class OrdersScreenState extends State<OrdersScreen>
     int index = 0;
     final upperStatus = status.toUpperCase();
 
-    if (upperStatus == 'PENDING') {
+    if (upperStatus == 'PENDING' || upperStatus == 'REVISED') {
       index = 0;
     } else if ([
       'PAYMENT_SLIP_REQUESTED',
@@ -105,7 +105,7 @@ class OrdersScreenState extends State<OrdersScreen>
       'PAYMENT_VERIFIED',
     ].contains(upperStatus)) {
       index = 1;
-    } else if (['COOKING', 'REVISED'].contains(upperStatus)) {
+    } else if (upperStatus == 'COOKING') {
       index = 2;
     } else if (upperStatus == 'ON_THE_WAY') {
       index = 3;
@@ -387,7 +387,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
     final upperStatus = newOrder.status.toUpperCase();
     switch (widget.tabStatus) {
       case 'NEW':
-        belongsHere = upperStatus == 'PENDING';
+        belongsHere = ['PENDING', 'REVISED'].contains(upperStatus);
         break;
       case 'PAYMENT':
         belongsHere = [
@@ -397,7 +397,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
         ].contains(upperStatus);
         break;
       case 'PREPARING':
-        belongsHere = ['COOKING', 'REVISED'].contains(upperStatus);
+        belongsHere = upperStatus == 'COOKING';
         break;
       case 'DELIVERING':
         belongsHere = upperStatus == 'ON_THE_WAY';
