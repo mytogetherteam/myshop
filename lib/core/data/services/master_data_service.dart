@@ -80,7 +80,7 @@ class MasterDataService {
   Future<List<MasterDataModel>?> getCuisineTypes() async {
     try {
       final response = await ApiClient().dio.get(
-        '/api/shop/cusine-types',
+        '/api/shop/cuisine-types',
       );
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&
