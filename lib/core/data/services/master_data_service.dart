@@ -13,8 +13,11 @@ class MasterDataService {
       final payload = data['data'];
       if (payload is List) {
         return payload.map((json) => MasterDataModel.fromJson(json)).toList();
-      } else if (payload is Map && payload.containsKey('content')) {
+      } else if (payload is Map && payload['content'] is List) {
         final List list = payload['content'];
+        return list.map((json) => MasterDataModel.fromJson(json)).toList();
+      } else if (payload is Map && payload['items'] is List) {
+        final List list = payload['items'];
         return list.map((json) => MasterDataModel.fromJson(json)).toList();
       }
     }
