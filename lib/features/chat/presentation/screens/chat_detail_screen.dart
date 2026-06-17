@@ -488,12 +488,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     return '$hour:$minute';
   }
 
+  bool _isSameCalendarDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
   bool _shouldShowDateSeparator(int index) {
     if (index == 0) return true;
     final current = _messages[index].createdAt;
     final previous = _messages[index - 1].createdAt;
-    return current.difference(previous).inMinutes > 30 ||
-        current.day != previous.day;
+    return !_isSameCalendarDay(current, previous);
   }
 
   String _formatDateSeparator(DateTime timestamp) {

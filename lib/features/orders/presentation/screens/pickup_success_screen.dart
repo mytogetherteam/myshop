@@ -80,11 +80,8 @@ class PickupSuccessScreen extends StatelessWidget {
   }
 }
 
-/// Returns true when a scanned pickup order can go straight to [PickupCompleteScreen].
+/// Returns true when a scanned pickup order can go to [PickupCompleteScreen].
 bool isPickupReadyForQrConfirm(OrderModel order) {
-  if (order.isPickupFulfillment) {
-    final status = order.status.toUpperCase();
-    return status == 'COOKING' || status == 'READY_FOR_PICKUP';
-  }
-  return false;
+  if (!order.isPickupFulfillment) return false;
+  return order.status.toUpperCase() == 'READY_FOR_PICKUP';
 }

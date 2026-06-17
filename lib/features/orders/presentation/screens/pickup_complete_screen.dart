@@ -1,60 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
-import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/presentation/widgets/back_title_app_bar.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/features/orders/data/models/order_model.dart';
-import 'package:my_shop/features/orders/data/services/order_service.dart';
-import 'package:my_shop/features/orders/presentation/screens/pickup_success_screen.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-/// Lightweight confirmation screen shown after scanning a pickup order QR.
-class PickupCompleteScreen extends StatefulWidget {
+/// Shop-side verification screen after scanning a customer pickup QR.
+/// The customer confirms pickup in their app; this screen does not change status.
+class PickupCompleteScreen extends StatelessWidget {
   final OrderModel order;
 
   const PickupCompleteScreen({super.key, required this.order});
-
-  @override
-  State<PickupCompleteScreen> createState() => _PickupCompleteScreenState();
-}
-
-class _PickupCompleteScreenState extends State<PickupCompleteScreen> {
-  bool _isSubmitting = false;
-
-  OrderModel get _order => widget.order;
-
-  Future<void> _confirmPickup() async {
-    if (_isSubmitting) return;
-    setState(() => _isSubmitting = true);
-
-    final result = await OrderService().confirmPickup(_order.id.toString());
-    if (!mounted) return;
-
-    final success = result['success'] == true;
-    if (!success) {
-      setState(() => _isSubmitting = false);
-      AppDialog.showToast(
-        context,
-        result['details']?.toString() ??
-            (AppLocalizations.of(context)?.translate('operation_failed') ??
-                'Operation failed. Please try again.'),
-        isError: true,
-      );
-      return;
-    }
-
-    await Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PickupSuccessScreen(
-          orderNo: _order.lastOrderNo,
-          customerName: _order.customerName,
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +21,7 @@ class _PickupCompleteScreenState extends State<PickupCompleteScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: BackTitleAppBar(
-        title: t?.translate('confirm_pickup') ?? 'Confirm Pickup',
+        title: t?.translate('verify_pickup') ?? 'Verify Pickup',
       ),
       body: Column(
         children: [
@@ -73,7 +31,39 @@ class _PickupCompleteScreenState extends State<PickupCompleteScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _HeaderCard(order: _order, t: t),
+                  _HeaderCard(order: order, t: t),
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0FDF4),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFBBF7D0)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(
+                          PhosphorIconsRegular.info,
+                          color: Color(0xFF16A34A),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            t?.translate('pickup_verify_hint') ??
+                                'Hand the order to the customer, then ask them to tap Confirm Pickup in the MyTogether app.',
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              color: const Color(0xFF166534),
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     t?.translate('items') ?? 'Items',
@@ -84,7 +74,7 @@ class _PickupCompleteScreenState extends State<PickupCompleteScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  ..._order.items.map(
+                  ...order.items.map(
                     (item) => Padding(
                       padding: const EdgeInsets.only(bottom: 10),
                       child: Row(
@@ -102,28 +92,13 @@ class _PickupCompleteScreenState extends State<PickupCompleteScreen> {
                             ),
                           ),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  item.displayName,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: const Color(0xFF1E293B),
-                                  ),
-                                ),
-                                if (item.specialInstructions != null &&
-                                    item.specialInstructions!.isNotEmpty)
-                                  Text(
-                                    '${t?.translate('note') ?? 'Note'}: ${item.specialInstructions}',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                      color: const Color(0xFF64748B),
-                                    ),
-                                  ),
-                              ],
+                            child: Text(
+                              item.displayName,
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xFF1E293B),
+                              ),
                             ),
                           ),
                           Text(
@@ -138,24 +113,17 @@ class _PickupCompleteScreenState extends State<PickupCompleteScreen> {
                     ),
                   ),
                   const Divider(height: 24, color: Color(0xFFE2E8F0)),
-                  if (_order.deliveryFee > 0) ...[
-                    _SummaryRow(
-                      label: t?.translate('delivery_fee') ?? 'Delivery Fee',
-                      value: _order.displayDeliveryFee,
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                  if (_order.waitingTimeMinutes > 0) ...[
+                  if (order.waitingTimeMinutes > 0) ...[
                     _SummaryRow(
                       label: t?.translate('est_prep_time') ?? 'Est. Prep Time',
                       value:
-                          '${_order.waitingTimeMinutes} ${t?.translate('mins') ?? 'mins'}',
+                          '${order.waitingTimeMinutes} ${t?.translate('mins') ?? 'mins'}',
                     ),
                     const SizedBox(height: 8),
                   ],
                   _SummaryRow(
                     label: t?.translate('total') ?? 'Total',
-                    value: _order.displayTotalAmount,
+                    value: order.displayTotalAmount,
                     emphasized: true,
                   ),
                 ],
@@ -171,21 +139,20 @@ class _PickupCompleteScreenState extends State<PickupCompleteScreen> {
               ),
             ),
             child: PrimaryGradientButton(
-              onPressed: _isSubmitting ? null : _confirmPickup,
-              isLoading: _isSubmitting,
+              onPressed: () => Navigator.pop(context),
               height: 56,
               borderRadius: 14,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(
-                    PhosphorIconsRegular.shoppingBag,
+                    PhosphorIconsRegular.check,
                     color: Colors.white,
                     size: 20,
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    t?.translate('confirm_pickup') ?? 'Confirm Pickup',
+                    t?.translate('order_handed_over') ?? 'Order Handed Over',
                     style: GoogleFonts.poppins(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -251,7 +218,9 @@ class _HeaderCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'MT-${order.lastOrderNo}',
+            order.lastOrderNo.isNotEmpty
+                ? order.lastOrderNo
+                : 'MT-${order.id}',
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w700,

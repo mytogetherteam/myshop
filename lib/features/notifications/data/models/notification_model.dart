@@ -25,6 +25,8 @@ enum NotificationSubType {
   onTheWayOrder,
   deliveredOrder,
   revisedOrder,
+  readyForPickupOrder,
+  pickedUpOrder,
   unknown;
 
   static NotificationSubType fromString(String? value) {
@@ -48,6 +50,10 @@ enum NotificationSubType {
         return NotificationSubType.deliveredOrder;
       case 'REVISED_ORDER':
         return NotificationSubType.revisedOrder;
+      case 'READY_FOR_PICKUP_ORDER':
+        return NotificationSubType.readyForPickupOrder;
+      case 'PICKED_UP_ORDER':
+        return NotificationSubType.pickedUpOrder;
       default:
         return NotificationSubType.unknown;
     }
@@ -95,6 +101,20 @@ class NotificationModel {
           ? DateTime.parse(json['createdAt'].toString())
           : DateTime.now(),
       isRead: json['isRead'] as bool? ?? false,
+    );
+  }
+
+  NotificationModel copyWith({bool? isRead}) {
+    return NotificationModel(
+      id: id,
+      title: title,
+      message: message,
+      mainType: mainType,
+      subType: subType,
+      orderId: orderId,
+      data: data,
+      createdAt: createdAt,
+      isRead: isRead ?? this.isRead,
     );
   }
 

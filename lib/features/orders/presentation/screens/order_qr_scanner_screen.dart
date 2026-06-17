@@ -123,9 +123,9 @@ class _OrderQrScannerScreenState extends State<OrderQrScannerScreen> {
     }
 
     if (isPickupReadyForQrConfirm(order)) {
-      final result = await navigator.push<String>(
+      await navigator.push(
         PageRouteBuilder(
-          settings: RouteSettings(name: 'pickup_complete_${order.id}'),
+          settings: RouteSettings(name: 'pickup_verify_${order.id}'),
           pageBuilder: (context, animation, secondaryAnimation) =>
               PickupCompleteScreen(order: order),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -144,9 +144,6 @@ class _OrderQrScannerScreenState extends State<OrderQrScannerScreen> {
           reverseTransitionDuration: Duration.zero,
         ),
       );
-      if (result == 'PICKED_UP' && navigator.mounted) {
-        // Success screen already popped with result; nothing else needed.
-      }
       return;
     }
 
