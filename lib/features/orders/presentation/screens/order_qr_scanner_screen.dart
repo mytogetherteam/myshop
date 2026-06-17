@@ -10,7 +10,6 @@ import 'package:my_shop/core/utils/order_qr_parser.dart';
 import 'package:my_shop/features/orders/data/services/order_service.dart';
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:my_shop/features/orders/presentation/screens/pickup_complete_screen.dart';
-import 'package:my_shop/features/orders/presentation/screens/pickup_success_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 

@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
-import 'package:my_shop/features/orders/data/models/order_model.dart';
 
 class PickupSuccessScreen extends StatelessWidget {
   final String orderNo;
@@ -78,10 +77,4 @@ class PickupSuccessScreen extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Returns true when a scanned pickup order can go to [PickupCompleteScreen].
-bool isPickupReadyForQrConfirm(OrderModel order) {
-  if (!order.isPickupFulfillment) return false;
-  return order.status.toUpperCase() == 'READY_FOR_PICKUP';
 }

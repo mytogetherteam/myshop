@@ -1,27 +1,91 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/presentation/widgets/back_title_app_bar.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/features/orders/data/models/order_model.dart';
+import 'package:my_shop/features/orders/data/services/order_service.dart';
+import 'package:my_shop/features/orders/presentation/screens/pickup_success_screen.dart';
+import 'package:my_shop/features/orders/presentation/widgets/order_qr_scan_icon.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-/// Shop-side verification screen after scanning a customer pickup QR.
-/// The customer confirms pickup in their app; this screen does not change status.
-class PickupCompleteScreen extends StatelessWidget {
+/// Returns true when a scanned pickup order can go to [PickupCompleteScreen].
+bool isPickupReadyForQrConfirm(OrderModel order) {
+  if (!order.isPickupFulfillment) return false;
+  return order.status.toUpperCase() == 'READY_FOR_PICKUP';
+}
+
+/// Shop-side screen after scanning a customer pickup QR. Tapping
+/// [order_handed_over] marks the order as PICKED_UP on the backend.
+class PickupCompleteScreen extends StatefulWidget {
   final OrderModel order;
 
   const PickupCompleteScreen({super.key, required this.order});
 
   @override
+  State<PickupCompleteScreen> createState() => _PickupCompleteScreenState();
+}
+
+class _PickupCompleteScreenState extends State<PickupCompleteScreen> {
+  bool _isSubmitting = false;
+
+  Future<void> _confirmHandover() async {
+    if (_isSubmitting) return;
+
+    setState(() => _isSubmitting = true);
+    HapticFeedback.lightImpact();
+
+    final t = AppLocalizations.of(context);
+    final result = await OrderService().confirmPickup(
+      widget.order.id.toString(),
+    );
+
+    if (!mounted) return;
+
+    final success = result['success'] == true;
+    if (!success) {
+      setState(() => _isSubmitting = false);
+      AppDialog.showToast(
+        context,
+        result['details'] ??
+            t?.translate('pickup_handover_failed') ??
+            'Failed to mark order as picked up.',
+        isError: true,
+      );
+      return;
+    }
+
+    final orderNo = widget.order.lastOrderNo.isNotEmpty
+        ? widget.order.lastOrderNo
+        : widget.order.id.toString();
+
+    await Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PickupSuccessScreen(
+          orderNo: orderNo,
+          customerName: widget.order.customerName,
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
+    final order = widget.order;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: BackTitleAppBar(
         title: t?.translate('verify_pickup') ?? 'Verify Pickup',
+        actions: const [
+          OrderQrScanIcon(),
+          SizedBox(width: 4),
+        ],
       ),
       body: Column(
         children: [
@@ -53,7 +117,7 @@ class PickupCompleteScreen extends StatelessWidget {
                         Expanded(
                           child: Text(
                             t?.translate('pickup_verify_hint') ??
-                                'Hand the order to the customer, then ask them to tap Confirm Pickup in the MyTogether app.',
+                                'Hand the order to the customer, then tap Order Handed Over below to complete the pickup.',
                             style: GoogleFonts.poppins(
                               fontSize: 13,
                               color: const Color(0xFF166534),
@@ -139,18 +203,21 @@ class PickupCompleteScreen extends StatelessWidget {
               ),
             ),
             child: PrimaryGradientButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: _isSubmitting ? null : _confirmHandover,
+              isLoading: _isSubmitting,
               height: 56,
               borderRadius: 14,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
-                    PhosphorIconsRegular.check,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 10),
+                  if (!_isSubmitting) ...[
+                    const Icon(
+                      PhosphorIconsRegular.check,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
+                  ],
                   Text(
                     t?.translate('order_handed_over') ?? 'Order Handed Over',
                     style: GoogleFonts.poppins(

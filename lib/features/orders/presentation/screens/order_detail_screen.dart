@@ -32,6 +32,7 @@ import 'package:my_shop/features/chat/data/services/chat_service.dart';
 import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
 import 'package:my_shop/features/chat/presentation/chat_navigation.dart';
 import 'package:my_shop/features/orders/presentation/screens/pickup_complete_screen.dart';
+import 'package:my_shop/features/orders/presentation/widgets/order_qr_scan_icon.dart';
 
 
 class OrderDetailScreen extends StatefulWidget {
@@ -1218,13 +1219,28 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Future<void> _openPickupCompleteScreen() async {
-    await Navigator.push(
+    final result = await Navigator.push<String>(
       context,
       MaterialPageRoute(
         builder: (_) => PickupCompleteScreen(order: _currentOrder),
       ),
     );
+    if (result == 'PICKED_UP' && mounted) {
+      await _fetchOrderDetails();
+    }
   }
+
+  Future<void> _openQrScanner() async {
+    await OrderQrScanIcon.openScanner(context);
+    if (mounted) {
+      await _fetchOrderDetails();
+    }
+  }
+
+  bool get _showPickupScanAction =>
+      _currentOrder.isPickupFulfillment &&
+      (_currentOrder.status == 'COOKING' ||
+          _currentOrder.status == 'READY_FOR_PICKUP');
 
   Future<void> _handleDispatchOrder() async {
     if (_selectedDriverId == null) {
@@ -1315,8 +1331,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   ),
           ],
         ),
-        actions: const [
-          SizedBox(width: 8),
+        actions: [
+          if (_showPickupScanAction) const OrderQrScanIcon(),
+          const SizedBox(width: 8),
         ],
       ),
       body: _isFirstLoading 
@@ -2630,6 +2647,36 @@ Widget _buildAnimatedProgress() {
                 ),
                 const SizedBox(width: 12),
               ],
+              if (_currentOrder.isPickupFulfillment &&
+                  _currentOrder.status == 'READY_FOR_PICKUP') ...[
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _isUpdating ? null : _openQrScanner,
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(0, 54),
+                      side: const BorderSide(color: Color(0xFFE2E8F0)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(
+                      PhosphorIconsRegular.qrCode,
+                      size: 18,
+                      color: Color(0xFF1E293B),
+                    ),
+                    label: Text(
+                      AppLocalizations.of(context)?.translate('scan_order_qr') ??
+                          'Scan QR',
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: const Color(0xFF1E293B),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
               Expanded(
                 flex: 2,
                 child: PrimaryGradientButton(
@@ -3136,7 +3183,7 @@ Widget _buildAnimatedProgress() {
                 ),
                 child: Text(
                   t?.translate('pickup_ready_hint') ??
-                      'Customer will confirm pickup in their app after you hand over the order. Scan their QR from the header to verify the order first.',
+                      'Hand the order to the customer and scan their QR code, or tap Verify Pickup when ready.',
                   style: GoogleFonts.poppins(
                     fontSize: 13,
                     color: const Color(0xFF64748B),
