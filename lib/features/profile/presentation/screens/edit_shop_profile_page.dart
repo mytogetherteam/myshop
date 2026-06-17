@@ -750,7 +750,9 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         ),
         body: ListView(
           controller: _scrollController,
-          padding: const EdgeInsets.only(bottom: 24),
+          padding: EdgeInsets.only(
+            bottom: 24 + MediaQuery.of(context).viewInsets.bottom,
+          ),
           children: [
             ShopProfileImageHeader(
               pickedCover: _pickedCover,

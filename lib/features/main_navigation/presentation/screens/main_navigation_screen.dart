@@ -15,6 +15,7 @@ import 'package:my_shop/features/orders/presentation/screens/order_detail_screen
 import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
 import 'package:my_shop/features/notifications/presentation/widgets/notification_badge_icon.dart';
+import 'package:my_shop/features/orders/presentation/widgets/order_qr_scan_icon.dart';
 import 'package:flutter/services.dart';
 import 'package:my_shop/core/presentation/widgets/app_bar_title_with_logo.dart';
 import 'package:my_shop/core/utils/app_logger.dart';
@@ -305,7 +306,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         scrolledUnderElevation: 0,
         centerTitle: false,
         title: AppBarTitleWithLogo(title: localizedTitles[_currentIndex]),
-        actions: [const NotificationBadgeIcon(), const SizedBox(width: 8)],
+        actions: const [
+          OrderQrScanIcon(),
+          NotificationBadgeIcon(),
+          SizedBox(width: 8),
+        ],
       ),
       body: IndexedStack(
         index: _currentIndex,

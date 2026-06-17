@@ -10,6 +10,10 @@ import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/features/chat/data/models/chat_model.dart';
 import 'package:my_shop/features/chat/data/services/chat_service.dart';
 import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
+import 'package:my_shop/features/chat/presentation/widgets/chat_order_summary_banner.dart';
+import 'package:my_shop/features/orders/data/models/order_model.dart';
+import 'package:my_shop/features/orders/data/services/order_service.dart';
+import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
 
 class ChatDetailScreen extends StatefulWidget {
   final ChatConversation conversation;
@@ -35,6 +39,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   int _lastPage = 1;
 
   StreamSubscription<Map<String, dynamic>>? _chatSub;
+  StreamSubscription<Map<String, dynamic>>? _orderSub;
+
+  OrderModel? _order;
+  bool _isLoadingOrder = true;
 
   /// Mutable: a conversation opened from an order may not exist on the server
   /// yet (id 0). It's assigned once the first message creates it.
@@ -46,7 +54,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     super.initState();
     _scrollController.addListener(_onScroll);
     _chatSub = WebSocketService().chatUpdates.listen(_onChatEvent);
+    _orderSub = WebSocketService().orderUpdates.listen(_onOrderEvent);
     _loadMessages();
+    _loadOrderInfo();
   }
 
   @override
@@ -54,7 +64,67 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     _messageController.dispose();
     _scrollController.dispose();
     _chatSub?.cancel();
+    _orderSub?.cancel();
     super.dispose();
+  }
+
+  Future<void> _loadOrderInfo() async {
+    setState(() => _isLoadingOrder = true);
+
+    final order = await OrderService().getOrderDetail(_orderId.toString());
+
+    if (!mounted) return;
+    setState(() {
+      _isLoadingOrder = false;
+      _order = order;
+    });
+  }
+
+  void _onOrderEvent(Map<String, dynamic> event) {
+    if (!mounted) return;
+    final orderId = event['orderId']?.toString();
+    if (orderId != _orderId.toString()) return;
+
+    if (event['order'] != null) {
+      setState(() {
+        _order = OrderModel.fromJson(
+          Map<String, dynamic>.from(event['order'] as Map),
+        );
+      });
+    } else {
+      _loadOrderInfo();
+    }
+  }
+
+  Future<void> _openOrderDetails() async {
+    if (_order == null) return;
+
+    await Navigator.push(
+      context,
+      PageRouteBuilder(
+        settings: RouteSettings(name: 'order_detail_${_order!.id}'),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            OrderDetailScreen(order: _order!),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeOut;
+          final tween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: curve));
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+        reverseTransitionDuration: Duration.zero,
+      ),
+    );
+
+    if (mounted) {
+      await _loadOrderInfo();
+    }
   }
 
   Future<void> _loadMessages() async {
@@ -446,6 +516,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       appBar: _buildAppBar(),
       body: Column(
         children: [
+          ChatOrderSummaryBanner(
+            order: _order,
+            fallbackOrderNo: widget.conversation.orderNo,
+            isLoading: _isLoadingOrder,
+            onRetry: _loadOrderInfo,
+            onViewDetails: _order != null ? _openOrderDetails : null,
+          ),
           Expanded(child: _buildBody(t)),
           _buildMessageInput(t),
         ],
