@@ -48,7 +48,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   StreamSubscription<int>? _chatReadSubscription;
   int _chatUnreadCount = 0;
   int _chatConversationId = 0;
-  bool _isUpdating = false;
+  bool _isSubmitting = false;
+  bool _isRefreshing = false;
   bool _isFirstLoading = true;
 
   // Controllers for Confirmation Details
@@ -166,6 +167,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Future<void> _fetchOrderDetails({bool showLoading = true}) async {
     if (showLoading) setState(() => _isFirstLoading = true);
+    final previousStatus = _currentOrder.status;
     final updatedOrder = await OrderService().getOrderDetail(_currentOrder.id);
     if (updatedOrder != null && mounted) {
       setState(() {
@@ -190,7 +192,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           }
           _availableDrivers = byId.values.toList();
         }
-        _initControllers();
+        // Keep in-progress form input when realtime refresh does not change status.
+        if (showLoading || previousStatus != updatedOrder.status) {
+          _initControllers();
+        }
         _isFirstLoading = false;
       });
       // Always (re)load the shop's full rider roster so the picker shows every
@@ -264,12 +269,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         debugPrint('Real-time update received for Order ${_currentOrder.id}');
 
         setState(() {
-          _isUpdating = true;
-          // If the event contains a full order object, we can reconstruct it
-          // for an instant status/items refresh.
+          _isRefreshing = true;
           if (event['order'] != null) {
             _currentOrder = OrderModel.fromJson(event['order']);
-            _initControllers();
           }
         });
 
@@ -279,12 +281,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         // properly-built absolute URLs (otherwise the receipt fails to load).
         _fetchOrderDetails(showLoading: false);
 
-        // Small delay to show the "updated" flash or animation
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) {
-            setState(() {
-              _isUpdating = false;
-            });
+            setState(() => _isRefreshing = false);
           }
         });
       }
@@ -884,7 +883,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     String? errorMessage,
     VoidCallback? onSuccess,
   }) async {
-    setState(() => _isUpdating = true);
+    setState(() => _isSubmitting = true);
     final result = await action();
 
     bool success = false;
@@ -912,8 +911,23 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
 
     if (mounted) {
-      setState(() => _isUpdating = false);
+      setState(() => _isSubmitting = false);
     }
+  }
+
+  void _showFormIncompleteMessage() {
+    final message = _deliveryOption == 'NORMAL'
+        ? 'Please enter the estimated prep time.'
+        : 'Please enter the delivery fee and estimated waiting time.';
+    AppDialog.showToast(context, message, isError: true);
+  }
+
+  Future<void> _handleConfirmOrderTap() async {
+    if (!_isFormValid) {
+      _showFormIncompleteMessage();
+      return;
+    }
+    await _handleConfirmOrder();
   }
 
   Future<void> _handleConfirmOrder() async {
@@ -1326,7 +1340,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ? _buildSkeletonDetail()
             : AnimatedOpacity(
                 duration: const Duration(milliseconds: 300),
-                opacity: _isUpdating ? 0.6 : 1.0,
+                opacity: _isRefreshing ? 0.6 : 1.0,
                 child: Column(
                   children: [
                     // Fixed Header Section (Info + Status)
@@ -2239,14 +2253,17 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                icon: const GradientWidget(
-                  child: Icon(PhosphorIconsRegular.warning, size: 16),
+                icon: Icon(
+                  PhosphorIconsRegular.pencilSimple,
+                  size: 16,
+                  color: AppColors.primary,
                 ),
-                label: GradientText(
-                  'Revise items',
+                label: Text(
+                  'Edit items',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
                   ),
                 ),
               ),
@@ -2584,15 +2601,15 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     switch (_currentOrder.status) {
       case 'PENDING':
         mainButtonText = 'Accept order & Send bill';
-        onPressed = (_isUpdating || !_isFormValid) ? null : _handleConfirmOrder;
+        onPressed = _isSubmitting ? null : _handleConfirmOrderTap;
         break;
       case 'AWAITING_APPROVAL':
         mainButtonText = 'Confirm Payment';
-        onPressed = _isUpdating ? null : _handleVerifyPayment;
+        onPressed = _isSubmitting ? null : _handleVerifyPayment;
         break;
       case 'PAYMENT_VERIFIED':
         mainButtonText = 'Accept order to cook';
-        onPressed = _isUpdating ? null : _handlePrepareOrder;
+        onPressed = _isSubmitting ? null : _handlePrepareOrder;
         break;
       case 'PAYMENT_SLIP_REQUESTED':
         mainButtonText = 'Waiting for payment';
@@ -2600,13 +2617,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         break;
       case 'COOKING':
         mainButtonText = 'Picked Up by Rider';
-        onPressed = (_isUpdating || _selectedDriverId == null)
+        onPressed = (_isSubmitting || _selectedDriverId == null)
             ? null
             : _handleDispatchOrder;
         break;
       case 'ON_THE_WAY':
         mainButtonText = 'Delivered';
-        onPressed = _isUpdating ? null : _handleCompleteDelivery;
+        onPressed = _isSubmitting ? null : _handleCompleteDelivery;
         break;
       case 'DELIVERED':
         return _buildDeliveredBanner();
@@ -2620,8 +2637,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
     isCancelable = _isOrderCancelable(_currentOrder.status);
 
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+      padding: EdgeInsets.fromLTRB(20, 16, 20, 32 + bottomInset),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(
@@ -2636,16 +2655,17 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               if (isCancelable) ...[
                 Expanded(
                   child: PrimaryGradientButton(
-                    onPressed: _isUpdating ? null : _handleCancelOrder,
+                    onPressed: _isSubmitting ? null : _handleCancelOrder,
                     height: 54,
                     gradient: const LinearGradient(
                       colors: [Color(0xFFFFF1F2), Color(0xFFFFF1F2)],
                     ),
-                    child: GradientText(
+                    child: Text(
                       t?.translate('cancel') ?? 'Cancel',
                       style: GoogleFonts.poppins(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
@@ -2656,16 +2676,17 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   _currentOrder.status == 'AWAITING_APPROVAL') ...[
                 Expanded(
                   child: PrimaryGradientButton(
-                    onPressed: _isUpdating ? null : _handleRequestSlip,
+                    onPressed: _isSubmitting ? null : _handleRequestSlip,
                     height: 54,
                     gradient: const LinearGradient(
                       colors: [Color(0xFFFFF1F2), Color(0xFFFFF1F2)],
                     ),
-                    child: GradientText(
+                    child: Text(
                       'Revise',
                       style: GoogleFonts.poppins(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
@@ -2676,7 +2697,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 flex: 2,
                 child: PrimaryGradientButton(
                   onPressed: onPressed,
-                  isLoading: _isUpdating,
+                  isLoading: _isSubmitting,
+                  muted: _currentOrder.status == 'PENDING' && !_isFormValid,
                   child: (_currentOrder.status == 'PAYMENT_SLIP_REQUESTED')
                       ? AnimatedEllipsisText(
                           text: mainButtonText,
@@ -2686,16 +2708,19 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : Flexible(
-                          child: Text(
-                            mainButtonText,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
+                      : Text(
+                          mainButtonText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color:
+                                (_currentOrder.status == 'PENDING' &&
+                                    !_isFormValid)
+                                ? const Color(0xFF94A3B8)
+                                : Colors.white,
                           ),
                         ),
                 ),
