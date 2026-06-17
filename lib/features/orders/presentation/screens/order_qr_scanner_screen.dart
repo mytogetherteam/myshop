@@ -9,6 +9,8 @@ import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/utils/order_qr_parser.dart';
 import 'package:my_shop/features/orders/data/services/order_service.dart';
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
+import 'package:my_shop/features/orders/presentation/screens/pickup_complete_screen.dart';
+import 'package:my_shop/features/orders/presentation/screens/pickup_success_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
@@ -110,6 +112,43 @@ class _OrderQrScannerScreenState extends State<OrderQrScannerScreen> {
 
     final navigator = Navigator.of(context);
     navigator.pop(); // Close scanner
+
+    if (order.status.toUpperCase() == 'PICKED_UP') {
+      AppDialog.showToast(
+        context,
+        t?.translate('order_already_picked_up') ??
+            'This order has already been picked up.',
+      );
+      return;
+    }
+
+    if (isPickupReadyForQrConfirm(order)) {
+      final result = await navigator.push<String>(
+        PageRouteBuilder(
+          settings: RouteSettings(name: 'pickup_complete_${order.id}'),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              PickupCompleteScreen(order: order),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            const begin = Offset(1.0, 0.0);
+            const end = Offset.zero;
+            const curve = Curves.easeOut;
+            final tween = Tween(
+              begin: begin,
+              end: end,
+            ).chain(CurveTween(curve: curve));
+            return SlideTransition(
+              position: animation.drive(tween),
+              child: child,
+            );
+          },
+          reverseTransitionDuration: Duration.zero,
+        ),
+      );
+      if (result == 'PICKED_UP' && navigator.mounted) {
+        // Success screen already popped with result; nothing else needed.
+      }
+      return;
+    }
 
     await navigator.push(
       PageRouteBuilder(

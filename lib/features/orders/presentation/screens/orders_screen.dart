@@ -35,8 +35,10 @@ class OrdersScreenState extends State<OrdersScreen>
     'NEW': 0,
     'PAYMENT': 0,
     'PREPARING': 0,
+    'READY_FOR_PICKUP': 0,
     'DELIVERING': 0,
     'DELIVERED': 0,
+    'PICKED_UP': 0,
     'CANCELED': 0,
   };
   int? _selectedShopId;
@@ -47,14 +49,23 @@ class OrdersScreenState extends State<OrdersScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 8, vsync: this);
     _setupWebSocketListener();
     _fetchInitialData();
   }
 
   Future<void> _fetchInitialData() async {
     _selectedShopId = await StorageService.instance.getSelectedShopId();
-    final tabs = ['NEW', 'PAYMENT', 'PREPARING', 'DELIVERING', 'DELIVERED', 'CANCELED'];
+    final tabs = [
+      'NEW',
+      'PAYMENT',
+      'PREPARING',
+      'READY_FOR_PICKUP',
+      'DELIVERING',
+      'DELIVERED',
+      'PICKED_UP',
+      'CANCELED',
+    ];
 
     final results = await Future.wait(
       tabs.map((tab) => _orderService.getOrders(tab: tab, page: 1, size: 1)),
@@ -107,12 +118,16 @@ class OrdersScreenState extends State<OrdersScreen>
       index = 1;
     } else if (upperStatus == 'COOKING') {
       index = 2;
-    } else if (upperStatus == 'ON_THE_WAY') {
+    } else if (upperStatus == 'READY_FOR_PICKUP') {
       index = 3;
-    } else if (upperStatus == 'DELIVERED') {
+    } else if (upperStatus == 'ON_THE_WAY') {
       index = 4;
-    } else if (upperStatus == 'CANCELED') {
+    } else if (upperStatus == 'DELIVERED') {
       index = 5;
+    } else if (upperStatus == 'PICKED_UP') {
+      index = 6;
+    } else if (upperStatus == 'CANCELED') {
+      index = 7;
     }
 
     if (_tabController.index != index) {
@@ -169,9 +184,15 @@ class OrdersScreenState extends State<OrdersScreen>
                 _buildTab(t?.translate('tab_new') ?? 'New Order', 'NEW', 0),
                 _buildTab(t?.translate('tab_payment') ?? 'Payment', 'PAYMENT', 1),
                 _buildTab(t?.translate('tab_preparing') ?? 'Preparing', 'PREPARING', 2),
-                _buildTab(t?.translate('tab_delivering') ?? 'Delivering', 'DELIVERING', 3),
-                _buildTab(t?.translate('tab_delivered') ?? 'Delivered', 'DELIVERED', 4),
-                _buildTab(t?.translate('tab_cancelled') ?? 'Cancelled', 'CANCELED', 5),
+                _buildTab(
+                  t?.translate('tab_ready_for_pickup') ?? 'Ready for Pickup',
+                  'READY_FOR_PICKUP',
+                  3,
+                ),
+                _buildTab(t?.translate('tab_delivering') ?? 'Delivering', 'DELIVERING', 4),
+                _buildTab(t?.translate('tab_delivered') ?? 'Delivered', 'DELIVERED', 5),
+                _buildTab(t?.translate('tab_picked_up') ?? 'Picked Up', 'PICKED_UP', 6),
+                _buildTab(t?.translate('tab_cancelled') ?? 'Cancelled', 'CANCELED', 7),
               ],
             ),
           ),
@@ -211,6 +232,17 @@ class OrdersScreenState extends State<OrdersScreen>
                   loadImmediately: true,
                 ),
                 OrderListTabView(
+                  key: const ValueKey('READY_FOR_PICKUP'),
+                  tabStatus: 'READY_FOR_PICKUP',
+                  orderService: _orderService,
+                  shopId: _selectedShopId,
+                  updateStream: _orderUpdatesController.stream,
+                  refreshStream: _refreshController.stream,
+                  onCountUpdated: (count) =>
+                      _updateTabCount('READY_FOR_PICKUP', count),
+                  loadImmediately: true,
+                ),
+                OrderListTabView(
                   key: const ValueKey('DELIVERING'),
                   tabStatus: 'DELIVERING',
                   orderService: _orderService,
@@ -230,6 +262,17 @@ class OrdersScreenState extends State<OrdersScreen>
                   refreshStream: _refreshController.stream,
                   onCountUpdated: (count) =>
                       _updateTabCount('DELIVERED', count),
+                  loadImmediately: true,
+                ),
+                OrderListTabView(
+                  key: const ValueKey('PICKED_UP'),
+                  tabStatus: 'PICKED_UP',
+                  orderService: _orderService,
+                  shopId: _selectedShopId,
+                  updateStream: _orderUpdatesController.stream,
+                  refreshStream: _refreshController.stream,
+                  onCountUpdated: (count) =>
+                      _updateTabCount('PICKED_UP', count),
                   loadImmediately: true,
                 ),
                 OrderListTabView(
@@ -399,11 +442,17 @@ class _OrderListTabViewState extends State<OrderListTabView>
       case 'PREPARING':
         belongsHere = upperStatus == 'COOKING';
         break;
+      case 'READY_FOR_PICKUP':
+        belongsHere = upperStatus == 'READY_FOR_PICKUP';
+        break;
       case 'DELIVERING':
         belongsHere = upperStatus == 'ON_THE_WAY';
         break;
       case 'DELIVERED':
         belongsHere = upperStatus == 'DELIVERED';
+        break;
+      case 'PICKED_UP':
+        belongsHere = upperStatus == 'PICKED_UP';
         break;
       case 'CANCELED':
         belongsHere = upperStatus == 'CANCELED';

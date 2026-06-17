@@ -10,7 +10,7 @@ import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/features/chat/data/models/chat_model.dart';
 import 'package:my_shop/features/chat/data/services/chat_service.dart';
 import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
-import 'package:my_shop/features/chat/presentation/widgets/chat_order_summary_banner.dart';
+import 'package:my_shop/features/chat/presentation/widgets/chat_order_summary_sheet.dart';
 import 'package:my_shop/features/orders/data/models/order_model.dart';
 import 'package:my_shop/features/orders/data/services/order_service.dart';
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
@@ -507,22 +507,39 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     return '${timestamp.day}/${timestamp.month}/${timestamp.year}';
   }
 
+  void _openOrderSummarySheet() {
+    ChatOrderSummarySheet.show(
+      context,
+      order: _order,
+      fallbackOrderNo: widget.conversation.orderNo,
+      isLoading: _isLoadingOrder,
+      onRetry: _loadOrderInfo,
+      onViewDetails: _order != null ? _openOrderDetails : null,
+    );
+  }
+
+  String? _headerSubtitle() {
+    final c = widget.conversation;
+    if (_order != null) {
+      final no = _order!.lastOrderNo.isNotEmpty
+          ? _order!.lastOrderNo
+          : (c.orderNo ?? _order!.id);
+      return '$no · ${_order!.items.length} items';
+    }
+    if (c.orderNo != null) return 'Order ${c.orderNo}';
+    return c.orderStatus;
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
+      resizeToAvoidBottomInset: true,
       appBar: _buildAppBar(),
       body: Column(
         children: [
-          ChatOrderSummaryBanner(
-            order: _order,
-            fallbackOrderNo: widget.conversation.orderNo,
-            isLoading: _isLoadingOrder,
-            onRetry: _loadOrderInfo,
-            onViewDetails: _order != null ? _openOrderDetails : null,
-          ),
           Expanded(child: _buildBody(t)),
           _buildMessageInput(t),
         ],
@@ -532,9 +549,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     final c = widget.conversation;
-    final subtitle = c.orderNo != null
-        ? 'Order ${c.orderNo}'
-        : (c.orderStatus ?? '');
+    final subtitle = _headerSubtitle();
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
@@ -548,38 +563,57 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      title: Row(
-        children: [
-          _buildHeaderAvatar(c),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  c.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1E293B),
-                  ),
-                ),
-                if (subtitle.isNotEmpty)
+      title: GestureDetector(
+        onTap: _openOrderSummarySheet,
+        behavior: HitTestBehavior.opaque,
+        child: Row(
+          children: [
+            _buildHeaderAvatar(c),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    subtitle,
+                    c.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: const Color(0xFF94A3B8),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF1E293B),
                     ),
                   ),
-              ],
+                  if (subtitle != null && subtitle.isNotEmpty)
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFF94A3B8),
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
+      actions: [
+        IconButton(
+          onPressed: _openOrderSummarySheet,
+          tooltip: AppLocalizations.of(context)?.translate('order_summary') ??
+              'Order Summary',
+          icon: const Icon(
+            PhosphorIconsRegular.receipt,
+            color: Color(0xFF1E293B),
+            size: 22,
+          ),
+        ),
+        const SizedBox(width: 4),
+      ],
     );
   }
 
@@ -937,12 +971,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   Widget _buildMessageInput(AppLocalizations? t) {
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final safeBottom = MediaQuery.paddingOf(context).bottom;
+
     return Container(
       padding: EdgeInsets.only(
         left: 16,
         right: 8,
         top: 12,
-        bottom: MediaQuery.of(context).padding.bottom + 12,
+        bottom: bottomInset > 0 ? 12 : safeBottom + 12,
       ),
       decoration: BoxDecoration(
         color: Colors.white,

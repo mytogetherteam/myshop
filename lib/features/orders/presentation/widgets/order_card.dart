@@ -268,7 +268,15 @@ class OrderCard extends StatelessWidget {
         mainButtonText = t?.translate('accept_order_to_cook') ?? 'Accept order to cook';
         break;
       case 'COOKING':
-        mainButtonText = t?.translate('picked_up_rider') ?? 'Picked Up by Rider';
+        if (order.isPickupFulfillment) {
+          mainButtonText =
+              t?.translate('mark_ready_for_pickup') ?? 'Ready for Pickup';
+        } else {
+          mainButtonText = t?.translate('picked_up_rider') ?? 'Picked Up by Rider';
+        }
+        break;
+      case 'READY_FOR_PICKUP':
+        mainButtonText = t?.translate('confirm_pickup') ?? 'Confirm Pickup';
         break;
       case 'ON_THE_WAY':
         mainButtonText = isDeliveryTab ? (t?.translate('check_delivery') ?? 'Check Delivery') : (t?.translate('tab_delivered') ?? 'Delivered');

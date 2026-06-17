@@ -31,6 +31,7 @@ import 'package:my_shop/features/chat/data/models/chat_model.dart';
 import 'package:my_shop/features/chat/data/services/chat_service.dart';
 import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
 import 'package:my_shop/features/chat/presentation/chat_navigation.dart';
+import 'package:my_shop/features/orders/presentation/screens/pickup_complete_screen.dart';
 
 
 class OrderDetailScreen extends StatefulWidget {
@@ -222,20 +223,22 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     bool isValid = false;
 
     if (_currentOrder.status == 'PENDING') {
-      if (_deliveryOption == 'NORMAL') {
+      if (_currentOrder.isPickupFulfillment) {
+        isValid = waiting.isNotEmpty && int.tryParse(waiting) != null;
+      } else if (_deliveryOption == 'NORMAL') {
         // Flexible Delivery: only need preparation time
         isValid = waiting.isNotEmpty && int.tryParse(waiting) != null;
       } else {
         // Fast Delivery (PENDING): only need fee + waiting time
         isValid = fee.isNotEmpty &&
-          double.tryParse(fee) != null &&
-          waiting.isNotEmpty &&
-          int.tryParse(waiting) != null;
+            double.tryParse(fee) != null &&
+            waiting.isNotEmpty &&
+            int.tryParse(waiting) != null;
       }
     } else if (_currentOrder.status == 'AWAITING_APPROVAL') {
       isValid = true;
     } else if (_currentOrder.status == 'COOKING') {
-      isValid = _selectedDriverId != null;
+      isValid = _currentOrder.isPickupFulfillment || _selectedDriverId != null;
     } else {
       isValid = true;
     }
@@ -1202,6 +1205,29 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     reasonController.dispose();
   }
 
+  Future<void> _handleMarkReadyForPickup() async {
+    await _runOrderAction(
+      action: () =>
+          OrderService().markReadyForPickup(_currentOrder.id.toString()),
+      errorMessage: 'Failed to mark order ready for pickup.',
+    );
+  }
+
+  Future<void> _openPickupCompleteScreen() async {
+    final result = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PickupCompleteScreen(order: _currentOrder),
+      ),
+    );
+    if (!mounted) return;
+    if (result == 'PICKED_UP') {
+      await _fetchOrderDetails();
+      if (!mounted) return;
+      Navigator.pop(context, 'PICKED_UP');
+    }
+  }
+
   Future<void> _handleDispatchOrder() async {
     if (_selectedDriverId == null) {
       AppDialog.showToast(context, 'Please select a delivery driver', isError: true);
@@ -1348,7 +1374,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
                     // Confirmation Form (Full Width - it has its own internal padding)
                     if (_currentOrder.status == 'PENDING' ||
-                        _currentOrder.status == 'COOKING') ...[
+                        _currentOrder.status == 'COOKING' ||
+                        _currentOrder.status == 'READY_FOR_PICKUP') ...[
                       _buildConfirmationForm(),
                       const SizedBox(height: 8),
                     ],
@@ -1543,8 +1570,9 @@ Widget _buildAnimatedProgress() {
         );
       },
       child: StatusProgressIndicator(
-        key: ValueKey(_currentOrder.status),
+        key: ValueKey('${_currentOrder.status}_${_currentOrder.orderType}'),
         status: _currentOrder.status,
+        isPickup: _currentOrder.isPickupFulfillment,
       ),
     );
   }
@@ -1817,6 +1845,63 @@ Widget _buildAnimatedProgress() {
   }
 
   Widget _buildAddressSection(BuildContext context) {
+    final t = AppLocalizations.of(context);
+
+    if (_currentOrder.isPickupFulfillment) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFDF2F8),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                PhosphorIconsRegular.shoppingBag,
+                size: 18,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    t?.translate('pickup') ?? 'Pickup',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    t?.translate('pickup_at_shop_desc') ??
+                        'Customer will pick up this order at your shop.',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: AppColors.onSurfaceVariant,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2465,10 +2550,19 @@ Widget _buildAnimatedProgress() {
         onPressed = null;
         break;
       case 'COOKING':
-        mainButtonText = 'Picked Up by Rider';
-        onPressed = (_isUpdating || _selectedDriverId == null)
-            ? null
-            : _handleDispatchOrder;
+        if (_currentOrder.isPickupFulfillment) {
+          mainButtonText = 'Mark Ready for Pickup';
+          onPressed = _isUpdating ? null : _handleMarkReadyForPickup;
+        } else {
+          mainButtonText = 'Picked Up by Rider';
+          onPressed = (_isUpdating || _selectedDriverId == null)
+              ? null
+              : _handleDispatchOrder;
+        }
+        break;
+      case 'READY_FOR_PICKUP':
+        mainButtonText = 'Confirm Pickup';
+        onPressed = _isUpdating ? null : _openPickupCompleteScreen;
         break;
       case 'ON_THE_WAY':
         mainButtonText = 'Delivered';
@@ -2476,6 +2570,8 @@ Widget _buildAnimatedProgress() {
         break;
       case 'DELIVERED':
         return _buildDeliveredBanner();
+      case 'PICKED_UP':
+        return _buildPickedUpBanner();
       case 'CANCELED':
         return const SizedBox.shrink();
       case 'REVISED':
@@ -2585,6 +2681,33 @@ Widget _buildAnimatedProgress() {
           const SizedBox(width: 10),
           Text(
             'Order successfully delivered',
+            style: GoogleFonts.poppins(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPickedUpBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 36),
+      decoration: const BoxDecoration(
+        gradient: AppColors.primaryGradient,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.check_circle_rounded, color: Colors.white, size: 22),
+          const SizedBox(width: 10),
+          Text(
+            AppLocalizations.of(context)?.translate('pickup_success_title') ??
+                'Pickup complete',
             style: GoogleFonts.poppins(
               fontSize: 15,
               fontWeight: FontWeight.w600,
@@ -2744,6 +2867,8 @@ Widget _buildAnimatedProgress() {
   }
 
   Widget _buildConfirmationForm() {
+    final t = AppLocalizations.of(context);
+
     return Container(
       padding: const EdgeInsets.all(20),
       color: const Color(0xFFF8FAFC),
@@ -2754,6 +2879,62 @@ Widget _buildAnimatedProgress() {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (_currentOrder.status == 'PENDING') ...[
+              if (_currentOrder.isPickupFulfillment) ...[
+                Text(
+                  t?.translate('pickup_confirmation') ?? 'Pickup confirmation',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1E293B),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  t?.translate('pickup_confirmation_desc') ??
+                      'Set the prep time. Delivery fee is optional for pickup orders.',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: const Color(0xFF64748B),
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildInputField(
+                        t?.translate('delivery_fee_optional') ??
+                            'Delivery Fee (optional)',
+                        _deliveryFeeController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          ThousandsSeparatorInputFormatter(),
+                        ],
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return null;
+                          final numValue = value.replaceAll(',', '');
+                          if (double.tryParse(numValue) == null) {
+                            return 'Invalid number';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildInputField(
+                        t?.translate('est_prep_time_mins') ?? 'Est Prep Time (mins)',
+                        _waitingTimeMinutesController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        validator: (value) =>
+                            (value == null || value.isEmpty) ? 'Required' : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ] else ...[
               Row(
                 children: [
                   Expanded(
@@ -2814,10 +2995,14 @@ Widget _buildAnimatedProgress() {
                 ],
               ),
               const SizedBox(height: 24),
+              ],
             ],
             // ── Section header ──────────────────────────────────────────
-            if (_deliveryOption == 'PREPAID' ||
-                _currentOrder.status == 'COOKING') ...[
+            if ((_deliveryOption == 'PREPAID' &&
+                    _currentOrder.status == 'PENDING' &&
+                    _currentOrder.isDeliveryFulfillment) ||
+                (_currentOrder.status == 'COOKING' &&
+                    _currentOrder.isDeliveryFulfillment)) ...[
               Text(
                 _currentOrder.status == 'COOKING'
                     ? 'Dispatch Information'
@@ -2832,7 +3017,9 @@ Widget _buildAnimatedProgress() {
             ],
 
             // ── Flexible Delivery (PENDING) ─────────────────────────────
-            if (_deliveryOption == 'NORMAL' && _currentOrder.status == 'PENDING') ...[
+            if (_deliveryOption == 'NORMAL' &&
+                _currentOrder.status == 'PENDING' &&
+                _currentOrder.isDeliveryFulfillment) ...[
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -2907,7 +3094,9 @@ Widget _buildAnimatedProgress() {
               ),
 
             // ── Fast Delivery (PENDING): fee + waiting only ─────────────
-            ] else if (_deliveryOption == 'PREPAID' && _currentOrder.status == 'PENDING') ...[
+            ] else if (_deliveryOption == 'PREPAID' &&
+                _currentOrder.status == 'PENDING' &&
+                _currentOrder.isDeliveryFulfillment) ...[
               Row(
                 children: [
                   Expanded(
@@ -2941,10 +3130,48 @@ Widget _buildAnimatedProgress() {
               ),
 
             // ── COOKING / dispatch (single driver selection point) ─────
-            ] else if (_currentOrder.status == 'COOKING') ...[
+            ] else if (_currentOrder.status == 'COOKING' &&
+                _currentOrder.isDeliveryFulfillment) ...[
               _buildDriverPicker(),
               const SizedBox(height: 12),
               _buildInputField('Tracking URL', _deliveryTrackingUrlController),
+            ] else if (_currentOrder.status == 'COOKING' &&
+                _currentOrder.isPickupFulfillment) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Text(
+                  'Mark this order ready for pickup when the food is prepared. The customer can then show their QR code at the counter.',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: const Color(0xFF64748B),
+                    height: 1.5,
+                  ),
+                ),
+              ),
+            ] else if (_currentOrder.status == 'READY_FOR_PICKUP') ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Text(
+                  'Customer can show their QR code. Scan it from the header or tap Confirm Pickup below.',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: const Color(0xFF64748B),
+                    height: 1.5,
+                  ),
+                ),
+              ),
             ],
           ],
         ),

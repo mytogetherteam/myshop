@@ -24,8 +24,10 @@ const Map<String, List<String>> kOrderTabStatuses = {
     'PAYMENT_VERIFIED',
   ],
   'PREPARING': ['COOKING'],
+  'READY_FOR_PICKUP': ['READY_FOR_PICKUP'],
   'DELIVERING': ['ON_THE_WAY'],
   'DELIVERED': ['DELIVERED'],
+  'PICKED_UP': ['PICKED_UP'],
   'CANCELED': ['CANCELED'],
 };
 
@@ -278,6 +280,14 @@ class OrderService {
       status: 'DELIVERED',
       proofImage: proofImage,
     );
+  }
+
+  Future<Map<String, dynamic>> markReadyForPickup(String orderId) {
+    return updateStatus(orderId, status: 'READY_FOR_PICKUP');
+  }
+
+  Future<Map<String, dynamic>> confirmPickup(String orderId) {
+    return updateStatus(orderId, status: 'PICKED_UP');
   }
 
   Future<Map<String, dynamic>> reviseOrder(
