@@ -36,6 +36,14 @@ class App extends StatelessWidget {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
+          builder: (context, child) {
+            return GestureDetector(
+              onTap: () {
+                FocusManager.instance.primaryFocus?.unfocus();
+              },
+              child: child,
+            );
+          },
           home: const AuthWrapper(),
           routes: {
             '/home': (context) => const AuthWrapper(),
