@@ -59,6 +59,37 @@ class AuthService {
     }
   }
 
+  Future<AuthResponse> registerShop({
+    required String shopName,
+    required String ownerName,
+    required String phone,
+    String? email,
+  }) async {
+    try {
+      final response = await ApiClient().dio.post(
+        '/api/shop-register',
+        data: {
+          'shopName': shopName,
+          'ownerName': ownerName,
+          'phone': phone,
+          if (email != null && email.isNotEmpty) 'email': email,
+        },
+      );
+
+      return AuthResponse(
+        success: response.data['success'] == true,
+        message: response.data['message'] ?? 'Application submitted',
+      );
+    } on DioException catch (e) {
+      final error = ApiHelper.handleError(e, context: 'AuthService.registerShop');
+      return AuthResponse(success: false, message: error.message);
+    } catch (e) {
+      final error = ApiHelper.handleError(e, context: 'AuthService.registerShop');
+      return AuthResponse(success: false, message: error.message);
+    }
+  }
+
+
   Future<void> logout() async {
     try {
       await NotificationService().unregisterDevice();
