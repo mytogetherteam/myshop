@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:my_shop/features/auth/data/services/auth_service.dart';
 import 'package:my_shop/core/auth/jwt_utils.dart';
@@ -14,7 +15,7 @@ class AuthInterceptor extends Interceptor {
   final Dio dio;
   bool _isRefreshing = false;
   final List<QueuedRequest> _pendingRequests = [];
-  bool _refreshLock = false;
+  Completer<String?>? _refreshCompleter;
 
   AuthInterceptor(this.dio);
 
@@ -26,78 +27,82 @@ class AuthInterceptor extends Interceptor {
     final authService = AuthService.instance;
     final isAuthPath = options.path.contains('/auth/');
 
-    final token = await authService.getAccessToken();
-
-    if (token != null && !isAuthPath) {
-      if (JwtUtils.isExpired(token, offsetSeconds: 5)) {
-        if (!JwtUtils.validateTokenIntegrity(token)) {
-          await authService.logoutWithRedirect();
-          handler.reject(
-            DioException(
-              requestOptions: options,
-              error: 'Session expired or invalid',
-              type: DioExceptionType.cancel,
-            ),
-          );
-          return;
-        }
-      }
-
-      if (JwtUtils.isExpired(token, offsetSeconds: 60)) {
-        try {
-          if (!_isRefreshing) {
-            _isRefreshing = true;
-            final newToken = await authService.performRefresh(dio);
-            _isRefreshing = false;
-            if (newToken != null) {
-              options.headers['Authorization'] = 'Bearer $newToken';
-              _processPendingRequests(newToken);
-            } else {
-              _processPendingRequests(null);
-            }
-          } else {
-            _pendingRequests.add(QueuedRequest(requestOptions: options, handler: handler));
-            return;
-          }
-        } catch (e) {
-          _isRefreshing = false;
-          _processPendingRequests(null);
-        }
-      }
+    if (isAuthPath) {
+      handler.next(options);
+      return;
     }
 
-    final currentToken = await authService.getAccessToken();
-    if (currentToken != null &&
-        currentToken.isNotEmpty &&
-        !options.headers.containsKey('Authorization')) {
-      options.headers['Authorization'] = 'Bearer $currentToken';
+    final token = await authService.getAccessToken();
+
+    if (token == null || token.isEmpty) {
+      handler.next(options);
+      return;
+    }
+
+    // Token မှန်ကန်မှု စစ်ဆေး (integrity check)
+    if (!JwtUtils.validateTokenIntegrity(token)) {
+      await authService.logoutWithRedirect();
+      handler.reject(
+        DioException(
+          requestOptions: options,
+          error: 'Session expired or invalid',
+          type: DioExceptionType.cancel,
+        ),
+      );
+      return;
+    }
+
+    // Token 60 second မပြည့်ခင် Proactively refresh လုပ်
+    if (JwtUtils.isExpired(token, offsetSeconds: 60)) {
+      final newToken = await _refreshToken();
+      if (newToken != null) {
+        options.headers['Authorization'] = 'Bearer $newToken';
+      } else {
+        // Refresh ဆိုင်ရာ fail ဖြစ်ရင် logoutWithRedirect ကို auth_service ကပဲ handle လုပ်ပြီးသား
+        handler.reject(
+          DioException(
+            requestOptions: options,
+            error: 'Token refresh failed',
+            type: DioExceptionType.cancel,
+          ),
+        );
+        return;
+      }
+    } else {
+      options.headers['Authorization'] = 'Bearer $token';
     }
 
     handler.next(options);
   }
 
-  void _processPendingRequests(String? newToken) {
-    for (final queued in _pendingRequests) {
-      if (newToken != null) {
-        queued.requestOptions.headers['Authorization'] = 'Bearer $newToken';
-        if (queued.handler != null) {
-          queued.handler!.next(queued.requestOptions);
-        } else if (queued.errorHandler != null) {
-          dio.fetch(queued.requestOptions).then(
-            (response) => queued.errorHandler!.resolve(response),
-            onError: (e) => queued.errorHandler!.next(e is DioException ? e : DioException(requestOptions: queued.requestOptions, error: e)),
-          );
-        }
-      } else {
-         final error = DioException(requestOptions: queued.requestOptions, error: 'Token refresh failed');
-         if (queued.handler != null) {
-            queued.handler!.reject(error);
-         } else if (queued.errorHandler != null) {
-            queued.errorHandler!.next(error);
-         }
-      }
+  /// Token refresh ကို centralize လုပ်ထားတဲ့ method
+  /// Multiple request တွေ တပြိုင်နက် request ဆိုရင် ပထမတစ်ခုကပဲ refresh လုပ်ပြီး
+  /// ကျန်တာတွေ queue မှာ စောင့်ကြည့်တာပါ
+  Future<String?> _refreshToken() async {
+    if (_isRefreshing) {
+      // Refresh လုပ်နေဆဲဆိုရင် completer ကို wait လုပ်ပါ
+      return await _refreshCompleter!.future;
     }
-    _pendingRequests.clear();
+
+    _isRefreshing = true;
+    _refreshCompleter = Completer<String?>();
+
+    try {
+      final newToken = await AuthService.instance.performRefresh(dio);
+      _refreshCompleter!.complete(newToken);
+      if (newToken == null) {
+        // Refresh token ကုန်သွားတာ - logout လုပ်ပေးပါ
+        await AuthService.instance.logoutWithRedirect();
+      }
+      return newToken;
+    } catch (e) {
+      _refreshCompleter!.complete(null);
+      await AuthService.instance.logoutWithRedirect();
+      return null;
+    } finally {
+      _isRefreshing = false;
+      _refreshCompleter = null;
+    }
   }
 
   @override
@@ -106,54 +111,28 @@ class AuthInterceptor extends Interceptor {
     final path = err.requestOptions.path;
     final isAuthPath = path.contains('/auth/');
 
-    if ((statusCode == 401 || statusCode == 403) &&
-        !isAuthPath &&
-        !_refreshLock) {
-      _refreshLock = true;
-      _isRefreshing = true;
+    // 401 / 403 ဆိုရင် refresh ကြိုးစားပါ
+    if ((statusCode == 401 || statusCode == 403) && !isAuthPath) {
       try {
-        final newToken = await AuthService.instance.performRefresh(dio);
+        final newToken = await _refreshToken();
         if (newToken != null && newToken.isNotEmpty) {
+          // Token အသစ်ရပြီ - Request ကို retry လုပ်ပါ
           final retryOptions = err.requestOptions;
           retryOptions.headers['Authorization'] = 'Bearer $newToken';
           final retryResponse = await dio.fetch(retryOptions);
-          _refreshLock = false;
-          _isRefreshing = false;
-          _processPendingRequests(newToken);
           handler.resolve(retryResponse);
           return;
         } else {
-          _refreshLock = false;
-          _isRefreshing = false;
-          await AuthService.instance.logoutWithRedirect();
+          // Refresh မအောင်မြင် - logout ပြီးသားဖြစ်တဲ့အတွက် error ဆက်ပါ
           handler.next(err);
           return;
         }
       } catch (e) {
-        _refreshLock = false;
-        _isRefreshing = false;
-        if (e is DioException) {
-          final refreshStatus = e.response?.statusCode;
-          if (refreshStatus == 401 || refreshStatus == 403) {
-            await AuthService.instance.logoutWithRedirect();
-          }
-        }
         handler.next(err);
         return;
       }
     }
 
-    if (_isRefreshing) {
-      _pendingRequests.add(QueuedRequest(requestOptions: err.requestOptions, errorHandler: handler));
-      return;
-    }
-
-    if ((statusCode == 401 || statusCode == 403) && !isAuthPath) {
-      _refreshLock = false;
-      await AuthService.instance.logoutWithRedirect();
-      handler.next(err);
-      return;
-    }
     handler.next(err);
   }
 }

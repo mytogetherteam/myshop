@@ -102,6 +102,7 @@ class AuthService {
   Future<String?> performRefresh(Dio dio) async {
     final refreshToken = await StorageService.instance.getRefreshToken();
     if (refreshToken == null || refreshToken.isEmpty) {
+      debugPrint('[AuthService.performRefresh] No refresh token stored - logging out');
       return null;
     }
 
@@ -128,15 +129,21 @@ class AuthService {
             token: newToken,
             refreshToken: newRefreshToken ?? refreshToken,
           );
+          debugPrint('[AuthService.performRefresh] Token refreshed successfully');
           return newToken;
         }
       }
     } on DioException catch (e) {
-      debugPrint(
-        '[AuthService.performRefresh] API error: ${ApiHelper.handleError(e).message}',
-      );
+      final statusCode = e.response?.statusCode;
+      debugPrint('[AuthService.performRefresh] API error (status=$statusCode): ${ApiHelper.handleError(e).message}');
+
+      // Refresh token ကုန်သွားတာ သို့မဟုတ် invalid ဖြစ်နေတာ - storage ကို clear လုပ်ပါ
+      if (statusCode == 401 || statusCode == 403) {
+        debugPrint('[AuthService.performRefresh] Refresh token expired/invalid - clearing storage');
+        await StorageService.instance.clearAll();
+      }
     } catch (e) {
-      debugPrint('[AuthService.performRefresh] Error: $e');
+      debugPrint('[AuthService.performRefresh] Unexpected error: $e');
     }
     return null;
   }
