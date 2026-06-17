@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
@@ -447,14 +448,15 @@ class ProfilePageState extends State<ProfilePage>
             ),
           ),
         ),
-        _buildMenuOption(
-          icon: PhosphorIconsRegular.shieldCheck,
-          title: t?.translate('app_permissions') ?? 'App Permissions',
-          onTap: () => Navigator.push(
-            context,
-            CupertinoPageRoute(builder: (_) => const AppPermissionsPage()),
+        if (!kIsWeb)
+          _buildMenuOption(
+            icon: PhosphorIconsRegular.shieldCheck,
+            title: t?.translate('app_permissions') ?? 'App Permissions',
+            onTap: () => Navigator.push(
+              context,
+              CupertinoPageRoute(builder: (_) => const AppPermissionsPage()),
+            ),
           ),
-        ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.user,
           title: t?.translate('account_settings') ?? 'Account Settings',

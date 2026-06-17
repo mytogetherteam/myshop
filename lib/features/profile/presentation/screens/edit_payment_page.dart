@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -21,6 +20,7 @@ import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
+import 'package:my_shop/core/presentation/widgets/xfile_image.dart';
 
 class EditPaymentPage extends StatefulWidget {
   final PaymentMethod paymentMethod;
@@ -256,28 +256,30 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                 }
               },
             ),
-            const Divider(height: 1, indent: 56),
-            ListTile(
-              leading: const GradientWidget(
-                child: Icon(
-                  Icons.camera_alt_outlined,
+            if (!kIsWeb) ...[
+              const Divider(height: 1, indent: 56),
+              ListTile(
+                leading: const GradientWidget(
+                  child: Icon(
+                    Icons.camera_alt_outlined,
+                  ),
                 ),
-              ),
-              title: Text(t?.translate('take_photo') ?? 'Take a Photo', style: GoogleFonts.poppins()),
-              onTap: () async {
-                Navigator.pop(context);
-                final result = await ImageUploadService().pickFromCamera();
-                if (result.isTooLarge) {
-                  if (mounted) {
-                    AppDialog.showToast(context, t?.translate('image_size_limit_msg') ?? 'Image Size Must Be Less Than 1MB', isError: true);
+                title: Text(t?.translate('take_photo') ?? 'Take a Photo', style: GoogleFonts.poppins()),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final result = await ImageUploadService().pickFromCamera();
+                  if (result.isTooLarge) {
+                    if (mounted) {
+                      AppDialog.showToast(context, t?.translate('image_size_limit_msg') ?? 'Image Size Must Be Less Than 1MB', isError: true);
+                    }
+                    return;
                   }
-                  return;
-                }
-                if (result.file != null) {
-                  setState(() => _pickedImages[paymentId] = result.file);
-                }
-              },
-            ),
+                  if (result.file != null) {
+                    setState(() => _pickedImages[paymentId] = result.file);
+                  }
+                },
+              ),
+            ],
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -482,19 +484,12 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: pickedImage != null
-                  ? (kIsWeb
-                        ? Image.network(
-                            pickedImage.path,
-                            width: double.infinity,
-                            height: 250,
-                            fit: BoxFit.cover,
-                          )
-                        : Image.file(
-                            File(pickedImage.path),
-                            width: double.infinity,
-                            height: 250,
-                            fit: BoxFit.cover,
-                          ))
+                  ? xFileImage(
+                      pickedImage,
+                      width: double.infinity,
+                      height: 250,
+                      fit: BoxFit.cover,
+                    )
                   : (_currentPayment?.qrImageUrl.isNotEmpty ?? false
                         ? Image.network(
                             _currentPayment!.fullQrImageUrl,

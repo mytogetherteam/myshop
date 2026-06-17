@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:my_shop/features/orders/presentation/screens/order_qr_scanner_screen.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
@@ -9,6 +10,8 @@ class OrderQrScanIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (kIsWeb) return const SizedBox.shrink();
+
     return IconButton(
       onPressed: () {
         Navigator.push(

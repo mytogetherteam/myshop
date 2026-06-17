@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/core/utils/app_logger.dart';
@@ -55,9 +56,13 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
     WebSocketService().connect();
     
-    final notiHandled = await StorageService.instance.isNotificationHandled();
-    if (!notiHandled) {
-      return const NotificationPermissionScreen();
+    if (!kIsWeb) {
+      final notiHandled = await StorageService.instance.isNotificationHandled();
+      if (!notiHandled) {
+        return const NotificationPermissionScreen();
+      }
+    } else {
+      await StorageService.instance.setNotificationHandled(true);
     }
     
     return const MainNavigationScreen();

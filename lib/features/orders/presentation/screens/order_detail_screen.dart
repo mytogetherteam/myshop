@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -554,7 +555,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     ),
                   )
                 else
-                  Flexible(
+                  SizedBox(
+                    height: MediaQuery.of(sheetContext).size.height * 0.4,
                     child: ListView.separated(
                       shrinkWrap: true,
                       padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
@@ -1805,6 +1807,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final phone = _currentOrder.customerPhone.trim();
     if (phone.isEmpty || phone == '-') {
       AppDialog.showToast(context, 'No phone number available', isError: true);
+      return;
+    }
+    if (kIsWeb) {
+      await Clipboard.setData(ClipboardData(text: phone));
+      if (mounted) {
+        AppDialog.showToast(context, 'Phone number copied to clipboard');
+      }
       return;
     }
     final uri = Uri(scheme: 'tel', path: phone);

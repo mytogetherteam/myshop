@@ -1,11 +1,10 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
+import 'package:my_shop/core/presentation/widgets/xfile_image.dart';
 
 
 class ShopProfileImageHeader extends StatelessWidget {
@@ -55,12 +54,7 @@ class ShopProfileImageHeader extends StatelessWidget {
                   children: [
                     // Image or gradient fallback
                     if (pickedCover != null)
-                      kIsWeb
-                          ? Image.network(pickedCover!.path, fit: BoxFit.cover)
-                          : Image.file(
-                              File(pickedCover!.path),
-                              fit: BoxFit.cover,
-                            )
+                      xFileImage(pickedCover!, fit: BoxFit.cover)
                                         else if (coverUrl != null && coverUrl!.isNotEmpty)
                       CachedNetworkImage(
                         imageUrl: coverUrl!,
@@ -166,15 +160,7 @@ class ShopProfileImageHeader extends StatelessWidget {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(14),
                             child: pickedLogo != null
-                                ? (kIsWeb
-                                      ? Image.network(
-                                          pickedLogo!.path,
-                                          fit: BoxFit.cover,
-                                        )
-                                      : Image.file(
-                                          File(pickedLogo!.path),
-                                          fit: BoxFit.cover,
-                                        ))
+                                ? xFileImage(pickedLogo!, fit: BoxFit.cover)
                                 : logoUrl != null && logoUrl!.isNotEmpty
                                 ? CachedNetworkImage(
                                     imageUrl: logoUrl!,

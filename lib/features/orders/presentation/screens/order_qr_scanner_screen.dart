@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -42,6 +43,15 @@ class _OrderQrScannerScreenState extends State<OrderQrScannerScreen> {
   }
 
   Future<void> _ensureCameraPermission() async {
+    if (kIsWeb) {
+      if (!mounted) return;
+      setState(() {
+        _cameraGranted = true;
+        _permissionChecked = true;
+      });
+      return;
+    }
+
     var status = await Permission.camera.status;
     if (!status.isGranted) {
       status = await Permission.camera.request();

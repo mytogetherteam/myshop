@@ -937,12 +937,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   Widget _buildMessageInput(AppLocalizations? t) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     return Container(
       padding: EdgeInsets.only(
         left: 16,
         right: 8,
         top: 12,
-        bottom: MediaQuery.of(context).padding.bottom + 12,
+        bottom: MediaQuery.of(context).padding.bottom + 12 + bottomInset,
       ),
       decoration: BoxDecoration(
         color: Colors.white,

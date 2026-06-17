@@ -3,7 +3,6 @@ import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'dart:io';
 
 /// Result returned after picking an image.
 class ImagePickResult {
@@ -97,9 +96,6 @@ class ImageUploadService {
     );
   }
 
-  /// Returns the [File] for a given [XFile].
-  File toFile(XFile xFile) => File(xFile.path);
-
   /// Validates if the file size is within the allowed limit (default 1MB).
   /// Returns true if valid, false if too large.
   static Future<bool> isSizeValid(XFile file, {int maxMB = 1}) async {
@@ -111,14 +107,12 @@ class ImageUploadService {
 
   Future<PermissionStatus> _requestGalleryPermission() async {
     if (kIsWeb) return PermissionStatus.granted;
-    if (Platform.isAndroid) {
-      // Android 13+ uses READ_MEDIA_IMAGES
+    if (defaultTargetPlatform == TargetPlatform.android) {
       if (await _isAndroid13OrAbove()) {
         return Permission.photos.request();
       }
       return Permission.storage.request();
     }
-    // iOS
     return Permission.photos.request();
   }
 
@@ -129,25 +123,7 @@ class ImageUploadService {
 
   Future<bool> _isAndroid13OrAbove() async {
     if (kIsWeb) return false;
-    if (!Platform.isAndroid) return false;
-    try {
-      // AndroidSdkVersion 33 == Android 13
-      final info = await _getAndroidSdkVersion();
-      return info >= 33;
-    } catch (_) {
-      // Fallback: use READ_MEDIA_IMAGES (safe default)
-      return true;
-    }
-  }
-
-  Future<int> _getAndroidSdkVersion() async {
-    if (kIsWeb) return 0;
-    try {
-      final result = await Process.run('getprop', ['ro.build.version.sdk']);
-      return int.tryParse(result.stdout.toString().trim()) ?? 33;
-    } catch (_) {
-      return 33;
-    }
+    return defaultTargetPlatform == TargetPlatform.android;
   }
 
   Future<ImagePickResult> _pick(

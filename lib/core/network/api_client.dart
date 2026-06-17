@@ -5,7 +5,6 @@ import 'package:my_shop/core/config/env_config.dart';
 import 'package:my_shop/core/network/shop_interceptor.dart';
 import 'package:my_shop/core/network/certificate_pinning_interceptor.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
-import 'dart:io';
 
 class ApiClient {
   static const String apiPrefix = '/api/shop';
@@ -97,11 +96,8 @@ class ApiClient {
     }
     if (err.type == DioExceptionType.connectionTimeout ||
         err.type == DioExceptionType.sendTimeout ||
-        err.type == DioExceptionType.receiveTimeout) {
-      return true;
-    }
-    // SocketException is only available on native platforms (dart:io).
-    if (!kIsWeb && err.error is SocketException) {
+        err.type == DioExceptionType.receiveTimeout ||
+        err.type == DioExceptionType.connectionError) {
       return true;
     }
     return false;

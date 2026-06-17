@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:my_shop/core/presentation/widgets/xfile_image.dart';
 import 'package:image_picker/image_picker.dart';
@@ -189,7 +190,7 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
           'Please enable it in your device Settings.',
       confirmLabel: 'Open Settings',
     );
-    if (shouldOpenSettings) {
+    if (shouldOpenSettings && !kIsWeb) {
       await openAppSettings();
     }
   }
@@ -375,13 +376,14 @@ class _PickerSheet extends StatelessWidget {
             onTap: () => onTap(ImageSource.gallery),
           ),
 
-          const Divider(height: 1, indent: 56),
-
-          _SheetOption(
-            icon: Icons.camera_alt_outlined,
-            label: 'Take a Photo',
-            onTap: () => onTap(ImageSource.camera),
-          ),
+          if (!kIsWeb) ...[
+            const Divider(height: 1, indent: 56),
+            _SheetOption(
+              icon: Icons.camera_alt_outlined,
+              label: 'Take a Photo',
+              onTap: () => onTap(ImageSource.camera),
+            ),
+          ],
 
           const SizedBox(height: 8),
 
