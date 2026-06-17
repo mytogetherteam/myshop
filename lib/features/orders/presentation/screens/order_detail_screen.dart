@@ -1230,13 +1230,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
   }
 
-  Future<void> _openQrScanner() async {
-    await OrderQrScanIcon.openScanner(context);
-    if (mounted) {
-      await _fetchOrderDetails();
-    }
-  }
-
   bool get _showPickupScanAction =>
       _currentOrder.isPickupFulfillment &&
       (_currentOrder.status == 'COOKING' ||
@@ -2641,36 +2634,6 @@ Widget _buildAnimatedProgress() {
                       style: GoogleFonts.poppins(
                         fontWeight: FontWeight.w600, 
                         fontSize: 14,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-              ],
-              if (_currentOrder.isPickupFulfillment &&
-                  _currentOrder.status == 'READY_FOR_PICKUP') ...[
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _isUpdating ? null : _openQrScanner,
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(0, 54),
-                      side: const BorderSide(color: Color(0xFFE2E8F0)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    icon: const Icon(
-                      PhosphorIconsRegular.qrCode,
-                      size: 18,
-                      color: Color(0xFF1E293B),
-                    ),
-                    label: Text(
-                      AppLocalizations.of(context)?.translate('scan_order_qr') ??
-                          'Scan QR',
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                        color: const Color(0xFF1E293B),
                       ),
                     ),
                   ),
