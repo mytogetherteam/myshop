@@ -1,4 +1,5 @@
 import 'package:my_shop/core/utils/file_url_util.dart';
+import 'package:my_shop/core/utils/order_tax.dart';
 
 String? _resolveUrl(dynamic value) => FileUrlUtil.resolve(value);
 
@@ -37,6 +38,8 @@ class OrderModel {
   final double deliveryFee;
   final String displayDeliveryFee;
   final double itemPrice;
+  final double taxAmount;
+  final String displayTaxAmount;
   final double totalAmount;
   final String displayTotalAmount;
   final double previousTotalAmount;
@@ -89,6 +92,8 @@ class OrderModel {
     this.deliveryFee = 0.0,
     this.displayDeliveryFee = '',
     this.itemPrice = 0.0,
+    this.taxAmount = 0.0,
+    this.displayTaxAmount = '',
     this.totalAmount = 0.0,
     this.displayTotalAmount = '',
     this.previousTotalAmount = 0.0,
@@ -183,6 +188,8 @@ class OrderModel {
                         ((item['quantity'] as num?)?.toInt() ?? 0),
               )
             : 0.0);
+    final taxAmount = (json['taxAmount'] as num?)?.toDouble() ??
+        OrderTax.calculateTax(itemPrice);
     final totalAmount = (json['totalAmount'] as num?)?.toDouble() ?? 0.0;
 
     List<OrderReviseItemModel> reviseItemsList = [];
@@ -238,6 +245,9 @@ class OrderModel {
       displayDeliveryFee: json['displayDeliveryFee']?.toString() ??
           (deliveryFee > 0 ? '฿${deliveryFee.toInt()}' : '฿ 0'),
       itemPrice: itemPrice,
+      taxAmount: taxAmount,
+      displayTaxAmount: json['displayTaxAmount']?.toString() ??
+          (taxAmount > 0 ? '฿${taxAmount.toInt()}' : '฿ 0'),
       totalAmount: totalAmount,
       displayTotalAmount: json['displayTotalAmount']?.toString() ??
           '฿${totalAmount.toInt()}',
@@ -311,6 +321,16 @@ class OrderModel {
       itemPrice > 0
           ? itemPrice
           : items.fold(0.0, (sum, item) => sum + (item.price * item.quantity));
+
+  double get resolvedTaxAmount =>
+      taxAmount > 0 ? taxAmount : OrderTax.calculateTax(foodPrice);
+
+  double get checkoutTotal => totalAmount > 0
+      ? totalAmount
+      : OrderTax.calculateTotal(
+          itemSubtotal: foodPrice,
+          deliveryFee: deliveryFee,
+        );
 
   String get deliveryAddressDetail => deliveryAddress?.address ?? '-';
   String get deliveryAddressTitle =>

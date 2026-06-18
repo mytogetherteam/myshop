@@ -2292,6 +2292,13 @@ Widget _buildAnimatedProgress() {
         const SizedBox(height: 16),
         _buildSummaryRow('Food Price', '฿ ${_currentOrder.foodPrice.toInt()}'),
         const SizedBox(height: 12),
+        _buildSummaryRow(
+          'Tax (7%)',
+          _currentOrder.displayTaxAmount.isNotEmpty
+              ? _currentOrder.displayTaxAmount
+              : '฿ ${_currentOrder.resolvedTaxAmount.toInt()}',
+        ),
+        const SizedBox(height: 12),
         Row(
           children: [
             const GradientWidget(child: Icon(PhosphorIconsFill.moped, size: 20)),
@@ -2344,7 +2351,9 @@ Widget _buildAnimatedProgress() {
             Row(
               children: [
                 Text(
-                  '฿ ${(_currentOrder.foodPrice + _currentOrder.deliveryFee).toInt()}',
+                  _currentOrder.displayTotalAmount.isNotEmpty
+                      ? _currentOrder.displayTotalAmount
+                      : '฿ ${_currentOrder.checkoutTotal.toInt()}',
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
