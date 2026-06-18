@@ -31,6 +31,7 @@ class _NotificationPageState extends State<NotificationPage> {
   bool _showLoadingThreshold = false;
   Timer? _loadingTimer;
   bool _isMoreLoading = false;
+  bool _isMarkingAllRead = false;
   int _currentPage = 0;
   bool _hasMore = true;
 
@@ -98,6 +99,33 @@ class _NotificationPageState extends State<NotificationPage> {
     await _fetchNotifications();
   }
 
+  bool get _hasUnread => _notifications.any((n) => !n.isRead);
+
+  Future<void> _markAllAsRead() async {
+    if (!_hasUnread || _isMarkingAllRead) return;
+
+    setState(() => _isMarkingAllRead = true);
+    final ok = await _notificationRepository.markAllAsRead();
+
+    if (!mounted) return;
+    setState(() {
+      _isMarkingAllRead = false;
+      if (ok) {
+        _notifications =
+            _notifications.map((n) => n.copyWith(isRead: true)).toList();
+      }
+    });
+
+    if (!ok && mounted) {
+      AppDialog.showToast(
+        context,
+        AppLocalizations.of(context)?.translate('read_all_failed') ??
+            'Could not mark notifications as read.',
+        isError: true,
+      );
+    }
+  }
+
   Future<void> _handleNotificationClick(NotificationModel noti) async {
     if (!noti.isRead) {
       await _notificationRepository.markAsRead(noti.id);
@@ -105,17 +133,7 @@ class _NotificationPageState extends State<NotificationPage> {
         setState(() {
           final index = _notifications.indexWhere((n) => n.id == noti.id);
           if (index != -1) {
-            _notifications[index] = NotificationModel(
-              id: noti.id,
-              title: noti.title,
-              message: noti.message,
-              mainType: noti.mainType,
-              subType: noti.subType,
-              orderId: noti.orderId,
-              data: noti.data,
-              createdAt: noti.createdAt,
-              isRead: true,
-            );
+            _notifications[index] = noti.copyWith(isRead: true);
           }
         });
       }
@@ -177,6 +195,29 @@ class _NotificationPageState extends State<NotificationPage> {
       appBar: BackTitleAppBar(
         title: t?.translate('notifications') ?? 'Notifications',
         onBack: () => Navigator.pop(context, true),
+        actions: [
+          if (_hasUnread && !_isLoading && _notifications.isNotEmpty)
+            TextButton(
+              onPressed: _isMarkingAllRead ? null : _markAllAsRead,
+              child: _isMarkingAllRead
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CustomLoadingIndicator(
+                        size: 18,
+                        color: AppColors.primary,
+                      ),
+                    )
+                  : Text(
+                      t?.translate('read_all') ?? 'Read all',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+            ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: () => _fetchNotifications(refresh: true),

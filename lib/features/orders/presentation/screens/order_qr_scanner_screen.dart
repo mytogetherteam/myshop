@@ -10,7 +10,6 @@ import 'package:my_shop/core/utils/order_qr_parser.dart';
 import 'package:my_shop/features/orders/data/services/order_service.dart';
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:my_shop/features/orders/presentation/screens/pickup_complete_screen.dart';
-import 'package:my_shop/features/orders/presentation/screens/pickup_success_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
@@ -123,9 +122,9 @@ class _OrderQrScannerScreenState extends State<OrderQrScannerScreen> {
     }
 
     if (isPickupReadyForQrConfirm(order)) {
-      final result = await navigator.push<String>(
+      await navigator.push(
         PageRouteBuilder(
-          settings: RouteSettings(name: 'pickup_complete_${order.id}'),
+          settings: RouteSettings(name: 'pickup_verify_${order.id}'),
           pageBuilder: (context, animation, secondaryAnimation) =>
               PickupCompleteScreen(order: order),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -144,9 +143,6 @@ class _OrderQrScannerScreenState extends State<OrderQrScannerScreen> {
           reverseTransitionDuration: Duration.zero,
         ),
       );
-      if (result == 'PICKED_UP' && navigator.mounted) {
-        // Success screen already popped with result; nothing else needed.
-      }
       return;
     }
 

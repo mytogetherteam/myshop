@@ -130,6 +130,7 @@ class OrderCard extends StatelessWidget {
                     child: StatusProgressIndicator(
                       key: ValueKey(order.status),
                       status: order.status,
+                      isPickup: order.isPickupFulfillment,
                     ),
                   ),
                 const SizedBox(height: 16),
@@ -276,7 +277,7 @@ class OrderCard extends StatelessWidget {
         }
         break;
       case 'READY_FOR_PICKUP':
-        mainButtonText = t?.translate('confirm_pickup') ?? 'Confirm Pickup';
+        mainButtonText = t?.translate('verify_pickup') ?? 'Verify Pickup';
         break;
       case 'ON_THE_WAY':
         mainButtonText = isDeliveryTab ? (t?.translate('check_delivery') ?? 'Check Delivery') : (t?.translate('tab_delivered') ?? 'Delivered');

@@ -22,6 +22,11 @@ import 'package:my_shop/core/utils/app_logger.dart';
 import 'dart:async';
 import 'package:my_shop/core/localization/app_localizations.dart';
 
+/// Lets deep order/pickup flows return to the Orders tab after completion.
+class OrdersTabNavigation {
+  static void Function(String status)? returnToOrdersTab;
+}
+
 class MainNavigationScreen extends StatefulWidget {
   final int initialIndex;
   const MainNavigationScreen({super.key, this.initialIndex = 0});
@@ -59,10 +64,24 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     WebSocketService().connect();
     _setupWebSocketListener();
     ChatUnreadController.instance.start();
+    OrdersTabNavigation.returnToOrdersTab = _returnToOrdersTab;
+  }
+
+  void _returnToOrdersTab(String status) {
+    if (_currentIndex != 0) {
+      setState(() => _currentIndex = 0);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _ordersKey.currentState?.refresh();
+      _ordersKey.currentState?.switchToStatus(status);
+    });
   }
 
   @override
   void dispose() {
+    if (OrdersTabNavigation.returnToOrdersTab == _returnToOrdersTab) {
+      OrdersTabNavigation.returnToOrdersTab = null;
+    }
     _socketSubscription?.cancel();
     super.dispose();
   }

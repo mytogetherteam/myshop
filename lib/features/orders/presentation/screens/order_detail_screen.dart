@@ -32,6 +32,7 @@ import 'package:my_shop/features/chat/data/services/chat_service.dart';
 import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
 import 'package:my_shop/features/chat/presentation/chat_navigation.dart';
 import 'package:my_shop/features/orders/presentation/screens/pickup_complete_screen.dart';
+import 'package:my_shop/features/orders/presentation/widgets/order_qr_scan_icon.dart';
 
 
 class OrderDetailScreen extends StatefulWidget {
@@ -907,12 +908,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     if (_deliveryOption == 'PREPAID' && !_formKey.currentState!.validate()) return;
 
     final orderDeliveryType = _deliveryOption == 'NORMAL' ? 'FLEXIBLE' : 'FAST';
+    final isPickup = _currentOrder.isPickupFulfillment;
+    final deliveryFee = isPickup
+        ? 0.0
+        : (double.tryParse(_deliveryFeeController.text.replaceAll(',', '')) ?? 0);
 
     await _runOrderAction(
       action: () => OrderService().confirmOrder(
         _currentOrder.id.toString(),
         orderDeliveryType: orderDeliveryType,
-        deliveryFee: double.tryParse(_deliveryFeeController.text.replaceAll(',', '')) ?? 0,
+        deliveryFee: deliveryFee,
         waitingTimeMinutes: int.tryParse(_waitingTimeMinutesController.text) ?? 0,
         driverId: _selectedDriverId,
       ),
@@ -1220,13 +1225,15 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         builder: (_) => PickupCompleteScreen(order: _currentOrder),
       ),
     );
-    if (!mounted) return;
-    if (result == 'PICKED_UP') {
+    if (result == 'PICKED_UP' && mounted) {
       await _fetchOrderDetails();
-      if (!mounted) return;
-      Navigator.pop(context, 'PICKED_UP');
     }
   }
+
+  bool get _showPickupScanAction =>
+      _currentOrder.isPickupFulfillment &&
+      (_currentOrder.status == 'COOKING' ||
+          _currentOrder.status == 'READY_FOR_PICKUP');
 
   Future<void> _handleDispatchOrder() async {
     if (_selectedDriverId == null) {
@@ -1317,8 +1324,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   ),
           ],
         ),
-        actions: const [
-          SizedBox(width: 8),
+        actions: [
+          if (_showPickupScanAction) const OrderQrScanIcon(),
+          const SizedBox(width: 8),
         ],
       ),
       body: _isFirstLoading 
@@ -2561,7 +2569,7 @@ Widget _buildAnimatedProgress() {
         }
         break;
       case 'READY_FOR_PICKUP':
-        mainButtonText = 'Confirm Pickup';
+        mainButtonText = 'Verify Pickup';
         onPressed = _isUpdating ? null : _openPickupCompleteScreen;
         break;
       case 'ON_THE_WAY':
@@ -2891,7 +2899,7 @@ Widget _buildAnimatedProgress() {
                 const SizedBox(height: 8),
                 Text(
                   t?.translate('pickup_confirmation_desc') ??
-                      'Set the prep time. Delivery fee is optional for pickup orders.',
+                      'Set how long the customer should wait before pickup.',
                   style: GoogleFonts.poppins(
                     fontSize: 13,
                     color: const Color(0xFF64748B),
@@ -2899,40 +2907,13 @@ Widget _buildAnimatedProgress() {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildInputField(
-                        t?.translate('delivery_fee_optional') ??
-                            'Delivery Fee (optional)',
-                        _deliveryFeeController,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          ThousandsSeparatorInputFormatter(),
-                        ],
-                        validator: (value) {
-                          if (value == null || value.isEmpty) return null;
-                          final numValue = value.replaceAll(',', '');
-                          if (double.tryParse(numValue) == null) {
-                            return 'Invalid number';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildInputField(
-                        t?.translate('est_prep_time_mins') ?? 'Est Prep Time (mins)',
-                        _waitingTimeMinutesController,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                        validator: (value) =>
-                            (value == null || value.isEmpty) ? 'Required' : null,
-                      ),
-                    ),
-                  ],
+                _buildInputField(
+                  t?.translate('est_prep_time_mins') ?? 'Est Prep Time (mins)',
+                  _waitingTimeMinutesController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  validator: (value) =>
+                      (value == null || value.isEmpty) ? 'Required' : null,
                 ),
               ] else ...[
               Row(
@@ -3164,7 +3145,8 @@ Widget _buildAnimatedProgress() {
                   border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: Text(
-                  'Customer can show their QR code. Scan it from the header or tap Confirm Pickup below.',
+                  t?.translate('pickup_ready_hint') ??
+                      'Hand the order to the customer and scan their QR code, or tap Verify Pickup when ready.',
                   style: GoogleFonts.poppins(
                     fontSize: 13,
                     color: const Color(0xFF64748B),
