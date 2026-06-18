@@ -1,13 +1,15 @@
 {
+    "id": "/",
     "name": "My Shop",
     "short_name": "MyShop",
     "start_url": "/",
     "scope": "/",
     "display": "standalone",
+    "display_override": ["standalone", "browser"],
     "background_color": "#ffffff",
     "theme_color": "#ffffff",
     "description": "My Together Shop",
-    "orientation": "portrait-primary",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

@@ -22,6 +22,17 @@ class App extends StatelessWidget {
           theme: ThemeData(
             useMaterial3: true,
             colorSchemeSeed: AppColors.primary,
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                disabledBackgroundColor: const Color(0xFFE2E8F0),
+                disabledForegroundColor: const Color(0xFF94A3B8),
+              ),
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                disabledForegroundColor: const Color(0xFF94A3B8),
+              ),
+            ),
           ),
           debugShowCheckedModeBanner: false,
           locale: locale,

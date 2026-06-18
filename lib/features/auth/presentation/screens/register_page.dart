@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/app_logo.dart';
@@ -245,7 +246,12 @@ class _RegisterPageState extends State<RegisterPage>
                             onTap: () async {
                               final uri = Uri.parse('https://mytogether.org/privacy-policy/shop');
                               try {
-                                await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+                                await launchUrl(
+                                  uri,
+                                  mode: kIsWeb
+                                      ? LaunchMode.platformDefault
+                                      : LaunchMode.inAppBrowserView,
+                                );
                               } catch (e) {
                                 debugPrint('Could not launch $uri');
                               }

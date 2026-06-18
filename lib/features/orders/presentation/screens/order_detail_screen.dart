@@ -1377,7 +1377,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ? _buildSkeletonDetail()
             : AnimatedOpacity(
                 duration: const Duration(milliseconds: 300),
-                opacity: _isUpdating ? 0.6 : 1.0,
+                opacity: (_isSubmitting || _isRefreshing) ? 0.6 : 1.0,
                 child: Column(
                   children: [
                     // Fixed Header Section (Info + Status)
@@ -2721,17 +2721,17 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       case 'COOKING':
         if (_currentOrder.isPickupFulfillment) {
           mainButtonText = 'Mark Ready for Pickup';
-          onPressed = _isUpdating ? null : _handleMarkReadyForPickup;
+          onPressed = _isSubmitting ? null : _handleMarkReadyForPickup;
         } else {
           mainButtonText = 'Picked Up by Rider';
-          onPressed = (_isUpdating || _selectedDriverId == null)
+          onPressed = (_isSubmitting || _selectedDriverId == null)
               ? null
               : _handleDispatchOrder;
         }
         break;
       case 'READY_FOR_PICKUP':
         mainButtonText = 'Verify Pickup';
-        onPressed = _isUpdating ? null : _openPickupCompleteScreen;
+        onPressed = _isSubmitting ? null : _openPickupCompleteScreen;
         break;
       case 'ON_THE_WAY':
         mainButtonText = 'Delivered';
@@ -2858,31 +2858,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           const SizedBox(width: 10),
           Text(
             'Order successfully delivered',
-            style: GoogleFonts.poppins(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-              letterSpacing: 0.2,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPickedUpBanner() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 36),
-      decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.check_circle_rounded, color: Colors.white, size: 22),
-          const SizedBox(width: 10),
-          Text(
-            AppLocalizations.of(context)?.translate('pickup_success_title') ??
-                'Pickup complete',
             style: GoogleFonts.poppins(
               fontSize: 15,
               fontWeight: FontWeight.w600,

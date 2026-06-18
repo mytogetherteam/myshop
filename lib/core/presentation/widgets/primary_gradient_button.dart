@@ -24,6 +24,36 @@ class PrimaryGradientButton extends StatelessWidget {
     this.gradient,
   });
 
+  static const Color _mutedForeground = Color(0xFF94A3B8);
+
+  Widget _buildLabel(bool useMutedStyle) {
+    final foregroundColor = useMutedStyle ? _mutedForeground : Colors.white;
+
+    if (child != null) {
+      return IconTheme.merge(
+        data: IconThemeData(color: foregroundColor, size: 18),
+        child: DefaultTextStyle.merge(
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: foregroundColor,
+          ),
+          child: child!,
+        ),
+      );
+    }
+
+    return Text(
+      text ?? '',
+      style: GoogleFonts.poppins(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.3,
+        color: foregroundColor,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isInteractive = onPressed != null && !isLoading;
@@ -57,18 +87,7 @@ class PrimaryGradientButton extends StatelessWidget {
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : (child ??
-                      Text(
-                        text ?? '',
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.3,
-                          color: useMutedStyle
-                              ? const Color(0xFF94A3B8)
-                              : Colors.white,
-                        ),
-                      )),
+                  : _buildLabel(useMutedStyle),
             ),
           ),
         ),

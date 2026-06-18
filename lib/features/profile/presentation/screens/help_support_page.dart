@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -43,8 +45,20 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
   void _launchEmail(String email) =>
       _launch(Uri(scheme: 'mailto', path: email, query: 'subject=MyShop Support Request'));
 
-  void _launchPhone(String phone) =>
-      _launch(Uri(scheme: 'tel', path: phone));
+  void _launchPhone(String phone) {
+    if (kIsWeb) {
+      Clipboard.setData(ClipboardData(text: phone));
+      if (mounted) {
+        final t = AppLocalizations.of(context);
+        AppDialog.showToast(
+          context,
+          t?.translate('phone_copied') ?? 'Phone number copied to clipboard',
+        );
+      }
+      return;
+    }
+    _launch(Uri(scheme: 'tel', path: phone));
+  }
 
   void _launchUrl(String url) =>
       _launch(Uri.parse(url.startsWith('http') ? url : 'https://$url'));

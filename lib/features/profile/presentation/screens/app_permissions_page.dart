@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -69,6 +70,31 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
+
+    if (kIsWeb) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        appBar: BackTitleAppBar(
+          title: t?.translate('app_permissions') ?? 'App Permissions',
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              t?.translate('app_permissions_web_unavailable') ??
+                  'Permission settings are managed by your browser on the web app.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: const Color(0xFF64748B),
+                height: 1.5,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: BackTitleAppBar(
