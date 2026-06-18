@@ -13,8 +13,10 @@ String _normalizeStatus(String? raw) {
       return 'PENDING';
     case 'PAYMENT_UPLOADED':
       return 'AWAITING_APPROVAL';
+    case 'PICKED_UP':
+      return 'PICKED_UP';
     case 'READY_FOR_PICKUP':
-      return 'COOKING';
+      return 'READY_FOR_PICKUP';
     case 'REJECTED':
       return 'CANCELED';
     default:
@@ -136,6 +138,11 @@ class OrderModel {
   /// Whether the customer chose delivery vs pickup (`orderType` from API).
   bool get isDeliveryFulfillment =>
       orderType.toUpperCase() == 'DELIVERY';
+
+  bool get isPickupFulfillment {
+    final type = orderType.toUpperCase();
+    return type == 'PICK_UP' || type == 'PICKUP';
+  }
 
   String? get deliveryCycleNo => vehicleNo;
   String? get deliveryTrackingUrl => trackingUrl;
@@ -291,8 +298,10 @@ class OrderModel {
       'AWAITING_APPROVAL': 'Awaiting Approval',
       'PAYMENT_VERIFIED': 'Payment Verified',
       'COOKING': 'Cooking',
+      'READY_FOR_PICKUP': 'Ready for Pickup',
       'ON_THE_WAY': 'On the Way',
       'DELIVERED': 'Delivered',
+      'PICKED_UP': 'Picked Up',
       'REVISED': 'Revised',
     };
     return labels[status] ?? status;
@@ -304,7 +313,8 @@ class OrderModel {
           : items.fold(0.0, (sum, item) => sum + (item.price * item.quantity));
 
   String get deliveryAddressDetail => deliveryAddress?.address ?? '-';
-  String get deliveryAddressTitle => 'Delivery Address';
+  String get deliveryAddressTitle =>
+      isPickupFulfillment ? 'Pickup' : 'Delivery Address';
   String get statusName => statusLabel ?? status;
 }
 

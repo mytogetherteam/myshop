@@ -32,6 +32,8 @@ import 'package:my_shop/features/chat/data/models/chat_model.dart';
 import 'package:my_shop/features/chat/data/services/chat_service.dart';
 import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
 import 'package:my_shop/features/chat/presentation/chat_navigation.dart';
+import 'package:my_shop/features/orders/presentation/screens/pickup_complete_screen.dart';
+import 'package:my_shop/features/orders/presentation/widgets/order_qr_scan_icon.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   final OrderModel order;
@@ -237,7 +239,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     bool isValid = false;
 
     if (_currentOrder.status == 'PENDING') {
-      if (_deliveryOption == 'NORMAL') {
+      if (_currentOrder.isPickupFulfillment) {
+        isValid = waiting.isNotEmpty && int.tryParse(waiting) != null;
+      } else if (_deliveryOption == 'NORMAL') {
         // Flexible Delivery: only need preparation time
         isValid = waiting.isNotEmpty && int.tryParse(waiting) != null;
       } else {
@@ -251,7 +255,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     } else if (_currentOrder.status == 'AWAITING_APPROVAL') {
       isValid = true;
     } else if (_currentOrder.status == 'COOKING') {
-      isValid = _selectedDriverId != null;
+      isValid = _currentOrder.isPickupFulfillment || _selectedDriverId != null;
     } else {
       isValid = true;
     }
@@ -937,14 +941,17 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       return;
 
     final orderDeliveryType = _deliveryOption == 'NORMAL' ? 'FLEXIBLE' : 'FAST';
+    final isPickup = _currentOrder.isPickupFulfillment;
+    final deliveryFee = isPickup
+        ? 0.0
+        : (double.tryParse(_deliveryFeeController.text.replaceAll(',', '')) ??
+              0);
 
     await _runOrderAction(
       action: () => OrderService().confirmOrder(
         _currentOrder.id.toString(),
         orderDeliveryType: orderDeliveryType,
-        deliveryFee:
-            double.tryParse(_deliveryFeeController.text.replaceAll(',', '')) ??
-            0,
+        deliveryFee: deliveryFee,
         waitingTimeMinutes:
             int.tryParse(_waitingTimeMinutesController.text) ?? 0,
         driverId: _selectedDriverId,
@@ -1246,6 +1253,31 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     reasonController.dispose();
   }
 
+  Future<void> _handleMarkReadyForPickup() async {
+    await _runOrderAction(
+      action: () =>
+          OrderService().markReadyForPickup(_currentOrder.id.toString()),
+      errorMessage: 'Failed to mark order ready for pickup.',
+    );
+  }
+
+  Future<void> _openPickupCompleteScreen() async {
+    final result = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PickupCompleteScreen(order: _currentOrder),
+      ),
+    );
+    if (result == 'PICKED_UP' && mounted) {
+      await _fetchOrderDetails();
+    }
+  }
+
+  bool get _showPickupScanAction =>
+      _currentOrder.isPickupFulfillment &&
+      (_currentOrder.status == 'COOKING' ||
+          _currentOrder.status == 'READY_FOR_PICKUP');
+
   Future<void> _handleDispatchOrder() async {
     if (_selectedDriverId == null) {
       AppDialog.showToast(
@@ -1336,13 +1368,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     ),
             ],
           ),
-          actions: const [SizedBox(width: 8)],
+          actions: [
+            if (_showPickupScanAction) const OrderQrScanIcon(),
+            const SizedBox(width: 8),
+          ],
         ),
         body: _isFirstLoading
             ? _buildSkeletonDetail()
             : AnimatedOpacity(
                 duration: const Duration(milliseconds: 300),
-                opacity: _isRefreshing ? 0.6 : 1.0,
+                opacity: _isUpdating ? 0.6 : 1.0,
                 child: Column(
                   children: [
                     // Fixed Header Section (Info + Status)
@@ -1399,7 +1434,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
                             // Confirmation Form (Full Width - it has its own internal padding)
                             if (_currentOrder.status == 'PENDING' ||
-                                _currentOrder.status == 'COOKING') ...[
+                                _currentOrder.status == 'COOKING' ||
+                                _currentOrder.status == 'READY_FOR_PICKUP') ...[
                               _buildConfirmationForm(),
                               const SizedBox(height: 8),
                             ],
@@ -1611,8 +1647,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         );
       },
       child: StatusProgressIndicator(
-        key: ValueKey(_currentOrder.status),
+        key: ValueKey('${_currentOrder.status}_${_currentOrder.orderType}'),
         status: _currentOrder.status,
+        isPickup: _currentOrder.isPickupFulfillment,
       ),
     );
   }
@@ -1920,6 +1957,63 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildAddressSection(BuildContext context) {
+    final t = AppLocalizations.of(context);
+
+    if (_currentOrder.isPickupFulfillment) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFDF2F8),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                PhosphorIconsRegular.shoppingBag,
+                size: 18,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    t?.translate('pickup') ?? 'Pickup',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    t?.translate('pickup_at_shop_desc') ??
+                        'Customer will pick up this order at your shop.',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: AppColors.onSurfaceVariant,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2625,10 +2719,19 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         onPressed = null;
         break;
       case 'COOKING':
-        mainButtonText = 'Picked Up by Rider';
-        onPressed = (_isSubmitting || _selectedDriverId == null)
-            ? null
-            : _handleDispatchOrder;
+        if (_currentOrder.isPickupFulfillment) {
+          mainButtonText = 'Mark Ready for Pickup';
+          onPressed = _isUpdating ? null : _handleMarkReadyForPickup;
+        } else {
+          mainButtonText = 'Picked Up by Rider';
+          onPressed = (_isUpdating || _selectedDriverId == null)
+              ? null
+              : _handleDispatchOrder;
+        }
+        break;
+      case 'READY_FOR_PICKUP':
+        mainButtonText = 'Verify Pickup';
+        onPressed = _isUpdating ? null : _openPickupCompleteScreen;
         break;
       case 'ON_THE_WAY':
         mainButtonText = 'Delivered';
@@ -2636,6 +2739,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         break;
       case 'DELIVERED':
         return _buildDeliveredBanner();
+      case 'PICKED_UP':
+        return _buildPickedUpBanner();
       case 'CANCELED':
         return const SizedBox.shrink();
       case 'REVISED':
@@ -2753,6 +2858,56 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           const SizedBox(width: 10),
           Text(
             'Order successfully delivered',
+            style: GoogleFonts.poppins(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPickedUpBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 36),
+      decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.check_circle_rounded, color: Colors.white, size: 22),
+          const SizedBox(width: 10),
+          Text(
+            AppLocalizations.of(context)?.translate('pickup_success_title') ??
+                'Pickup complete',
+            style: GoogleFonts.poppins(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPickedUpBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 36),
+      decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.check_circle_rounded, color: Colors.white, size: 22),
+          const SizedBox(width: 10),
+          Text(
+            AppLocalizations.of(context)?.translate('pickup_success_title') ??
+                'Pickup complete',
             style: GoogleFonts.poppins(
               fontSize: 15,
               fontWeight: FontWeight.w600,
@@ -2915,6 +3070,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildConfirmationForm() {
+    final t = AppLocalizations.of(context);
+
     return Container(
       padding: const EdgeInsets.all(20),
       color: const Color(0xFFF8FAFC),
@@ -2925,82 +3082,115 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (_currentOrder.status == 'PENDING') ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _deliveryOption = 'PREPAID';
-                          _validateFormState();
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          gradient: _deliveryOption == 'PREPAID'
-                              ? AppColors.primaryGradient
-                              : null,
-                          color: _deliveryOption == 'PREPAID'
-                              ? null
-                              : const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          'Fast Delivery',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+              if (_currentOrder.isPickupFulfillment) ...[
+                Text(
+                  t?.translate('pickup_confirmation') ?? 'Pickup confirmation',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1E293B),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  t?.translate('pickup_confirmation_desc') ??
+                      'Set how long the customer should wait before pickup.',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: const Color(0xFF64748B),
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildInputField(
+                  t?.translate('est_prep_time_mins') ?? 'Est Prep Time (mins)',
+                  _waitingTimeMinutesController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  validator: (value) =>
+                      (value == null || value.isEmpty) ? 'Required' : null,
+                ),
+              ] else ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _deliveryOption = 'PREPAID';
+                            _validateFormState();
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            gradient: _deliveryOption == 'PREPAID'
+                                ? AppColors.primaryGradient
+                                : null,
                             color: _deliveryOption == 'PREPAID'
-                                ? Colors.white
-                                : const Color(0xFF64748B),
+                                ? null
+                                : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            'Fast Delivery',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: _deliveryOption == 'PREPAID'
+                                  ? Colors.white
+                                  : const Color(0xFF64748B),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _deliveryOption = 'NORMAL';
-                          _validateFormState();
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          gradient: _deliveryOption == 'NORMAL'
-                              ? AppColors.primaryGradient
-                              : null,
-                          color: _deliveryOption == 'NORMAL'
-                              ? null
-                              : const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          'Flexible Delivery',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _deliveryOption = 'NORMAL';
+                            _validateFormState();
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            gradient: _deliveryOption == 'NORMAL'
+                                ? AppColors.primaryGradient
+                                : null,
                             color: _deliveryOption == 'NORMAL'
-                                ? Colors.white
-                                : const Color(0xFF64748B),
+                                ? null
+                                : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            'Flexible Delivery',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: _deliveryOption == 'NORMAL'
+                                  ? Colors.white
+                                  : const Color(0xFF64748B),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
+                  ],
+                ),
+                const SizedBox(height: 24),
+              ],
             ],
             // ── Section header ──────────────────────────────────────────
-            if (_deliveryOption == 'PREPAID' ||
-                _currentOrder.status == 'COOKING') ...[
+            if ((_deliveryOption == 'PREPAID' &&
+                    _currentOrder.status == 'PENDING' &&
+                    _currentOrder.isDeliveryFulfillment) ||
+                (_currentOrder.status == 'COOKING' &&
+                    _currentOrder.isDeliveryFulfillment)) ...[
               Text(
                 _currentOrder.status == 'COOKING'
                     ? 'Dispatch Information'
@@ -3016,7 +3206,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
             // ── Flexible Delivery (PENDING) ─────────────────────────────
             if (_deliveryOption == 'NORMAL' &&
-                _currentOrder.status == 'PENDING') ...[
+                _currentOrder.status == 'PENDING' &&
+                _currentOrder.isDeliveryFulfillment) ...[
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -3094,7 +3285,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
               // ── Fast Delivery (PENDING): fee + waiting only ─────────────
             ] else if (_deliveryOption == 'PREPAID' &&
-                _currentOrder.status == 'PENDING') ...[
+                _currentOrder.status == 'PENDING' &&
+                _currentOrder.isDeliveryFulfillment) ...[
               Row(
                 children: [
                   Expanded(
@@ -3130,10 +3322,49 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
 
               // ── COOKING / dispatch (single driver selection point) ─────
-            ] else if (_currentOrder.status == 'COOKING') ...[
+            ] else if (_currentOrder.status == 'COOKING' &&
+                _currentOrder.isDeliveryFulfillment) ...[
               _buildDriverPicker(),
               const SizedBox(height: 12),
               _buildInputField('Tracking URL', _deliveryTrackingUrlController),
+            ] else if (_currentOrder.status == 'COOKING' &&
+                _currentOrder.isPickupFulfillment) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Text(
+                  'Mark this order ready for pickup when the food is prepared. The customer can then show their QR code at the counter.',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: const Color(0xFF64748B),
+                    height: 1.5,
+                  ),
+                ),
+              ),
+            ] else if (_currentOrder.status == 'READY_FOR_PICKUP') ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Text(
+                  t?.translate('pickup_ready_hint') ??
+                      'Hand the order to the customer and scan their QR code, or tap Verify Pickup when ready.',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: const Color(0xFF64748B),
+                    height: 1.5,
+                  ),
+                ),
+              ),
             ],
           ],
         ),

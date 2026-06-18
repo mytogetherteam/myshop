@@ -4,8 +4,13 @@ import 'package:my_shop/core/utils/app_colors.dart';
 
 class StatusProgressIndicator extends StatefulWidget {
   final String status;
+  final bool isPickup;
 
-  const StatusProgressIndicator({super.key, required this.status});
+  const StatusProgressIndicator({
+    super.key,
+    required this.status,
+    this.isPickup = false,
+  });
 
   @override
   State<StatusProgressIndicator> createState() => _StatusProgressIndicatorState();
@@ -31,6 +36,58 @@ class _StatusProgressIndicatorState extends State<StatusProgressIndicator> with 
 
   @override
   Widget build(BuildContext context) {
+    if (widget.isPickup) {
+      return _buildPickupProgress();
+    }
+    return _buildDeliveryProgress();
+  }
+
+  Widget _buildPickupProgress() {
+    int activeStep = 0;
+    switch (widget.status) {
+      case 'PENDING':
+      case 'REVISED':
+        activeStep = 0;
+        break;
+      case 'PAYMENT_SLIP_REQUESTED':
+      case 'AWAITING_APPROVAL':
+      case 'PAYMENT_VERIFIED':
+        activeStep = 1;
+        break;
+      case 'COOKING':
+        activeStep = 2;
+        break;
+      case 'READY_FOR_PICKUP':
+        activeStep = 3;
+        break;
+      case 'PICKED_UP':
+        activeStep = 4;
+        break;
+      case 'CANCELED':
+        activeStep = 0;
+        break;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildStep(0, activeStep, PhosphorIconsRegular.check, PhosphorIconsFill.check, 'New'),
+          _buildLine(0, activeStep, terminalStatus: 'PICKED_UP'),
+          _buildStep(1, activeStep, PhosphorIconsRegular.wallet, PhosphorIconsFill.wallet, 'Payment'),
+          _buildLine(1, activeStep, terminalStatus: 'PICKED_UP'),
+          _buildStep(2, activeStep, PhosphorIconsRegular.cookingPot, PhosphorIconsFill.cookingPot, 'Preparing'),
+          _buildLine(2, activeStep, terminalStatus: 'PICKED_UP'),
+          _buildStep(3, activeStep, PhosphorIconsRegular.shoppingBag, PhosphorIconsFill.shoppingBag, 'Ready'),
+          _buildLine(3, activeStep, terminalStatus: 'PICKED_UP'),
+          _buildStep(4, activeStep, PhosphorIconsRegular.checkCircle, PhosphorIconsFill.checkCircle, 'Picked up'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeliveryProgress() {
     int activeStep = 0;
     switch (widget.status) {
       case 'PENDING':
@@ -75,9 +132,19 @@ class _StatusProgressIndicatorState extends State<StatusProgressIndicator> with 
     );
   }
 
+  bool get _isTerminalStatus {
+    final status = widget.status.toUpperCase();
+    if (widget.isPickup) return status == 'PICKED_UP';
+    return status == 'DELIVERED';
+  }
+
+  String get _terminalStatus =>
+      widget.isPickup ? 'PICKED_UP' : 'DELIVERED';
+
   Widget _buildStep(int step, int activeStep, IconData icon, IconData activeIcon, String label) {
     final bool isActive = step <= activeStep;
-    final bool isCurrent = step == activeStep && widget.status != 'DELIVERED' && widget.status != 'CANCELED';
+    final bool isCurrent =
+        step == activeStep && !_isTerminalStatus && widget.status != 'CANCELED';
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -137,9 +204,13 @@ class _StatusProgressIndicatorState extends State<StatusProgressIndicator> with 
     );
   }
 
-  Widget _buildLine(int step, int activeStep) {
+  Widget _buildLine(int step, int activeStep, {String? terminalStatus}) {
+    final terminal = terminalStatus ?? _terminalStatus;
     final bool isCompleted = step < activeStep;
-    final bool isProcessing = step == activeStep && widget.status != 'DELIVERED' && widget.status != 'CANCELED';
+    final bool isProcessing =
+        step == activeStep &&
+        widget.status.toUpperCase() != terminal &&
+        widget.status != 'CANCELED';
     
     return Expanded(
       child: Padding(

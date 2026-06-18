@@ -1,34 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/app_logo.dart';
-import 'package:my_shop/core/notifications/notification_service.dart';
-import 'package:my_shop/features/auth/data/services/auth_service.dart';
-import '../../../../core/network/websocket_service.dart';
-import '../../../../core/presentation/widgets/primary_gradient_button.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
-import 'package:my_shop/core/utils/app_version.dart';
-import 'package:my_shop/features/auth/presentation/screens/register_page.dart';
+import 'package:my_shop/features/auth/data/services/auth_service.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:my_shop/core/presentation/widgets/global_modal.dart';
 import 'package:my_shop/features/profile/presentation/widgets/language_selector_sheet.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _LoginPageState extends State<LoginPage>
+class _RegisterPageState extends State<RegisterPage>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _identifierController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _shopNameController = TextEditingController();
+  final _ownerNameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
 
-  bool _obscurePassword = true;
   bool _isLoading = false;
+  bool _agreeToTerms = false;
 
   late final AnimationController _animController;
   late final Animation<double> _fadeAnim;
@@ -52,49 +51,50 @@ class _LoginPageState extends State<LoginPage>
   @override
   void dispose() {
     _animController.dispose();
-    _identifierController.dispose();
-    _passwordController.dispose();
+    _shopNameController.dispose();
+    _ownerNameController.dispose();
+    _phoneController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
+  Future<void> _handleRegister() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    if (!_agreeToTerms) {
+      final t = AppLocalizations.of(context);
+      AppDialog.showToast(context, t?.translate('please_agree_terms') ?? 'Please agree to the Terms of Service and Privacy Policy', isError: true);
+      return;
+    }
+    
     setState(() {
       _isLoading = true;
     });
 
-    try {
-      final response = await AuthService.instance.login(
-        usernameOrEmail: _identifierController.text.trim(),
-        password: _passwordController.text,
-      );
+    final response = await AuthService.instance.registerShop(
+      shopName: _shopNameController.text.trim(),
+      ownerName: _ownerNameController.text.trim(),
+      phone: _phoneController.text.trim(),
+      email: _emailController.text.trim(),
+    );
 
-      if (!mounted) return;
+    if (!mounted) return;
 
-      if (response.success) {
-        WebSocketService().connect();
-        await NotificationService().registerDevice();
-        if (!mounted) return;
-        Navigator.of(context).pushReplacementNamed('/home');
-      } else {
-        final t = AppLocalizations.of(context);
-        _showError(response.details ?? response.message ?? (t?.translate('login_failed') ?? 'Login failed'));
-      }
-    } catch (e) {
-      if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (response.success) {
       final t = AppLocalizations.of(context);
-      _showError('${t?.translate('unexpected_error') ?? 'An unexpected error occurred'}: $e');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      AppDialog.showSuccessDialog(
+        context,
+        message: t?.translate('registration_success') ?? 'Application submitted successfully! Our team will contact you shortly to verify and activate your shop account.',
+        onDone: () => Navigator.pop(context),
+      );
+    } else {
+      final t = AppLocalizations.of(context);
+      AppDialog.showToast(context, response.message ?? (t?.translate('registration_failed') ?? 'Registration failed'), isError: true);
     }
-  }
-
-  void _showError(String message) {
-    AppDialog.showToast(context, message, isError: true);
   }
 
   @override
@@ -102,6 +102,22 @@ class _LoginPageState extends State<LoginPage>
     final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 24),
+              child: _buildLanguageFab(),
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Stack(
           children: [
@@ -116,16 +132,14 @@ class _LoginPageState extends State<LoginPage>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 64),
-
                     // Logo
-                    const Center(child: AppLogo(size: 88)),
+                    const Center(child: AppLogo(size: 72)),
 
-                    const SizedBox(height: 48),
+                    const SizedBox(height: 32),
 
                     // Welcome text
                     Text(
-                      t?.translate('login_title') ?? 'Shop Admin Login 👋',
+                      t?.translate('register_title') ?? 'Become a Partner 🚀',
                       style: GoogleFonts.poppins(
                         fontSize: 26,
                         fontWeight: FontWeight.w700,
@@ -134,25 +148,26 @@ class _LoginPageState extends State<LoginPage>
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      t?.translate('login_subtitle') ?? 'Manage your shop with ease',
+                      t?.translate('register_subtitle') ?? 'Apply now to open your online shop and reach more customers.',
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         color: Colors.grey[600],
+                        height: 1.5,
                       ),
                     ),
 
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 32),
 
-                    // Username / Email field
-                    _buildLabel(t?.translate('username_or_email') ?? 'Username or Email'),
+                    // Shop Name
+                    _buildLabel(t?.translate('shop_name') ?? 'Shop Name'),
                     const SizedBox(height: 8),
                     _buildTextField(
-                      controller: _identifierController,
-                      hint: t?.translate('username_email_hint') ?? 'admin@shop.com',
-                      icon: Icons.person_outline_rounded,
+                      controller: _shopNameController,
+                      hint: t?.translate('shop_name_hint') ?? 'e.g., My Awesome Shop',
+                      icon: Icons.storefront_outlined,
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) {
-                          return t?.translate('please_enter_username_email') ?? 'Please enter your username or email';
+                          return t?.translate('please_enter_shop_name') ?? 'Please enter your shop name';
                         }
                         return null;
                       },
@@ -160,97 +175,114 @@ class _LoginPageState extends State<LoginPage>
 
                     const SizedBox(height: 20),
 
-                    // Password field
-                    _buildLabel(t?.translate('password') ?? 'Password'),
+                    // Owner Name
+                    _buildLabel(t?.translate('owner_name') ?? 'Owner Name'),
                     const SizedBox(height: 8),
                     _buildTextField(
-                      controller: _passwordController,
-                      hint: t?.translate('enter_your_password') ?? 'Enter your password',
-                      icon: Icons.lock_outline_rounded,
-                      obscure: _obscurePassword,
-                      suffixWidget: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
-                          color: Colors.grey[500],
-                          size: 20,
-                        ),
-                        onPressed: () => setState(
-                          () => _obscurePassword = !_obscurePassword,
-                        ),
-                      ),
+                      controller: _ownerNameController,
+                      hint: t?.translate('owner_name_hint') ?? 'Enter your full name',
+                      icon: Icons.person_outline_rounded,
                       validator: (v) {
-                        if (v == null || v.isEmpty) {
-                          return t?.translate('please_enter_password') ?? 'Please enter your password';
+                        if (v == null || v.trim().isEmpty) {
+                          return t?.translate('please_enter_owner_name') ?? 'Please enter owner name';
                         }
                         return null;
                       },
                     ),
 
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 20),
 
-                    // Login Button
-                    _buildLoginButton(),
+                    // Phone Number
+                    _buildLabel(t?.translate('phone_number') ?? 'Phone Number'),
+                    const SizedBox(height: 8),
+                    _buildTextField(
+                      controller: _phoneController,
+                      hint: t?.translate('phone_hint') ?? 'e.g., 09xxxxxxxxx',
+                      icon: Icons.phone_outlined,
+                      keyboardType: TextInputType.phone,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return t?.translate('please_enter_phone') ?? 'Please enter your phone number';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Email (Optional)
+                    _buildLabel(t?.translate('email_optional') ?? 'Email Address (Optional)'),
+                    const SizedBox(height: 8),
+                    _buildTextField(
+                      controller: _emailController,
+                      hint: t?.translate('username_email_hint') ?? 'admin@shop.com',
+                      icon: Icons.email_outlined,
+                      keyboardType: TextInputType.emailAddress,
+                    ),
 
                     const SizedBox(height: 24),
 
-                    // Register Link
+                    // Privacy Policy & Terms Checkbox
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          t?.translate('no_account') ?? "Don't have a shop account? ",
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            color: Colors.grey[600],
+                        SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: Checkbox(
+                            value: _agreeToTerms,
+                            activeColor: AppColors.primary,
+                            onChanged: (val) {
+                              setState(() {
+                                _agreeToTerms = val ?? false;
+                              });
+                            },
                           ),
                         ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const RegisterPage(),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () async {
+                              final uri = Uri.parse('https://mytogether.org/privacy-policy/shop');
+                              try {
+                                await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+                              } catch (e) {
+                                debugPrint('Could not launch $uri');
+                              }
+                            },
+                            child: ShaderMask(
+                              shaderCallback: (bounds) => AppColors.primaryGradient.createShader(bounds),
+                              child: Text(
+                                t?.translate('terms_and_privacy') ?? 'I agree to the Terms of Service and Privacy Policy',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: Colors.white,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: Colors.white,
+                                  height: 1.4,
+                                ),
                               ),
-                            );
-                          },
-                          child: Text(
-                            t?.translate('apply_now') ?? "Apply Now",
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
                             ),
                           ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 48),
+                    const SizedBox(height: 32),
 
-                    // Version Info
-                    Center(
-                      child: Text(
-                        AppVersion.fullVersion,
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: Colors.grey[400],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
+                    // Register Button
+                    PrimaryGradientButton(
+                      text: t?.translate('submit_application') ?? 'Submit Application',
+                      isLoading: _isLoading,
+                      onPressed: _handleRegister,
                     ),
-                    const SizedBox(height: 24),
+
+                    const SizedBox(height: 32),
                   ],
                 ),
               ),
             ),
           ),
-        ),
-        Positioned(
-          top: 16,
-          right: 24,
-          child: _buildLanguageFab(),
         ),
       ],
     ),
@@ -273,20 +305,18 @@ class _LoginPageState extends State<LoginPage>
     required TextEditingController controller,
     required String hint,
     required IconData icon,
-    bool obscure = false,
-    Widget? suffixWidget,
+    TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
-      obscureText: obscure,
       validator: validator,
+      keyboardType: keyboardType,
       style: GoogleFonts.poppins(fontSize: 15, color: Colors.black),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: GoogleFonts.poppins(color: Colors.grey[400], fontSize: 14),
         prefixIcon: Icon(icon, color: Colors.grey[500], size: 20),
-        suffixIcon: suffixWidget,
         filled: true,
         fillColor: Colors.grey[50],
         contentPadding: const EdgeInsets.symmetric(
@@ -314,15 +344,6 @@ class _LoginPageState extends State<LoginPage>
           borderSide: const BorderSide(color: Colors.red, width: 1.5),
         ),
       ),
-    );
-  }
-
-  Widget _buildLoginButton() {
-    final t = AppLocalizations.of(context);
-    return PrimaryGradientButton(
-      text: t?.translate('login_btn') ?? 'Login',
-      isLoading: _isLoading,
-      onPressed: _handleLogin,
     );
   }
 

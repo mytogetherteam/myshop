@@ -8,17 +8,19 @@ class OrderQrScanIcon extends StatelessWidget {
 
   const OrderQrScanIcon({super.key, this.color = const Color(0xFF1E293B)});
 
+  static Future<void> openScanner(BuildContext context) {
+    return Navigator.push<void>(
+      context,
+      MaterialPageRoute(builder: (_) => const OrderQrScannerScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (kIsWeb) return const SizedBox.shrink();
 
     return IconButton(
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const OrderQrScannerScreen()),
-        );
-      },
+      onPressed: () => openScanner(context),
       icon: Icon(PhosphorIconsRegular.qrCode, color: color, size: 26),
     );
   }

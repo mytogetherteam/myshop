@@ -12,6 +12,13 @@ class QueuedRequest {
 }
 
 class AuthInterceptor extends Interceptor {
+  /// Auth routes that must not send a Bearer token (login, token refresh).
+  /// Other `/auth/` routes (change-password, logout, delete-account) require auth.
+  static const _publicAuthPaths = {
+    '/api/shop/auth/login',
+    '/api/shop/auth/refresh',
+  };
+
   final Dio dio;
   bool _isRefreshing = false;
   final List<QueuedRequest> _pendingRequests = [];
@@ -19,15 +26,19 @@ class AuthInterceptor extends Interceptor {
 
   AuthInterceptor(this.dio);
 
+  static bool _isPublicAuthPath(String path) {
+    final normalized = path.split('?').first;
+    return _publicAuthPaths.contains(normalized);
+  }
+
   @override
   void onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
     final authService = AuthService.instance;
-    final isAuthPath = options.path.contains('/auth/');
 
-    if (isAuthPath) {
+    if (_isPublicAuthPath(options.path)) {
       handler.next(options);
       return;
     }
@@ -109,10 +120,9 @@ class AuthInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     final statusCode = err.response?.statusCode;
     final path = err.requestOptions.path;
-    final isAuthPath = path.contains('/auth/');
 
     // 401 / 403 ဆိုရင် refresh ကြိုးစားပါ
-    if ((statusCode == 401 || statusCode == 403) && !isAuthPath) {
+    if ((statusCode == 401 || statusCode == 403) && !_isPublicAuthPath(path)) {
       try {
         final newToken = await _refreshToken();
         if (newToken != null && newToken.isNotEmpty) {
