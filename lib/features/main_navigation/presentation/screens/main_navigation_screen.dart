@@ -21,6 +21,7 @@ import 'package:my_shop/core/presentation/widgets/app_bar_title_with_logo.dart';
 import 'package:my_shop/core/utils/app_logger.dart';
 import 'dart:async';
 import 'package:my_shop/core/localization/app_localizations.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 /// Lets deep order/pickup flows return to the Orders tab after completion.
 class OrdersTabNavigation {
@@ -39,6 +40,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   late int _currentIndex;
   late List<Widget> _pages;
   StreamSubscription? _socketSubscription;
+  AudioPlayer? _alertAudioPlayer;
 
   final GlobalKey<OrdersScreenState> _ordersKey =
       GlobalKey<OrdersScreenState>();
@@ -83,12 +85,41 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       OrdersTabNavigation.returnToOrdersTab = null;
     }
     _socketSubscription?.cancel();
+    _alertAudioPlayer?.dispose();
     super.dispose();
+  }
+
+  void _playAlertSoundIfNotViewing(String orderId) {
+    final routeName = 'order_detail_$orderId';
+    bool isAlreadyOnThisOrder = false;
+    Navigator.popUntil(context, (route) {
+      if (route.settings.name == routeName) {
+        isAlreadyOnThisOrder = true;
+      }
+      return true; // Don't actually pop anything
+    });
+
+    if (!isAlreadyOnThisOrder) {
+      try {
+        _alertAudioPlayer?.stop();
+        _alertAudioPlayer = AudioPlayer();
+        _alertAudioPlayer?.setReleaseMode(ReleaseMode.loop);
+        _alertAudioPlayer?.play(AssetSource('alert/alert.mp3'));
+      } catch (e) {
+        AppLogger.realtime('Audio play error: $e');
+      }
+    }
+  }
+
+  void _stopAlertSound() {
+    _alertAudioPlayer?.stop();
+    _alertAudioPlayer?.dispose();
+    _alertAudioPlayer = null;
   }
 
   void _setupWebSocketListener() {
     AppLogger.realtime('MainNavigation: setting up listener');
-    _socketSubscription = WebSocketService().orderUpdates.listen((event) {
+    _socketSubscription = WebSocketService().orderUpdates.listen((event) async {
       AppLogger.realtime(
         'MainNavigation event: ${event['type']}, msg: ${event['message']}',
       );
@@ -114,7 +145,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           if (isTwoMinWarning) {
             AppLogger.realtime('MainNavigation: triggering OrderWarningDialog (2-min)');
             HapticFeedback.vibrate();
-            showDialog(
+            _playAlertSoundIfNotViewing(orderData.id.toString());
+            await showDialog(
               context: context,
               barrierDismissible: true,
               builder: (context) => OrderWarningDialog(
@@ -126,12 +158,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 },
               ),
             );
+            _stopAlertSound();
           } else if (status == 'PENDING' ||
               status == 'NEW' ||
               event['type'] == 'NEW_ORDER') {
             AppLogger.realtime('MainNavigation: triggering NewOrderDialog');
             HapticFeedback.heavyImpact();
-            showDialog(
+            _playAlertSoundIfNotViewing(orderData.id.toString());
+            await showDialog(
               context: context,
               barrierDismissible: true,
               builder: (context) => NewOrderDialog(
@@ -142,11 +176,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 },
               ),
             );
+            _stopAlertSound();
           } else if (msg != null && msg.trim().isNotEmpty) {
             // Generic warning for other status updates with messages
             AppLogger.realtime('MainNavigation: triggering OrderWarningDialog (generic)');
             HapticFeedback.vibrate();
-            showDialog(
+            _playAlertSoundIfNotViewing(orderData.id.toString());
+            await showDialog(
               context: context,
               barrierDismissible: true,
               builder: (context) => OrderWarningDialog(
@@ -158,6 +194,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 },
               ),
             );
+            _stopAlertSound();
           }
         }
       }

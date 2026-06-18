@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import 'package:my_shop/core/notifications/notification_service.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 
-class NotificationPermissionScreen extends StatelessWidget {
-  const NotificationPermissionScreen({super.key});
+class SystemAlertPermissionScreen extends StatelessWidget {
+  const SystemAlertPermissionScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -34,14 +34,14 @@ class NotificationPermissionScreen extends StatelessWidget {
                   blendMode: BlendMode.srcIn,
                   shaderCallback: (Rect bounds) => AppColors.primaryGradient.createShader(bounds),
                   child: const Icon(
-                    PhosphorIconsFill.bellRinging,
+                    PhosphorIconsFill.deviceMobileCamera,
                     size: 80,
                   ),
                 ),
               ),
               const SizedBox(height: 48),
               Text(
-                t?.translate('dont_miss_out') ?? "Don't Miss Out!",
+                t?.translate('display_over_apps') ?? "Display Over Apps",
                 style: GoogleFonts.poppins(
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
@@ -51,7 +51,7 @@ class NotificationPermissionScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                t?.translate('notification_permission_desc') ?? 'Turn on notifications to get real-time updates on your orders, special offers, and new arrivals tailored for you.',
+                t?.translate('display_over_apps_desc') ?? 'Required to wake up the screen and show new orders like a phone call.',
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   color: const Color(0xFF64748B),
@@ -63,24 +63,28 @@ class NotificationPermissionScreen extends StatelessWidget {
               // Action Buttons
               SizedBox(
                 width: double.infinity,
-          child: PrimaryGradientButton(
-            onPressed: () async {
-              await NotificationService().requestSystemPermission();
-              if (context.mounted) {
-                Navigator.pushReplacementNamed(context, '/navigation');
-              }
-            },
-            text: t?.translate('allow_notifications') ?? 'Allow Notifications',
-            height: 56,
-            borderRadius: 16,
-          ),
+                child: PrimaryGradientButton(
+                  onPressed: () async {
+                    final status = await Permission.systemAlertWindow.request();
+                    if (status.isPermanentlyDenied) {
+                      await openAppSettings();
+                    }
+                    await StorageService.instance.setSystemAlertHandled(true);
+                    if (context.mounted) {
+                      Navigator.pushReplacementNamed(context, '/navigation');
+                    }
+                  },
+                  text: t?.translate('allow_access') ?? 'Allow Access',
+                  height: 56,
+                  borderRadius: 16,
+                ),
               ),
               const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
                 child: TextButton(
                   onPressed: () async {
-                    await StorageService.instance.setNotificationHandled(true);
+                    await StorageService.instance.setSystemAlertHandled(true);
                     if (context.mounted) {
                       Navigator.pushReplacementNamed(context, '/navigation');
                     }

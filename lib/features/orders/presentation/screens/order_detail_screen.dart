@@ -18,6 +18,8 @@ import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/presentation/widgets/global_modal.dart';
+import 'package:my_shop/core/presentation/widgets/keyboard_padding_wrapper.dart';
+import 'package:my_shop/features/orders/presentation/widgets/cancel_order_dialog.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/features/profile/data/models/rider_model.dart';
@@ -1054,7 +1056,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Future<void> _handleCancelOrder() async {
     final t = AppLocalizations.of(context);
-    final reasonController = TextEditingController();
+    final staticMediaQuery = MediaQuery.of(context).copyWith(viewInsets: EdgeInsets.zero);
 
     await showModalBottomSheet<void>(
       context: context,
@@ -1062,152 +1064,33 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       isDismissible: true,
       enableDrag: true,
       backgroundColor: Colors.transparent,
-      builder: (sheetContext) => Container(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
-        ),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+      builder: (sheetContext) => MediaQuery(
+        data: staticMediaQuery,
+        child: CancelOrderDialog(
+          onConfirm: (reason) async {
+            bool success = false;
+            await _runOrderAction(
+              action: () => OrderService().cancelOrder(
+                _currentOrder.id.toString(),
+                reason.isEmpty ? null : reason,
               ),
-              const SizedBox(height: 24),
-              Text(
-                t?.translate('cancel_order') ?? 'Cancel Order',
-                style: GoogleFonts.poppins(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1E293B),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                t?.translate('cancel_order_confirm') ??
-                    'Are you sure you want to cancel this order? This action cannot be undone.',
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: const Color(0xFF64748B),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                t?.translate('cancel_reason') ?? 'Reason for Cancellation',
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF475569),
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: reasonController,
-                maxLines: 3,
-                autofocus: true,
-                style: GoogleFonts.poppins(fontSize: 14),
-                decoration: InputDecoration(
-                  hintText:
-                      t?.translate('cancel_reason_hint') ?? 'Enter reason here...',
-                  hintStyle:
-                      GoogleFonts.poppins(fontSize: 14, color: Colors.grey[400]),
-                  filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.all(16),
-                ),
-              ),
-              const SizedBox(height: 32),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(sheetContext),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        side: const BorderSide(color: Color(0xFFE2E8F0)),
-                      ),
-                      child: Text(
-                        t?.translate('no_go_back') ?? 'No, Go Back',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF64748B),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        FocusScope.of(sheetContext).unfocus();
-                        final reason = reasonController.text.trim();
-                        Navigator.pop(sheetContext);
-
-                        await _runOrderAction(
-                          action: () => OrderService().cancelOrder(
-                            _currentOrder.id.toString(),
-                            reason.isEmpty ? null : reason,
-                          ),
-                          errorMessage: t?.translate('order_cancelled_fail') ??
-                              'Failed to cancel order. Please try again.',
-                          onSuccess: () {
-                            if (!mounted) return;
-                            AppDialog.showToast(
-                              context,
-                              t?.translate('order_cancelled_success') ??
-                                  'Order Cancelled',
-                            );
-                          },
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFEF4444),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        t?.translate('yes_cancel_order') ?? 'Yes, Cancel Order',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+              errorMessage: t?.translate('order_cancelled_fail') ??
+                  'Failed to cancel order. Please try again.',
+              onSuccess: () {
+                if (!mounted) return;
+                success = true;
+                AppDialog.showToast(
+                  context,
+                  t?.translate('order_cancelled_success') ??
+                      'Order Cancelled',
+                );
+              },
+            );
+            return success;
+          },
         ),
       ),
     );
-
-    reasonController.dispose();
   }
 
   Future<void> _handleMarkReadyForPickup() async {
@@ -2253,25 +2136,55 @@ Widget _buildAnimatedProgress() {
     );
   }
 
+  Widget _buildNoImageBox() {
+    return Container(
+      width: 54,
+      height: 54,
+      color: const Color(0xFFF1F5F9),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            PhosphorIconsRegular.image,
+            size: 18,
+            color: Color(0xFFCBD5E1),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'No Image',
+            style: GoogleFonts.poppins(
+              fontSize: 8,
+              color: const Color(0xFF94A3B8),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildOrderItem(OrderItemModel item, {bool isLast = false}) {
     return Padding(
       padding: EdgeInsets.only(bottom: isLast ? 0 : 20),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: const Color(0xFFFEE2E2),
-              image: item.menuItemImageUrl != null
-                  ? DecorationImage(
-                      image: NetworkImage(item.menuItemImageUrl!),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
-            ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: item.menuItemImageUrl != null && item.menuItemImageUrl!.isNotEmpty
+                ? CachedNetworkImage(
+                    imageUrl: item.menuItemImageUrl!,
+                    width: 54,
+                    height: 54,
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) => Container(
+                      width: 54,
+                      height: 54,
+                      color: const Color(0xFFF1F5F9),
+                    ),
+                    errorWidget: (_, __, ___) => _buildNoImageBox(),
+                  )
+                : _buildNoImageBox(),
           ),
           const SizedBox(width: 12),
           Expanded(

@@ -540,63 +540,105 @@ class _OrderListTabViewState extends State<OrderListTabView>
     }
 
     if (_hasError) {
-      return Center(
+      return RefreshIndicator(
         key: const ValueKey('error'),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 64, color: Color(0xFFCBD5E1)),
-            const SizedBox(height: 16),
-            Text(
-              t?.translate('failed_load_orders') ?? 'Failed to Load Orders',
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF64748B),
+        color: const Color(0xFFED3973),
+        onRefresh: () => _fetchOrders(isRefresh: true),
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: SizedBox(
+              height: constraints.maxHeight,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, size: 64, color: Color(0xFFCBD5E1)),
+                    const SizedBox(height: 16),
+                    Text(
+                      t?.translate('failed_load_orders') ?? 'Failed to Load Orders',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      t?.translate('pull_to_retry') ?? 'Pull down to retry',
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        color: const Color(0xFF94A3B8),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    PrimaryGradientButton(
+                      onPressed: () => _fetchOrders(isRefresh: true),
+                      text: t?.translate('retry') ?? 'Retry',
+                      height: 48,
+                      borderRadius: 12,
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 16),
-            PrimaryGradientButton(
-              onPressed: () => _fetchOrders(isRefresh: true),
-              text: t?.translate('retry') ?? 'Retry',
-              height: 48,
-              borderRadius: 12,
-            ),
-          ],
+          ),
         ),
       );
     }
 
     if (_orders.isEmpty) {
-      return Center(
+      return RefreshIndicator(
         key: const ValueKey('empty'),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.receipt_long_outlined,
-              size: 64,
-              color: Color(0xFFCBD5E1),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              t?.translate('no_orders_yet') ?? 'No Orders Yet',
-              style: GoogleFonts.poppins(
-                color: const Color(0xFF94A3B8),
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
+        color: const Color(0xFFED3973),
+        onRefresh: () => _fetchOrders(isRefresh: true),
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: SizedBox(
+              height: constraints.maxHeight,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.receipt_long_outlined,
+                      size: 64,
+                      color: Color(0xFFCBD5E1),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      t?.translate('no_orders_yet') ?? 'No Orders Yet',
+                      style: GoogleFonts.poppins(
+                        color: const Color(0xFF94A3B8),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      t?.translate('pull_to_refresh') ?? 'Pull down to refresh',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: const Color(0xFFCBD5E1),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ],
+          ),
         ),
       );
     }
 
     return RefreshIndicator(
       key: const ValueKey('data'),
+      color: const Color(0xFFED3973),
       onRefresh: () => _fetchOrders(isRefresh: true),
       child: ListView.builder(
         controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(top: 12, bottom: 20),
         itemCount: _orders.length + (_isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
@@ -617,6 +659,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
       ),
     );
   }
+
 
   Widget _buildSkeletonList({Key? key}) {
     return ListView.builder(

@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -44,25 +46,52 @@ class NotificationService {
       },
     );
 
-    // Create high importance channel for Android
-    const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'shop_important_notifications',
+    // Create high importance channel for Android (New Orders)
+    const AndroidNotificationChannel orderChannel = AndroidNotificationChannel(
+      'shop_order_alerts_channel_v2',
       'Shop Important Notifications',
       description: 'This channel is used for shop orders and alerts.',
-      importance: Importance.high,
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('alert'),
+      playSound: true,
     );
     await _localNotifications
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(channel);
+        ?.createNotificationChannel(orderChannel);
+
+    // Create a normal importance channel for Android (Other Updates)
+    const AndroidNotificationChannel normalChannel = AndroidNotificationChannel(
+      'shop_normal_alerts_channel_v1',
+      'Shop Normal Notifications',
+      description: 'This channel is used for normal shop updates.',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('normal_noti'),
+      playSound: true,
+    );
+    await _localNotifications
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(normalChannel);
 
     // Handle foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      final String? type = message.data['type'];
+      final String? subType = message.data['subType'];
+      final bool isNewOrder = type == 'NEW_ORDER' || subType == 'PENDING_ORDER';
+
+      // Skip showing system banner for new orders in the foreground, 
+      // because MainNavigationScreen's WebSocket listener will show the NewOrderDialog
+      // and play the alert sound. This prevents overlapping looping sounds.
+      if (isNewOrder) {
+        NotificationRepository().incrementCount();
+        return;
+      }
+
       if (message.notification != null) {
         NotificationRepository().incrementCount();
-        _showLocalNotification(message);
+        showLocalNotification(message);
       } else if (message.data.isNotEmpty) {
         NotificationRepository().getUnreadCount();
-        _showLocalNotification(message);
+        showLocalNotification(message);
       }
     });
 
@@ -200,18 +229,35 @@ class NotificationService {
     return null;
   }
 
-  Future<void> _showLocalNotification(RemoteMessage message) async {
+  Future<void> showLocalNotification(RemoteMessage message) async {
     final String title = message.notification?.title ?? message.data['title'] ?? 'New Notification';
     final String body = message.notification?.body ?? message.data['body'] ?? 'You have a new update';
 
-    const AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'shop_important_notifications',
-      'Shop Important Notifications',
-      channelDescription: 'This channel is used for shop orders and alerts.',
+    final String? type = message.data['type'];
+    final String? subType = message.data['subType'];
+    final bool isNewOrder = type == 'NEW_ORDER' || subType == 'PENDING_ORDER';
+
+    // Int32List.fromList([4]) sets FLAG_INSISTENT, which loops the sound until dismissed
+    final AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      isNewOrder ? 'shop_order_alerts_channel_v2' : 'shop_normal_alerts_channel_v1',
+      isNewOrder ? 'Shop Important Notifications' : 'Shop Normal Notifications',
+      channelDescription: isNewOrder ? 'This channel is used for shop orders and alerts.' : 'This channel is used for normal shop updates.',
       importance: Importance.max,
       priority: Priority.high,
+      sound: RawResourceAndroidNotificationSound(isNewOrder ? 'alert' : 'normal_noti'),
+      playSound: true,
+      additionalFlags: isNewOrder ? Int32List.fromList([4]) : null,
+      fullScreenIntent: true,
+      category: AndroidNotificationCategory.call,
     );
-    const NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+    final DarwinNotificationDetails iosPlatformChannelSpecifics = DarwinNotificationDetails(
+      sound: isNewOrder ? 'alert.mp3' : 'normal_noti.mp3',
+      presentSound: true,
+    );
+    final NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+      iOS: iosPlatformChannelSpecifics,
+    );
     await _localNotifications.show(
       message.hashCode,
       title,

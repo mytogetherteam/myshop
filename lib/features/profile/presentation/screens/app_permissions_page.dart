@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -16,6 +17,7 @@ class AppPermissionsPage extends StatefulWidget {
 
 class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBindingObserver {
   PermissionStatus _notificationStatus = PermissionStatus.denied;
+  PermissionStatus _systemAlertWindowStatus = PermissionStatus.denied;
   bool _isLoading = true;
 
   @override
@@ -42,10 +44,12 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
   Future<void> _checkPermissions({bool silent = false}) async {
     if (!silent) setState(() => _isLoading = true);
     final status = await Permission.notification.status;
+    final alertStatus = await Permission.systemAlertWindow.status;
     
     if (mounted) {
       setState(() {
         _notificationStatus = status;
+        _systemAlertWindowStatus = alertStatus;
         _isLoading = false;
       });
     }
@@ -62,6 +66,20 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
       }
       if (mounted) {
         setState(() => _notificationStatus = status);
+      }
+    }
+  }
+
+  Future<void> _requestSystemAlertWindowPermission() async {
+    if (_systemAlertWindowStatus.isGranted || _systemAlertWindowStatus.isPermanentlyDenied) {
+      await openAppSettings();
+    } else {
+      final status = await Permission.systemAlertWindow.request();
+      if (status.isPermanentlyDenied) {
+        await openAppSettings();
+      }
+      if (mounted) {
+        setState(() => _systemAlertWindowStatus = status);
       }
     }
   }
@@ -108,6 +126,18 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
                   status: _notificationStatus,
                   onActionPressed: _requestNotificationPermission,
                 ),
+                
+                const SizedBox(height: 16),
+                
+                // System Alert Window Permission Card (For Full Screen Intent / Pop-ups)
+                if (Platform.isAndroid)
+                  _buildPermissionCard(
+                    icon: PhosphorIconsRegular.deviceMobileCamera,
+                    title: t?.translate('display_over_apps') ?? 'Display Over Apps',
+                    description: t?.translate('display_over_apps_desc') ?? 'Required to wake up the screen and show new orders like a phone call.',
+                    status: _systemAlertWindowStatus,
+                    onActionPressed: _requestSystemAlertWindowPermission,
+                  ),
                 
               ],
             ),

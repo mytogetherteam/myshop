@@ -12,6 +12,8 @@ import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
+import 'package:my_shop/core/presentation/widgets/keyboard_padding_wrapper.dart';
+import 'package:my_shop/features/orders/presentation/widgets/cancel_order_dialog.dart';
 
 class OrderCard extends StatelessWidget {
   final OrderModel order;
@@ -385,146 +387,32 @@ class OrderCard extends StatelessWidget {
 
   void _showCancelDialog(BuildContext context) {
     final t = AppLocalizations.of(context);
-    final TextEditingController reasonController = TextEditingController();
+    final staticMediaQuery = MediaQuery.of(context).copyWith(viewInsets: EdgeInsets.zero);
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                t?.translate('cancel_order') ?? 'Cancel Order',
-                style: GoogleFonts.poppins(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1E293B),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                t?.translate('cancel_order_confirm') ?? 'Are you sure you want to cancel this order? This action cannot be undone.',
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: const Color(0xFF64748B),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                t?.translate('cancel_reason') ?? 'Reason for Cancellation',
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF475569),
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: reasonController,
-                maxLines: 3,
-                autofocus: true,
-                style: GoogleFonts.poppins(fontSize: 14),
-                decoration: InputDecoration(
-                  hintText: t?.translate('cancel_reason_hint') ?? 'Enter reason here...',
-                  hintStyle: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[400]),
-                  filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.all(16),
-                ),
-              ),
-              const SizedBox(height: 32),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        side: const BorderSide(color: Color(0xFFE2E8F0)),
-                      ),
-                      child: Text(
-                        t?.translate('no_go_back') ?? 'No, Go Back',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF64748B),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        final reason = reasonController.text.trim();
-                        Navigator.pop(context); // Close bottom sheet
-                        final result = await OrderService().cancelOrder(
-                          order.id,
-                          reason.isEmpty ? null : reason,
-                        );
-                        final success = result['success'] == true;
-                        if (context.mounted) {
-                          AppDialog.showToast(
-                            context,
-                            success
-                                ? (t?.translate('order_cancelled_success') ?? 'Order Cancelled')
-                                : (t?.translate('order_cancelled_fail') ?? 'Failed to Cancel Order'),
-                            isError: !success,
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFEF4444),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        t?.translate('yes_cancel_order') ?? 'Yes, Cancel Order',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+      builder: (sheetContext) => MediaQuery(
+        data: staticMediaQuery,
+        child: CancelOrderDialog(
+          onConfirm: (reason) async {
+            final result = await OrderService().cancelOrder(
+              order.id,
+              reason.isEmpty ? null : reason,
+            );
+            final success = result['success'] == true;
+            if (context.mounted) {
+              AppDialog.showToast(
+                context,
+                success
+                    ? (t?.translate('order_cancelled_success') ?? 'Order Cancelled')
+                    : (t?.translate('order_cancelled_fail') ?? 'Failed to Cancel Order'),
+                isError: !success,
+              );
+            }
+            return success;
+          },
         ),
       ),
     );

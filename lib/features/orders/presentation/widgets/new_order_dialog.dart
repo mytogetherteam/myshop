@@ -72,11 +72,7 @@ class NewOrderDialog extends StatelessWidget {
                     ],
                   ),
                   child: const Center(
-                    child: Icon(
-                      PhosphorIconsFill.bell,
-                      color: Color(0xFFED3973),
-                      size: 32,
-                    ),
+                    child: _RingingBell(),
                   ),
                 ),
               ),
@@ -252,5 +248,51 @@ class NewOrderDialog extends StatelessWidget {
       PhosphorIconsRegular.brandy,
     ];
     return icons[index % icons.length];
+  }
+}
+
+class _RingingBell extends StatefulWidget {
+  const _RingingBell();
+
+  @override
+  State<_RingingBell> createState() => _RingingBellState();
+}
+
+class _RingingBellState extends State<_RingingBell> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    )..repeat(reverse: true);
+
+    _animation = Tween<double>(begin: -0.15, end: 0.15).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Transform.rotate(
+          angle: _animation.value,
+          child: const Icon(
+            PhosphorIconsFill.bell,
+            color: Color(0xFFED3973),
+            size: 32,
+          ),
+        );
+      },
+    );
   }
 }
