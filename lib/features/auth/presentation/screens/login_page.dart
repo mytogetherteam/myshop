@@ -9,6 +9,10 @@ import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/utils/app_version.dart';
 import 'package:my_shop/features/auth/presentation/screens/register_page.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+import 'package:my_shop/core/presentation/widgets/global_modal.dart';
+import 'package:my_shop/features/profile/presentation/widgets/language_selector_sheet.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -73,11 +77,13 @@ class _LoginPageState extends State<LoginPage>
         if (!mounted) return;
         Navigator.of(context).pushReplacementNamed('/home');
       } else {
-        _showError(response.details ?? response.message ?? 'Login failed');
+        final t = AppLocalizations.of(context);
+        _showError(response.details ?? response.message ?? (t?.translate('login_failed') ?? 'Login failed'));
       }
     } catch (e) {
       if (!mounted) return;
-      _showError('An unexpected error occurred: $e');
+      final t = AppLocalizations.of(context);
+      _showError('${t?.translate('unexpected_error') ?? 'An unexpected error occurred'}: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -93,10 +99,13 @@ class _LoginPageState extends State<LoginPage>
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: FadeTransition(
+        child: Stack(
+          children: [
+            FadeTransition(
           opacity: _fadeAnim,
           child: SlideTransition(
             position: _slideAnim,
@@ -116,7 +125,7 @@ class _LoginPageState extends State<LoginPage>
 
                     // Welcome text
                     Text(
-                      'Shop Admin Login 👋',
+                      t?.translate('login_title') ?? 'Shop Admin Login 👋',
                       style: GoogleFonts.poppins(
                         fontSize: 26,
                         fontWeight: FontWeight.w700,
@@ -125,7 +134,7 @@ class _LoginPageState extends State<LoginPage>
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Manage your shop with ease',
+                      t?.translate('login_subtitle') ?? 'Manage your shop with ease',
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         color: Colors.grey[600],
@@ -135,15 +144,15 @@ class _LoginPageState extends State<LoginPage>
                     const SizedBox(height: 40),
 
                     // Username / Email field
-                    _buildLabel('Username or Email'),
+                    _buildLabel(t?.translate('username_or_email') ?? 'Username or Email'),
                     const SizedBox(height: 8),
                     _buildTextField(
                       controller: _identifierController,
-                      hint: 'admin@shop.com',
+                      hint: t?.translate('username_email_hint') ?? 'admin@shop.com',
                       icon: Icons.person_outline_rounded,
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) {
-                          return 'Please enter your username or email';
+                          return t?.translate('please_enter_username_email') ?? 'Please enter your username or email';
                         }
                         return null;
                       },
@@ -152,11 +161,11 @@ class _LoginPageState extends State<LoginPage>
                     const SizedBox(height: 20),
 
                     // Password field
-                    _buildLabel('Password'),
+                    _buildLabel(t?.translate('password') ?? 'Password'),
                     const SizedBox(height: 8),
                     _buildTextField(
                       controller: _passwordController,
-                      hint: 'Enter your password',
+                      hint: t?.translate('enter_your_password') ?? 'Enter your password',
                       icon: Icons.lock_outline_rounded,
                       obscure: _obscurePassword,
                       suffixWidget: IconButton(
@@ -173,7 +182,7 @@ class _LoginPageState extends State<LoginPage>
                       ),
                       validator: (v) {
                         if (v == null || v.isEmpty) {
-                          return 'Please enter your password';
+                          return t?.translate('please_enter_password') ?? 'Please enter your password';
                         }
                         return null;
                       },
@@ -191,7 +200,7 @@ class _LoginPageState extends State<LoginPage>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Don't have a shop account? ",
+                          t?.translate('no_account') ?? "Don't have a shop account? ",
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             color: Colors.grey[600],
@@ -207,7 +216,7 @@ class _LoginPageState extends State<LoginPage>
                             );
                           },
                           child: Text(
-                            "Apply Now",
+                            t?.translate('apply_now') ?? "Apply Now",
                             style: GoogleFonts.poppins(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -238,7 +247,14 @@ class _LoginPageState extends State<LoginPage>
             ),
           ),
         ),
-      ),
+        Positioned(
+          top: 16,
+          right: 24,
+          child: _buildLanguageFab(),
+        ),
+      ],
+    ),
+  ),
     );
   }
 
@@ -302,10 +318,62 @@ class _LoginPageState extends State<LoginPage>
   }
 
   Widget _buildLoginButton() {
+    final t = AppLocalizations.of(context);
     return PrimaryGradientButton(
-      text: 'Login',
+      text: t?.translate('login_btn') ?? 'Login',
       isLoading: _isLoading,
       onPressed: _handleLogin,
+    );
+  }
+
+  Widget _buildLanguageFab() {
+    return ValueListenableBuilder<Locale>(
+      valueListenable: LocalizationService.instance.localeNotifier,
+      builder: (context, locale, _) {
+        String langCode = locale.languageCode.toUpperCase();
+        if (locale.languageCode == 'my') langCode = 'MM';
+
+        return GestureDetector(
+          onTap: () {
+            GlobalModal.show(
+              context: context,
+              child: const LanguageSelectorSheet(),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const PhosphorIcon(PhosphorIconsRegular.globe, color: Colors.black87, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  langCode,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const PhosphorIcon(PhosphorIconsRegular.caretDown, color: Colors.black54, size: 16),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
