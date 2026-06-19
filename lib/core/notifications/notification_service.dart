@@ -1,11 +1,8 @@
-<<<<<<< HEAD
-=======
 import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'dart:typed_data';
 
->>>>>>> 11b9527fdb1d08da7e7b7f824afa6d59dc57b8bd
 import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
