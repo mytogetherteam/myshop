@@ -158,7 +158,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 
   void _playAlertSoundIfNotViewing(String orderId) {
-    if (kIsWeb) return;
 
     final routeName = 'order_detail_$orderId';
     bool isAlreadyOnThisOrder = false;
