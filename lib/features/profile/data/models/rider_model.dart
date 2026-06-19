@@ -6,6 +6,7 @@ class Rider {
   final String? profileUrl;
   final int shopId;
   final bool isActive;
+  final bool isBusy;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -17,9 +18,19 @@ class Rider {
     this.profileUrl,
     required this.shopId,
     this.isActive = true,
+    this.isBusy = false,
     this.createdAt,
     this.updatedAt,
   });
+
+  /// Active drivers who are not on another delivery can be assigned to an order.
+  bool get isSelectableForOrder => isActive && !isBusy;
+
+  static bool isEligibleForAssignment({
+    required bool isActive,
+    required bool isBusy,
+  }) =>
+      isActive && !isBusy;
 
   factory Rider.fromJson(Map<String, dynamic> json) {
     return Rider(
@@ -30,6 +41,7 @@ class Rider {
       profileUrl: json['profileUrl']?.toString(),
       shopId: json['shopId'] as int,
       isActive: json['isActive'] as bool? ?? true,
+      isBusy: json['isBusy'] as bool? ?? false,
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'].toString())
           : null,
@@ -48,6 +60,7 @@ class Rider {
       'profileUrl': profileUrl,
       'shopId': shopId,
       'isActive': isActive,
+      'isBusy': isBusy,
     };
   }
 }

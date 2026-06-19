@@ -25,7 +25,6 @@ import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/notifications/notification_service.dart';
-import 'package:my_shop/features/orders/presentation/widgets/order_cancelled_dialog.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 
 /// Lets deep order/pickup flows return to the Orders tab after completion.
@@ -230,21 +229,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               ),
             );
             _stopAlertSound();
-          } else if (status == 'CANCELED') {
-            AppLogger.realtime('MainNavigation: Order cancelled');
-            _stopAlertSound();
-            NotificationService.stopGlobalAlert();
-
-            await showDialog(
-              context: context,
-              barrierDismissible: true,
-              builder: (context) => OrderCancelledDialog(
-                order: orderData,
-                onClose: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            );
           } else if (status == 'PENDING' ||
               status == 'NEW' ||
               event['type'] == 'NEW_ORDER') {

@@ -396,6 +396,18 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
             ),
+            suffixIcon: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: controller,
+              builder: (context, value, child) {
+                if (value.text.isEmpty) return const SizedBox.shrink();
+                return IconButton(
+                  icon: const Icon(Icons.clear, color: Colors.grey, size: 20),
+                  onPressed: () {
+                    controller.clear();
+                  },
+                );
+              },
+            ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 14,

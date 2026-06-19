@@ -13,7 +13,6 @@ import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/core/presentation/widgets/keyboard_padding_wrapper.dart';
-import 'package:my_shop/features/orders/presentation/widgets/cancel_order_dialog.dart';
 
 class OrderCard extends StatelessWidget {
   final OrderModel order;
@@ -289,36 +288,9 @@ class OrderCard extends StatelessWidget {
         break;
     }
 
-    final bool canCancel = order.status == 'PAYMENT_SLIP_REQUESTED';
-
     return Row(
       children: [
-        if (canCancel) ...[
-          Expanded(
-            child: OutlinedButton(
-              onPressed: () => _showCancelDialog(context),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFFED3973),
-                side: const BorderSide(color: Color(0xFFFEE2E2)),
-                backgroundColor: const Color(0xFFFFF1F2),
-                minimumSize: const Size(0, 54),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: GradientText(
-                t?.translate('cancel') ?? 'Cancel',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-        ],
         Expanded(
-          flex: isPaymentTab ? 1 : 2,
           child: PrimaryGradientButton(
             onPressed: isMainButtonEnabled ? () async {
               final result = await Navigator.push(
@@ -350,8 +322,8 @@ class OrderCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (mainButtonIcon != null) ...[
-                  Icon(mainButtonIcon, size: 18, color: Colors.white),
-                  const SizedBox(width: 8),
+                  Icon(mainButtonIcon, size: 16, color: Colors.white),
+                  const SizedBox(width: 6),
                 ],
                 if (isMainButtonEnabled)
                   Flexible(
@@ -359,6 +331,7 @@ class OrderCard extends StatelessWidget {
                       mainButtonText,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
                       style: GoogleFonts.poppins(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
@@ -367,12 +340,14 @@ class OrderCard extends StatelessWidget {
                     ),
                   )
                 else
-                  AnimatedEllipsisText(
-                    text: mainButtonText,
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                      color: Colors.white,
+                  Flexible(
+                    child: AnimatedEllipsisText(
+                      text: mainButtonText,
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
               ],
@@ -380,39 +355,6 @@ class OrderCard extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  void _showCancelDialog(BuildContext context) {
-    final t = AppLocalizations.of(context);
-    final staticMediaQuery = MediaQuery.of(context).copyWith(viewInsets: EdgeInsets.zero);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) => MediaQuery(
-        data: staticMediaQuery,
-        child: CancelOrderDialog(
-          onConfirm: (reason) async {
-            final result = await OrderService().cancelOrder(
-              order.id,
-              reason.isEmpty ? null : reason,
-            );
-            final success = result['success'] == true;
-            if (context.mounted) {
-              AppDialog.showToast(
-                context,
-                success
-                    ? (t?.translate('order_cancelled_success') ?? 'Order Cancelled')
-                    : (t?.translate('order_cancelled_fail') ?? 'Failed to Cancel Order'),
-                isError: !success,
-              );
-            }
-            return success;
-          },
-        ),
-      ),
     );
   }
 

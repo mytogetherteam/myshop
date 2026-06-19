@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -175,16 +175,60 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final riders = await RiderService().getSelectableRiders();
     if (mounted) {
       setState(() {
-        // Merge so any driver already known from the order (e.g. the assigned
-        // one) is preserved even if it isn't in the active list.
-        final byId = <int, Rider>{for (final r in _availableDrivers) r.id: r};
-        for (final r in riders) {
-          byId[r.id] = r;
+        final byId = <int, Rider>{for (final r in riders) r.id: r};
+
+        // Keep the already-assigned driver for read-only display after dispatch,
+        // even if they are now busy or inactive.
+        final assigned = _assignedRiderFromOrder();
+        if (assigned != null) {
+          byId.putIfAbsent(assigned.id, () => assigned);
         }
+
         _availableDrivers = byId.values.toList();
+        if (_selectedDriverId != null && !_hasValidSelectedDriver) {
+          _selectedDriverId = null;
+        }
         _isLoadingRiders = false;
       });
+      _validateFormState();
     }
+  }
+
+  Rider? _assignedRiderFromOrder() {
+    final assignedId = _currentOrder.driverId;
+    if (assignedId == null) return null;
+
+    for (final r in _availableDrivers) {
+      if (r.id == assignedId) return r;
+    }
+
+    for (final d in _currentOrder.shopDeliveryDrivers) {
+      if (d.id == assignedId) {
+        return Rider(
+          id: d.id,
+          name: d.name,
+          phone: d.phone,
+          vehicleNo: d.vehicleNo,
+          profileUrl: d.profileUrl,
+          shopId: 0,
+          isActive: d.isActive,
+          isBusy: d.isBusy,
+        );
+      }
+    }
+
+    final name = _currentOrder.riderName?.trim();
+    if (name == null || name.isEmpty) return null;
+    return Rider(
+      id: assignedId,
+      name: name,
+      phone: _currentOrder.riderPhone,
+      vehicleNo: _currentOrder.vehicleNo,
+      profileUrl: null,
+      shopId: 0,
+      isActive: true,
+      isBusy: true,
+    );
   }
 
   void _initControllers() {
@@ -220,29 +264,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       setState(() {
         _currentOrder = updatedOrder;
         _selectedDriverId = updatedOrder.driverId;
-        // Merge any drivers carried on the order (e.g. the already-assigned
-        // one) into the roster instead of replacing it — replacing with the
-        // order's active-only list could wipe out riders loaded elsewhere and
-        // leave the picker empty.
-        if (updatedOrder.shopDeliveryDrivers.isNotEmpty) {
-          final byId = <int, Rider>{for (final r in _availableDrivers) r.id: r};
-          for (final d in updatedOrder.shopDeliveryDrivers) {
-            byId[d.id] = Rider(
-              id: d.id,
-              name: d.name,
-              phone: d.phone,
-              vehicleNo: d.vehicleNo,
-              profileUrl: d.profileUrl,
-              shopId: 0,
-              isActive: d.isActive,
-            );
-          }
-          _availableDrivers = byId.values.toList();
-        }
-        // Keep in-progress form input when realtime refresh does not change status.
-        if (showLoading || previousStatus != updatedOrder.status) {
-          _initControllers();
-        }
+        _initControllers();
         _isFirstLoading = false;
       });
       // Always (re)load the shop's full rider roster so the picker shows every
@@ -306,7 +328,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     } else if (_currentOrder.status == 'AWAITING_APPROVAL') {
       isValid = true;
     } else if (_currentOrder.status == 'COOKING') {
-      isValid = _currentOrder.isPickupFulfillment || _selectedDriverId != null;
+      isValid = _currentOrder.isPickupFulfillment || 
+                _selectedDriverId != null || 
+                _deliveryTrackingUrlController.text.trim().isNotEmpty;
     } else {
       isValid = true;
     }
@@ -400,9 +424,21 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 TextField(
                   controller: reasonController,
                   maxLines: 2,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Reason',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
+                    suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: reasonController,
+                      builder: (context, value, child) {
+                        if (value.text.isEmpty) return const SizedBox.shrink();
+                        return IconButton(
+                          icon: const Icon(Icons.clear, color: Colors.grey, size: 20),
+                          onPressed: () {
+                            reasonController.clear();
+                          },
+                        );
+                      },
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -457,6 +493,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _validateFormState();
   }
 
+  /// Drivers that can be picked in the dispatch dropdown (`isActive && !isBusy`).
+  List<Rider> get _selectableDrivers => _availableDrivers
+      .where((r) => r.isActive && !r.isBusy)
+      .toList();
+
+  /// Whether the currently selected driver is still eligible for assignment.
+  bool get _hasValidSelectedDriver =>
+      _selectedDriverId != null &&
+      _selectableDrivers.any((r) => r.id == _selectedDriverId);
+
   /// The driver assigned to this order, resolved from the loaded roster by
   /// `driverId`. The driver is chosen once at the COOKING (dispatch) step, so
   /// later steps display it read-only instead of offering another picker.
@@ -495,14 +541,22 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           Navigator.pop(context);
           if (!mounted) return;
           setState(() {
-            final idx = _availableDrivers.indexWhere((r) => r.id == rider.id);
-            if (idx >= 0) {
-              _availableDrivers[idx] = rider;
+            if (rider.isActive && !rider.isBusy) {
+              final idx = _availableDrivers.indexWhere((r) => r.id == rider.id);
+              if (idx >= 0) {
+                _availableDrivers[idx] = rider;
+              } else {
+                _availableDrivers = [rider, ..._availableDrivers];
+              }
+              _applySelectedDriver(rider);
             } else {
-              _availableDrivers = [rider, ..._availableDrivers];
+              AppDialog.showToast(
+                context,
+                'Driver must be active and not busy to assign to an order.',
+                isError: true,
+              );
             }
           });
-          _applySelectedDriver(rider);
         },
       ),
     );
@@ -511,10 +565,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Future<void> _openDriverPicker() async {
     // Always ensure the list is loaded before opening so the sheet never shows
     // an empty/blank state due to a skipped or in-flight load.
-    if (_availableDrivers.isEmpty) {
+    if (_selectableDrivers.isEmpty) {
       await _loadDrivers();
     }
     if (!mounted) return;
+
+    final drivers = _selectableDrivers;
 
     final selected = await showModalBottomSheet<Rider?>(
       context: context,
@@ -580,7 +636,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     padding: EdgeInsets.symmetric(vertical: 32),
                     child: CustomLoadingIndicator(size: 24),
                   )
-                else if (_availableDrivers.isEmpty)
+                else if (drivers.isEmpty)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
                     child: Column(
@@ -592,7 +648,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'No saved drivers yet',
+                          'No available drivers',
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -601,7 +657,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Tap "Add new" to save a driver for next time.',
+                          'Only active drivers who are not on another delivery can be assigned. Add a new driver or wait until someone is free.',
                           style: GoogleFonts.poppins(
                             fontSize: 12,
                             color: const Color(0xFF94A3B8),
@@ -617,10 +673,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     child: ListView.separated(
                       shrinkWrap: true,
                       padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-                      itemCount: _availableDrivers.length,
+                      itemCount: drivers.length,
                       separatorBuilder: (_, _) => const SizedBox(height: 8),
                       itemBuilder: (_, index) {
-                        final rider = _availableDrivers[index];
+                        final rider = drivers[index];
                         final isSelected = _selectedDriverId == rider.id;
                         return _buildDriverTile(
                           rider,
@@ -735,13 +791,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildDriverPicker({bool required = true}) {
-    final selected = _selectedDriverId == null
-        ? null
-        : _availableDrivers.firstWhere(
-            (r) => r.id == _selectedDriverId,
-            orElse: () => Rider(id: -1, name: '', shopId: 0),
-          );
-    final hasSelection = selected != null && selected.id != -1;
+    final selected = _hasValidSelectedDriver
+        ? _selectableDrivers.firstWhere((r) => r.id == _selectedDriverId)
+        : null;
+    final hasSelection = selected != null;
     final displayName = hasSelection ? selected.name : 'Choose a saved driver';
     final subtitle = hasSelection
         ? [
@@ -1249,6 +1302,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 ),
                 filled: true,
                 fillColor: const Color(0xFFF8FAFC),
+                suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: reasonController,
+                  builder: (context, value, child) {
+                    if (value.text.isEmpty) return const SizedBox.shrink();
+                    return IconButton(
+                      icon: const Icon(Icons.clear, color: Colors.grey, size: 20),
+                      onPressed: () {
+                        reasonController.clear();
+                      },
+                    );
+                  },
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
@@ -1388,21 +1453,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           _currentOrder.status == 'READY_FOR_PICKUP');
 
   Future<void> _handleDispatchOrder() async {
-    if (_selectedDriverId == null) {
-      AppDialog.showToast(
-        context,
-        'Please select a delivery driver',
-        isError: true,
-      );
+    final hasTrackingUrl = _deliveryTrackingUrlController.text.trim().isNotEmpty;
+    if (_selectedDriverId == null && !hasTrackingUrl) {
+      AppDialog.showToast(context, 'Please select a delivery driver or provide a tracking URL', isError: true);
       return;
     }
 
     await _runOrderAction(
       action: () => OrderService().dispatchOrder(
         _currentOrder.id.toString(),
-        driverId: _selectedDriverId!,
-        trackingUrl: _deliveryTrackingUrlController.text.isNotEmpty
-            ? _deliveryTrackingUrlController.text
+        driverId: _selectedDriverId,
+        trackingUrl: hasTrackingUrl
+            ? _deliveryTrackingUrlController.text.trim()
             : null,
       ),
       errorMessage: 'Failed to dispatch order. Please try again.',
@@ -1425,6 +1487,86 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       },
     );
   }
+
+  Future<void> _handleTrackingUrlChanged(String urlStr) async {
+    try {
+      final uri = Uri.tryParse(urlStr.trim());
+      if (uri == null) return;
+      if (!uri.host.contains('bolt.eu')) return;
+      
+      final sToken = uri.queryParameters['s'];
+      if (sToken == null || sToken.isEmpty) return;
+
+      setState(() => _isUpdating = true);
+      AppDialog.showToast(context, 'Fetching rider details from Bolt...');
+
+      final auth = base64Encode(utf8.encode(':$sToken'));
+      final apiUrl = 'https://node.bolt.eu/route-sharing/routeSharing/getOrder?version=RS.3.13&language=en-US';
+
+      final response = await Dio().get(
+        apiUrl,
+        options: Options(
+          headers: {'Authorization': 'Basic $auth'},
+          validateStatus: (status) => true,
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['code'] == 0 && data['data'] != null) {
+          final resData = data['data'];
+          final driverName = resData['driver_name'] as String?;
+          final carColor = resData['car_color'] as String?;
+          final carModel = resData['car_model'] as String?;
+          final carRegNumber = resData['car_reg_number'] as String?;
+          final driverPicture = resData['driver_picture'] as String?;
+
+          XFile? imageFile;
+          if (driverPicture != null && driverPicture.isNotEmpty) {
+            try {
+              final imgRes = await Dio().get(
+                driverPicture,
+                options: Options(responseType: ResponseType.bytes, validateStatus: (status) => true),
+              );
+              if (imgRes.statusCode == 200) {
+                imageFile = XFile.fromData(imgRes.data, name: 'bolt_rider.jpg');
+              }
+            } catch (_) {}
+          }
+
+          final vehicleNo = [carColor, carModel, carRegNumber]
+              .where((e) => e != null && e.isNotEmpty)
+              .join(' ');
+
+          final riderData = {
+            'name': driverName ?? 'Bolt Rider',
+            'phone': '',
+            'vehicleNo': vehicleNo,
+            'isActive': true,
+          };
+
+          final newRider = await RiderService().createRider(riderData, image: imageFile);
+
+          if (newRider != null && mounted) {
+            setState(() {
+              _availableDrivers.add(newRider);
+              _selectedDriverId = newRider.id;
+            });
+            AppDialog.showToast(context, 'Bolt rider auto-filled successfully');
+          }
+        }
+      }
+    } catch (_) {
+      // Silently ignore errors
+    } finally {
+      if (mounted) setState(() => _isUpdating = false);
+    }
+  }
+
+
+
+
+
 
   void _handleBack() {
     Navigator.pop(context, _currentOrder.status);
@@ -2923,7 +3065,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         break;
       case 'AWAITING_APPROVAL':
         mainButtonText = 'Confirm Payment';
-        onPressed = _isSubmitting ? null : _showPaymentVerificationModal;
+        onPressed = _isUpdating ? null : _handleVerifyPayment;
         break;
       case 'PAYMENT_VERIFIED':
         mainButtonText = 'Accept order to cook';
@@ -2939,7 +3081,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           onPressed = _isSubmitting ? null : _handleMarkReadyForPickup;
         } else {
           mainButtonText = 'Picked Up by Rider';
-          onPressed = (_isSubmitting || _selectedDriverId == null)
+          onPressed = (_isUpdating || (_selectedDriverId == null && _deliveryTrackingUrlController.text.trim().isEmpty))
               ? null
               : _handleDispatchOrder;
         }
@@ -2982,10 +3124,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           Row(
             children: [
               if (isCancelable) ...[
-                Expanded(
+                SizedBox(
+                  width: 96,
                   child: PrimaryGradientButton(
-                    onPressed: _isSubmitting ? null : _handleCancelOrder,
-                    height: 54,
+                    onPressed: _isUpdating ? null : _handleCancelOrder,
+                    height: 48,
+                    borderRadius: 12,
                     gradient: const LinearGradient(
                       colors: [Color(0xFFFFF1F2), Color(0xFFFFF1F2)],
                     ),
@@ -2993,13 +3137,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       t?.translate('cancel') ?? 'Cancel',
                       style: GoogleFonts.poppins(
                         fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: AppColors.primary,
+                        fontSize: 13,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
               ],
               if (_currentOrder.status == 'PAYMENT_VERIFIED' ||
                   _currentOrder.status == 'AWAITING_APPROVAL') ...[
@@ -3023,17 +3166,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 const SizedBox(width: 12),
               ],
               Expanded(
-                flex: 2,
                 child: PrimaryGradientButton(
                   onPressed: onPressed,
-                  isLoading: _isSubmitting,
-                  muted: _currentOrder.status == 'PENDING' && !_isFormValid,
+                  isLoading: _isUpdating,
+                  height: 54,
                   child: (_currentOrder.status == 'PAYMENT_SLIP_REQUESTED')
                       ? AnimatedEllipsisText(
                           text: mainButtonText,
                           style: GoogleFonts.poppins(
                             fontWeight: FontWeight.w600,
-                            fontSize: 14,
+                            fontSize: 13,
                             color: Colors.white,
                           ),
                         )
@@ -3045,11 +3187,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           style: GoogleFonts.poppins(
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
-                            color:
-                                (_currentOrder.status == 'PENDING' &&
-                                    !_isFormValid)
-                                ? const Color(0xFF94A3B8)
-                                : Colors.white,
+                            color: Colors.white,
                           ),
                         ),
                 ),
@@ -3147,6 +3285,19 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 color: const Color(0xFF94A3B8),
               ),
               suffixText: 'mins',
+              suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _waitingTimeMinutesController,
+                builder: (context, value, child) {
+                  if (value.text.isEmpty) return const SizedBox.shrink();
+                  return IconButton(
+                    icon: const Icon(Icons.clear, color: Colors.grey, size: 20),
+                    onPressed: () {
+                      _waitingTimeMinutesController.clear();
+                      _validateFormState();
+                    },
+                  );
+                },
+              ),
               suffixStyle: GoogleFonts.poppins(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
@@ -3527,18 +3678,28 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               // ── COOKING / dispatch (single driver selection point) ─────
             ] else if (_currentOrder.status == 'COOKING' &&
                 _currentOrder.isDeliveryFulfillment) ...[
-              _buildDriverPicker(),
+              if (_deliveryTrackingUrlController.text.trim().isEmpty || _selectedDriverId != null)
+                _buildDriverPicker(),
               if (_selectedDriverId == null) ...[
-                const SizedBox(height: 12),
+                if (_deliveryTrackingUrlController.text.trim().isEmpty)
+                  const SizedBox(height: 12),
                 _buildInputField(
                   'Tracking URL',
                   _deliveryTrackingUrlController,
                   isNumeric: false,
-                  modalTitle: 'Delivery Tracking Link ( Bolt , Grab )',
-                  description:
-                      'Add a live tracking link so the customer can follow their order in real-time.',
-                  fieldLabel: 'Link from Bolt, Grab',
+                  modalTitle: 'Delivery Tracking Link',
+                  description: 'Add a live tracking link so the customer can follow their order in real-time.',
+                  fieldLabel: 'Tracking Link',
                   placeholder: 'https://tracking-service.com/...',
+                  onChanged: _handleTrackingUrlChanged,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) return null;
+                    final uri = Uri.tryParse(value.trim());
+                    if (uri == null || !uri.hasScheme || !uri.hasAuthority) {
+                      return 'Please enter a valid URL (e.g. https://...)';
+                    }
+                    return null;
+                  },
                 ),
               ],
             ] else if (_currentOrder.status == 'COOKING' &&
@@ -3599,6 +3760,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     String? placeholder,
     bool showDeliveryApps = false,
     String? suffixText,
+    Function(String)? onChanged,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -3635,6 +3797,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             );
             if (result != null) {
               controller.text = result as String;
+              if (onChanged != null) onChanged(result as String);
               _validateFormState();
             }
           },
@@ -4105,14 +4268,20 @@ class _FullScreenTextInputState extends State<_FullScreenTextInput> {
                 hintText: widget.placeholder ?? 'Enter ${widget.label}',
                 hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
                 suffixText: widget.suffixText,
-                suffixStyle: GoogleFonts.poppins(
-                  color: const Color(0xFF64748B),
-                  fontWeight: FontWeight.w500,
+                suffixStyle: GoogleFonts.poppins(color: const Color(0xFF64748B), fontWeight: FontWeight.w500),
+                suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _controller,
+                  builder: (context, value, child) {
+                    if (value.text.isEmpty) return const SizedBox.shrink();
+                    return IconButton(
+                      icon: const Icon(Icons.clear, color: Colors.grey, size: 20),
+                      onPressed: () {
+                        _controller.clear();
+                      },
+                    );
+                  },
                 ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 16,
-                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,

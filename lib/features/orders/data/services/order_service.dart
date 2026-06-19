@@ -252,7 +252,7 @@ class OrderService {
 
   Future<Map<String, dynamic>> dispatchOrder(
     String orderId, {
-    required int driverId,
+    int? driverId,
     String? trackingUrl,
   }) {
     return updateStatus(

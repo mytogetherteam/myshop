@@ -354,6 +354,7 @@ class OrderDriverModel {
   final String? vehicleNo;
   final String? profileUrl;
   final bool isActive;
+  final bool isBusy;
 
   OrderDriverModel({
     required this.id,
@@ -362,6 +363,7 @@ class OrderDriverModel {
     this.vehicleNo,
     this.profileUrl,
     this.isActive = true,
+    this.isBusy = false,
   });
 
   factory OrderDriverModel.fromJson(Map<String, dynamic> json) {
@@ -372,6 +374,7 @@ class OrderDriverModel {
       vehicleNo: json['vehicleNo']?.toString(),
       profileUrl: _resolveUrl(json['profileUrl']),
       isActive: json['isActive'] as bool? ?? true,
+      isBusy: json['isBusy'] as bool? ?? false,
     );
   }
 }

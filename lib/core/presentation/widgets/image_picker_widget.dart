@@ -213,12 +213,19 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
     Widget image;
 
     if (_localFile != null) {
-      image = xFileImage(
-        _localFile!,
-        fit: BoxFit.cover,
-        width: widget.width,
-        height: widget.height,
-      );
+      image = kIsWeb
+          ? Image.network(
+              _localFile!.path,
+              fit: BoxFit.cover,
+              width: widget.width,
+              height: widget.height,
+            )
+          : Image.file(
+              File(_localFile!.path),
+              fit: BoxFit.cover,
+              width: widget.width,
+              height: widget.height,
+            );
     } else if (widget.imageUrl != null && widget.imageUrl!.isNotEmpty) {
       image = CachedNetworkImage(
         imageUrl: widget.imageUrl!,

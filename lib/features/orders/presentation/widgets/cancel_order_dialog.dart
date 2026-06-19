@@ -102,6 +102,18 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
+                  suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _reasonController,
+                    builder: (context, value, child) {
+                      if (value.text.isEmpty) return const SizedBox.shrink();
+                      return IconButton(
+                        icon: const Icon(Icons.clear, color: Colors.grey, size: 20),
+                        onPressed: () {
+                          _reasonController.clear();
+                        },
+                      );
+                    },
+                  ),
                   contentPadding: const EdgeInsets.all(16),
                 ),
               ),
