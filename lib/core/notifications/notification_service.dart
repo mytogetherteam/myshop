@@ -330,6 +330,37 @@ class NotificationService {
     final String? subType = message.data['subType'];
     final bool isNewOrder = type == 'NEW_ORDER' || subType == 'PENDING_ORDER';
 
+    if (kIsWeb) {
+      // On Web, flutter_local_notifications might fail or not show anything.
+      // So we play a sound and show an in-app toast/banner for foreground messages.
+      try {
+        final player = AudioPlayer();
+        player.play(AssetSource(isNewOrder ? 'alert/alert.mp3' : 'alert/normal_noti.mp3'));
+      } catch (e) {
+        debugPrint('Audio play error on web: $e');
+      }
+
+      final context = App.navigatorKey.currentContext;
+      if (context != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(body),
+              ],
+            ),
+            duration: const Duration(seconds: 4),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: const Color(0xFFED3973),
+          ),
+        );
+      }
+      return;
+    }
+
     // Int32List.fromList([4]) sets FLAG_INSISTENT, which loops the sound until dismissed
     final AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
       isNewOrder ? 'shop_order_alerts_channel_v2' : 'shop_normal_alerts_channel_v1',
@@ -351,12 +382,16 @@ class NotificationService {
       android: androidPlatformChannelSpecifics,
       iOS: iosPlatformChannelSpecifics,
     );
-    await _localNotifications.show(
-      message.hashCode,
-      title,
-      body,
-      platformChannelSpecifics,
-    );
+    try {
+      await _localNotifications.show(
+        message.hashCode,
+        title,
+        body,
+        platformChannelSpecifics,
+      );
+    } catch (e) {
+      debugPrint('Error showing local notification: $e');
+    }
   }
 
   void _handleNotificationClick(RemoteMessage? message) async {

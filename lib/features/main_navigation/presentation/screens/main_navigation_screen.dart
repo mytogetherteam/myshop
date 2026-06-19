@@ -53,7 +53,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final GlobalKey<ProfilePageState> _profileKey = GlobalKey<ProfilePageState>();
   final List<bool> _visited = [false, false, false, false, false];
 
-
   @override
   void initState() {
     super.initState();
@@ -106,10 +105,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset(
-                  'assets/images/app_logo.png',
-                  height: 60,
-                ),
+                Image.asset('assets/images/app_logo.png', height: 60),
                 const SizedBox(height: 16),
                 Text(
                   'အရေးကြီးသတိပေးချက် - Partner ဆိုင်ရှင်များ အားလုံး သိရှိရန်',
@@ -232,7 +228,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           );
 
           if (isTwoMinWarning) {
-            AppLogger.realtime('MainNavigation: triggering OrderWarningDialog (2-min)');
+            AppLogger.realtime(
+              'MainNavigation: triggering OrderWarningDialog (2-min)',
+            );
             if (!kIsWeb) HapticFeedback.vibrate();
             await _showOrderAlertDialog(
               orderData: orderData,
@@ -262,7 +260,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             );
           } else if (msg != null && msg.trim().isNotEmpty) {
             // Generic warning for other status updates with messages
-            AppLogger.realtime('MainNavigation: triggering OrderWarningDialog (generic)');
+            AppLogger.realtime(
+              'MainNavigation: triggering OrderWarningDialog (generic)',
+            );
             if (!kIsWeb) HapticFeedback.vibrate();
             await _showOrderAlertDialog(
               orderData: orderData,
@@ -294,7 +294,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     });
 
     if (isAlreadyOnThisOrder) {
-      AppLogger.realtime('Already viewing order ${order.id}, skipping navigation.');
+      AppLogger.realtime(
+        'Already viewing order ${order.id}, skipping navigation.',
+      );
       return;
     }
 
@@ -331,8 +333,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       });
     }
   }
-
-
 
   Widget _buildGradientItem(IconData icon, String label) {
     return Padding(
@@ -381,8 +381,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     );
   }
 
-
-
   /// Overlays the live unread-chat count on top of the Chat tab icon.
   Widget _withChatBadge(Widget child) {
     return ValueListenableBuilder<int>(
@@ -397,7 +395,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 right: -2,
                 top: 4,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 2,
+                  ),
                   decoration: const BoxDecoration(
                     color: Color(0xFFED3973),
                     shape: BoxShape.circle,
@@ -495,28 +496,62 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         elevation: 8,
         items: [
           BottomNavigationBarItem(
-            icon: _buildInactiveItem(PhosphorIconsRegular.cookingPot, t?.translate('order') ?? 'Order'),
-            activeIcon: _buildGradientItem(PhosphorIconsFill.cookingPot, t?.translate('order') ?? 'Order'),
+            icon: _buildInactiveItem(
+              PhosphorIconsRegular.cookingPot,
+              t?.translate('order') ?? 'Order',
+            ),
+            activeIcon: _buildGradientItem(
+              PhosphorIconsFill.cookingPot,
+              t?.translate('order') ?? 'Order',
+            ),
             label: t?.translate('order') ?? 'Order',
           ),
           BottomNavigationBarItem(
-            icon: _buildInactiveItem(PhosphorIconsRegular.forkKnife, t?.translate('menu') ?? 'Menu'),
-            activeIcon: _buildGradientItem(PhosphorIconsFill.forkKnife, t?.translate('menu') ?? 'Menu'),
+            icon: _buildInactiveItem(
+              PhosphorIconsRegular.forkKnife,
+              t?.translate('menu') ?? 'Menu',
+            ),
+            activeIcon: _buildGradientItem(
+              PhosphorIconsFill.forkKnife,
+              t?.translate('menu') ?? 'Menu',
+            ),
             label: t?.translate('menu') ?? 'Menu',
           ),
           BottomNavigationBarItem(
-            icon: _buildInactiveItem(PhosphorIconsRegular.listHeart, t?.translate('report') ?? 'Report'),
-            activeIcon: _buildGradientItem(PhosphorIconsFill.listHeart, t?.translate('report') ?? 'Report'),
+            icon: _buildInactiveItem(
+              PhosphorIconsRegular.listHeart,
+              t?.translate('report') ?? 'Report',
+            ),
+            activeIcon: _buildGradientItem(
+              PhosphorIconsFill.listHeart,
+              t?.translate('report') ?? 'Report',
+            ),
             label: t?.translate('report') ?? 'Report',
           ),
           BottomNavigationBarItem(
-            icon: _withChatBadge(_buildInactiveItem(PhosphorIconsRegular.chatCircle, t?.translate('chat') ?? 'Chat')),
-            activeIcon: _withChatBadge(_buildGradientItem(PhosphorIconsFill.chatCircle, t?.translate('chat') ?? 'Chat')),
+            icon: _withChatBadge(
+              _buildInactiveItem(
+                PhosphorIconsRegular.chatCircle,
+                t?.translate('chat') ?? 'Chat',
+              ),
+            ),
+            activeIcon: _withChatBadge(
+              _buildGradientItem(
+                PhosphorIconsFill.chatCircle,
+                t?.translate('chat') ?? 'Chat',
+              ),
+            ),
             label: t?.translate('chat') ?? 'Chat',
           ),
           BottomNavigationBarItem(
-            icon: _buildInactiveItem(PhosphorIconsRegular.storefront, t?.translate('profile') ?? 'Profile'),
-            activeIcon: _buildGradientItem(PhosphorIconsFill.storefront, t?.translate('profile') ?? 'Profile'),
+            icon: _buildInactiveItem(
+              PhosphorIconsRegular.storefront,
+              t?.translate('profile') ?? 'Profile',
+            ),
+            activeIcon: _buildGradientItem(
+              PhosphorIconsFill.storefront,
+              t?.translate('profile') ?? 'Profile',
+            ),
             label: t?.translate('profile') ?? 'Profile',
           ),
         ],
