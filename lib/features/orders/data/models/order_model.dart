@@ -53,6 +53,8 @@ class OrderModel {
   final int? driverId;
   final String? trackingUrl;
   final String? proofPhotoUrl;
+  final String? paymentMethodName;
+  final String? paymentMethodIconUrl;
   final List<OrderReviseItemModel> reviseItems;
   final List<OrderDriverModel> shopDeliveryDrivers;
   final int queueNo;
@@ -107,6 +109,8 @@ class OrderModel {
     this.driverId,
     this.trackingUrl,
     this.proofPhotoUrl,
+    this.paymentMethodName,
+    this.paymentMethodIconUrl,
     this.reviseItems = const [],
     this.shopDeliveryDrivers = const [],
     this.queueNo = 0,
@@ -229,6 +233,9 @@ class OrderModel {
 
     final waitingMins = json['waitingTimeMinutes'] as int? ?? 0;
 
+    final shopPaymentMethodMap = json['shopPaymentMethod'] as Map?;
+    final paymentMethodMap = shopPaymentMethodMap?['paymentMethod'] as Map? ?? shopPaymentMethodMap;
+
     return OrderModel(
       id: (json['id'] ?? '').toString(),
       lastOrderNo: json['lastOrderNo']?.toString() ?? json['id']?.toString() ?? '',
@@ -268,6 +275,8 @@ class OrderModel {
       driverId: json['driverId'] as int? ?? driver?['id'] as int?,
       trackingUrl: json['trackingUrl']?.toString() ?? json['deliveryTrackingUrl']?.toString(),
       proofPhotoUrl: _resolveUrl(json['proofPhotoUrl']),
+      paymentMethodName: paymentMethodMap?['name']?.toString(),
+      paymentMethodIconUrl: _resolveUrl(paymentMethodMap?['iconUrl']),
       reviseItems: reviseItemsList,
       shopDeliveryDrivers: driversList,
       queueNo: json['queueNo'] as int? ?? 0,

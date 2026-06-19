@@ -289,9 +289,7 @@ class OrderCard extends StatelessWidget {
         break;
     }
 
-    final bool canCancel = order.status == 'PENDING' ||
-        order.status == 'REVISED' ||
-        order.status == 'PAYMENT_SLIP_REQUESTED';
+    final bool canCancel = order.status == 'PAYMENT_SLIP_REQUESTED';
 
     return Row(
       children: [

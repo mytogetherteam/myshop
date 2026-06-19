@@ -22,6 +22,10 @@ import 'package:my_shop/core/utils/app_logger.dart';
 import 'dart:async';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:my_shop/core/notifications/notification_service.dart';
+import 'package:my_shop/core/notifications/notification_service.dart';
+import 'package:my_shop/features/orders/presentation/widgets/order_cancelled_dialog.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 
 /// Lets deep order/pickup flows return to the Orders tab after completion.
 class OrdersTabNavigation {
@@ -67,6 +71,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     _setupWebSocketListener();
     ChatUnreadController.instance.start();
     OrdersTabNavigation.returnToOrdersTab = _returnToOrdersTab;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showMenuWarningModal();
+    });
   }
 
   void _returnToOrdersTab(String status) {
@@ -77,6 +85,66 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       _ordersKey.currentState?.refresh();
       _ordersKey.currentState?.switchToStatus(status);
     });
+  }
+
+  void _showMenuWarningModal() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'assets/images/app_logo.png',
+                  height: 60,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'အရေးကြီးသတိပေးချက် - Partner ဆိုင်ရှင်များ အားလုံး သိရှိရန်',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFFE11D48),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Partner ဆိုင်ရှင်များခင်ဗျာ - မိမိတို့ဆိုင်၏ စာမျက်နှာတွင် Menu Image နှင့် အချက်အလက် (Data) များ ဖြည့်စွက်ထားခြင်း ရှိ၊ မရှိကို ယခုပဲ အမြန်ဆုံး စစ်ဆေးပေးကြပါရန်။\n\nနောင်တွင် ကျွန်တော်တို့ App အနေဖြင့် အချက်အလက်စုံလင်သော ဆိုင်များကိုသာ ဦးစားပေး (Priority) စနစ်ဖြင့် အပေါ်ဆုံးတွင် ချပြတော့မည် ဖြစ်သည်။ ပုံနှင့် Data မပြည့်စုံသော ဆိုင်များသည် Customer များ ရှာဖွေရခက်ခဲသည့် နောက်တန်းနေရာများသို့ အလိုအလျောက် ရောက်ရှိသွားမည် ဖြစ်သဖြင့် ရောင်းအား ထိခိုက်မှုများ ရှိလာနိုင်ပါသည်။\n\nမိမိတို့ဆိုင်၏ မြင်သာမှုနှုန်း ကျဆင်းမသွားစေရန်အတွက် ဆိုင်စာမျက်နှာကို အချက်အလက်အပြည့်အစုံဖြင့် အခုပဲ ချက်ချင်း ဝင်ရောက် Update ပြုလုပ်ပေးကြပါရန် အသိပေးအပ်ပါသည်။',
+                  textAlign: TextAlign.justify,
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: const Color(0xFF1E293B),
+                    height: 1.6,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: PrimaryGradientButton(
+                    onPressed: () => Navigator.pop(context),
+                    text: 'သိရှိပါသည်',
+                    height: 52,
+                    borderRadius: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -159,6 +227,21 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               ),
             );
             _stopAlertSound();
+          } else if (status == 'CANCELED') {
+            AppLogger.realtime('MainNavigation: Order cancelled');
+            _stopAlertSound();
+            NotificationService.stopGlobalAlert();
+
+            await showDialog(
+              context: context,
+              barrierDismissible: true,
+              builder: (context) => OrderCancelledDialog(
+                order: orderData,
+                onClose: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            );
           } else if (status == 'PENDING' ||
               status == 'NEW' ||
               event['type'] == 'NEW_ORDER') {

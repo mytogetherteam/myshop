@@ -44,6 +44,7 @@
   "order_cancelled": "Order Cancelled",
   "view_details": "View Details",
   "check_payment": "Check Payment",
+  "accept_order_to_cook": "Accept order to cook",
   "waiting_payment": "Waiting for Payment",
   "picked_up_rider": "Picked Up by Rider",
   "check_delivery": "Check Delivery",

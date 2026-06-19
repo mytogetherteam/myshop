@@ -5,6 +5,7 @@ import 'features/auth/presentation/widgets/auth_wrapper.dart';
 import 'features/notifications/presentation/screens/notification_permission_screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/localization/app_localizations.dart';
+import 'core/presentation/widgets/connectivity_wrapper.dart';
 
 class App extends StatelessWidget {
   static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -37,11 +38,13 @@ class App extends StatelessWidget {
             GlobalCupertinoLocalizations.delegate,
           ],
           builder: (context, child) {
-            return GestureDetector(
-              onTap: () {
-                FocusManager.instance.primaryFocus?.unfocus();
-              },
-              child: child,
+            return ConnectivityWrapper(
+              child: GestureDetector(
+                onTap: () {
+                  FocusManager.instance.primaryFocus?.unfocus();
+                },
+                child: child,
+              ),
             );
           },
           home: const AuthWrapper(),

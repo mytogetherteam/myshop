@@ -69,8 +69,14 @@ class ImagePickerWidget extends StatefulWidget {
   /// Corner radius for [ImagePickerShape.rectangle]. Defaults to 12.
   final double borderRadius;
 
-  /// Border color of the container. Defaults to theme's outline color.
+  /// Border color of the container. Defaults to theme's outline color if themeColor is null.
   final Color? borderColor;
+
+  /// The primary theme color used for borders, placeholder text, and badges.
+  final Color? themeColor;
+
+  /// The primary theme gradient used for borders, placeholder text, and badges.
+  final LinearGradient? themeGradient;
 
   /// Whether to show a camera-icon badge on the bottom-right. Defaults to true.
   final bool showEditBadge;
@@ -98,6 +104,8 @@ class ImagePickerWidget extends StatefulWidget {
     this.height = 120,
     this.borderRadius = 12,
     this.borderColor,
+    this.themeColor,
+    this.themeGradient,
     this.showEditBadge = true,
     this.placeholder,
     this.maxWidth = 1920,
@@ -229,21 +237,36 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
 
   Widget _buildPlaceholder() {
     if (widget.placeholder != null) return widget.placeholder!;
+    
+    final effectiveColor = widget.themeGradient?.colors.first ?? widget.themeColor;
+    final bgColor = effectiveColor?.withValues(alpha: 0.05) ?? Colors.grey.shade100;
+    final iconColor = effectiveColor?.withValues(alpha: 0.4) ?? Colors.grey.shade400;
+    final textColor = effectiveColor?.withValues(alpha: 0.5) ?? Colors.grey.shade500;
+    
+    Widget content = Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.add_a_photo_outlined, size: 32, color: widget.themeGradient != null ? Colors.white : iconColor),
+        const SizedBox(height: 6),
+        Text(
+          'Add Photo',
+          style: TextStyle(fontSize: 12, color: widget.themeGradient != null ? Colors.white : textColor),
+        ),
+      ],
+    );
+
+    if (widget.themeGradient != null) {
+      content = ShaderMask(
+        shaderCallback: (bounds) => widget.themeGradient!.createShader(bounds),
+        child: content,
+      );
+    }
+
     return Container(
       width: widget.width,
       height: widget.height,
-      color: Colors.grey.shade100,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.add_a_photo_outlined, size: 32, color: Colors.grey.shade400),
-          const SizedBox(height: 6),
-          Text(
-            'Add Photo',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
-          ),
-        ],
-      ),
+      color: bgColor,
+      child: content,
     );
   }
 
@@ -269,17 +292,28 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
   }
 
   Widget _buildEditBadge() {
+    BoxDecoration badgeDecoration;
+    if (widget.themeGradient != null) {
+      badgeDecoration = BoxDecoration(
+        gradient: widget.themeGradient,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2),
+      );
+    } else {
+      badgeDecoration = BoxDecoration(
+        color: widget.themeColor ?? Theme.of(context).colorScheme.primary,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2),
+      );
+    }
+
     return Positioned(
       bottom: 0,
       right: 0,
       child: Container(
         width: 30,
         height: 30,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary,
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.white, width: 2),
-        ),
+        decoration: badgeDecoration,
         child: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
       ),
     );
@@ -289,8 +323,11 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveColor = widget.themeGradient?.colors.first ?? widget.themeColor;
     final borderColor = widget.borderColor ??
-        Theme.of(context).colorScheme.outlineVariant;
+        (effectiveColor != null 
+            ? effectiveColor.withValues(alpha: 0.3) 
+            : Theme.of(context).colorScheme.outlineVariant);
 
     final hasImage = _localFile != null ||
         (widget.imageUrl != null && widget.imageUrl!.isNotEmpty);

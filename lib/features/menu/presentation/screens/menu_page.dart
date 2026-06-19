@@ -218,6 +218,8 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
                           children: [Expanded(child: _buildCategoryDropdown())],
                         ),
                       ),
+                      const SizedBox(height: 20),
+                      _buildWarningAlert(),
                       const SizedBox(height: 24),
                       QuickActionCards(onRefresh: refresh),
                       const SizedBox(height: 24),
@@ -350,6 +352,40 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
     }
 
     return sections;
+  }
+
+  Widget _buildWarningAlert() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF2F2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFECACA)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline, color: Color(0xFFE11D48), size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'ပုံပါရှိသော အစားအသောက်များသည် Customer များကို ပိုမိုဆွဲဆောင်နိုင်ပါသည်။',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: const Color(0xFFE11D48),
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildCategoryDropdown() {

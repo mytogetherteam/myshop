@@ -182,10 +182,18 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
 
   void _applyFilter() {
     final query = _searchController.text.toLowerCase().trim();
+    final now = DateTime.now();
+    
+    final todayConversations = _conversations.where((c) {
+      return c.timestamp.year == now.year &&
+             c.timestamp.month == now.month &&
+             c.timestamp.day == now.day;
+    }).toList();
+
     if (query.isEmpty) {
-      _filteredConversations = _conversations;
+      _filteredConversations = todayConversations;
     } else {
-      _filteredConversations = _conversations
+      _filteredConversations = todayConversations
           .where((c) =>
               c.name.toLowerCase().contains(query) ||
               c.lastMessage.toLowerCase().contains(query) ||
