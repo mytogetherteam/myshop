@@ -45,6 +45,9 @@ class PrimaryGradientButton extends StatelessWidget {
 
     return Text(
       text ?? '',
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      textAlign: TextAlign.center,
       style: GoogleFonts.poppins(
         fontSize: 16,
         fontWeight: FontWeight.w600,
@@ -69,35 +72,32 @@ class PrimaryGradientButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(borderRadius),
           splashColor: Colors.white.withValues(alpha: 0.2),
           highlightColor: Colors.white.withValues(alpha: 0.1),
-          child: Center(
-            child: isLoading
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(borderRadius),
+              color: useMutedStyle ? const Color(0xFFE2E8F0) : null,
+              gradient: useMutedStyle
+                  ? null
+                  : (gradient ?? AppColors.primaryGradient),
+            ),
+            child: Center(
+              child: isLoading
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: _buildLabel(useMutedStyle),
+                      ),
                     ),
-                  )
-                : Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: child ??
-                          Text(
-                            text ?? '',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.3,
-                              color: Colors.white,
-                            ),
-                          ),
-                    ),
-                  ),
+            ),
           ),
         ),
       ),
