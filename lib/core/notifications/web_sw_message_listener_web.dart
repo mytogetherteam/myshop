@@ -14,6 +14,9 @@ class WebServiceWorkerMessageListener {
       }
     }
 
-    web.window.onmessage = handler.toJS;
+    final handlerJs = handler.toJS;
+    web.window.navigator.serviceWorker.onmessage = handlerJs;
+    // Fallback for older browsers / edge cases.
+    web.window.onmessage = handlerJs;
   }
 }

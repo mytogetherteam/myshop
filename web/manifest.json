@@ -11,6 +11,7 @@
     "description": "My Together Shop",
     "orientation": "any",
     "prefer_related_applications": false,
+    "permissions": ["notifications"],
     "icons": [
         {
             "src": "icons/Icon-192.png",

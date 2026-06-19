@@ -60,6 +60,12 @@ class OrderAlertSound {
     _player = null;
     _activeOrderId = null;
   }
+
+  static void setupBackgroundAlertResume() {}
+
+  static Future<void> handleServiceWorkerAlert({String? orderId}) async {
+    await playLoopingAlert(orderId: orderId);
+  }
 }
 
 /// Prevents duplicate dialogs when WebSocket and FCM fire for the same order.

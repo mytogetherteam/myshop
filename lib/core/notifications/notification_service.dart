@@ -96,14 +96,25 @@ class NotificationService {
     }
 
     if (kIsWeb) {
-      await WebPushHelper.registerMessagingServiceWorker();
+      await WebPushHelper.ensureMessagingServiceWorkerReady();
+      OrderAlertSound.setupBackgroundAlertResume();
 
-      WebServiceWorkerMessageListener.start((data) {
+      WebServiceWorkerMessageListener.start((data) async {
         final type = data['type']?.toString();
         if (type != 'NEW_ORDER_ALERT') return;
 
         final orderId = data['orderId']?.toString();
-        OrderAlertSound.playLoopingAlert(orderId: orderId);
+        final title = data['title']?.toString();
+        final body = data['body']?.toString();
+        if (title != null && body != null) {
+          await WebBrowserNotification.show(
+            title: title,
+            body: body,
+            tag: orderId != null ? 'order-$orderId' : 'new-order',
+            requireInteraction: true,
+          );
+        }
+        await OrderAlertSound.handleServiceWorkerAlert(orderId: orderId);
       });
     }
 
@@ -178,7 +189,7 @@ class NotificationService {
       return;
     }
 
-    await WebPushHelper.registerMessagingServiceWorker();
+    await WebPushHelper.ensureMessagingServiceWorkerReady();
 
     final settings = await _fcm.getNotificationSettings();
     final granted = settings.authorizationStatus ==
@@ -223,7 +234,7 @@ class NotificationService {
   Future<void> registerDevice() async {
     try {
       if (kIsWeb) {
-        await WebPushHelper.registerMessagingServiceWorker();
+        await WebPushHelper.ensureMessagingServiceWorkerReady();
       }
 
       String? token;

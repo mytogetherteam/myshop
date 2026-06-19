@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:js_interop';
 
 import 'package:flutter/foundation.dart';
@@ -11,6 +12,9 @@ class OrderAlertSound {
   static web.HTMLAudioElement? _audio;
   static String? _activeOrderId;
   static bool _webPrepared = false;
+  static bool _visibilityHookInstalled = false;
+
+  static const _pendingStorageKey = 'myshop_pending_order_alert';
 
   static bool get isPlaying =>
       _audio != null && !_audio!.paused && _audio!.currentTime > 0;
@@ -44,6 +48,62 @@ class OrderAlertSound {
     }
   }
 
+  /// Resume queued alerts when the user returns to the PWA tab/app.
+  static void setupBackgroundAlertResume() {
+    if (_visibilityHookInstalled) return;
+    _visibilityHookInstalled = true;
+
+    web.document.onvisibilitychange = (web.Event _) {
+      if (web.document.visibilityState == 'visible') {
+        unawaited(_playPendingAlertIfAny());
+      }
+    }.toJS;
+
+    web.window.onfocus = (web.Event _) {
+      unawaited(_playPendingAlertIfAny());
+    }.toJS;
+
+    unawaited(_playPendingAlertIfAny());
+  }
+
+  static void _queuePendingAlert(String? orderId) {
+    final storage = web.window.sessionStorage;
+    storage.setItem(_pendingStorageKey, orderId ?? 'new');
+    debugPrint('[OrderAlertSound] queued pending alert: $orderId');
+  }
+
+  static String? _takePendingAlert() {
+    final storage = web.window.sessionStorage;
+    final pending = storage.getItem(_pendingStorageKey);
+    if (pending == null || pending.isEmpty) return null;
+    storage.removeItem(_pendingStorageKey);
+    return pending == 'new' ? null : pending;
+  }
+
+  static bool get _hasPendingAlert {
+    final pending = web.window.sessionStorage.getItem(_pendingStorageKey);
+    return pending != null && pending.isNotEmpty;
+  }
+
+  static Future<void> _playPendingAlertIfAny() async {
+    if (web.document.visibilityState != 'visible') return;
+    if (!_hasPendingAlert) return;
+
+    final orderId = _takePendingAlert();
+    await playLoopingAlert(orderId: orderId);
+  }
+
+  /// Called when the service worker posts a new-order alert while the app may
+  /// be in the background.
+  static Future<void> handleServiceWorkerAlert({String? orderId}) async {
+    if (web.document.visibilityState == 'visible' && !web.document.hidden) {
+      await playLoopingAlert(orderId: orderId);
+      return;
+    }
+
+    _queuePendingAlert(orderId);
+  }
+
   static Future<void> playLoopingAlert({String? orderId}) async {
     if (orderId != null && orderId == _activeOrderId && isPlaying) {
       return;
@@ -65,6 +125,7 @@ class OrderAlertSound {
       debugPrint('[OrderAlertSound] web alert playing');
     } catch (e) {
       debugPrint('[OrderAlertSound] web play error: $e');
+      _queuePendingAlert(orderId);
       await stopAlert();
     }
   }
@@ -76,6 +137,7 @@ class OrderAlertSound {
     audio.pause();
     audio.currentTime = 0;
     _activeOrderId = null;
+    web.window.sessionStorage.removeItem(_pendingStorageKey);
   }
 }
 
