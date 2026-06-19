@@ -2,13 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:my_shop/core/notifications/notification_service.dart';
+import 'package:my_shop/core/notifications/order_alert_sound.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 
 class NotificationPermissionScreen extends StatelessWidget {
-  const NotificationPermissionScreen({super.key});
+  final bool isInitialFlow;
+
+  const NotificationPermissionScreen({
+    super.key,
+    this.isInitialFlow = true,
+  });
+
+  void _finish(BuildContext context) {
+    if (isInitialFlow) {
+      Navigator.pushReplacementNamed(context, '/navigation');
+    } else {
+      Navigator.pop(context);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +31,17 @@ class NotificationPermissionScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: isInitialFlow
+          ? null
+          : AppBar(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                color: const Color(0xFF1E293B),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
@@ -65,9 +90,10 @@ class NotificationPermissionScreen extends StatelessWidget {
                 width: double.infinity,
           child: PrimaryGradientButton(
             onPressed: () async {
+              await OrderAlertSound.prepareForUserInteraction();
               await NotificationService().requestSystemPermission();
               if (context.mounted) {
-                Navigator.pushReplacementNamed(context, '/navigation');
+                _finish(context);
               }
             },
             text: t?.translate('allow_notifications') ?? 'Allow Notifications',
@@ -82,7 +108,7 @@ class NotificationPermissionScreen extends StatelessWidget {
                   onPressed: () async {
                     await StorageService.instance.setNotificationHandled(true);
                     if (context.mounted) {
-                      Navigator.pushReplacementNamed(context, '/navigation');
+                      _finish(context);
                     }
                   },
                   style: TextButton.styleFrom(

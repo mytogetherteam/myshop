@@ -36,8 +36,8 @@ import 'package:my_shop/features/chat/data/services/chat_service.dart';
 import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
 import 'package:my_shop/features/chat/presentation/chat_navigation.dart';
 import 'package:my_shop/features/orders/presentation/screens/pickup_complete_screen.dart';
+import 'package:my_shop/core/presentation/widgets/tracking_map_view/tracking_map_view.dart';
 import 'package:my_shop/features/orders/presentation/widgets/order_qr_scan_icon.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 void _showAppNotInstalledSnackbar(BuildContext context, String name) {
   ScaffoldMessenger.of(context).showSnackBar(
@@ -80,7 +80,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   bool _isSubmitting = false;
   bool _isRefreshing = false;
   bool _isFirstLoading = true;
-  WebViewController? _webViewController;
 
   // Controllers for Confirmation Details
   final _deliveryFeeController = TextEditingController();
@@ -2525,11 +2524,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       return const SizedBox.shrink();
     }
 
-    if (_webViewController == null) {
-      _webViewController = WebViewController()
-        ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..loadRequest(Uri.parse(_currentOrder.deliveryTrackingUrl!));
-    }
+    final trackingUrl = _currentOrder.deliveryTrackingUrl!;
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.45,
@@ -2542,8 +2537,70 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         ),
       ),
       clipBehavior: Clip.hardEdge,
-      child: WebViewWidget(controller: _webViewController!),
+      child: Stack(
+        children: [
+          TrackingMapView(url: trackingUrl),
+          if (kIsWeb)
+            Positioned(
+              top: 10,
+              right: 10,
+              child: _buildOpenTrackingButton(trackingUrl),
+            ),
+        ],
+      ),
     );
+  }
+
+  Widget _buildOpenTrackingButton(String trackingUrl) {
+    return Material(
+      color: Colors.white,
+      elevation: 2,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: () => _openTrackingUrl(trackingUrl),
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                PhosphorIconsRegular.arrowSquareOut,
+                size: 16,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Open map',
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openTrackingUrl(String trackingUrl) async {
+    final uri = Uri.tryParse(trackingUrl);
+    if (uri == null) return;
+    try {
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched && mounted) {
+        AppDialog.showToast(context, 'Could not open tracking map', isError: true);
+      }
+    } catch (_) {
+      if (mounted) {
+        AppDialog.showToast(context, 'Could not open tracking map', isError: true);
+      }
+    }
   }
 
   Widget _buildModificationsSection() {
@@ -3174,6 +3231,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       style: GoogleFonts.poppins(
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
+                        color: AppColors.primary,
                       ),
                     ),
                   ),

@@ -14,34 +14,69 @@ firebase.initializeApp(firebaseConfig);
 
 const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage((payload) => {
-  console.log('[firebase-messaging-sw.js] Received background message ', payload);
+function iconUrl() {
+  return new URL('icons/Icon-192.png', self.registration.scope).href;
+}
 
+function buildNotificationPayload(payload) {
   const title = payload.notification?.title || payload.data?.title || 'New Notification';
   const body = payload.notification?.body || payload.data?.body || 'You have a new update.';
-  
   const type = payload.data?.type;
   const subType = payload.data?.subType;
   const isNewOrder = type === 'NEW_ORDER' || subType === 'PENDING_ORDER';
+  const orderId = payload.data?.orderId || payload.data?.order_id || 'new';
 
-  // For orders, we can try to play a sound, but standard Web Notification 
-  // API doesn't support custom sound file paths directly in all browsers.
-  // We can use the 'silent' flag to false and let the system play its default notification sound.
-  const notificationOptions = {
-    body: body,
-    icon: '/icons/Icon-192.png',
-    data: payload.data,
-    requireInteraction: isNewOrder // keep the notification open until the user interacts
+  return {
+    title,
+    body,
+    isNewOrder,
+    orderId,
+    options: {
+      body: body,
+      icon: iconUrl(),
+      badge: iconUrl(),
+      data: payload.data || {},
+      tag: isNewOrder ? 'order-' + orderId : 'shop-update',
+      requireInteraction: isNewOrder,
+      silent: false,
+      renotify: true,
+    },
   };
+}
 
-  return self.registration.showNotification(title, notificationOptions);
+function notifyOpenClients(payload, title, body) {
+  return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {
+    clientList.forEach(function (client) {
+      client.postMessage({
+        type: 'NEW_ORDER_ALERT',
+        orderId: payload.data?.orderId || payload.data?.order_id || null,
+        title: title,
+        body: body,
+      });
+    });
+  });
+}
+
+function showPushNotification(payload) {
+  const built = buildNotificationPayload(payload);
+  const tasks = [self.registration.showNotification(built.title, built.options)];
+
+  if (built.isNewOrder) {
+    tasks.push(notifyOpenClients(payload, built.title, built.body));
+  }
+
+  return Promise.all(tasks);
+}
+
+messaging.onBackgroundMessage(function (payload) {
+  console.log('[firebase-messaging-sw.js] onBackgroundMessage', payload);
+  return showPushNotification(payload);
 });
 
-// Handle notification click to focus or open the app
-self.addEventListener('notificationclick', function(event) {
+self.addEventListener('notificationclick', function (event) {
   event.notification.close();
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clientList) {
       for (var i = 0; i < clientList.length; i++) {
         var client = clientList[i];
         if (client.url.includes(self.registration.scope) && 'focus' in client) {

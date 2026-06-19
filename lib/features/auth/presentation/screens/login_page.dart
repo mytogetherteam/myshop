@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/app_logo.dart';
 import 'package:my_shop/core/notifications/notification_service.dart';
+import 'package:my_shop/core/notifications/order_alert_sound.dart';
 import 'package:my_shop/features/auth/data/services/auth_service.dart';
 import '../../../../core/network/websocket_service.dart';
 import '../../../../core/presentation/widgets/primary_gradient_button.dart';
@@ -12,7 +13,6 @@ import 'package:my_shop/features/auth/presentation/screens/register_page.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:my_shop/core/presentation/widgets/global_modal.dart';
 import 'package:my_shop/features/profile/presentation/widgets/language_selector_sheet.dart';
-import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 
@@ -61,6 +61,7 @@ class _LoginPageState extends State<LoginPage>
 
   Future<void> _handleLogin() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    await OrderAlertSound.prepareForUserInteraction();
     setState(() {
       _isLoading = true;
     });

@@ -22,9 +22,9 @@ import 'package:my_shop/core/presentation/widgets/app_bar_title_with_logo.dart';
 import 'package:my_shop/core/utils/app_logger.dart';
 import 'dart:async';
 import 'package:my_shop/core/localization/app_localizations.dart';
-import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/notifications/notification_service.dart';
+import 'package:my_shop/core/notifications/order_alert_sound.dart';
+import 'package:my_shop/core/notifications/web_browser_notification.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 
 /// Lets deep order/pickup flows return to the Orders tab after completion.
@@ -44,7 +44,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   late int _currentIndex;
   late List<Widget> _pages;
   StreamSubscription? _socketSubscription;
-  AudioPlayer? _alertAudioPlayer;
 
   final GlobalKey<OrdersScreenState> _ordersKey =
       GlobalKey<OrdersScreenState>();
@@ -74,6 +73,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _showMenuWarningModal();
+      OrderAlertSound.prepareForUserInteraction();
+      NotificationService().ensurePushRegistration();
     });
   }
 
@@ -153,38 +154,56 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       OrdersTabNavigation.returnToOrdersTab = null;
     }
     _socketSubscription?.cancel();
-    _alertAudioPlayer?.dispose();
+    OrderAlertSound.stopAlert();
     super.dispose();
   }
 
-  void _playAlertSoundIfNotViewing(String orderId) {
-    if (kIsWeb) return;
-
+  Future<void> _playAlertSoundIfNotViewing(String orderId) async {
     final routeName = 'order_detail_$orderId';
-    bool isAlreadyOnThisOrder = false;
+    var isAlreadyOnThisOrder = false;
     Navigator.popUntil(context, (route) {
       if (route.settings.name == routeName) {
         isAlreadyOnThisOrder = true;
       }
-      return true; // Don't actually pop anything
+      return true;
     });
 
     if (!isAlreadyOnThisOrder) {
-      try {
-        _alertAudioPlayer?.stop();
-        _alertAudioPlayer = AudioPlayer();
-        _alertAudioPlayer?.setReleaseMode(ReleaseMode.loop);
-        _alertAudioPlayer?.play(AssetSource('alert/alert.mp3'));
-      } catch (e) {
-        AppLogger.realtime('Audio play error: $e');
-      }
+      await OrderAlertSound.playLoopingAlert(orderId: orderId);
     }
   }
 
   void _stopAlertSound() {
-    _alertAudioPlayer?.stop();
-    _alertAudioPlayer?.dispose();
-    _alertAudioPlayer = null;
+    OrderAlertSound.stopAlert();
+  }
+
+  Future<bool> _showOrderAlertDialog({
+    required OrderModel orderData,
+    required Widget Function(BuildContext) dialogBuilder,
+  }) async {
+    if (!NotificationService.tryClaimOrderAlert(orderData.id.toString())) {
+      await _playAlertSoundIfNotViewing(orderData.id.toString());
+      return false;
+    }
+
+    await _playAlertSoundIfNotViewing(orderData.id.toString());
+
+    if (kIsWeb) {
+      await WebBrowserNotification.show(
+        title: 'New Order',
+        body: 'You have a new order waiting.',
+        tag: 'order-${orderData.id}',
+        requireInteraction: true,
+      );
+    }
+
+    await showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: dialogBuilder,
+    );
+    _stopAlertSound();
+    return true;
   }
 
   void _setupWebSocketListener() {
@@ -214,12 +233,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
           if (isTwoMinWarning) {
             AppLogger.realtime('MainNavigation: triggering OrderWarningDialog (2-min)');
-            HapticFeedback.vibrate();
-            _playAlertSoundIfNotViewing(orderData.id.toString());
-            await showDialog(
-              context: context,
-              barrierDismissible: true,
-              builder: (context) => OrderWarningDialog(
+            if (!kIsWeb) HapticFeedback.vibrate();
+            await _showOrderAlertDialog(
+              orderData: orderData,
+              dialogBuilder: (context) => OrderWarningDialog(
                 message: msg!,
                 order: orderData,
                 onTakeAction: () {
@@ -228,17 +245,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 },
               ),
             );
-            _stopAlertSound();
           } else if (status == 'PENDING' ||
               status == 'NEW' ||
               event['type'] == 'NEW_ORDER') {
             AppLogger.realtime('MainNavigation: triggering NewOrderDialog');
-            HapticFeedback.heavyImpact();
-            _playAlertSoundIfNotViewing(orderData.id.toString());
-            await showDialog(
-              context: context,
-              barrierDismissible: true,
-              builder: (context) => NewOrderDialog(
+            if (!kIsWeb) HapticFeedback.heavyImpact();
+            await _showOrderAlertDialog(
+              orderData: orderData,
+              dialogBuilder: (context) => NewOrderDialog(
                 order: orderData,
                 onViewOrder: () {
                   Navigator.pop(context);
@@ -246,16 +260,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 },
               ),
             );
-            _stopAlertSound();
           } else if (msg != null && msg.trim().isNotEmpty) {
             // Generic warning for other status updates with messages
             AppLogger.realtime('MainNavigation: triggering OrderWarningDialog (generic)');
-            HapticFeedback.vibrate();
-            _playAlertSoundIfNotViewing(orderData.id.toString());
-            await showDialog(
-              context: context,
-              barrierDismissible: true,
-              builder: (context) => OrderWarningDialog(
+            if (!kIsWeb) HapticFeedback.vibrate();
+            await _showOrderAlertDialog(
+              orderData: orderData,
+              dialogBuilder: (context) => OrderWarningDialog(
                 message: msg,
                 order: orderData,
                 onTakeAction: () {
@@ -264,7 +275,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 },
               ),
             );
-            _stopAlertSound();
           }
         }
       }

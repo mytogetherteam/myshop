@@ -30,6 +30,11 @@ class PrimaryGradientButton extends StatelessWidget {
     final foregroundColor = useMutedStyle ? _mutedForeground : Colors.white;
 
     if (child != null) {
+      // Custom children (e.g. light secondary buttons) supply their own colors.
+      if (!useMutedStyle) {
+        return child!;
+      }
+
       return IconTheme.merge(
         data: IconThemeData(color: foregroundColor, size: 18),
         child: DefaultTextStyle.merge(

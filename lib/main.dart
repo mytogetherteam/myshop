@@ -28,7 +28,9 @@ void main() async {
 
   // Initialize notification service
   await NotificationService().initialize();
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  if (!kIsWeb) {
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  }
 
   await AppVersion.init();
 

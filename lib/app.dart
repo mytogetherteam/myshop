@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'core/utils/app_colors.dart';
+import 'core/notifications/order_alert_sound.dart';
 import 'features/auth/presentation/screens/login_page.dart';
 import 'features/auth/presentation/widgets/auth_wrapper.dart';
 import 'features/notifications/presentation/screens/notification_permission_screen.dart';
@@ -52,6 +54,9 @@ class App extends StatelessWidget {
             return ConnectivityWrapper(
               child: GestureDetector(
                 onTap: () {
+                  if (kIsWeb) {
+                    OrderAlertSound.prepareForUserInteraction();
+                  }
                   FocusManager.instance.primaryFocus?.unfocus();
                 },
                 child: child,

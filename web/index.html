@@ -105,6 +105,23 @@
       document.body.style.background = "transparent";
     }
   </script>
+  <script id="pwa-install-script">
+    window.deferredPwaInstallPrompt = null;
+    window.addEventListener('beforeinstallprompt', function (event) {
+      event.preventDefault();
+      window.deferredPwaInstallPrompt = event;
+      window.dispatchEvent(new CustomEvent('pwa-install-available'));
+    });
+    window.installPwa = async function () {
+      if (!window.deferredPwaInstallPrompt) {
+        return false;
+      }
+      window.deferredPwaInstallPrompt.prompt();
+      var choice = await window.deferredPwaInstallPrompt.userChoice;
+      window.deferredPwaInstallPrompt = null;
+      return choice.outcome === 'accepted';
+    };
+  </script>
 </head>
 
 <body>

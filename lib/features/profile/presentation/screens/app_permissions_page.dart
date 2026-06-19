@@ -4,6 +4,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:my_shop/core/notifications/notification_service.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/presentation/widgets/back_title_app_bar.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
@@ -19,6 +21,7 @@ class _AppPermissionsPageState extends State<AppPermissionsPage>
     with WidgetsBindingObserver {
   PermissionStatus _notificationStatus = PermissionStatus.denied;
   PermissionStatus _systemAlertWindowStatus = PermissionStatus.denied;
+  AuthorizationStatus _webNotificationStatus = AuthorizationStatus.notDetermined;
   bool _isLoading = true;
 
   @override
@@ -44,6 +47,18 @@ class _AppPermissionsPageState extends State<AppPermissionsPage>
 
   Future<void> _checkPermissions({bool silent = false}) async {
     if (!silent) setState(() => _isLoading = true);
+
+    if (kIsWeb) {
+      final settings = await FirebaseMessaging.instance.getNotificationSettings();
+      if (mounted) {
+        setState(() {
+          _webNotificationStatus = settings.authorizationStatus;
+          _isLoading = false;
+        });
+      }
+      return;
+    }
+
     final status = await Permission.notification.status;
     final alertStatus = await Permission.systemAlertWindow.status;
 
@@ -54,6 +69,16 @@ class _AppPermissionsPageState extends State<AppPermissionsPage>
         _isLoading = false;
       });
     }
+  }
+
+  bool _webNotificationsGranted() {
+    return _webNotificationStatus == AuthorizationStatus.authorized ||
+        _webNotificationStatus == AuthorizationStatus.provisional;
+  }
+
+  Future<void> _requestWebNotificationPermission() async {
+    await NotificationService().requestSystemPermission();
+    await _checkPermissions(silent: true);
   }
 
   Future<void> _requestNotificationPermission() async {
@@ -92,26 +117,59 @@ class _AppPermissionsPageState extends State<AppPermissionsPage>
     final t = AppLocalizations.of(context);
 
     if (kIsWeb) {
+      final webGranted = _webNotificationsGranted();
+
       return Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
         appBar: BackTitleAppBar(
           title: t?.translate('app_permissions') ?? 'App Permissions',
         ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Text(
-              t?.translate('app_permissions_web_unavailable') ??
-                  'Permission settings are managed by your browser on the web app.',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                color: const Color(0xFF64748B),
-                height: 1.5,
+        body: _isLoading
+            ? const Center(child: CupertinoActivityIndicator())
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t?.translate('manage_access') ?? 'Manage Access',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      t?.translate('app_permissions_web_desc') ??
+                          'On the web app, permissions are managed by your browser. Enable notifications below to receive new order alerts.',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: const Color(0xFF64748B),
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    _buildPermissionCard(
+                      icon: PhosphorIconsRegular.bellRinging,
+                      title: t?.translate('notifications') ?? 'Notifications',
+                      description:
+                          t?.translate('notifications_desc') ??
+                          'Receive real-time alerts for new orders, order statuses, and shop updates.',
+                      status: webGranted
+                          ? PermissionStatus.granted
+                          : PermissionStatus.denied,
+                      onActionPressed: webGranted
+                          ? () {}
+                          : _requestWebNotificationPermission,
+                      actionLabel: webGranted
+                          ? (t?.translate('allowed') ?? 'Allowed')
+                          : (t?.translate('allow_access') ?? 'Allow Access'),
+                      actionEnabled: !webGranted,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ),
-        ),
       );
     }
 
@@ -185,9 +243,15 @@ class _AppPermissionsPageState extends State<AppPermissionsPage>
     required String description,
     required PermissionStatus status,
     required VoidCallback onActionPressed,
+    String? actionLabel,
+    bool actionEnabled = true,
   }) {
     final bool isGranted = status.isGranted;
     final t = AppLocalizations.of(context);
+    final buttonLabel = actionLabel ??
+        (isGranted
+            ? (t?.translate('open_settings') ?? 'Open Settings')
+            : (t?.translate('allow_access') ?? 'Allow Access'));
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -294,17 +358,16 @@ class _AppPermissionsPageState extends State<AppPermissionsPage>
             ),
           ),
           const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: PrimaryGradientButton(
-              onPressed: onActionPressed,
-              text: isGranted
-                  ? (t?.translate('open_settings') ?? 'Open Settings')
-                  : (t?.translate('allow_access') ?? 'Allow Access'),
-              height: 48,
-              borderRadius: 12,
+          if (actionEnabled)
+            SizedBox(
+              width: double.infinity,
+              child: PrimaryGradientButton(
+                onPressed: onActionPressed,
+                text: buttonLabel,
+                height: 48,
+                borderRadius: 12,
+              ),
             ),
-          ),
         ],
       ),
     );

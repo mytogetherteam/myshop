@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'dart:typed_data';
@@ -15,19 +14,22 @@ import 'package:my_shop/features/notifications/data/repositories/notification_re
 import 'package:my_shop/features/orders/data/services/order_service.dart';
 import 'package:my_shop/features/orders/presentation/widgets/new_order_dialog.dart';
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
-import 'package:audioplayers/audioplayers.dart';
+import 'package:my_shop/core/notifications/order_alert_sound.dart';
+import 'package:my_shop/core/notifications/web_browser_notification.dart';
+import 'package:my_shop/core/notifications/web_sw_message_listener.dart';
+import 'package:my_shop/core/notifications/web_push_helper.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  static AudioPlayer? globalAlertAudioPlayer;
-
   static void stopGlobalAlert() {
-    globalAlertAudioPlayer?.stop();
-    globalAlertAudioPlayer?.dispose();
-    globalAlertAudioPlayer = null;
+    OrderAlertSound.stopAlert();
+  }
+
+  static bool tryClaimOrderAlert(String orderId) {
+    return OrderAlertCoordinator.tryClaimOrderAlert(orderId);
   }
 
   // Resolved lazily so constructing the singleton on web (where Firebase is
@@ -44,46 +46,66 @@ class NotificationService {
   Future<void> initialize() async {
     if (_isInitialized) return;
 
-    // Initialize local notifications
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@drawable/ic_notification');
-    const DarwinInitializationSettings initializationSettingsIOS = DarwinInitializationSettings();
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-      iOS: initializationSettingsIOS,
-    );
-    await _localNotifications.initialize(
-      initializationSettings,
-      onDidReceiveNotificationResponse: (details) {
-        _handleNotificationClick(null);
-      },
-    );
+    if (!kIsWeb) {
+      // Initialize local notifications
+      const AndroidInitializationSettings initializationSettingsAndroid =
+          AndroidInitializationSettings('@drawable/ic_notification');
+      const DarwinInitializationSettings initializationSettingsIOS =
+          DarwinInitializationSettings();
+      const InitializationSettings initializationSettings =
+          InitializationSettings(
+        android: initializationSettingsAndroid,
+        iOS: initializationSettingsIOS,
+      );
+      await _localNotifications.initialize(
+        initializationSettings,
+        onDidReceiveNotificationResponse: (details) {
+          _handleNotificationClick(null);
+        },
+      );
 
-    // Create high importance channel for Android (New Orders)
-    const AndroidNotificationChannel orderChannel = AndroidNotificationChannel(
-      'shop_order_alerts_channel_v2',
-      'Shop Important Notifications',
-      description: 'This channel is used for shop orders and alerts.',
-      importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('alert'),
-      playSound: true,
-    );
-    await _localNotifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(orderChannel);
+      // Create high importance channel for Android (New Orders)
+      const AndroidNotificationChannel orderChannel =
+          AndroidNotificationChannel(
+        'shop_order_alerts_channel_v2',
+        'Shop Important Notifications',
+        description: 'This channel is used for shop orders and alerts.',
+        importance: Importance.max,
+        sound: RawResourceAndroidNotificationSound('alert'),
+        playSound: true,
+      );
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(orderChannel);
 
-    // Create a normal importance channel for Android (Other Updates)
-    const AndroidNotificationChannel normalChannel = AndroidNotificationChannel(
-      'shop_normal_alerts_channel_v1',
-      'Shop Normal Notifications',
-      description: 'This channel is used for normal shop updates.',
-      importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('normal_noti'),
-      playSound: true,
-    );
-    await _localNotifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(normalChannel);
+      // Create a normal importance channel for Android (Other Updates)
+      const AndroidNotificationChannel normalChannel =
+          AndroidNotificationChannel(
+        'shop_normal_alerts_channel_v1',
+        'Shop Normal Notifications',
+        description: 'This channel is used for normal shop updates.',
+        importance: Importance.max,
+        sound: RawResourceAndroidNotificationSound('normal_noti'),
+        playSound: true,
+      );
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(normalChannel);
+    }
+
+    if (kIsWeb) {
+      await WebPushHelper.registerMessagingServiceWorker();
+
+      WebServiceWorkerMessageListener.start((data) {
+        final type = data['type']?.toString();
+        if (type != 'NEW_ORDER_ALERT') return;
+
+        final orderId = data['orderId']?.toString();
+        OrderAlertSound.playLoopingAlert(orderId: orderId);
+      });
+    }
 
     // Handle foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
@@ -91,20 +113,28 @@ class NotificationService {
       final String? subType = message.data['subType'];
       final bool isNewOrder = type == 'NEW_ORDER' || subType == 'PENDING_ORDER';
 
-      // Skip showing system banner for new orders in the foreground, 
-      // because MainNavigationScreen's WebSocket listener will show the NewOrderDialog
-      // and play the alert sound. This prevents overlapping looping sounds.
       if (isNewOrder) {
         NotificationRepository().incrementCount();
+        if (kIsWeb) {
+          _handleWebForegroundOrderAlert(message);
+        }
         return;
       }
 
       if (message.notification != null) {
         NotificationRepository().incrementCount();
-        showLocalNotification(message);
+        if (kIsWeb) {
+          _showWebNotification(message);
+        } else {
+          showLocalNotification(message);
+        }
       } else if (message.data.isNotEmpty) {
         NotificationRepository().getUnreadCount();
-        showLocalNotification(message);
+        if (kIsWeb) {
+          _showWebNotification(message);
+        } else {
+          showLocalNotification(message);
+        }
       }
     });
 
@@ -124,9 +154,7 @@ class NotificationService {
     } catch (_) {}
 
     // Register token if already logged in
-    if (await _isLoggedIn) {
-      await registerDevice();
-    }
+    await ensurePushRegistration();
 
     // Listen for token refreshes
     _fcm.onTokenRefresh.listen((newToken) async {
@@ -141,13 +169,40 @@ class NotificationService {
     _isInitialized = true;
   }
 
-  Future<void> requestSystemPermission() async {
-    if (kIsWeb) {
-      await _fcm.requestPermission();
-      await StorageService.instance.setNotificationHandled(true);
+  /// Ensures the FCM service worker is active and the device token is registered.
+  Future<void> ensurePushRegistration() async {
+    if (!kIsWeb) {
       if (await _isLoggedIn) {
         await registerDevice();
       }
+      return;
+    }
+
+    await WebPushHelper.registerMessagingServiceWorker();
+
+    final settings = await _fcm.getNotificationSettings();
+    final granted = settings.authorizationStatus ==
+            AuthorizationStatus.authorized ||
+        settings.authorizationStatus == AuthorizationStatus.provisional;
+
+    if (!granted) {
+      debugPrint(
+        '[NotificationService] Web push permission: ${settings.authorizationStatus}',
+      );
+      return;
+    }
+
+    if (await _isLoggedIn) {
+      await registerDevice();
+    }
+  }
+
+  Future<void> requestSystemPermission() async {
+    if (kIsWeb) {
+      await OrderAlertSound.prepareForUserInteraction();
+      await _fcm.requestPermission();
+      await StorageService.instance.setNotificationHandled(true);
+      await ensurePushRegistration();
       return;
     }
     await _fcm.requestPermission(
@@ -167,6 +222,10 @@ class NotificationService {
 
   Future<void> registerDevice() async {
     try {
+      if (kIsWeb) {
+        await WebPushHelper.registerMessagingServiceWorker();
+      }
+
       String? token;
       if (kIsWeb) {
         token = await _fcm.getToken(
@@ -176,10 +235,13 @@ class NotificationService {
         token = await _fcm.getToken().timeout(const Duration(seconds: 5));
       }
       if (token != null) {
+        debugPrint('[NotificationService] FCM token obtained (${kIsWeb ? 'web' : 'native'})');
         await _sendTokenToServer(token);
+      } else {
+        debugPrint('[NotificationService] FCM token is null');
       }
     } catch (e) {
-      debugPrint('Error getting FCM token: $e');
+      debugPrint('[NotificationService] Error getting FCM token: $e');
     }
   }
 
@@ -257,8 +319,12 @@ class NotificationService {
   }
 
   Future<void> showLocalNotification(RemoteMessage message) async {
-    final String title = message.notification?.title ?? message.data['title'] ?? 'New Notification';
-    final String body = message.notification?.body ?? message.data['body'] ?? 'You have a new update';
+    if (kIsWeb) return;
+
+    final String title =
+        message.notification?.title ?? message.data['title'] ?? 'New Notification';
+    final String body =
+        message.notification?.body ?? message.data['body'] ?? 'You have a new update';
 
     final String? type = message.data['type'];
     final String? subType = message.data['subType'];
@@ -301,64 +367,119 @@ class NotificationService {
     final bool isNewOrder = type == 'NEW_ORDER' || subType == 'PENDING_ORDER';
 
     if (isNewOrder) {
-      final String? orderIdStr = message.data['orderId']?.toString() ?? message.data['order_id']?.toString();
+      final orderIdStr = message.data['orderId']?.toString() ??
+          message.data['order_id']?.toString();
       if (orderIdStr != null) {
-        // Wait until navigator context is available
-        BuildContext? context = App.navigatorKey.currentContext;
-        int retries = 0;
-        while (context == null && retries < 10) {
-          await Future.delayed(const Duration(milliseconds: 500));
-          context = App.navigatorKey.currentContext;
-          retries++;
-        }
-
-        if (context != null) {
-          try {
-            final orderData = await OrderService().getOrderDetail(orderIdStr);
-            if (orderData != null) {
-              // Play loop alert if needed since the notification sound might only play once
-              NotificationService.globalAlertAudioPlayer = AudioPlayer();
-              NotificationService.globalAlertAudioPlayer!.setReleaseMode(ReleaseMode.loop);
-              NotificationService.globalAlertAudioPlayer!.play(AssetSource('alert/alert.mp3'));
-
-              showDialog(
-                context: context,
-                barrierDismissible: true,
-                builder: (context) => NewOrderDialog(
-                  order: orderData,
-                  onViewOrder: () {
-                    NotificationService.stopGlobalAlert();
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      PageRouteBuilder(
-                        settings: RouteSettings(name: 'order_detail_$orderIdStr'),
-                        pageBuilder: (context, animation, secondaryAnimation) =>
-                            OrderDetailScreen(order: orderData),
-                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                          const begin = Offset(1.0, 0.0);
-                          const end = Offset.zero;
-                          const curve = Curves.easeOut;
-                          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                          return SlideTransition(position: animation.drive(tween), child: child);
-                        },
-                      ),
-                    );
-                  },
-                ),
-              ).then((_) {
-                NotificationService.stopGlobalAlert();
-              });
-              return;
-            }
-          } catch (e) {
-            debugPrint('Failed to load order from notification: $e');
-          }
-        }
+        await _presentNewOrderAlert(orderIdStr);
       }
+      return;
     }
 
-    // Default: Navigate to notifications screen
     App.navigatorKey.currentState?.pushNamed('/notifications');
+  }
+
+  Future<void> _handleWebForegroundOrderAlert(RemoteMessage message) async {
+    final orderId = message.data['orderId']?.toString() ??
+        message.data['order_id']?.toString();
+    final title =
+        message.notification?.title ?? message.data['title'] ?? 'New Order';
+    final body = message.notification?.body ??
+        message.data['body'] ??
+        'You have a new order waiting.';
+
+    await WebBrowserNotification.show(
+      title: title,
+      body: body,
+      tag: orderId != null ? 'order-$orderId' : 'new-order',
+      requireInteraction: true,
+    );
+
+    await OrderAlertSound.playLoopingAlert(orderId: orderId);
+
+    if (orderId != null) {
+      await _presentNewOrderAlert(orderId);
+    }
+  }
+
+  Future<void> _showWebNotification(RemoteMessage message) async {
+    final title =
+        message.notification?.title ?? message.data['title'] ?? 'New Notification';
+    final body = message.notification?.body ??
+        message.data['body'] ??
+        'You have a new update.';
+
+    await WebBrowserNotification.show(
+      title: title,
+      body: body,
+      tag: message.messageId,
+    );
+  }
+
+  Future<void> _presentNewOrderAlert(String orderIdStr) async {
+    if (!tryClaimOrderAlert(orderIdStr)) {
+      await OrderAlertSound.playLoopingAlert(orderId: orderIdStr);
+      return;
+    }
+
+    BuildContext? context = App.navigatorKey.currentContext;
+    var retries = 0;
+    while (context == null && retries < 10) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      context = App.navigatorKey.currentContext;
+      retries++;
+    }
+
+    if (context == null) {
+      await OrderAlertSound.playLoopingAlert(orderId: orderIdStr);
+      return;
+    }
+
+    try {
+      final orderData = await OrderService().getOrderDetail(orderIdStr);
+      if (orderData == null) {
+        await OrderAlertSound.playLoopingAlert(orderId: orderIdStr);
+        return;
+      }
+
+      await OrderAlertSound.playLoopingAlert(orderId: orderIdStr);
+
+      if (!context.mounted) return;
+
+      await showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (dialogContext) => NewOrderDialog(
+          order: orderData,
+          onViewOrder: () {
+            NotificationService.stopGlobalAlert();
+            Navigator.pop(dialogContext);
+            Navigator.push(
+              dialogContext,
+              PageRouteBuilder(
+                settings: RouteSettings(name: 'order_detail_$orderIdStr'),
+                pageBuilder: (context, animation, secondaryAnimation) =>
+                    OrderDetailScreen(order: orderData),
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                  const begin = Offset(1.0, 0.0);
+                  const end = Offset.zero;
+                  const curve = Curves.easeOut;
+                  final tween = Tween(begin: begin, end: end)
+                      .chain(CurveTween(curve: curve));
+                  return SlideTransition(
+                    position: animation.drive(tween),
+                    child: child,
+                  );
+                },
+              ),
+            );
+          },
+        ),
+      );
+      NotificationService.stopGlobalAlert();
+    } catch (e) {
+      debugPrint('Failed to load order from notification: $e');
+      await OrderAlertSound.playLoopingAlert(orderId: orderIdStr);
+    }
   }
 }

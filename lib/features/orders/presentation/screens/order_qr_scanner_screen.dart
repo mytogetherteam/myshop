@@ -237,6 +237,19 @@ class _OrderQrScannerScreenState extends State<OrderQrScannerScreen> {
         MobileScanner(
           controller: _controller,
           onDetect: _handleBarcode,
+          errorBuilder: (context, error) {
+            return _PermissionDeniedView(
+              message: kIsWeb
+                  ? (t?.translate('camera_permission_web_required') ??
+                      'Allow camera access in your browser to scan order QR codes.')
+                  : (t?.translate('camera_permission_required') ??
+                      'Camera permission is required to scan order QR codes.'),
+              onRetry: () async {
+                await _controller.start();
+              },
+              retryLabel: t?.translate('retry') ?? 'Retry',
+            );
+          },
         ),
         IgnorePointer(
           child: Container(

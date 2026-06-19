@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/core/utils/app_logger.dart';
 import 'package:my_shop/features/main_navigation/presentation/screens/main_navigation_screen.dart';
@@ -57,13 +58,16 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
     WebSocketService().connect();
     
-    if (!kIsWeb) {
-      final notiHandled = await StorageService.instance.isNotificationHandled();
-      if (!notiHandled) {
+    final notiHandled = await StorageService.instance.isNotificationHandled();
+    if (!notiHandled) {
+      return const NotificationPermissionScreen();
+    }
+
+    if (kIsWeb) {
+      final settings = await FirebaseMessaging.instance.getNotificationSettings();
+      if (settings.authorizationStatus == AuthorizationStatus.notDetermined) {
         return const NotificationPermissionScreen();
       }
-    } else {
-      await StorageService.instance.setNotificationHandled(true);
     }
     
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {

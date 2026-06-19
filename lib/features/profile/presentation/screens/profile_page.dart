@@ -448,15 +448,14 @@ class ProfilePageState extends State<ProfilePage>
             ),
           ),
         ),
-        if (!kIsWeb)
-          _buildMenuOption(
-            icon: PhosphorIconsRegular.shieldCheck,
-            title: t?.translate('app_permissions') ?? 'App Permissions',
-            onTap: () => Navigator.push(
-              context,
-              CupertinoPageRoute(builder: (_) => const AppPermissionsPage()),
-            ),
+        _buildMenuOption(
+          icon: PhosphorIconsRegular.shieldCheck,
+          title: t?.translate('app_permissions') ?? 'App Permissions',
+          onTap: () => Navigator.push(
+            context,
+            CupertinoPageRoute(builder: (_) => const AppPermissionsPage()),
           ),
+        ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.user,
           title: t?.translate('account_settings') ?? 'Account Settings',
