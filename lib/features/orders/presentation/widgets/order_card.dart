@@ -294,14 +294,16 @@ class OrderCard extends StatelessWidget {
     return Row(
       children: [
         if (canCancel) ...[
-          Expanded(
+          SizedBox(
+            width: 96,
             child: OutlinedButton(
               onPressed: () => _showCancelDialog(context),
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFFED3973),
                 side: const BorderSide(color: Color(0xFFFEE2E2)),
                 backgroundColor: const Color(0xFFFFF1F2),
-                minimumSize: const Size(0, 54),
+                minimumSize: const Size(0, 48),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -310,15 +312,14 @@ class OrderCard extends StatelessWidget {
                 t?.translate('cancel') ?? 'Cancel',
                 style: const TextStyle(
                   fontWeight: FontWeight.w600,
-                  fontSize: 14,
+                  fontSize: 13,
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
         ],
         Expanded(
-          flex: isPaymentTab ? 1 : 2,
           child: PrimaryGradientButton(
             onPressed: isMainButtonEnabled ? () async {
               final result = await Navigator.push(
@@ -350,8 +351,8 @@ class OrderCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (mainButtonIcon != null) ...[
-                  Icon(mainButtonIcon, size: 18, color: Colors.white),
-                  const SizedBox(width: 8),
+                  Icon(mainButtonIcon, size: 16, color: Colors.white),
+                  const SizedBox(width: 6),
                 ],
                 if (isMainButtonEnabled)
                   Flexible(
@@ -359,6 +360,7 @@ class OrderCard extends StatelessWidget {
                       mainButtonText,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
                       style: GoogleFonts.poppins(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
@@ -367,12 +369,14 @@ class OrderCard extends StatelessWidget {
                     ),
                   )
                 else
-                  AnimatedEllipsisText(
-                    text: mainButtonText,
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                      color: Colors.white,
+                  Flexible(
+                    child: AnimatedEllipsisText(
+                      text: mainButtonText,
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
               ],

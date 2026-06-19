@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:my_shop/core/data/services/image_upload_service.dart';
@@ -213,12 +214,19 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
     Widget image;
 
     if (_localFile != null) {
-      image = Image.file(
-        File(_localFile!.path),
-        fit: BoxFit.cover,
-        width: widget.width,
-        height: widget.height,
-      );
+      image = kIsWeb
+          ? Image.network(
+              _localFile!.path,
+              fit: BoxFit.cover,
+              width: widget.width,
+              height: widget.height,
+            )
+          : Image.file(
+              File(_localFile!.path),
+              fit: BoxFit.cover,
+              width: widget.width,
+              height: widget.height,
+            );
     } else if (widget.imageUrl != null && widget.imageUrl!.isNotEmpty) {
       image = CachedNetworkImage(
         imageUrl: widget.imageUrl!,
