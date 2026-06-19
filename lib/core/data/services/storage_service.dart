@@ -92,6 +92,18 @@ class StorageService {
     return _prefs!.getBool(_keyNotificationHandled) ?? false;
   }
 
+  static const String _keySystemAlertHandled = 'system_alert_permission_handled';
+
+  Future<void> setSystemAlertHandled(bool value) async {
+    await _ensureInitialized();
+    await _prefs!.setBool(_keySystemAlertHandled, value);
+  }
+
+  Future<bool> isSystemAlertHandled() async {
+    await _ensureInitialized();
+    return _prefs!.getBool(_keySystemAlertHandled) ?? false;
+  }
+
   Future<void> saveSelectedShopId(int shopId) async {
     await _ensureInitialized();
     await _prefs!.setInt(_keySelectedShopId, shopId);

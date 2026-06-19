@@ -44,6 +44,7 @@
   "order_cancelled": "Order Cancelled",
   "view_details": "View Details",
   "check_payment": "Check Payment",
+  "accept_order_to_cook": "Accept order to cook",
   "waiting_payment": "Waiting for Payment",
   "picked_up_rider": "Picked Up by Rider",
   "check_delivery": "Check Delivery",
@@ -515,5 +516,7 @@
   "registration_success": "Application submitted successfully! Our team will contact you shortly to verify and activate your shop account.",
   "registration_failed": "Registration failed",
   "terms_and_privacy": "I agree to the Terms of Service and Privacy Policy",
-  "please_agree_terms": "Please agree to the Terms of Service and Privacy Policy"
+  "please_agree_terms": "Please agree to the Terms of Service and Privacy Policy",
+  "display_over_apps": "Display Over Apps",
+  "display_over_apps_desc": "Required to wake up the screen and show new orders like a phone call."
 }

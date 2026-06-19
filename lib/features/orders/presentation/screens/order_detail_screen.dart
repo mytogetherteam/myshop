@@ -19,6 +19,8 @@ import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/presentation/widgets/global_modal.dart';
+import 'package:my_shop/core/presentation/widgets/keyboard_padding_wrapper.dart';
+import 'package:my_shop/features/orders/presentation/widgets/cancel_order_dialog.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/features/profile/data/models/rider_model.dart';
@@ -34,6 +36,7 @@ import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart'
 import 'package:my_shop/features/chat/presentation/chat_navigation.dart';
 import 'package:my_shop/features/orders/presentation/screens/pickup_complete_screen.dart';
 import 'package:my_shop/features/orders/presentation/widgets/order_qr_scan_icon.dart';
+
 
 class OrderDetailScreen extends StatefulWidget {
   final OrderModel order;
@@ -73,6 +76,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   int? _shopId;
   int? _userId;
   bool _isLoadingRiders = false;
+  bool _isScrolled = false;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -88,6 +93,20 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     // Eagerly load the saved drivers so the picker is always populated,
     // regardless of whether the order payload carried any.
     _loadDrivers();
+
+    _scrollController.addListener(() {
+      if (_scrollController.offset > 80 && !_isScrolled) {
+        setState(() => _isScrolled = true);
+      } else if (_scrollController.offset <= 80 && _isScrolled) {
+        setState(() => _isScrolled = false);
+      }
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_currentOrder.status == 'AWAITING_APPROVAL' && _currentOrder.paymentSlipUrl != null) {
+        _showPaymentVerificationModal();
+      }
+    });
   }
 
   /// Loads the unread customer-message count for this order so the chat icon
@@ -148,9 +167,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   void _initControllers() {
     final formatter = NumberFormat('#,##0');
-    _deliveryFeeController.text = _currentOrder.deliveryFee > 0
-        ? formatter.format(_currentOrder.deliveryFee)
-        : _currentOrder.deliveryFee.toString();
+    _deliveryFeeController.text = _currentOrder.deliveryFee > 0 ? formatter.format(_currentOrder.deliveryFee) : _currentOrder.deliveryFee.toString();
     _deliveryCycleNoController.text = _currentOrder.deliveryCycleNo ?? '';
     _deliveryRiderNameController.text = _currentOrder.riderName ?? '';
     _deliveryPhoneNoController.text =
@@ -168,9 +185,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _validateFormState();
   }
 
-  Future<void> _fetchOrderDetails({bool showLoading = true}) async {
+  Future<void> _fetchOrderDetails({bool showLoading = true, String? previousStatus}) async {
     if (showLoading) setState(() => _isFirstLoading = true);
-    final previousStatus = _currentOrder.status;
     final updatedOrder = await OrderService().getOrderDetail(_currentOrder.id);
     if (updatedOrder != null && mounted) {
       setState(() {
@@ -204,6 +220,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       // Always (re)load the shop's full rider roster so the picker shows every
       // saved rider, regardless of what the order payload carried.
       _loadDrivers();
+
+      if (oldStatus != 'AWAITING_APPROVAL' &&
+          _currentOrder.status == 'AWAITING_APPROVAL' &&
+          _currentOrder.paymentSlipUrl != null) {
+        _showPaymentVerificationModal();
+      }
     } else if (mounted) {
       setState(() => _isFirstLoading = false);
     }
@@ -211,6 +233,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _wsSubscription?.cancel();
     _chatSubscription?.cancel();
     _chatReadSubscription?.cancel();
@@ -272,7 +295,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       final orderId = event['orderId']?.toString();
       if (orderId != null && orderId == _currentOrder.id.toString()) {
         debugPrint('Real-time update received for Order ${_currentOrder.id}');
-
+        
         setState(() {
           _isRefreshing = true;
           if (event['order'] != null) {
@@ -284,7 +307,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         // so its file fields (paymentSlipUrl, proofPhotoUrl, images) are raw
         // storage keys that don't resolve. Re-fetch over HTTP to get the
         // properly-built absolute URLs (otherwise the receipt fails to load).
-        _fetchOrderDetails(showLoading: false);
+        _fetchOrderDetails(showLoading: false, previousStatus: previousStatus);
 
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) {
@@ -960,6 +983,177 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
+  String _formatTimeAgo(DateTime? date) {
+    if (date == null) return '';
+    final diff = DateTime.now().difference(date);
+    if (diff.inMinutes < 60) return '${diff.inMinutes}min ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return '${diff.inDays}d ago';
+  }
+
+  void _showPaymentVerificationModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final overdueMinutes = DateTime.now().difference(_currentOrder.updatedAt).inMinutes;
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.9,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFF1F5F9)),
+                ),
+                child: const Center(
+                  child: Icon(PhosphorIconsFill.ticket, color: Color(0xFFE11D48)),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Check payment',
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '#${_currentOrder.lastOrderNo} • ${_formatTimeAgo(_currentOrder.createdAt)} • ${_currentOrder.orderType == "DELIVERY" ? "🚚 Delivery" : "📦 Pickup"}',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (overdueMinutes > 5) ...[
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF1F2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '!! Verification overdue',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFFE11D48),
+                                    ),
+                                  ),
+                                  Text(
+                                    '$overdueMinutes min',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFFE11D48),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Customer has completed payment, please verify to continue the order.',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  color: const Color(0xFFE11D48),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFF1F5F9)),
+                        ),
+                        child: _buildPaymentSlipSection(),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: PrimaryGradientButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _handleRequestSlip();
+                      },
+                      height: 56,
+                      borderRadius: 16,
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFFF1F2), Color(0xFFFFF1F2)],
+                      ),
+                      child: GradientText(
+                        'Revise',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600, 
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: PrimaryGradientButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _handleVerifyPayment();
+                      },
+                      text: 'Confirm Payment',
+                      height: 56,
+                      borderRadius: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _handleVerifyPayment() async {
     await _runOrderAction(
       action: () => OrderService().verifyPayment(_currentOrder.id.toString()),
@@ -1093,7 +1287,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Future<void> _handleCancelOrder() async {
     final t = AppLocalizations.of(context);
-    final reasonController = TextEditingController();
+    final staticMediaQuery = MediaQuery.of(context).copyWith(viewInsets: EdgeInsets.zero);
 
     await showModalBottomSheet<void>(
       context: context,
@@ -1160,12 +1354,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 style: GoogleFonts.poppins(fontSize: 14),
                 decoration: InputDecoration(
                   hintText:
-                      t?.translate('cancel_reason_hint') ??
-                      'Enter reason here...',
-                  hintStyle: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: Colors.grey[400],
-                  ),
+                      t?.translate('cancel_reason_hint') ?? 'Enter reason here...',
+                  hintStyle:
+                      GoogleFonts.poppins(fontSize: 14, color: Colors.grey[400]),
                   filled: true,
                   fillColor: const Color(0xFFF8FAFC),
                   border: OutlineInputBorder(
@@ -1211,8 +1402,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                             _currentOrder.id.toString(),
                             reason.isEmpty ? null : reason,
                           ),
-                          errorMessage:
-                              t?.translate('order_cancelled_fail') ??
+                          errorMessage: t?.translate('order_cancelled_fail') ??
                               'Failed to cancel order. Please try again.',
                           onSuccess: () {
                             if (!mounted) return;
@@ -1249,8 +1439,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         ),
       ),
     );
-
-    reasonController.dispose();
   }
 
   Future<void> _handleMarkReadyForPickup() async {
@@ -1330,107 +1518,99 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         _handleBack();
       },
       child: Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
         backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: _handleBack,
-          ),
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'MT-${_currentOrder.lastOrderNo}',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF1E293B),
-                ),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: _handleBack,
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'MT-${_currentOrder.lastOrderNo}',
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF1E293B),
               ),
-              _currentOrder.status == 'CANCELED'
-                  ? Text(
-                      _currentOrder.statusName,
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFFEF4444),
-                      ),
-                    )
-                  : GradientText(
-                      _currentOrder.statusName,
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
+            ),
+            _currentOrder.status == 'CANCELED' 
+                ? Text(
+                    _currentOrder.statusName,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFFEF4444),
                     ),
-            ],
-          ),
-          actions: [
-            if (_showPickupScanAction) const OrderQrScanIcon(),
-            const SizedBox(width: 8),
+                  )
+                : GradientText(
+                    _currentOrder.statusName,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
           ],
         ),
-        body: _isFirstLoading
-            ? _buildSkeletonDetail()
-            : AnimatedOpacity(
-                duration: const Duration(milliseconds: 300),
-                opacity: (_isSubmitting || _isRefreshing) ? 0.6 : 1.0,
+        actions: [
+          if (_showPickupScanAction) const OrderQrScanIcon(),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: _isFirstLoading 
+          ? _buildSkeletonDetail()
+          : AnimatedOpacity(
+              duration: const Duration(milliseconds: 300),
+              opacity: _isUpdating ? 0.6 : 1.0,
+        child: Column(
+          children: [
+            // Fixed Header Section (Info + Status)
+            Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildCustomerSection(),
+                        const SizedBox(height: 16),
+                        _buildAddressSection(context),
+                      ],
+                    ),
+                  ),
+                  _buildStickyProgress(),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Fixed Header Section (Info + Status)
-                    Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        border: Border(
-                          bottom: BorderSide(
-                            color: Color(0xFFE2E8F0),
-                            width: 1,
-                          ),
-                        ),
-                      ),
+                    const SizedBox(height: 16),
+                    // Items Ordered (Padded)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Column(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildCustomerSection(),
-                                const SizedBox(height: 16),
-                                _buildAddressSection(context),
-                              ],
-                            ),
-                          ),
-                          _buildStickyProgress(),
+                          _buildItemsSection(),
+                          const SizedBox(height: 24),
+                          const Divider(color: Color(0xFFF1F5F9), thickness: 1.5),
                         ],
                       ),
                     ),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 16),
-                            // Items Ordered (Padded)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                              ),
-                              child: Column(
-                                children: [
-                                  _buildItemsSection(),
-                                  const SizedBox(height: 24),
-                                  const Divider(
-                                    color: Color(0xFFF1F5F9),
-                                    thickness: 1.5,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
                             // Confirmation Form (Full Width - it has its own internal padding)
                             if (_currentOrder.status == 'PENDING' ||
@@ -1489,56 +1669,48 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                       _currentOrder.status == 'CANCELED')
                                     const SizedBox(height: 16),
 
-                                  // Payment Slip Section
-                                  if (_currentOrder.paymentSlipUrl != null) ...[
-                                    _buildPaymentSlipSection(),
-                                    const SizedBox(height: 16),
-                                  ],
-
-                                  // Order Modifications
-                                  if (_currentOrder
-                                      .modifications
-                                      .isNotEmpty) ...[
-                                    _buildModificationsSection(),
-                                    const SizedBox(height: 12),
-                                  ],
-
-                                  // Estimated Time
-                                  if (_currentOrder.estimatedDeliveryTime !=
-                                          null &&
-                                      _currentOrder
-                                          .estimatedDeliveryTime!
-                                          .isNotEmpty &&
-                                      _currentOrder.status != 'CANCELED') ...[
-                                    _buildEstimatedTimeBox(),
-                                    const SizedBox(height: 24),
-                                  ],
+                          // Payment Slip Section
+                          if (_currentOrder.paymentSlipUrl != null) ...[
+                            _buildPaymentSlipSection(),
+                            const SizedBox(height: 16),
+                          ],
+                          
+                          // Order Modifications
+                          if (_currentOrder.modifications.isNotEmpty) ...[
+                            _buildModificationsSection(),
+                            const SizedBox(height: 12),
+                          ],
+                          
+                          // Estimated Time
+                          if (_currentOrder.estimatedDeliveryTime != null && _currentOrder.estimatedDeliveryTime!.isNotEmpty && _currentOrder.status != 'CANCELED') ...[
+                            _buildEstimatedTimeBox(),
+                            const SizedBox(height: 24),
+                          ],
 
                                   // Payment Summary
                                   _buildPaymentSummary(),
                                   const SizedBox(height: 32),
 
-                                  // Calculate delivery fee box (hidden for DELIVERED & CANCELLED)
-                                  if (_currentOrder.status != 'CANCELED' &&
-                                      _currentOrder.status != 'DELIVERED') ...[
-                                    _buildDeliveryCalculator(),
-                                    const SizedBox(height: 40),
-                                  ],
-                                ],
-                              ),
-                            ),
+                          // Calculate delivery fee box (hidden for DELIVERED & CANCELLED)
+                          if (_currentOrder.status != 'CANCELED' && _currentOrder.status != 'DELIVERED') ...[
+                            _buildDeliveryCalculator(),
+                            const SizedBox(height: 40),
                           ],
-                        ),
+                        ],
                       ),
                     ),
-                    // Bottom Action Buttons
-                    _buildBottomActionButtons(),
                   ],
                 ),
               ),
+            ),
+            // Bottom Action Buttons
+            _buildBottomActionButtons(),
+          ],
+        ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildSkeletonDetail() {
     return SingleChildScrollView(
@@ -1626,7 +1798,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(color: Colors.white),
+      decoration: BoxDecoration(
+          color: Colors.white,
+        ),
       child: _buildAnimatedProgress(),
     );
   }
@@ -1658,24 +1832,20 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0FDF4),
+        color: const Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFDCFCE7)),
+        border: Border.all(color: const Color(0xFFFEF3C7)),
       ),
       child: Row(
         children: [
-          const Icon(
-            PhosphorIconsRegular.timer,
-            color: Color(0xFF16A34A),
-            size: 20,
-          ),
+          const Icon(PhosphorIconsRegular.timer, color: Color(0xFF16A34A), size: 20),
           const SizedBox(width: 8),
           Text(
             'Est Waiting Time: ',
             style: GoogleFonts.poppins(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF16A34A),
+              color: const Color(0xFFD97706),
             ),
           ),
           Text(
@@ -1683,7 +1853,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             style: GoogleFonts.poppins(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF15803D),
+              color: const Color(0xFFB45309),
             ),
           ),
         ],
@@ -1806,11 +1976,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         ),
         _buildCircularIcon(PhosphorIconsFill.phone, onTap: _callCustomer),
         const SizedBox(width: 12),
-        _buildCircularIcon(
-          PhosphorIconsFill.chatCircleDots,
-          onTap: _openCustomerChat,
-          badgeCount: _chatUnreadCount,
-        ),
+        _buildCircularIcon(PhosphorIconsFill.chatCircleDots,
+            onTap: _openCustomerChat, badgeCount: _chatUnreadCount),
         const SizedBox(width: 12),
         GestureDetector(
           onTap: () {
@@ -2382,25 +2549,55 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
+  Widget _buildNoImageBox() {
+    return Container(
+      width: 54,
+      height: 54,
+      color: const Color(0xFFF1F5F9),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            PhosphorIconsRegular.image,
+            size: 18,
+            color: Color(0xFFCBD5E1),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'No Image',
+            style: GoogleFonts.poppins(
+              fontSize: 8,
+              color: const Color(0xFF94A3B8),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildOrderItem(OrderItemModel item, {bool isLast = false}) {
     return Padding(
       padding: EdgeInsets.only(bottom: isLast ? 0 : 20),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: const Color(0xFFFEE2E2),
-              image: item.menuItemImageUrl != null
-                  ? DecorationImage(
-                      image: NetworkImage(item.menuItemImageUrl!),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
-            ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: item.menuItemImageUrl != null && item.menuItemImageUrl!.isNotEmpty
+                ? CachedNetworkImage(
+                    imageUrl: item.menuItemImageUrl!,
+                    width: 54,
+                    height: 54,
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) => Container(
+                      width: 54,
+                      height: 54,
+                      color: const Color(0xFFF1F5F9),
+                    ),
+                    errorWidget: (_, __, ___) => _buildNoImageBox(),
+                  )
+                : _buildNoImageBox(),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -2509,8 +2706,63 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             color: const Color(0xFF1E293B),
           ),
         ),
+        if (_currentOrder.paymentSlipUrl != null) ...[
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              if (_currentOrder.paymentMethodIconUrl != null)
+                Image.network(
+                  _currentOrder.paymentMethodIconUrl!,
+                  width: 24,
+                  height: 24,
+                  fit: BoxFit.contain,
+                )
+              else
+                const Icon(PhosphorIconsRegular.qrCode, size: 20, color: Color(0xFF64748B)),
+              const SizedBox(width: 8),
+              Text(
+                _currentOrder.paymentMethodName ?? 'QR Prompt Pay',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: _currentOrder.paymentSlipUrl!.startsWith('data:image') 
+              ? Image.memory(
+                  base64Decode(_currentOrder.paymentSlipUrl!.contains(',') ? _currentOrder.paymentSlipUrl!.split(',').last : _currentOrder.paymentSlipUrl!),
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                )
+              : Image.network(
+                  _currentOrder.paymentSlipUrl!,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      height: 200,
+                      color: const Color(0xFFF1F5F9),
+                      child: const Center(child: CustomLoadingIndicator(size: 24)),
+                    );
+                  },
+                ),
+          ),
+        ],
         const SizedBox(height: 16),
         _buildSummaryRow('Food Price', '฿ ${_currentOrder.foodPrice.toInt()}'),
+        const SizedBox(height: 12),
+        _buildSummaryRow(
+          'Tax (7%)',
+          _currentOrder.displayTaxAmount.isNotEmpty
+              ? _currentOrder.displayTaxAmount
+              : '฿ ${_currentOrder.resolvedTaxAmount.toInt()}',
+        ),
         const SizedBox(height: 12),
         Row(
           children: [
@@ -2570,7 +2822,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             Row(
               children: [
                 Text(
-                  '฿ ${(_currentOrder.foodPrice + _currentOrder.deliveryFee).toInt()}',
+                  _currentOrder.displayTotalAmount.isNotEmpty
+                      ? _currentOrder.displayTotalAmount
+                      : '฿ ${_currentOrder.checkoutTotal.toInt()}',
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -2651,7 +2905,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Widget _buildLaunchButton(String name, String iconPath, Color color) {
     return InkWell(
-      onTap: _showDemoDialog,
+      onTap: () async {
+        final url = Uri.parse('${name.toLowerCase()}://');
+        try {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+        } catch (e) {
+          _showAppNotInstalledSnackbar(context, name);
+        }
+      },
       borderRadius: BorderRadius.circular(12),
       child: Column(
         children: [
@@ -2708,7 +2969,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         break;
       case 'AWAITING_APPROVAL':
         mainButtonText = 'Confirm Payment';
-        onPressed = _isSubmitting ? null : _handleVerifyPayment;
+        onPressed = _isUpdating ? null : _handleVerifyPayment;
         break;
       case 'PAYMENT_VERIFIED':
         mainButtonText = 'Accept order to cook';
@@ -2786,8 +3047,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 ),
                 const SizedBox(width: 12),
               ],
-              if (_currentOrder.status == 'PAYMENT_VERIFIED' ||
-                  _currentOrder.status == 'AWAITING_APPROVAL') ...[
+              if (_currentOrder.status == 'PAYMENT_VERIFIED' || _currentOrder.status == 'AWAITING_APPROVAL') ...[
                 Expanded(
                   child: PrimaryGradientButton(
                     onPressed: _isSubmitting ? null : _handleRequestSlip,
@@ -2987,6 +3247,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               shape: ImagePickerShape.rectangle,
               width: 120,
               height: 120,
+              themeGradient: AppColors.primaryGradient,
               pickedFile: _proofImage,
               onImageSelected: (file) => setState(() => _proofImage = file),
               onImageRemoved: () => setState(() => _proofImage = null),
@@ -3084,6 +3345,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   validator: (value) =>
                       (value == null || value.isEmpty) ? 'Required' : null,
+                  description: 'Set the estimated preparation time for the order.',
+                  placeholder: 'e.g. 15',
                 ),
               ] else ...[
                 Row(
@@ -3242,6 +3505,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           return 'Invalid number';
                         return null;
                       },
+                      description: 'Enter the estimated delivery fee for this order.',
+                      placeholder: 'e.g. 50',
+                      showDeliveryApps: true,
+                      suffixText: 'THB',
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -3251,8 +3518,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       _waitingTimeMinutesController,
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      validator: (value) =>
-                          (value == null || value.isEmpty) ? 'Required' : null,
+                      validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
                     ),
                   ),
                 ],
@@ -3280,6 +3546,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           return 'Invalid number';
                         return null;
                       },
+                      description: 'Enter the delivery fee for this order.',
+                      placeholder: 'e.g. 50',
+                      showDeliveryApps: true,
+                      suffixText: 'THB',
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -3289,8 +3559,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       _waitingTimeMinutesController,
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      validator: (value) =>
-                          (value == null || value.isEmpty) ? 'Required' : null,
+                      validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
                     ),
                   ),
                 ],
@@ -3300,8 +3569,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ] else if (_currentOrder.status == 'COOKING' &&
                 _currentOrder.isDeliveryFulfillment) ...[
               _buildDriverPicker(),
-              const SizedBox(height: 12),
-              _buildInputField('Tracking URL', _deliveryTrackingUrlController),
+              if (_selectedDriverId == null) ...[
+                const SizedBox(height: 12),
+                _buildInputField(
+                  'Tracking URL',
+                  _deliveryTrackingUrlController,
+                  isNumeric: false,
+                  modalTitle: 'Delivery Tracking Link ( Bolt , Grab )',
+                  description: 'Add a live tracking link so the customer can follow their order in real-time.',
+                  fieldLabel: 'Link from Bolt, Grab',
+                  placeholder: 'https://tracking-service.com/...',
+                ),
+              ],
             ] else if (_currentOrder.status == 'COOKING' &&
                 _currentOrder.isPickupFulfillment) ...[
               Container(
@@ -3347,13 +3626,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
-  Widget _buildInputField(
-    String label,
-    TextEditingController controller, {
-    TextInputType? keyboardType,
-    String? Function(String?)? validator,
-    List<TextInputFormatter>? inputFormatters,
-  }) {
+  Widget _buildInputField(String label, TextEditingController controller, {TextInputType? keyboardType, String? Function(String?)? validator, List<TextInputFormatter>? inputFormatters}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -3368,9 +3641,31 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         const SizedBox(height: 6),
         TextFormField(
           controller: controller,
-          keyboardType: keyboardType,
+          readOnly: true,
+          onTap: () async {
+            final result = await showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => _FullScreenTextInput(
+                label: modalTitle ?? label,
+                initialValue: controller.text,
+                keyboardType: keyboardType,
+                inputFormatters: inputFormatters,
+                isNumeric: isNumeric,
+                description: description,
+                fieldLabel: fieldLabel,
+                placeholder: placeholder,
+                showDeliveryApps: showDeliveryApps,
+                suffixText: suffixText,
+              ),
+            );
+            if (result != null) {
+              controller.text = result as String;
+              _validateFormState();
+            }
+          },
           validator: validator,
-          inputFormatters: inputFormatters,
           style: GoogleFonts.poppins(fontSize: 14),
           decoration: InputDecoration(
             filled: true,
@@ -3470,14 +3765,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ),
             Row(
               children: [
-                const Icon(
-                  PhosphorIconsRegular.qrCode,
-                  size: 20,
-                  color: Color(0xFF64748B),
-                ),
+                const Icon(PhosphorIconsRegular.qrCode, size: 20, color: Color(0xFF64748B)),
                 const SizedBox(width: 8),
                 Text(
-                  'QR Prompt Pay',
+                  _currentOrder.paymentMethodName ?? 'QR Prompt Pay',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -3577,6 +3868,308 @@ class ThousandsSeparatorInputFormatter extends TextInputFormatter {
       text: newText,
       selection: TextSelection.collapsed(
         offset: newText.length - selectionIndex,
+      ),
+    );
+  }
+}
+
+class _StatusHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  final double height;
+
+  _StatusHeaderDelegate({required this.child, required this.height});
+
+  @override
+  double get minExtent => height;
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return SizedBox.expand(child: child);
+  }
+
+  @override
+  bool shouldRebuild(covariant _StatusHeaderDelegate oldDelegate) {
+    return oldDelegate.height != height || oldDelegate.child != child;
+  }
+}
+
+class _FullScreenTextInput extends StatefulWidget {
+  final String label;
+  final String initialValue;
+  final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
+  final bool isNumeric;
+  final String? description;
+  final String? fieldLabel;
+  final String? placeholder;
+  final bool showDeliveryApps;
+  final String? suffixText;
+
+  const _FullScreenTextInput({
+    required this.label,
+    required this.initialValue,
+    this.keyboardType,
+    this.inputFormatters,
+    this.isNumeric = true,
+    this.description,
+    this.fieldLabel,
+    this.placeholder,
+    this.showDeliveryApps = false,
+    this.suffixText,
+  });
+
+  @override
+  State<_FullScreenTextInput> createState() => _FullScreenTextInputState();
+}
+
+class _FullScreenTextInputState extends State<_FullScreenTextInput> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _increment() {
+    String text = _controller.text.replaceAll(',', '');
+    int? val = int.tryParse(text);
+    if (val != null) {
+      val += 1;
+      _controller.text = val.toString();
+    } else {
+      _controller.text = "1";
+    }
+  }
+
+  void _decrement() {
+    String text = _controller.text.replaceAll(',', '');
+    int? val = int.tryParse(text);
+    if (val != null && val > 0) {
+      val -= 1;
+      _controller.text = val.toString();
+    } else {
+      _controller.text = "0";
+    }
+  }
+
+  Widget _buildCircleButton(IconData icon, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(32),
+      child: Container(
+        width: 64,
+        height: 64,
+        decoration: const BoxDecoration(
+          color: Color(0xFFF1F5F9),
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: Icon(icon, color: const Color(0xFF475569), size: 32),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAppIcon({
+    required String name,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              name,
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Open $name',
+            style: GoogleFonts.poppins(
+              color: const Color(0xFF64748B),
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.5,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.label,
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF1E293B),
+              ),
+            ),
+            if (widget.description != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                widget.description!,
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+            ],
+            const SizedBox(height: 24),
+            if (widget.showDeliveryApps) ...[
+              Text(
+                'Calculate delivery fee',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _buildAppIcon(
+                    name: 'Bolt',
+                    color: const Color(0xFF32C671),
+                    onTap: () async {
+                      final url = Uri.parse('bolt://');
+                      try {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      } catch (e) {
+                        _showAppNotInstalledSnackbar(context, 'Bolt');
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 24),
+                  _buildAppIcon(
+                    name: 'Grab',
+                    color: const Color(0xFF00B14F),
+                    onTap: () async {
+                      final url = Uri.parse('grab://');
+                      try {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      } catch (e) {
+                        _showAppNotInstalledSnackbar(context, 'Grab');
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+            ],
+            if (widget.fieldLabel != null) ...[
+              Text(
+                widget.fieldLabel!,
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+            TextField(
+              controller: _controller,
+              keyboardType: widget.keyboardType,
+              inputFormatters: widget.inputFormatters,
+              autofocus: true,
+              style: GoogleFonts.poppins(fontSize: 14),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: const Color(0xFFF8FAFC),
+                hintText: widget.placeholder ?? 'Enter ${widget.label}',
+                hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
+                suffixText: widget.suffixText,
+                suffixStyle: GoogleFonts.poppins(color: const Color(0xFF64748B), fontWeight: FontWeight.w500),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.primary),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (widget.fieldLabel != null || widget.description != null) // Only show paste for tracking url or similar
+              GestureDetector(
+                onTap: () async {
+                  final data = await Clipboard.getData('text/plain');
+                  if (data?.text != null) {
+                    _controller.text = data!.text!;
+                  }
+                },
+                child: Row(
+                  children: [
+                    const Icon(PhosphorIconsRegular.clipboard, color: Color(0xFFE11D48), size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Paste from Clipboard',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFFE11D48),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const Spacer(),
+            PrimaryGradientButton(
+              onPressed: () {
+                Navigator.pop(context, _controller.text);
+              },
+              text: 'Save',
+              height: 56,
+              borderRadius: 16,
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/core/utils/app_logger.dart';
@@ -9,6 +9,7 @@ import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart'
 import 'package:my_shop/features/notifications/presentation/screens/notification_permission_screen.dart';
 import 'package:my_shop/features/profile/data/services/shop_service.dart';
 import 'package:my_shop/features/profile/presentation/screens/global_shop_selection_page.dart';
+import 'package:my_shop/features/notifications/presentation/screens/system_alert_permission_screen.dart';
 
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
@@ -63,6 +64,20 @@ class _AuthWrapperState extends State<AuthWrapper> {
       }
     } else {
       await StorageService.instance.setNotificationHandled(true);
+    }
+    
+    if (Platform.isAndroid) {
+      final systemAlertHandled = await StorageService.instance.isSystemAlertHandled();
+      if (!systemAlertHandled) {
+        return const SystemAlertPermissionScreen();
+      }
+    }
+    
+    if (Platform.isAndroid) {
+      final systemAlertHandled = await StorageService.instance.isSystemAlertHandled();
+      if (!systemAlertHandled) {
+        return const SystemAlertPermissionScreen();
+      }
     }
     
     return const MainNavigationScreen();

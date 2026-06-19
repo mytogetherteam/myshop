@@ -299,6 +299,8 @@ class _RiderFormSheetState extends State<RiderFormSheet> {
       'name': _nameController.text,
       'phone': _phoneController.text,
       'vehicleNo': _licensePlateController.text,
+      'status': true,
+      'isActive': true,
     };
 
     final XFile? imageFile = _pickedImage;

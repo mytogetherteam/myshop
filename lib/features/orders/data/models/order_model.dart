@@ -1,4 +1,5 @@
 import 'package:my_shop/core/utils/file_url_util.dart';
+import 'package:my_shop/core/utils/order_tax.dart';
 
 String? _resolveUrl(dynamic value) => FileUrlUtil.resolve(value);
 
@@ -37,6 +38,8 @@ class OrderModel {
   final double deliveryFee;
   final String displayDeliveryFee;
   final double itemPrice;
+  final double taxAmount;
+  final String displayTaxAmount;
   final double totalAmount;
   final String displayTotalAmount;
   final double previousTotalAmount;
@@ -50,6 +53,8 @@ class OrderModel {
   final int? driverId;
   final String? trackingUrl;
   final String? proofPhotoUrl;
+  final String? paymentMethodName;
+  final String? paymentMethodIconUrl;
   final List<OrderReviseItemModel> reviseItems;
   final List<OrderDriverModel> shopDeliveryDrivers;
   final int queueNo;
@@ -89,6 +94,8 @@ class OrderModel {
     this.deliveryFee = 0.0,
     this.displayDeliveryFee = '',
     this.itemPrice = 0.0,
+    this.taxAmount = 0.0,
+    this.displayTaxAmount = '',
     this.totalAmount = 0.0,
     this.displayTotalAmount = '',
     this.previousTotalAmount = 0.0,
@@ -102,6 +109,8 @@ class OrderModel {
     this.driverId,
     this.trackingUrl,
     this.proofPhotoUrl,
+    this.paymentMethodName,
+    this.paymentMethodIconUrl,
     this.reviseItems = const [],
     this.shopDeliveryDrivers = const [],
     this.queueNo = 0,
@@ -183,6 +192,8 @@ class OrderModel {
                         ((item['quantity'] as num?)?.toInt() ?? 0),
               )
             : 0.0);
+    final taxAmount = (json['taxAmount'] as num?)?.toDouble() ??
+        OrderTax.calculateTax(itemPrice);
     final totalAmount = (json['totalAmount'] as num?)?.toDouble() ?? 0.0;
 
     List<OrderReviseItemModel> reviseItemsList = [];
@@ -222,6 +233,9 @@ class OrderModel {
 
     final waitingMins = json['waitingTimeMinutes'] as int? ?? 0;
 
+    final shopPaymentMethodMap = json['shopPaymentMethod'] as Map?;
+    final paymentMethodMap = shopPaymentMethodMap?['paymentMethod'] as Map? ?? shopPaymentMethodMap;
+
     return OrderModel(
       id: (json['id'] ?? '').toString(),
       lastOrderNo: json['lastOrderNo']?.toString() ?? json['id']?.toString() ?? '',
@@ -238,6 +252,9 @@ class OrderModel {
       displayDeliveryFee: json['displayDeliveryFee']?.toString() ??
           (deliveryFee > 0 ? '฿${deliveryFee.toInt()}' : '฿ 0'),
       itemPrice: itemPrice,
+      taxAmount: taxAmount,
+      displayTaxAmount: json['displayTaxAmount']?.toString() ??
+          (taxAmount > 0 ? '฿${taxAmount.toInt()}' : '฿ 0'),
       totalAmount: totalAmount,
       displayTotalAmount: json['displayTotalAmount']?.toString() ??
           '฿${totalAmount.toInt()}',
@@ -258,6 +275,8 @@ class OrderModel {
       driverId: json['driverId'] as int? ?? driver?['id'] as int?,
       trackingUrl: json['trackingUrl']?.toString() ?? json['deliveryTrackingUrl']?.toString(),
       proofPhotoUrl: _resolveUrl(json['proofPhotoUrl']),
+      paymentMethodName: paymentMethodMap?['name']?.toString(),
+      paymentMethodIconUrl: _resolveUrl(paymentMethodMap?['iconUrl']),
       reviseItems: reviseItemsList,
       shopDeliveryDrivers: driversList,
       queueNo: json['queueNo'] as int? ?? 0,
@@ -311,6 +330,16 @@ class OrderModel {
       itemPrice > 0
           ? itemPrice
           : items.fold(0.0, (sum, item) => sum + (item.price * item.quantity));
+
+  double get resolvedTaxAmount =>
+      taxAmount > 0 ? taxAmount : OrderTax.calculateTax(foodPrice);
+
+  double get checkoutTotal => totalAmount > 0
+      ? totalAmount
+      : OrderTax.calculateTotal(
+          itemSubtotal: foodPrice,
+          deliveryFee: deliveryFee,
+        );
 
   String get deliveryAddressDetail => deliveryAddress?.address ?? '-';
   String get deliveryAddressTitle =>

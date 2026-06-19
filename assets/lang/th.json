@@ -44,6 +44,7 @@
   "order_cancelled": "คำสั่งซื้อถูกยกเลิก",
   "view_details": "ดูรายละเอียด",
   "check_payment": "ตรวจสอบการชำระเงิน",
+  "accept_order_to_cook": "รับออเดอร์เพื่อทำอาหาร",
   "waiting_payment": "รอการชำระเงิน",
   "picked_up_rider": "ไรเดอร์รับของแล้ว",
   "check_delivery": "ตรวจสอบการจัดส่ง",

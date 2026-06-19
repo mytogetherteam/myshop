@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -15,8 +15,10 @@ class AppPermissionsPage extends StatefulWidget {
   State<AppPermissionsPage> createState() => _AppPermissionsPageState();
 }
 
-class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBindingObserver {
+class _AppPermissionsPageState extends State<AppPermissionsPage>
+    with WidgetsBindingObserver {
   PermissionStatus _notificationStatus = PermissionStatus.denied;
+  PermissionStatus _systemAlertWindowStatus = PermissionStatus.denied;
   bool _isLoading = true;
 
   @override
@@ -43,10 +45,12 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
   Future<void> _checkPermissions({bool silent = false}) async {
     if (!silent) setState(() => _isLoading = true);
     final status = await Permission.notification.status;
-    
+    final alertStatus = await Permission.systemAlertWindow.status;
+
     if (mounted) {
       setState(() {
         _notificationStatus = status;
+        _systemAlertWindowStatus = alertStatus;
         _isLoading = false;
       });
     }
@@ -54,7 +58,8 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
 
   Future<void> _requestNotificationPermission() async {
     // If it's already granted, or permanently denied, route to OS settings.
-    if (_notificationStatus.isGranted || _notificationStatus.isPermanentlyDenied) {
+    if (_notificationStatus.isGranted ||
+        _notificationStatus.isPermanentlyDenied) {
       await openAppSettings();
     } else {
       final status = await Permission.notification.request();
@@ -63,6 +68,21 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
       }
       if (mounted) {
         setState(() => _notificationStatus = status);
+      }
+    }
+  }
+
+  Future<void> _requestSystemAlertWindowPermission() async {
+    if (_systemAlertWindowStatus.isGranted ||
+        _systemAlertWindowStatus.isPermanentlyDenied) {
+      await openAppSettings();
+    } else {
+      final status = await Permission.systemAlertWindow.request();
+      if (status.isPermanentlyDenied) {
+        await openAppSettings();
+      }
+      if (mounted) {
+        setState(() => _systemAlertWindowStatus = status);
       }
     }
   }
@@ -100,44 +120,62 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
       appBar: BackTitleAppBar(
         title: t?.translate('app_permissions') ?? 'App Permissions',
       ),
-      body: _isLoading 
-        ? const Center(child: CupertinoActivityIndicator())
-        : SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  t?.translate('manage_access') ?? 'Manage Access',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1E293B),
+      body: _isLoading
+          ? const Center(child: CupertinoActivityIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    t?.translate('manage_access') ?? 'Manage Access',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1E293B),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  t?.translate('control_permissions_desc') ?? 'Control what features this app has access to. You can easily enable or disable them in your device settings.',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: const Color(0xFF64748B),
-                    height: 1.5,
+                  const SizedBox(height: 8),
+                  Text(
+                    t?.translate('control_permissions_desc') ??
+                        'Control what features this app has access to. You can easily enable or disable them in your device settings.',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: const Color(0xFF64748B),
+                      height: 1.5,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                
-                // Notifications Permission Card
-                _buildPermissionCard(
-                  icon: PhosphorIconsRegular.bellRinging,
-                  title: t?.translate('notifications') ?? 'Notifications',
-                  description: t?.translate('notifications_desc') ?? 'Receive real-time alerts for new orders, order statuses, and shop updates.',
-                  status: _notificationStatus,
-                  onActionPressed: _requestNotificationPermission,
-                ),
-                
-              ],
+                  const SizedBox(height: 24),
+
+                  // Notifications Permission Card
+                  _buildPermissionCard(
+                    icon: PhosphorIconsRegular.bellRinging,
+                    title: t?.translate('notifications') ?? 'Notifications',
+                    description:
+                        t?.translate('notifications_desc') ??
+                        'Receive real-time alerts for new orders, order statuses, and shop updates.',
+                    status: _notificationStatus,
+                    onActionPressed: _requestNotificationPermission,
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // System Alert Window Permission Card (For Full Screen Intent / Pop-ups)
+                  if (Platform.isAndroid)
+                    _buildPermissionCard(
+                      icon: PhosphorIconsRegular.deviceMobileCamera,
+                      title:
+                          t?.translate('display_over_apps') ??
+                          'Display Over Apps',
+                      description:
+                          t?.translate('display_over_apps_desc') ??
+                          'Required to wake up the screen and show new orders like a phone call.',
+                      status: _systemAlertWindowStatus,
+                      onActionPressed: _requestSystemAlertWindowPermission,
+                    ),
+                ],
+              ),
             ),
-        ),
     );
   }
 
@@ -150,7 +188,7 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
   }) {
     final bool isGranted = status.isGranted;
     final t = AppLocalizations.of(context);
-    
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -174,13 +212,17 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isGranted ? const Color(0xFFFFF1F2) : const Color(0xFFF1F5F9),
+                  color: isGranted
+                      ? const Color(0xFFFFF1F2)
+                      : const Color(0xFFF1F5F9),
                   shape: BoxShape.circle,
                 ),
                 child: PhosphorIcon(
                   icon,
                   size: 24,
-                  color: isGranted ? const Color(0xFFED3973) : const Color(0xFF94A3B8),
+                  color: isGranted
+                      ? const Color(0xFFED3973)
+                      : const Color(0xFF94A3B8),
                 ),
               ),
               const SizedBox(width: 16),
@@ -198,26 +240,40 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
                     ),
                     const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: isGranted ? const Color(0xFFDCFCE7) : const Color(0xFFF1F5F9),
+                        color: isGranted
+                            ? const Color(0xFFDCFCE7)
+                            : const Color(0xFFF1F5F9),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            isGranted ? PhosphorIconsFill.checkCircle : PhosphorIconsFill.xCircle,
+                            isGranted
+                                ? PhosphorIconsFill.checkCircle
+                                : PhosphorIconsFill.xCircle,
                             size: 14,
-                            color: isGranted ? const Color(0xFF15803D) : const Color(0xFF64748B),
+                            color: isGranted
+                                ? const Color(0xFF15803D)
+                                : const Color(0xFF64748B),
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            isGranted ? (t?.translate('allowed') ?? 'Allowed') : (t?.translate('not_allowed') ?? 'Not Allowed'),
+                            isGranted
+                                ? (t?.translate('allowed') ?? 'Allowed')
+                                : (t?.translate('not_allowed') ??
+                                      'Not Allowed'),
                             style: GoogleFonts.poppins(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: isGranted ? const Color(0xFF15803D) : const Color(0xFF475569),
+                              color: isGranted
+                                  ? const Color(0xFF15803D)
+                                  : const Color(0xFF475569),
                             ),
                           ),
                         ],
@@ -242,7 +298,9 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
             width: double.infinity,
             child: PrimaryGradientButton(
               onPressed: onActionPressed,
-              text: isGranted ? (t?.translate('open_settings') ?? 'Open Settings') : (t?.translate('allow_access') ?? 'Allow Access'),
+              text: isGranted
+                  ? (t?.translate('open_settings') ?? 'Open Settings')
+                  : (t?.translate('allow_access') ?? 'Allow Access'),
               height: 48,
               borderRadius: 12,
             ),

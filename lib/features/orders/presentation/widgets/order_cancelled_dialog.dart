@@ -2,50 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/features/orders/data/models/order_model.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import 'dart:async';
-import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 
-class NewOrderDialog extends StatefulWidget {
+class OrderCancelledDialog extends StatelessWidget {
   final OrderModel order;
-  final VoidCallback onViewOrder;
+  final VoidCallback onClose;
 
-  const NewOrderDialog({
+  const OrderCancelledDialog({
     super.key,
     required this.order,
-    required this.onViewOrder,
+    required this.onClose,
   });
-
-  @override
-  State<NewOrderDialog> createState() => _NewOrderDialogState();
-}
-
-class _NewOrderDialogState extends State<NewOrderDialog> {
-  StreamSubscription? _wsSubscription;
-
-  @override
-  void initState() {
-    super.initState();
-    _wsSubscription = WebSocketService().orderUpdates.listen((event) {
-      final orderId = event['orderId']?.toString() ?? event['order']?['id']?.toString();
-      final status = event['order']?['status']?.toString() ?? event['status']?.toString();
-      
-      if (orderId == widget.order.id.toString() && status?.toUpperCase() == 'CANCELED') {
-        if (mounted) {
-          final route = ModalRoute.of(context);
-          if (route != null) {
-            Navigator.of(context).removeRoute(route);
-          }
-        }
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _wsSubscription?.cancel();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +32,7 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
                 width: double.infinity,
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFFF06292), Color(0xFFFF8A65)],
+                    colors: [Color(0xFFEF4444), Color(0xFFF87171)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -105,7 +72,11 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
                     ],
                   ),
                   child: const Center(
-                    child: _RingingBell(),
+                    child: Icon(
+                      PhosphorIconsFill.xCircle,
+                      color: Color(0xFFEF4444),
+                      size: 36,
+                    ),
                   ),
                 ),
               ),
@@ -117,7 +88,7 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
             child: Column(
               children: [
                 Text(
-                  'New Order Received!',
+                  'Order Cancelled',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
                     fontSize: 22,
@@ -128,7 +99,7 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '#${widget.order.lastOrderNo}',
+                  '#${order.lastOrderNo}',
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -158,7 +129,7 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
                     ),
                     const SizedBox(width: 8),
                     Icon(
-                      widget.order.isDeliveryFulfillment
+                      order.isDeliveryFulfillment
                           ? PhosphorIconsRegular.moped
                           : PhosphorIconsRegular.shoppingBag,
                       size: 16,
@@ -166,7 +137,7 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      widget.order.isDeliveryFulfillment ? 'Delivery' : 'Pickup',
+                      order.isDeliveryFulfillment ? 'Delivery' : 'Pickup',
                       style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -183,9 +154,9 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
                   child: ListView.builder(
                     shrinkWrap: true,
                     padding: EdgeInsets.zero,
-                    itemCount: widget.order.items.length,
+                    itemCount: order.items.length,
                     itemBuilder: (context, index) {
-                      final item = widget.order.items[index];
+                      final item = order.items[index];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: Row(
@@ -244,21 +215,34 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
                       ),
                     ),
                     Text(
-                      widget.order.displayTotalAmount,
+                      order.displayTotalAmount,
                       style: GoogleFonts.poppins(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFFED3973),
+                        color: const Color(0xFFEF4444),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 24),
                 PrimaryGradientButton(
-                  onPressed: widget.onViewOrder,
-                  text: 'View Order',
+                  onPressed: onClose,
                   height: 56,
                   borderRadius: 16,
+                  gradient: const LinearGradient(
+                    colors: [Colors.white, Colors.white],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  child: Text(
+                    'Close',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
+                      color: const Color(0xFF1E293B),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 24),
               ],
@@ -281,51 +265,5 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
       PhosphorIconsRegular.brandy,
     ];
     return icons[index % icons.length];
-  }
-}
-
-class _RingingBell extends StatefulWidget {
-  const _RingingBell();
-
-  @override
-  State<_RingingBell> createState() => _RingingBellState();
-}
-
-class _RingingBellState extends State<_RingingBell> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 200),
-    )..repeat(reverse: true);
-
-    _animation = Tween<double>(begin: -0.15, end: 0.15).animate(_controller);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return Transform.rotate(
-          angle: _animation.value,
-          child: const Icon(
-            PhosphorIconsFill.bell,
-            color: Color(0xFFED3973),
-            size: 32,
-          ),
-        );
-      },
-    );
   }
 }

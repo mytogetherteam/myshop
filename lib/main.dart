@@ -12,6 +12,10 @@ import 'app.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
+  // Initialize NotificationService to create channels
+  await NotificationService().initialize();
+  // Manually show local notification to ensure sound plays even if data-only
+  await NotificationService().showLocalNotification(message);
 }
 
 void main() async {

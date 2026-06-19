@@ -238,6 +238,10 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           }
           _isLoadingData = false;
         });
+
+        if (widget.item != null && (widget.item?.imageUrl == null || widget.item!.imageUrl!.isEmpty)) {
+          Future.microtask(() => _showNoImageAlertBottomSheet());
+        }
       }
     } catch (e) {
       debugPrint('Error fetching data: $e');
@@ -1896,8 +1900,38 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
 
   Widget _buildImageUploadSection() {
     final existingUrl = widget.item?.imageUrl;
+    final hasNoImage = _pickedImage == null && (existingUrl == null || existingUrl.isEmpty);
 
-    return GestureDetector(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (hasNoImage) ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFEF2F2),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFFECACA)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline, color: Color(0xFFEF4444), size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Food items with images attract more customers. Consider uploading a photo.',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: const Color(0xFFEF4444),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        GestureDetector(
       onTap: _pickImage,
       child: Container(
         width: double.infinity,
@@ -1946,8 +1980,10 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                     )),
         ),
       ),
-    );
-  }
+    ),
+    ],
+  );
+}
 
   Future<void> _pickImage() async {
     final result = await ImageUploadService().pickFromGallery();
@@ -1986,6 +2022,104 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           SizedBox(height: 8),
           Skeleton(width: double.infinity, height: 50),
         ],
+      ),
+    );
+  }
+
+  void _showNoImageAlertBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 48,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE2E8F0),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFEF2F2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.image_not_supported_outlined,
+                color: Color(0xFFEF4444),
+                size: 32,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Missing Image',
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF1E293B),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Food items with images attract more customers. Consider uploading a photo for this item.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: const Color(0xFF64748B),
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: PrimaryGradientButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _pickImage();
+                },
+                text: 'Upload Image',
+                height: 56,
+                borderRadius: 16,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Text(
+                  'Maybe Later',
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF64748B),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }
