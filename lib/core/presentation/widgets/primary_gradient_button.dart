@@ -42,45 +42,50 @@ class PrimaryGradientButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(borderRadius),
           splashColor: Colors.white.withValues(alpha: 0.2),
           highlightColor: Colors.white.withValues(alpha: 0.1),
-          child: SizedBox(
-            width: double.infinity,
-            height: height,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: isLoading
-                  ? const Center(
-                      child: SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
+          child: Semantics(
+            button: true,
+            enabled: !isDisabled,
+            label: text,
+            child: SizedBox(
+              width: double.infinity,
+              height: height,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: isLoading
+                    ? const Center(
+                        child: SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
                         ),
-                      ),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Flexible(
-                          child: child ??
-                              Text(
-                                text ?? '',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.3,
-                                  color: Colors.white,
-                                  height: 1.0,
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: child ??
+                                Text(
+                                  text ?? '',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.3,
+                                    color: Colors.white,
+                                    height: 1.0,
+                                  ),
                                 ),
-                              ),
-                        ),
-                      ],
-                    ),
+                          ),
+                        ],
+                      ),
+              ),
             ),
           ),
         ),

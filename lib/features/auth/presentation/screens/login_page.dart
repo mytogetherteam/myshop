@@ -76,7 +76,8 @@ class _LoginPageState extends State<LoginPage>
 
       if (response.success) {
         WebSocketService().connect();
-        await NotificationService().registerDevice();
+        await NotificationService().initialize();
+        await NotificationService().ensurePushRegistration();
         if (!mounted) return;
         Navigator.of(context).pushReplacementNamed('/home');
       } else {

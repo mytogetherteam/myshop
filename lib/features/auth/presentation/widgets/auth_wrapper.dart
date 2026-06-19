@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
+import 'package:my_shop/core/notifications/notification_service.dart';
 import 'package:my_shop/core/utils/app_logger.dart';
 import 'package:my_shop/features/main_navigation/presentation/screens/main_navigation_screen.dart';
 import 'package:my_shop/features/auth/presentation/screens/login_page.dart';
@@ -65,9 +66,12 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
     if (kIsWeb) {
       final settings = await FirebaseMessaging.instance.getNotificationSettings();
-      if (settings.authorizationStatus == AuthorizationStatus.notDetermined) {
+      if (settings.authorizationStatus == AuthorizationStatus.notDetermined ||
+          settings.authorizationStatus == AuthorizationStatus.denied) {
         return const NotificationPermissionScreen();
       }
+      await NotificationService().initialize();
+      await NotificationService().ensurePushRegistration();
     }
     
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {

@@ -224,18 +224,11 @@ class _SuccessDialogState extends State<_SuccessDialog> with SingleTickerProvide
             PrimaryGradientButton(
               onPressed: () {
                 Navigator.pop(context);
-                if (widget.onDone != null) widget.onDone!();
+                widget.onDone?.call();
               },
+              text: 'Done',
               height: 54,
               borderRadius: 16,
-              child: Text(
-                'Done',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
             ),
           ],
         ),

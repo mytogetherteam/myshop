@@ -75,7 +75,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   StreamSubscription<int>? _chatReadSubscription;
   int _chatUnreadCount = 0;
   int _chatConversationId = 0;
-  bool _isUpdating = false;
+  bool _isSubmitting = false;
+  bool _isRefreshing = false;
   bool _isFirstLoading = true;
 
   // Controllers for Confirmation Details
@@ -335,7 +336,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         final previousStatus = _currentOrder.status;
         
         setState(() {
-          _isUpdating = true;
+          _isRefreshing = true;
           // If the event contains a full order object, we can reconstruct it
           // for an instant status/items refresh.
           if (event['order'] != null) {
@@ -350,11 +351,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         // properly-built absolute URLs (otherwise the receipt fails to load).
         _fetchOrderDetails(showLoading: false, previousStatus: previousStatus);
 
-        // Small delay to show the "updated" flash or animation
+        // Visual flash only — do not block action buttons while refreshing.
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) {
             setState(() {
-              _isUpdating = false;
+              _isRefreshing = false;
             });
           }
         });
@@ -977,34 +978,39 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     String? errorMessage,
     VoidCallback? onSuccess,
   }) async {
-    setState(() => _isUpdating = true);
-    final result = await action();
-    
-    bool success = false;
-    String? errorDetails;
-    
-    if (result is bool) {
-      success = result;
-    } else if (result is Map<String, dynamic>) {
-      success = result['success'] == true;
-      errorDetails = result['details'];
-    }
-    
-    if (success) {
-      await _fetchOrderDetails();
-      if (onSuccess != null) onSuccess();
-    } else if (mounted) {
-      AppDialog.showToast(
-        context,
-        errorDetails ?? errorMessage ??
-            (AppLocalizations.of(context)?.translate('operation_failed') ??
-                'Operation failed. Please try again.'),
-        isError: true,
-      );
-    }
-    
-    if (mounted) {
-      setState(() => _isUpdating = false);
+    setState(() => _isSubmitting = true);
+    try {
+      final result = await action();
+
+      bool success = false;
+      String? errorDetails;
+
+      if (result is bool) {
+        success = result;
+      } else if (result is Map<String, dynamic>) {
+        success = result['success'] == true;
+        errorDetails = result['details'];
+      }
+
+      if (success) {
+        await _fetchOrderDetails();
+        if (mounted) {
+          onSuccess?.call();
+        }
+      } else if (mounted) {
+        AppDialog.showToast(
+          context,
+          errorDetails ??
+              errorMessage ??
+              (AppLocalizations.of(context)?.translate('operation_failed') ??
+                  'Operation failed. Please try again.'),
+          isError: true,
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
   }
 
@@ -1449,7 +1455,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       final sToken = uri.queryParameters['s'];
       if (sToken == null || sToken.isEmpty) return;
 
-      setState(() => _isUpdating = true);
+      setState(() => _isSubmitting = true);
       AppDialog.showToast(context, 'Fetching rider details from Bolt...');
 
       final auth = base64Encode(utf8.encode(':$sToken'));
@@ -1511,7 +1517,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     } catch (_) {
       // Silently ignore errors
     } finally {
-      if (mounted) setState(() => _isUpdating = false);
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
@@ -1631,7 +1637,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           ? _buildSkeletonDetail()
           : AnimatedOpacity(
               duration: const Duration(milliseconds: 300),
-              opacity: _isUpdating ? 0.6 : 1.0,
+              opacity: (_isRefreshing || _isSubmitting) ? 0.6 : 1.0,
         child: Column(
           children: [
             Expanded(
@@ -3029,15 +3035,15 @@ Widget _buildAnimatedProgress() {
     switch (_currentOrder.status) {
       case 'PENDING':
         mainButtonText = 'Accept order & Send bill';
-        onPressed = (_isUpdating || !_isFormValid) ? null : _handleConfirmOrder;
+        onPressed = (_isSubmitting || !_isFormValid) ? null : _handleConfirmOrder;
         break;
       case 'AWAITING_APPROVAL':
         mainButtonText = 'Confirm Payment';
-        onPressed = _isUpdating ? null : _handleVerifyPayment;
+        onPressed = _isSubmitting ? null : _handleVerifyPayment;
         break;
       case 'PAYMENT_VERIFIED':
         mainButtonText = 'Accept order to cook';
-        onPressed = _isUpdating ? null : _handlePrepareOrder;
+        onPressed = _isSubmitting ? null : _handlePrepareOrder;
         break;
       case 'PAYMENT_SLIP_REQUESTED':
         mainButtonText = 'Waiting for payment';
@@ -3046,21 +3052,21 @@ Widget _buildAnimatedProgress() {
       case 'COOKING':
         if (_currentOrder.isPickupFulfillment) {
           mainButtonText = 'Mark Ready for Pickup';
-          onPressed = _isUpdating ? null : _handleMarkReadyForPickup;
+          onPressed = _isSubmitting ? null : _handleMarkReadyForPickup;
         } else {
           mainButtonText = 'Picked Up by Rider';
-          onPressed = (_isUpdating || (_selectedDriverId == null && _deliveryTrackingUrlController.text.trim().isEmpty))
+          onPressed = (_isSubmitting || (_selectedDriverId == null && _deliveryTrackingUrlController.text.trim().isEmpty))
               ? null
               : _handleDispatchOrder;
         }
         break;
       case 'READY_FOR_PICKUP':
         mainButtonText = 'Verify Pickup';
-        onPressed = _isUpdating ? null : _openPickupCompleteScreen;
+        onPressed = _isSubmitting ? null : _openPickupCompleteScreen;
         break;
       case 'ON_THE_WAY':
         mainButtonText = 'Delivered';
-        onPressed = _isUpdating ? null : _handleCompleteDelivery;
+        onPressed = _isSubmitting ? null : _handleCompleteDelivery;
         break;
       case 'DELIVERED':
         return _buildDeliveredBanner();
@@ -3092,7 +3098,7 @@ Widget _buildAnimatedProgress() {
                 SizedBox(
                   width: 96,
                   child: PrimaryGradientButton(
-                    onPressed: _isUpdating ? null : _handleCancelOrder,
+                    onPressed: _isSubmitting ? null : _handleCancelOrder,
                     height: 48,
                     borderRadius: 12,
                     gradient: const LinearGradient(
@@ -3113,7 +3119,7 @@ Widget _buildAnimatedProgress() {
               if (_currentOrder.status == 'AWAITING_APPROVAL') ...[
                 Expanded(
                   child: PrimaryGradientButton(
-                    onPressed: _isUpdating ? null : _handleRequestSlip,
+                    onPressed: _isSubmitting ? null : _handleRequestSlip,
                     height: 54,
                     gradient: const LinearGradient(
                       colors: [Color(0xFFFFF1F2), Color(0xFFFFF1F2)],
@@ -3133,7 +3139,7 @@ Widget _buildAnimatedProgress() {
               Expanded(
                 child: PrimaryGradientButton(
                   onPressed: onPressed,
-                  isLoading: _isUpdating,
+                  isLoading: _isSubmitting,
                   height: 54,
                   child: (_currentOrder.status == 'PAYMENT_SLIP_REQUESTED')
                       ? AnimatedEllipsisText(
