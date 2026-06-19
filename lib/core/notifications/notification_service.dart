@@ -42,7 +42,7 @@ class NotificationService {
   String? _registeredToken;
 
   Future<void> initialize() async {
-    if (_isInitialized || kIsWeb) return;
+    if (_isInitialized) return;
 
     // Initialize local notifications
     const AndroidInitializationSettings initializationSettingsAndroid =
@@ -143,7 +143,11 @@ class NotificationService {
 
   Future<void> requestSystemPermission() async {
     if (kIsWeb) {
+      await _fcm.requestPermission();
       await StorageService.instance.setNotificationHandled(true);
+      if (await _isLoggedIn) {
+        await registerDevice();
+      }
       return;
     }
     await _fcm.requestPermission(
@@ -162,9 +166,15 @@ class NotificationService {
   }
 
   Future<void> registerDevice() async {
-    if (kIsWeb) return;
     try {
-      String? token = await _fcm.getToken().timeout(const Duration(seconds: 5));
+      String? token;
+      if (kIsWeb) {
+        token = await _fcm.getToken(
+          vapidKey: 'BC-crzKl9sm4dwrObVQhpICmgtx7l9MmuP8OG-8AZW-RvxGOUszZx8hKzWOy5ZuDOCcO_La4UbPNkDl9tsAX3RQ',
+        ).timeout(const Duration(seconds: 10));
+      } else {
+        token = await _fcm.getToken().timeout(const Duration(seconds: 5));
+      }
       if (token != null) {
         await _sendTokenToServer(token);
       }
@@ -175,7 +185,6 @@ class NotificationService {
 
   /// Remove this device's FCM token from the backend (call on logout).
   Future<void> unregisterDevice() async {
-    if (kIsWeb) return;
 
     String? token = _registeredToken;
     if (token == null || token.isEmpty) {

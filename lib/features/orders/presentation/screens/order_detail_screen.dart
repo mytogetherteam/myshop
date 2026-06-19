@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
@@ -36,6 +37,7 @@ import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart'
 import 'package:my_shop/features/chat/presentation/chat_navigation.dart';
 import 'package:my_shop/features/orders/presentation/screens/pickup_complete_screen.dart';
 import 'package:my_shop/features/orders/presentation/widgets/order_qr_scan_icon.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 void _showAppNotInstalledSnackbar(BuildContext context, String name) {
   ScaffoldMessenger.of(context).showSnackBar(
@@ -78,6 +80,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   bool _isSubmitting = false;
   bool _isRefreshing = false;
   bool _isFirstLoading = true;
+  WebViewController? _webViewController;
 
   // Controllers for Confirmation Details
   final _deliveryFeeController = TextEditingController();
@@ -1497,7 +1500,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       final sToken = uri.queryParameters['s'];
       if (sToken == null || sToken.isEmpty) return;
 
-      setState(() => _isUpdating = true);
+      setState(() => _isSubmitting = true);
       AppDialog.showToast(context, 'Fetching rider details from Bolt...');
 
       final auth = base64Encode(utf8.encode(':$sToken'));
@@ -1559,7 +1562,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     } catch (_) {
       // Silently ignore errors
     } finally {
-      if (mounted) setState(() => _isUpdating = false);
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
@@ -1727,6 +1730,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                   // Scheduled Info if applicable
                                   if (_currentOrder.isScheduled)
                                     _buildScheduledInfo(),
+
+                                  // Tracking Webview Section
+                                  if (_currentOrder.deliveryTrackingUrl != null &&
+                                      _currentOrder.deliveryTrackingUrl!.isNotEmpty) ...[
+                                    _buildTrackingWebView(),
+                                  ],
 
                                   // Assigned rider (read-only) — the driver is selected
                                   // once at the dispatch step, so here we only display it.
@@ -2510,6 +2519,33 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
+  Widget _buildTrackingWebView() {
+    if (_currentOrder.deliveryTrackingUrl == null ||
+        _currentOrder.deliveryTrackingUrl!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    if (_webViewController == null) {
+      _webViewController = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..loadRequest(Uri.parse(_currentOrder.deliveryTrackingUrl!));
+    }
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.45,
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      clipBehavior: Clip.hardEdge,
+      child: WebViewWidget(controller: _webViewController!),
+    );
+  }
+
   Widget _buildModificationsSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -3065,7 +3101,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         break;
       case 'AWAITING_APPROVAL':
         mainButtonText = 'Confirm Payment';
-        onPressed = _isUpdating ? null : _handleVerifyPayment;
+        onPressed = _isSubmitting ? null : _handleVerifyPayment;
         break;
       case 'PAYMENT_VERIFIED':
         mainButtonText = 'Accept order to cook';
@@ -3081,7 +3117,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           onPressed = _isSubmitting ? null : _handleMarkReadyForPickup;
         } else {
           mainButtonText = 'Picked Up by Rider';
-          onPressed = (_isUpdating || (_selectedDriverId == null && _deliveryTrackingUrlController.text.trim().isEmpty))
+          onPressed = (_isSubmitting || (_selectedDriverId == null && _deliveryTrackingUrlController.text.trim().isEmpty))
               ? null
               : _handleDispatchOrder;
         }
@@ -3127,7 +3163,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 SizedBox(
                   width: 96,
                   child: PrimaryGradientButton(
-                    onPressed: _isUpdating ? null : _handleCancelOrder,
+                    onPressed: _isSubmitting ? null : _handleCancelOrder,
                     height: 48,
                     borderRadius: 12,
                     gradient: const LinearGradient(
@@ -3168,7 +3204,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               Expanded(
                 child: PrimaryGradientButton(
                   onPressed: onPressed,
-                  isLoading: _isUpdating,
+                  isLoading: _isSubmitting,
                   height: 54,
                   child: (_currentOrder.status == 'PAYMENT_SLIP_REQUESTED')
                       ? AnimatedEllipsisText(
