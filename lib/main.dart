@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,9 +28,8 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Initialize notification service
-  await NotificationService().initialize();
   if (!kIsWeb) {
+    await NotificationService().initialize();
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   }
 
@@ -47,4 +48,8 @@ void main() async {
   GoogleFonts.config.allowRuntimeFetching = false;
 
   runApp(const App());
+
+  if (kIsWeb) {
+    unawaited(NotificationService().initialize());
+  }
 }

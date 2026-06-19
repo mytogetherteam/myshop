@@ -96,7 +96,6 @@ class NotificationService {
     }
 
     if (kIsWeb) {
-      await WebPushHelper.ensureMessagingServiceWorkerReady();
       OrderAlertSound.setupBackgroundAlertResume();
 
       WebServiceWorkerMessageListener.start((data) async {
