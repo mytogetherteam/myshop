@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -161,7 +161,7 @@ class _AppPermissionsPageState extends State<AppPermissionsPage>
                   const SizedBox(height: 16),
 
                   // System Alert Window Permission Card (For Full Screen Intent / Pop-ups)
-                  if (Platform.isAndroid)
+                  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android)
                     _buildPermissionCard(
                       icon: PhosphorIconsRegular.deviceMobileCamera,
                       title:

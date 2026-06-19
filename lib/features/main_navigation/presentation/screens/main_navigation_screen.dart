@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -22,7 +23,7 @@ import 'package:my_shop/core/utils/app_logger.dart';
 import 'dart:async';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:my_shop/core/notifications/notification_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/notifications/notification_service.dart';
 import 'package:my_shop/features/orders/presentation/widgets/order_cancelled_dialog.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
@@ -158,6 +159,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 
   void _playAlertSoundIfNotViewing(String orderId) {
+    if (kIsWeb) return;
+
     final routeName = 'order_detail_$orderId';
     bool isAlreadyOnThisOrder = false;
     Navigator.popUntil(context, (route) {

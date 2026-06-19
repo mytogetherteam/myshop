@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -56,6 +57,13 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
 
   @override
   Widget build(BuildContext context) {
+    // On web/PWA, connectivity_plus can briefly report offline and a full-screen
+    // overlay would block every tap. Let the app stay interactive; API errors
+    // still surface when the network is actually down.
+    if (kIsWeb) {
+      return widget.child;
+    }
+
     return Stack(
       textDirection: TextDirection.ltr,
       children: [

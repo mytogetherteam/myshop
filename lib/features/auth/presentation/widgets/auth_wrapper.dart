@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/core/utils/app_logger.dart';
@@ -66,20 +66,14 @@ class _AuthWrapperState extends State<AuthWrapper> {
       await StorageService.instance.setNotificationHandled(true);
     }
     
-    if (Platform.isAndroid) {
-      final systemAlertHandled = await StorageService.instance.isSystemAlertHandled();
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      final systemAlertHandled =
+          await StorageService.instance.isSystemAlertHandled();
       if (!systemAlertHandled) {
         return const SystemAlertPermissionScreen();
       }
     }
-    
-    if (Platform.isAndroid) {
-      final systemAlertHandled = await StorageService.instance.isSystemAlertHandled();
-      if (!systemAlertHandled) {
-        return const SystemAlertPermissionScreen();
-      }
-    }
-    
+
     return const MainNavigationScreen();
   }
 
