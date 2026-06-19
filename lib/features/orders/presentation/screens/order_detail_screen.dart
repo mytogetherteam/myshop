@@ -169,16 +169,60 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final riders = await RiderService().getSelectableRiders();
     if (mounted) {
       setState(() {
-        // Merge so any driver already known from the order (e.g. the assigned
-        // one) is preserved even if it isn't in the active list.
-        final byId = <int, Rider>{for (final r in _availableDrivers) r.id: r};
-        for (final r in riders) {
-          byId[r.id] = r;
+        final byId = <int, Rider>{for (final r in riders) r.id: r};
+
+        // Keep the already-assigned driver for read-only display after dispatch,
+        // even if they are now busy or inactive.
+        final assigned = _assignedRiderFromOrder();
+        if (assigned != null) {
+          byId.putIfAbsent(assigned.id, () => assigned);
         }
+
         _availableDrivers = byId.values.toList();
+        if (_selectedDriverId != null && !_hasValidSelectedDriver) {
+          _selectedDriverId = null;
+        }
         _isLoadingRiders = false;
       });
+      _validateFormState();
     }
+  }
+
+  Rider? _assignedRiderFromOrder() {
+    final assignedId = _currentOrder.driverId;
+    if (assignedId == null) return null;
+
+    for (final r in _availableDrivers) {
+      if (r.id == assignedId) return r;
+    }
+
+    for (final d in _currentOrder.shopDeliveryDrivers) {
+      if (d.id == assignedId) {
+        return Rider(
+          id: d.id,
+          name: d.name,
+          phone: d.phone,
+          vehicleNo: d.vehicleNo,
+          profileUrl: d.profileUrl,
+          shopId: 0,
+          isActive: d.isActive,
+          isBusy: d.isBusy,
+        );
+      }
+    }
+
+    final name = _currentOrder.riderName?.trim();
+    if (name == null || name.isEmpty) return null;
+    return Rider(
+      id: assignedId,
+      name: name,
+      phone: _currentOrder.riderPhone,
+      vehicleNo: _currentOrder.vehicleNo,
+      profileUrl: null,
+      shopId: 0,
+      isActive: true,
+      isBusy: true,
+    );
   }
 
   void _initControllers() {
@@ -203,25 +247,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       setState(() {
         _currentOrder = updatedOrder;
         _selectedDriverId = updatedOrder.driverId;
-        // Merge any drivers carried on the order (e.g. the already-assigned
-        // one) into the roster instead of replacing it — replacing with the
-        // order's active-only list could wipe out riders loaded elsewhere and
-        // leave the picker empty.
-        if (updatedOrder.shopDeliveryDrivers.isNotEmpty) {
-          final byId = <int, Rider>{for (final r in _availableDrivers) r.id: r};
-          for (final d in updatedOrder.shopDeliveryDrivers) {
-            byId[d.id] = Rider(
-              id: d.id,
-              name: d.name,
-              phone: d.phone,
-              vehicleNo: d.vehicleNo,
-              profileUrl: d.profileUrl,
-              shopId: 0,
-              isActive: d.isActive,
-            );
-          }
-          _availableDrivers = byId.values.toList();
-        }
         _initControllers();
         _isFirstLoading = false;
       });
@@ -453,6 +478,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _validateFormState();
   }
 
+  /// Drivers that can be picked in the dispatch dropdown (`isActive && !isBusy`).
+  List<Rider> get _selectableDrivers => _availableDrivers
+      .where((r) => r.isActive && !r.isBusy)
+      .toList();
+
+  /// Whether the currently selected driver is still eligible for assignment.
+  bool get _hasValidSelectedDriver =>
+      _selectedDriverId != null &&
+      _selectableDrivers.any((r) => r.id == _selectedDriverId);
+
   /// The driver assigned to this order, resolved from the loaded roster by
   /// `driverId`. The driver is chosen once at the COOKING (dispatch) step, so
   /// later steps display it read-only instead of offering another picker.
@@ -491,14 +526,22 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           Navigator.pop(context);
           if (!mounted) return;
           setState(() {
-            final idx = _availableDrivers.indexWhere((r) => r.id == rider.id);
-            if (idx >= 0) {
-              _availableDrivers[idx] = rider;
+            if (rider.isActive && !rider.isBusy) {
+              final idx = _availableDrivers.indexWhere((r) => r.id == rider.id);
+              if (idx >= 0) {
+                _availableDrivers[idx] = rider;
+              } else {
+                _availableDrivers = [rider, ..._availableDrivers];
+              }
+              _applySelectedDriver(rider);
             } else {
-              _availableDrivers = [rider, ..._availableDrivers];
+              AppDialog.showToast(
+                context,
+                'Driver must be active and not busy to assign to an order.',
+                isError: true,
+              );
             }
           });
-          _applySelectedDriver(rider);
         },
       ),
     );
@@ -507,10 +550,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Future<void> _openDriverPicker() async {
     // Always ensure the list is loaded before opening so the sheet never shows
     // an empty/blank state due to a skipped or in-flight load.
-    if (_availableDrivers.isEmpty) {
+    if (_selectableDrivers.isEmpty) {
       await _loadDrivers();
     }
     if (!mounted) return;
+
+    final drivers = _selectableDrivers;
 
     final selected = await showModalBottomSheet<Rider?>(
       context: context,
@@ -576,7 +621,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     padding: EdgeInsets.symmetric(vertical: 32),
                     child: CustomLoadingIndicator(size: 24),
                   )
-                else if (_availableDrivers.isEmpty)
+                else if (drivers.isEmpty)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
                     child: Column(
@@ -588,7 +633,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'No saved drivers yet',
+                          'No available drivers',
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -597,7 +642,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Tap "Add new" to save a driver for next time.',
+                          'Only active drivers who are not on another delivery can be assigned. Add a new driver or wait until someone is free.',
                           style: GoogleFonts.poppins(
                             fontSize: 12,
                             color: const Color(0xFF94A3B8),
@@ -612,10 +657,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     child: ListView.separated(
                       shrinkWrap: true,
                       padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-                      itemCount: _availableDrivers.length,
+                      itemCount: drivers.length,
                       separatorBuilder: (_, _) => const SizedBox(height: 8),
                       itemBuilder: (_, index) {
-                        final rider = _availableDrivers[index];
+                        final rider = drivers[index];
                         final isSelected = _selectedDriverId == rider.id;
                         return _buildDriverTile(
                           rider,
@@ -730,13 +775,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildDriverPicker({bool required = true}) {
-    final selected = _selectedDriverId == null
-        ? null
-        : _availableDrivers.firstWhere(
-            (r) => r.id == _selectedDriverId,
-            orElse: () => Rider(id: -1, name: '', shopId: 0),
-          );
-    final hasSelection = selected != null && selected.id != -1;
+    final selected = _hasValidSelectedDriver
+        ? _selectableDrivers.firstWhere((r) => r.id == _selectedDriverId)
+        : null;
+    final hasSelection = selected != null;
     final displayName = hasSelection ? selected.name : 'Choose a saved driver';
     final subtitle = hasSelection
         ? [
@@ -2958,23 +3000,25 @@ Widget _buildAnimatedProgress() {
           Row(
             children: [
               if (isCancelable) ...[
-                Expanded(
+                SizedBox(
+                  width: 96,
                   child: PrimaryGradientButton(
                     onPressed: _isUpdating ? null : _handleCancelOrder,
-                    height: 54,
+                    height: 48,
+                    borderRadius: 12,
                     gradient: const LinearGradient(
                       colors: [Color(0xFFFFF1F2), Color(0xFFFFF1F2)],
                     ),
                     child: GradientText(
                       t?.translate('cancel') ?? 'Cancel',
                       style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w600, 
-                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
               ],
               if (_currentOrder.status == 'AWAITING_APPROVAL') ...[
                 Expanded(
@@ -2996,29 +3040,28 @@ Widget _buildAnimatedProgress() {
                 const SizedBox(width: 12),
               ],
               Expanded(
-                flex: 2,
                 child: PrimaryGradientButton(
                   onPressed: onPressed,
                   isLoading: _isUpdating,
+                  height: 54,
                   child: (_currentOrder.status == 'PAYMENT_SLIP_REQUESTED')
                       ? AnimatedEllipsisText(
                           text: mainButtonText,
                           style: GoogleFonts.poppins(
                             fontWeight: FontWeight.w600,
-                            fontSize: 14,
+                            fontSize: 13,
                             color: Colors.white,
                           ),
                         )
-                      : Flexible(
-                          child: Text(
-                            mainButtonText,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
+                      : Text(
+                          mainButtonText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: Colors.white,
                           ),
                         ),
                 ),

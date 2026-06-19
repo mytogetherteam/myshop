@@ -16,6 +16,7 @@ import 'package:my_shop/core/presentation/widgets/empty_state.dart';
 import 'package:my_shop/core/presentation/widgets/image_picker_widget.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton_list.dart';
+import 'package:my_shop/core/presentation/widgets/primary_gradient_switch.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 
 class RiderManagementPage extends StatefulWidget {
@@ -56,6 +57,16 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
 
   void _showRiderForm([Rider? rider]) {
     if (_shopId == null || _userId == null) return;
+    if (rider?.isBusy == true) {
+      final t = AppLocalizations.of(context);
+      AppDialog.showToast(
+        context,
+        t?.translate('rider_busy_locked') ??
+            'Cannot edit or delete a driver while they are on delivery.',
+        isError: true,
+      );
+      return;
+    }
     GlobalModal.show(
       context: context,
       child: RiderFormSheet(
@@ -72,6 +83,16 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
 
   Future<void> _deleteRider(Rider rider) async {
     final t = AppLocalizations.of(context);
+    if (rider.isBusy) {
+      AppDialog.showToast(
+        context,
+        t?.translate('rider_busy_locked') ??
+            'Cannot edit or delete a driver while they are on delivery.',
+        isError: true,
+      );
+      return;
+    }
+
     final confirm = await AppDialog.showConfirm(
       context,
       title: t?.translate('delete_rider') ?? 'Delete Rider',
@@ -176,70 +197,177 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
   }
 
   Widget _buildRiderCard(Rider rider) {
+    final t = AppLocalizations.of(context);
+    final isBusy = rider.isBusy;
+    final muted = const Color(0xFF94A3B8);
+    final titleColor = isBusy ? muted : const Color(0xFF1E293B);
+    final subtitleColor =
+        isBusy ? const Color(0xFFCBD5E1) : const Color(0xFF64748B);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isBusy ? const Color(0xFFF1F5F9) : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(
+          color: isBusy ? const Color(0xFFE2E8F0) : const Color(0xFFE2E8F0),
+        ),
       ),
       child: Material(
         color: Colors.transparent,
         clipBehavior: Clip.antiAlias,
         borderRadius: BorderRadius.circular(12),
         child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-          child: rider.profileUrl != null && rider.profileUrl!.isNotEmpty
-              ? ClipOval(
-                  child: CachedNetworkImage(
-                    imageUrl: rider.profileUrl!,
-                    width: 40,
-                    height: 40,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => const CupertinoActivityIndicator(radius: 8),
-                    errorWidget: (context, url, error) => PhosphorIcon(PhosphorIconsRegular.user, color: AppColors.primary),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          leading: CircleAvatar(
+            backgroundColor: isBusy
+                ? const Color(0xFFE2E8F0)
+                : AppColors.primary.withValues(alpha: 0.1),
+            child: rider.profileUrl != null && rider.profileUrl!.isNotEmpty
+                ? ClipOval(
+                    child: isBusy
+                        ? ColorFiltered(
+                            colorFilter: const ColorFilter.mode(
+                              Color(0xFFCBD5E1),
+                              BlendMode.saturation,
+                            ),
+                            child: CachedNetworkImage(
+                              imageUrl: rider.profileUrl!,
+                              width: 40,
+                              height: 40,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) =>
+                                  const CupertinoActivityIndicator(radius: 8),
+                              errorWidget: (context, url, error) =>
+                                  PhosphorIcon(
+                                PhosphorIconsRegular.user,
+                                color: muted,
+                              ),
+                            ),
+                          )
+                        : CachedNetworkImage(
+                            imageUrl: rider.profileUrl!,
+                            width: 40,
+                            height: 40,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) =>
+                                const CupertinoActivityIndicator(radius: 8),
+                            errorWidget: (context, url, error) => PhosphorIcon(
+                              PhosphorIconsRegular.user,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                  )
+                : PhosphorIcon(
+                    PhosphorIconsRegular.user,
+                    color: isBusy ? muted : AppColors.primary,
                   ),
-                )
-              : PhosphorIcon(PhosphorIconsRegular.user, color: AppColors.primary),
-        ),
-        title: Text(
-          rider.name,
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
+          ),
+          title: Text(
+            rider.name,
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w600,
+              color: titleColor,
+            ),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (rider.phone != null && rider.phone!.isNotEmpty)
+                Text(
+                  rider.phone!,
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: subtitleColor,
+                  ),
+                ),
+              if (rider.vehicleNo != null && rider.vehicleNo!.isNotEmpty)
+                Text(
+                  'Plate: ${rider.vehicleNo}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: subtitleColor,
+                  ),
+                ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  _RiderStatusChip(
+                    label: rider.isActive
+                        ? (t?.translate('active') ?? 'Active')
+                        : (t?.translate('inactive') ?? 'Inactive'),
+                    color: rider.isActive
+                        ? const Color(0xFF22C55E)
+                        : const Color(0xFFEF4444),
+                    muted: isBusy,
+                  ),
+                  if (isBusy)
+                    _RiderStatusChip(
+                      label: t?.translate('rider_busy') ?? 'On delivery',
+                      color: muted,
+                      muted: true,
+                    ),
+                ],
+              ),
+            ],
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: PhosphorIcon(
+                  PhosphorIconsRegular.pencilSimple,
+                  color: isBusy ? muted : const Color(0xFF64748B),
+                  size: 20,
+                ),
+                onPressed: isBusy ? null : () => _showRiderForm(rider),
+              ),
+              IconButton(
+                icon: PhosphorIcon(
+                  PhosphorIconsRegular.trash,
+                  color: isBusy ? muted : Colors.red,
+                  size: 20,
+                ),
+                onPressed: isBusy ? null : () => _deleteRider(rider),
+              ),
+            ],
           ),
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (rider.phone != null && rider.phone!.isNotEmpty)
-              Text(
-                rider.phone!,
-                style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF64748B)),
-              ),
-            if (rider.vehicleNo != null && rider.vehicleNo!.isNotEmpty)
-              Text(
-                'Plate: ${rider.vehicleNo}',
-                style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF64748B)),
-              ),
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const PhosphorIcon(PhosphorIconsRegular.pencilSimple, color: Color(0xFF64748B), size: 20),
-              onPressed: () => _showRiderForm(rider),
-            ),
-            IconButton(
-              icon: const PhosphorIcon(PhosphorIconsRegular.trash, color: Colors.red, size: 20),
-              onPressed: () => _deleteRider(rider),
-            ),
-          ],
-        ),
       ),
+    );
+  }
+}
+
+class _RiderStatusChip extends StatelessWidget {
+  final String label;
+  final Color color;
+  final bool muted;
+
+  const _RiderStatusChip({
+    required this.label,
+    required this.color,
+    this.muted = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final displayColor = muted ? const Color(0xFF94A3B8) : color;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: displayColor.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.poppins(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: displayColor,
+        ),
       ),
     );
   }
@@ -269,6 +397,7 @@ class _RiderFormSheetState extends State<RiderFormSheet> {
   final _phoneController = TextEditingController();
   final _licensePlateController = TextEditingController();
   bool _isLoading = false;
+  bool _isActive = true;
   final RiderService _riderService = RiderService();
   XFile? _pickedImage;
 
@@ -279,6 +408,7 @@ class _RiderFormSheetState extends State<RiderFormSheet> {
       _nameController.text = widget.rider!.name;
       _phoneController.text = widget.rider!.phone ?? '';
       _licensePlateController.text = widget.rider!.vehicleNo ?? '';
+      _isActive = widget.rider!.isActive;
     }
   }
 
@@ -299,8 +429,7 @@ class _RiderFormSheetState extends State<RiderFormSheet> {
       'name': _nameController.text,
       'phone': _phoneController.text,
       'vehicleNo': _licensePlateController.text,
-      'status': true,
-      'isActive': true,
+      'isActive': _isActive,
     };
 
     final XFile? imageFile = _pickedImage;
@@ -390,6 +519,8 @@ class _RiderFormSheetState extends State<RiderFormSheet> {
               label: t?.translate('license_plate') ?? 'License Plate',
               hint: t?.translate('enter_license_plate') ?? 'Enter License Plate',
             ),
+            const SizedBox(height: 16),
+            _buildActiveToggle(),
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
@@ -401,6 +532,49 @@ class _RiderFormSheetState extends State<RiderFormSheet> {
             ),
           ],
         ),
+    );
+  }
+
+  Widget _buildActiveToggle() {
+    final t = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          t?.translate('status') ?? 'Status',
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF475569),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          height: 50,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Row(
+            children: [
+              Text(
+                t?.translate('is_active') ?? 'Is Active',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: const Color(0xFF1E293B),
+                ),
+              ),
+              const Spacer(),
+              PrimaryGradientSwitch(
+                value: _isActive,
+                onChanged: (v) => setState(() => _isActive = v),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

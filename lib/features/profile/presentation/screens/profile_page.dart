@@ -381,7 +381,7 @@ class ProfilePageState extends State<ProfilePage>
         ),
         _buildToggleOption(
           icon: PhosphorIconsRegular.truck,
-          title: t?.translate('delivery_enabled') ?? 'Delivery Enabled',
+          title: t?.translate('delivery_enabled') ?? 'Delivery / Pick up Enabled',
           value: _deliveryEnabled,
           isLoading: _isTogglingDelivery,
           onChanged: _toggleDelivery,

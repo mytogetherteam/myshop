@@ -291,7 +291,6 @@ class OrderCard extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          flex: isPaymentTab ? 1 : 2,
           child: PrimaryGradientButton(
             onPressed: isMainButtonEnabled ? () async {
               final result = await Navigator.push(
@@ -323,8 +322,8 @@ class OrderCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (mainButtonIcon != null) ...[
-                  Icon(mainButtonIcon, size: 18, color: Colors.white),
-                  const SizedBox(width: 8),
+                  Icon(mainButtonIcon, size: 16, color: Colors.white),
+                  const SizedBox(width: 6),
                 ],
                 if (isMainButtonEnabled)
                   Flexible(
@@ -332,6 +331,7 @@ class OrderCard extends StatelessWidget {
                       mainButtonText,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
                       style: GoogleFonts.poppins(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
@@ -340,12 +340,14 @@ class OrderCard extends StatelessWidget {
                     ),
                   )
                 else
-                  AnimatedEllipsisText(
-                    text: mainButtonText,
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                      color: Colors.white,
+                  Flexible(
+                    child: AnimatedEllipsisText(
+                      text: mainButtonText,
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
               ],
