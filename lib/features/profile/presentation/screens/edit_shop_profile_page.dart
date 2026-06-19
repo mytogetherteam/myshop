@@ -1196,6 +1196,19 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: Color(0xFFED3973), width: 1.5),
         ),
+        suffixIcon: ValueListenableBuilder<TextEditingValue>(
+          valueListenable: ctrl,
+          builder: (context, value, child) {
+            if (value.text.isEmpty) return const SizedBox.shrink();
+            return IconButton(
+              icon: const Icon(Icons.clear, color: Color(0xFF94A3B8), size: 20),
+              onPressed: () {
+                ctrl.clear();
+                _markChanged();
+              },
+            );
+          },
+        ),
       ),
       style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B)),
     );

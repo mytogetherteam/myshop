@@ -328,12 +328,9 @@ class _RiderFormSheetState extends State<RiderFormSheet> {
     final t = AppLocalizations.of(context);
     final isEditing = widget.rider != null;
 
-    return Padding(
-      // Ensure padding at bottom for keyboard
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: Form(
-        key: _formKey,
-        child: Column(
+    return Form(
+      key: _formKey,
+      child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -404,7 +401,6 @@ class _RiderFormSheetState extends State<RiderFormSheet> {
             ),
           ],
         ),
-      ),
     );
   }
 
@@ -454,6 +450,18 @@ class _RiderFormSheetState extends State<RiderFormSheet> {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+            ),
+            suffixIcon: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: controller,
+              builder: (context, value, child) {
+                if (value.text.isEmpty) return const SizedBox.shrink();
+                return IconButton(
+                  icon: const Icon(Icons.clear, color: Color(0xFF94A3B8), size: 20),
+                  onPressed: () {
+                    controller.clear();
+                  },
+                );
+              },
             ),
           ),
           validator: validator,

@@ -343,6 +343,18 @@ class _RegisterPageState extends State<RegisterPage>
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: Colors.red, width: 1.5),
         ),
+        suffixIcon: ValueListenableBuilder<TextEditingValue>(
+          valueListenable: controller,
+          builder: (context, value, child) {
+            if (value.text.isEmpty) return const SizedBox.shrink();
+            return IconButton(
+              icon: const Icon(Icons.clear, color: Colors.grey, size: 20),
+              onPressed: () {
+                controller.clear();
+              },
+            );
+          },
+        ),
       ),
     );
   }

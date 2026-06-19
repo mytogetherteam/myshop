@@ -287,7 +287,18 @@ class _LoginPageState extends State<LoginPage>
         hintText: hint,
         hintStyle: GoogleFonts.poppins(color: Colors.grey[400], fontSize: 14),
         prefixIcon: Icon(icon, color: Colors.grey[500], size: 20),
-        suffixIcon: suffixWidget,
+        suffixIcon: suffixWidget ?? ValueListenableBuilder<TextEditingValue>(
+          valueListenable: controller,
+          builder: (context, value, child) {
+            if (value.text.isEmpty) return const SizedBox.shrink();
+            return IconButton(
+              icon: const Icon(Icons.clear, color: Colors.grey, size: 20),
+              onPressed: () {
+                controller.clear();
+              },
+            );
+          },
+        ),
         filled: true,
         fillColor: Colors.grey[50],
         contentPadding: const EdgeInsets.symmetric(

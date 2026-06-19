@@ -233,6 +233,18 @@ class _SubmitFeedbackDialogState extends State<SubmitFeedbackDialog> {
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(color: Color(0xFFED3973)),
                 ),
+                suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _feedbackController,
+                  builder: (context, value, child) {
+                    if (value.text.isEmpty) return const SizedBox.shrink();
+                    return IconButton(
+                      icon: const Icon(Icons.clear, color: Color(0xFF94A3B8), size: 20),
+                      onPressed: () {
+                        _feedbackController.clear();
+                      },
+                    );
+                  },
+                ),
                 filled: true,
                 fillColor: const Color(0xFFF8FAFC),
               ),

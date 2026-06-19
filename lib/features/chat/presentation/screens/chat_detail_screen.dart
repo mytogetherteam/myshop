@@ -329,7 +329,21 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           maxLines: 4,
           minLines: 1,
           style: GoogleFonts.poppins(fontSize: 14),
-          decoration: const InputDecoration(border: OutlineInputBorder()),
+          decoration: InputDecoration(
+            border: const OutlineInputBorder(),
+            suffixIcon: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: controller,
+              builder: (context, value, child) {
+                if (value.text.isEmpty) return const SizedBox.shrink();
+                return IconButton(
+                  icon: const Icon(Icons.clear, color: Colors.grey, size: 20),
+                  onPressed: () {
+                    controller.clear();
+                  },
+                );
+              },
+            ),
+          ),
         ),
         actions: [
           TextButton(
@@ -1023,6 +1037,18 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 18,
                     vertical: 10,
+                  ),
+                  suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _messageController,
+                    builder: (context, value, child) {
+                      if (value.text.isEmpty) return const SizedBox.shrink();
+                      return IconButton(
+                        icon: const Icon(Icons.clear, color: Colors.grey, size: 20),
+                        onPressed: () {
+                          _messageController.clear();
+                        },
+                      );
+                    },
                   ),
                 ),
               ),

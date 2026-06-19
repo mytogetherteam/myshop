@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -284,7 +285,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     } else if (_currentOrder.status == 'AWAITING_APPROVAL') {
       isValid = true;
     } else if (_currentOrder.status == 'COOKING') {
-      isValid = _currentOrder.isPickupFulfillment || _selectedDriverId != null;
+      isValid = _currentOrder.isPickupFulfillment || 
+                _selectedDriverId != null || 
+                _deliveryTrackingUrlController.text.trim().isNotEmpty;
     } else {
       isValid = true;
     }
@@ -384,9 +387,21 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 TextField(
                   controller: reasonController,
                   maxLines: 2,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Reason',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
+                    suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: reasonController,
+                      builder: (context, value, child) {
+                        if (value.text.isEmpty) return const SizedBox.shrink();
+                        return IconButton(
+                          icon: const Icon(Icons.clear, color: Colors.grey, size: 20),
+                          onPressed: () {
+                            reasonController.clear();
+                          },
+                        );
+                      },
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -1199,6 +1214,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 hintStyle: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF94A3B8)),
                 filled: true,
                 fillColor: const Color(0xFFF8FAFC),
+                suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: reasonController,
+                  builder: (context, value, child) {
+                    if (value.text.isEmpty) return const SizedBox.shrink();
+                    return IconButton(
+                      icon: const Icon(Icons.clear, color: Colors.grey, size: 20),
+                      onPressed: () {
+                        reasonController.clear();
+                      },
+                    );
+                  },
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
@@ -1335,17 +1362,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           _currentOrder.status == 'READY_FOR_PICKUP');
 
   Future<void> _handleDispatchOrder() async {
-    if (_selectedDriverId == null) {
-      AppDialog.showToast(context, 'Please select a delivery driver', isError: true);
+    final hasTrackingUrl = _deliveryTrackingUrlController.text.trim().isNotEmpty;
+    if (_selectedDriverId == null && !hasTrackingUrl) {
+      AppDialog.showToast(context, 'Please select a delivery driver or provide a tracking URL', isError: true);
       return;
     }
 
     await _runOrderAction(
       action: () => OrderService().dispatchOrder(
         _currentOrder.id.toString(),
-        driverId: _selectedDriverId!,
-        trackingUrl: _deliveryTrackingUrlController.text.isNotEmpty
-            ? _deliveryTrackingUrlController.text
+        driverId: _selectedDriverId,
+        trackingUrl: hasTrackingUrl
+            ? _deliveryTrackingUrlController.text.trim()
             : null,
       ),
       errorMessage: 'Failed to dispatch order. Please try again.',
@@ -1367,6 +1395,82 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       },
     );
   }
+
+  Future<void> _handleTrackingUrlChanged(String urlStr) async {
+    try {
+      final uri = Uri.tryParse(urlStr.trim());
+      if (uri == null) return;
+      if (!uri.host.contains('bolt.eu')) return;
+      
+      final sToken = uri.queryParameters['s'];
+      if (sToken == null || sToken.isEmpty) return;
+
+      setState(() => _isUpdating = true);
+      AppDialog.showToast(context, 'Fetching rider details from Bolt...');
+
+      final auth = base64Encode(utf8.encode(':$sToken'));
+      final apiUrl = 'https://node.bolt.eu/route-sharing/routeSharing/getOrder?version=RS.3.13&language=en-US';
+
+      final response = await Dio().get(
+        apiUrl,
+        options: Options(
+          headers: {'Authorization': 'Basic $auth'},
+          validateStatus: (status) => true,
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['code'] == 0 && data['data'] != null) {
+          final resData = data['data'];
+          final driverName = resData['driver_name'] as String?;
+          final carColor = resData['car_color'] as String?;
+          final carModel = resData['car_model'] as String?;
+          final carRegNumber = resData['car_reg_number'] as String?;
+          final driverPicture = resData['driver_picture'] as String?;
+
+          XFile? imageFile;
+          if (driverPicture != null && driverPicture.isNotEmpty) {
+            try {
+              final imgRes = await Dio().get(
+                driverPicture,
+                options: Options(responseType: ResponseType.bytes, validateStatus: (status) => true),
+              );
+              if (imgRes.statusCode == 200) {
+                imageFile = XFile.fromData(imgRes.data, name: 'bolt_rider.jpg');
+              }
+            } catch (_) {}
+          }
+
+          final vehicleNo = [carColor, carModel, carRegNumber]
+              .where((e) => e != null && e.isNotEmpty)
+              .join(' ');
+
+          final riderData = {
+            'name': driverName ?? 'Bolt Rider',
+            'phone': '',
+            'vehicleNo': vehicleNo,
+            'isActive': true,
+          };
+
+          final newRider = await RiderService().createRider(riderData, image: imageFile);
+
+          if (newRider != null && mounted) {
+            setState(() {
+              _availableDrivers.add(newRider);
+              _selectedDriverId = newRider.id;
+            });
+            AppDialog.showToast(context, 'Bolt rider auto-filled successfully');
+          }
+        }
+      }
+    } catch (_) {
+      // Silently ignore errors
+    } finally {
+      if (mounted) setState(() => _isUpdating = false);
+    }
+  }
+
 
 
 
@@ -2798,7 +2902,7 @@ Widget _buildAnimatedProgress() {
         break;
       case 'AWAITING_APPROVAL':
         mainButtonText = 'Confirm Payment';
-        onPressed = _isUpdating ? null : _showPaymentVerificationModal;
+        onPressed = _isUpdating ? null : _handleVerifyPayment;
         break;
       case 'PAYMENT_VERIFIED':
         mainButtonText = 'Accept order to cook';
@@ -2814,7 +2918,7 @@ Widget _buildAnimatedProgress() {
           onPressed = _isUpdating ? null : _handleMarkReadyForPickup;
         } else {
           mainButtonText = 'Picked Up by Rider';
-          onPressed = (_isUpdating || _selectedDriverId == null)
+          onPressed = (_isUpdating || (_selectedDriverId == null && _deliveryTrackingUrlController.text.trim().isEmpty))
               ? null
               : _handleDispatchOrder;
         }
@@ -3016,6 +3120,19 @@ Widget _buildAnimatedProgress() {
                 color: const Color(0xFF94A3B8),
               ),
               suffixText: 'mins',
+              suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _waitingTimeMinutesController,
+                builder: (context, value, child) {
+                  if (value.text.isEmpty) return const SizedBox.shrink();
+                  return IconButton(
+                    icon: const Icon(Icons.clear, color: Colors.grey, size: 20),
+                    onPressed: () {
+                      _waitingTimeMinutesController.clear();
+                      _validateFormState();
+                    },
+                  );
+                },
+              ),
               suffixStyle: GoogleFonts.poppins(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
@@ -3379,17 +3496,28 @@ Widget _buildAnimatedProgress() {
             // ── COOKING / dispatch (single driver selection point) ─────
             ] else if (_currentOrder.status == 'COOKING' &&
                 _currentOrder.isDeliveryFulfillment) ...[
-              _buildDriverPicker(),
+              if (_deliveryTrackingUrlController.text.trim().isEmpty || _selectedDriverId != null)
+                _buildDriverPicker(),
               if (_selectedDriverId == null) ...[
-                const SizedBox(height: 12),
+                if (_deliveryTrackingUrlController.text.trim().isEmpty)
+                  const SizedBox(height: 12),
                 _buildInputField(
                   'Tracking URL',
                   _deliveryTrackingUrlController,
                   isNumeric: false,
-                  modalTitle: 'Delivery Tracking Link ( Bolt , Grab )',
+                  modalTitle: 'Delivery Tracking Link',
                   description: 'Add a live tracking link so the customer can follow their order in real-time.',
-                  fieldLabel: 'Link from Bolt, Grab',
+                  fieldLabel: 'Tracking Link',
                   placeholder: 'https://tracking-service.com/...',
+                  onChanged: _handleTrackingUrlChanged,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) return null;
+                    final uri = Uri.tryParse(value.trim());
+                    if (uri == null || !uri.hasScheme || !uri.hasAuthority) {
+                      return 'Please enter a valid URL (e.g. https://...)';
+                    }
+                    return null;
+                  },
                 ),
               ],
             ] else if (_currentOrder.status == 'COOKING' &&
@@ -3450,6 +3578,7 @@ Widget _buildAnimatedProgress() {
     String? placeholder,
     bool showDeliveryApps = false,
     String? suffixText,
+    Function(String)? onChanged,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -3486,6 +3615,7 @@ Widget _buildAnimatedProgress() {
             );
             if (result != null) {
               controller.text = result as String;
+              if (onChanged != null) onChanged(result as String);
               _validateFormState();
             }
           },
@@ -3938,6 +4068,18 @@ class _FullScreenTextInputState extends State<_FullScreenTextInput> {
                 hintStyle: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
                 suffixText: widget.suffixText,
                 suffixStyle: GoogleFonts.poppins(color: const Color(0xFF64748B), fontWeight: FontWeight.w500),
+                suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _controller,
+                  builder: (context, value, child) {
+                    if (value.text.isEmpty) return const SizedBox.shrink();
+                    return IconButton(
+                      icon: const Icon(Icons.clear, color: Colors.grey, size: 20),
+                      onPressed: () {
+                        _controller.clear();
+                      },
+                    );
+                  },
+                ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
