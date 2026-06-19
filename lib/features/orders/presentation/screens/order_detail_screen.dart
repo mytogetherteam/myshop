@@ -2261,11 +2261,27 @@ Widget _buildAnimatedProgress() {
         Text(
           _currentOrder.deliveryAddressDetail,
           style: GoogleFonts.poppins(
-            fontSize: 12,
-            color: AppColors.onSurfaceVariant,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppColors.onSurface,
             height: 1.5,
           ),
         ),
+        if (_currentOrder.deliveryAddress?.addressMm != null &&
+            _currentOrder.deliveryAddress!.addressMm!.trim().isNotEmpty &&
+            _currentOrder.deliveryAddress!.addressMm!.trim() !=
+                _currentOrder.deliveryAddressDetail)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              _currentOrder.deliveryAddress!.addressMm!.trim(),
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: AppColors.onSurfaceVariant,
+                height: 1.4,
+              ),
+            ),
+          ),
         if (_currentOrder.deliveryAddress?.buildingName != null || _currentOrder.deliveryAddress?.floor != null)
           Padding(
             padding: const EdgeInsets.only(top: 4),

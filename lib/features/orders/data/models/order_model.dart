@@ -341,7 +341,10 @@ class OrderModel {
           deliveryFee: deliveryFee,
         );
 
-  String get deliveryAddressDetail => deliveryAddress?.address ?? '-';
+  String get deliveryAddressDetail {
+    final street = deliveryAddress?.streetLine ?? '';
+    return street.isNotEmpty ? street : '-';
+  }
   String get deliveryAddressTitle =>
       isPickupFulfillment ? 'Pickup' : 'Delivery Address';
   String get statusName => statusLabel ?? status;
@@ -483,6 +486,14 @@ class DeliveryAddressModel {
     this.floor,
     this.note,
   });
+
+  String get streetLine {
+    final primary = address.trim();
+    if (primary.isNotEmpty) return primary;
+    final mm = addressMm?.trim();
+    if (mm != null && mm.isNotEmpty) return mm;
+    return '';
+  }
 
   factory DeliveryAddressModel.fromJson(Map<String, dynamic> json) {
     return DeliveryAddressModel(
