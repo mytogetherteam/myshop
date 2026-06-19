@@ -19,7 +19,6 @@ class OrderQrScanIcon extends StatelessWidget {
     return IconButton(
       onPressed: () => openScanner(context),
       icon: Icon(PhosphorIconsRegular.qrCode, color: color, size: 26),
-      tooltip: 'Scan order QR code',
     );
   }
 }

@@ -1,6 +1,7 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:my_shop/core/presentation/widgets/local_path_image.dart';
 
 class FullscreenImageViewer extends StatelessWidget {
   final String? imageUrl;
@@ -27,11 +28,7 @@ class FullscreenImageViewer extends StatelessWidget {
         ),
         title: Text(
           title,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
       body: Center(
@@ -46,13 +43,11 @@ class FullscreenImageViewer extends StatelessWidget {
 
   Widget _buildImage() {
     if (imagePath != null) {
-      return localPathImage(imagePath!, fit: BoxFit.contain);
+      return kIsWeb ? Image.network(imagePath!) : Image.file(File(imagePath!));
     } else if (imageUrl != null && imageUrl!.isNotEmpty) {
       return CachedNetworkImage(
         imageUrl: imageUrl!,
-        placeholder: (_, _) => const Center(
-          child: CircularProgressIndicator(color: Colors.white),
-        ),
+        placeholder: (_, _) => const Center(child: CircularProgressIndicator(color: Colors.white)),
         errorWidget: (_, _, _) => const Icon(Icons.error, color: Colors.white),
       );
     }

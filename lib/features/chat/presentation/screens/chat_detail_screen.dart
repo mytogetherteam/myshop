@@ -168,10 +168,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     if (_isLoadingOlder || _currentPage >= _lastPage) return;
     setState(() => _isLoadingOlder = true);
 
-    final result = await ChatService.instance.getMessages(
-      _conversationId,
-      page: _currentPage + 1,
-    );
+    final result = await ChatService.instance
+        .getMessages(_conversationId, page: _currentPage + 1);
     if (!mounted) return;
 
     setState(() {
@@ -279,7 +277,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     if (type == 'CHAT_MESSAGE') {
       final wasNearBottom = _isNearBottom;
       if (wasNearBottom) {
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+        WidgetsBinding.instance
+            .addPostFrameCallback((_) => _scrollToBottom());
       }
       // We're viewing the conversation, so clear unread on the server.
       _markConversationRead();
@@ -321,10 +320,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     final result = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(
-          'Edit message',
-          style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
+        title: Text('Edit message',
+            style: GoogleFonts.poppins(
+                fontSize: 16, fontWeight: FontWeight.w600)),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -350,20 +348,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.poppins(color: const Color(0xFF64748B)),
-            ),
+            child: Text('Cancel',
+                style: GoogleFonts.poppins(color: const Color(0xFF64748B))),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: Text(
-              'Save',
-              style: GoogleFonts.poppins(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            child: Text('Save',
+                style: GoogleFonts.poppins(
+                    color: AppColors.primary, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -371,11 +363,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
     if (result == null || result.isEmpty || result == message.content) return;
 
-    final updated = await ChatService.instance.editMessage(
-      _conversationId,
-      message.id,
-      result,
-    );
+    final updated = await ChatService.instance
+        .editMessage(_conversationId, message.id, result);
     if (!mounted) return;
     if (updated != null) {
       setState(() {
@@ -391,31 +380,23 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(
-          'Delete message',
-          style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
-        content: Text(
-          'This message will be deleted for everyone.',
-          style: GoogleFonts.poppins(fontSize: 14),
-        ),
+        title: Text('Delete message',
+            style: GoogleFonts.poppins(
+                fontSize: 16, fontWeight: FontWeight.w600)),
+        content: Text('This message will be deleted for everyone.',
+            style: GoogleFonts.poppins(fontSize: 14)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.poppins(color: const Color(0xFF64748B)),
-            ),
+            child: Text('Cancel',
+                style: GoogleFonts.poppins(color: const Color(0xFF64748B))),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              'Delete',
-              style: GoogleFonts.poppins(
-                color: const Color(0xFFEF4444),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            child: Text('Delete',
+                style: GoogleFonts.poppins(
+                    color: const Color(0xFFEF4444),
+                    fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -423,10 +404,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
     if (confirm != true) return;
 
-    final ok = await ChatService.instance.deleteMessage(
-      _conversationId,
-      message.id,
-    );
+    final ok =
+        await ChatService.instance.deleteMessage(_conversationId, message.id);
     if (!mounted) return;
     if (ok) {
       setState(() {
@@ -460,10 +439,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             const SizedBox(height: 8),
             if (message.kind == ChatMessageKind.text)
               ListTile(
-                leading: const Icon(
-                  Icons.edit_rounded,
-                  color: Color(0xFF475569),
-                ),
+                leading: const Icon(Icons.edit_rounded,
+                    color: Color(0xFF475569)),
                 title: Text('Edit', style: GoogleFonts.poppins(fontSize: 15)),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -471,17 +448,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 },
               ),
             ListTile(
-              leading: const Icon(
-                Icons.delete_outline_rounded,
-                color: Color(0xFFEF4444),
-              ),
-              title: Text(
-                'Delete',
-                style: GoogleFonts.poppins(
-                  fontSize: 15,
-                  color: const Color(0xFFEF4444),
-                ),
-              ),
+              leading:
+                  const Icon(Icons.delete_outline_rounded, color: Color(0xFFEF4444)),
+              title: Text('Delete',
+                  style: GoogleFonts.poppins(
+                      fontSize: 15, color: const Color(0xFFEF4444))),
               onTap: () {
                 Navigator.pop(ctx);
                 _deleteMessage(message);
@@ -544,11 +515,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   String _formatDateSeparator(DateTime timestamp) {
     final now = DateTime.now();
-    final diff = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    ).difference(DateTime(timestamp.year, timestamp.month, timestamp.day));
+    final diff =
+        DateTime(now.year, now.month, now.day).difference(
+            DateTime(timestamp.year, timestamp.month, timestamp.day));
 
     if (diff.inDays == 0) return 'Today';
     if (diff.inDays == 1) return 'Yesterday';
@@ -652,8 +621,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       actions: [
         IconButton(
           onPressed: _openOrderSummarySheet,
-          tooltip:
-              AppLocalizations.of(context)?.translate('order_summary') ??
+          tooltip: AppLocalizations.of(context)?.translate('order_summary') ??
               'Order Summary',
           icon: const Icon(
             PhosphorIconsRegular.receipt,
@@ -684,25 +652,19 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               imageUrl: url,
               fit: BoxFit.cover,
               errorWidget: (_, _, _) => Center(
-                child: Text(
-                  initial,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
+                child: Text(initial,
+                    style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white)),
               ),
             )
           : Center(
-              child: Text(
-                initial,
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
+              child: Text(initial,
+                  style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white)),
             ),
     );
   }
@@ -722,21 +684,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.cloud_off_rounded,
-              size: 44,
-              color: Color(0xFFCBD5E1),
-            ),
+            const Icon(Icons.cloud_off_rounded,
+                size: 44, color: Color(0xFFCBD5E1)),
             const SizedBox(height: 12),
             TextButton(
               onPressed: _loadMessages,
-              child: Text(
-                t?.translate('retry') ?? 'Retry',
-                style: GoogleFonts.poppins(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              child: Text(t?.translate('retry') ?? 'Retry',
+                  style: GoogleFonts.poppins(
+                      color: AppColors.primary, fontWeight: FontWeight.w600)),
             ),
           ],
         ),
@@ -748,9 +703,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         child: Text(
           'Say hello 👋',
           style: GoogleFonts.poppins(
-            fontSize: 14,
-            color: const Color(0xFF94A3B8),
-          ),
+              fontSize: 14, color: const Color(0xFF94A3B8)),
         ),
       );
     }
@@ -804,9 +757,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             message.content ?? '',
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
-              fontSize: 12,
-              color: const Color(0xFF64748B),
-            ),
+                fontSize: 12, color: const Color(0xFF64748B)),
           ),
         ),
       ),
@@ -842,9 +793,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
-        mainAxisAlignment: isMe
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
+        mainAxisAlignment:
+            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMe) ...[
@@ -877,8 +827,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 constraints: BoxConstraints(
                   maxWidth: MediaQuery.of(context).size.width * 0.72,
                 ),
-                padding:
-                    message.kind == ChatMessageKind.image && !message.isDeleted
+                padding: message.kind == ChatMessageKind.image &&
+                        !message.isDeleted
                     ? const EdgeInsets.all(4)
                     : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
@@ -954,17 +904,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   height: 200,
                   color: const Color(0xFFF1F5F9),
                   child: const Center(
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
+                      child: CircularProgressIndicator(strokeWidth: 2)),
                 ),
                 errorWidget: (_, _, _) => Container(
                   width: 200,
                   height: 120,
                   color: const Color(0xFFF1F5F9),
-                  child: const Icon(
-                    Icons.broken_image_outlined,
-                    color: Color(0xFF94A3B8),
-                  ),
+                  child: const Icon(Icons.broken_image_outlined,
+                      color: Color(0xFF94A3B8)),
                 ),
               ),
             ),
@@ -1010,9 +957,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   Widget _buildMetaRow(ChatMessage message, bool isMe) {
-    final mutedColor = isMe
-        ? Colors.white.withValues(alpha: 0.7)
-        : const Color(0xFF94A3B8);
+    final mutedColor =
+        isMe ? Colors.white.withValues(alpha: 0.7) : const Color(0xFF94A3B8);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1020,20 +966,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           Text(
             'edited',
             style: GoogleFonts.poppins(
-              fontSize: 10,
-              fontStyle: FontStyle.italic,
-              color: mutedColor,
-            ),
+                fontSize: 10, fontStyle: FontStyle.italic, color: mutedColor),
           ),
           const SizedBox(width: 4),
         ],
         Text(
           _formatMessageTime(message.createdAt),
           style: GoogleFonts.poppins(
-            fontSize: 10,
-            fontWeight: FontWeight.w400,
-            color: mutedColor,
-          ),
+              fontSize: 10, fontWeight: FontWeight.w400, color: mutedColor),
         ),
         if (isMe) ...[
           const SizedBox(width: 4),
@@ -1138,9 +1078,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                         height: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
-                          ),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
                     : const PhosphorIcon(

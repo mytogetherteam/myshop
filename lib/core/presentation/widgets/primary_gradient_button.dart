@@ -6,7 +6,6 @@ class PrimaryGradientButton extends StatelessWidget {
   final String? text;
   final VoidCallback? onPressed;
   final bool isLoading;
-  final bool muted;
   final Widget? child;
   final double height;
   final double borderRadius;
@@ -17,90 +16,70 @@ class PrimaryGradientButton extends StatelessWidget {
     this.text,
     this.onPressed,
     this.isLoading = false,
-    this.muted = false,
     this.child,
     this.height = 54,
     this.borderRadius = 14,
     this.gradient,
   });
 
-  static const Color _mutedForeground = Color(0xFF94A3B8);
-
-  Widget _buildLabel(bool useMutedStyle) {
-    final foregroundColor = useMutedStyle ? _mutedForeground : Colors.white;
-
-    if (child != null) {
-      // Custom children (e.g. light secondary buttons) supply their own colors.
-      if (!useMutedStyle) {
-        return child!;
-      }
-
-      return IconTheme.merge(
-        data: IconThemeData(color: foregroundColor, size: 18),
-        child: DefaultTextStyle.merge(
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: foregroundColor,
-          ),
-          child: child!,
-        ),
-      );
-    }
-
-    return Text(
-      text ?? '',
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      textAlign: TextAlign.center,
-      style: GoogleFonts.poppins(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.3,
-        color: foregroundColor,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final isInteractive = onPressed != null && !isLoading;
-    final useMutedStyle = muted || !isInteractive;
+    final isDisabled = onPressed == null || isLoading;
 
-    return SizedBox(
+    return Container(
       width: double.infinity,
       height: height,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(borderRadius),
+        gradient: isDisabled
+            ? AppColors.getFadedGradient(AppColors.primaryGradient, 0.4)
+            : (gradient ?? AppColors.primaryGradient),
+      ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: isInteractive ? onPressed : null,
+          onTap: isDisabled ? null : onPressed,
           borderRadius: BorderRadius.circular(borderRadius),
           splashColor: Colors.white.withValues(alpha: 0.2),
           highlightColor: Colors.white.withValues(alpha: 0.1),
-          child: Ink(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(borderRadius),
-              color: useMutedStyle ? const Color(0xFFE2E8F0) : null,
-              gradient: useMutedStyle
-                  ? null
-                  : (gradient ?? AppColors.primaryGradient),
-            ),
-            child: Center(
+          child: SizedBox(
+            width: double.infinity,
+            height: height,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               child: isLoading
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ? const Center(
+                      child: SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
                       ),
                     )
-                  : Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: _buildLabel(useMutedStyle),
-                      ),
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Flexible(
+                          child: child ??
+                              Text(
+                                text ?? '',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.3,
+                                  color: Colors.white,
+                                  height: 1.0,
+                                ),
+                              ),
+                        ),
+                      ],
                     ),
             ),
           ),

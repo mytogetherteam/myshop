@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
@@ -63,25 +62,23 @@ class LogoPickerSheet extends StatelessWidget {
               vertical: 4,
             ),
           ),
-          if (!kIsWeb) ...[
-            const Divider(height: 1, indent: 64),
-            ListTile(
-              leading: const GradientWidget(
-                child: Icon(
-                  Icons.camera_alt_outlined,
-                ),
-              ),
-              title: Text(
-                t?.translate('take_photo') ?? 'Take a Photo',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-              ),
-              onTap: onCamera,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 4,
+          const Divider(height: 1, indent: 64),
+          ListTile(
+            leading: const GradientWidget(
+              child: Icon(
+                Icons.camera_alt_outlined,
               ),
             ),
-          ],
+            title: Text(
+              t?.translate('take_photo') ?? 'Take a Photo',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+            ),
+            onTap: onCamera,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 4,
+            ),
+          ),
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),

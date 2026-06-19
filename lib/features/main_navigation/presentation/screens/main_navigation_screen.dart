@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
@@ -24,7 +24,6 @@ import 'dart:async';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/core/notifications/notification_service.dart';
 import 'package:my_shop/core/notifications/order_alert_sound.dart';
-import 'package:my_shop/core/notifications/web_browser_notification.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 
 /// Lets deep order/pickup flows return to the Orders tab after completion.
@@ -53,6 +52,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final GlobalKey<ProfilePageState> _profileKey = GlobalKey<ProfilePageState>();
   final List<bool> _visited = [false, false, false, false, false];
 
+
   @override
   void initState() {
     super.initState();
@@ -70,10 +70,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     ChatUnreadController.instance.start();
     OrdersTabNavigation.returnToOrdersTab = _returnToOrdersTab;
 
+    if (kIsWeb) {
+      OrderAlertSound.prepareForUserInteraction();
+      unawaited(NotificationService().ensurePushRegistration());
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _showMenuWarningModal();
-      OrderAlertSound.prepareForUserInteraction();
-      NotificationService().ensurePushRegistration();
     });
   }
 
@@ -105,7 +108,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset('assets/images/app_logo.png', height: 60),
+                Image.asset(
+                  'assets/images/app_logo.png',
+                  height: 60,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'အရေးကြီးသတိပေးချက် - Partner ဆိုင်ရှင်များ အားလုံး သိရှိရန်',
@@ -156,50 +162,25 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   Future<void> _playAlertSoundIfNotViewing(String orderId) async {
     final routeName = 'order_detail_$orderId';
-    var isAlreadyOnThisOrder = false;
+    bool isAlreadyOnThisOrder = false;
     Navigator.popUntil(context, (route) {
       if (route.settings.name == routeName) {
         isAlreadyOnThisOrder = true;
       }
-      return true;
+      return true; // Don't actually pop anything
     });
 
     if (!isAlreadyOnThisOrder) {
-      await OrderAlertSound.playLoopingAlert(orderId: orderId);
+      try {
+        await OrderAlertSound.playLoopingAlert(orderId: orderId);
+      } catch (e) {
+        AppLogger.realtime('Audio play error: $e');
+      }
     }
   }
 
   void _stopAlertSound() {
     OrderAlertSound.stopAlert();
-  }
-
-  Future<bool> _showOrderAlertDialog({
-    required OrderModel orderData,
-    required Widget Function(BuildContext) dialogBuilder,
-  }) async {
-    if (!NotificationService.tryClaimOrderAlert(orderData.id.toString())) {
-      await _playAlertSoundIfNotViewing(orderData.id.toString());
-      return false;
-    }
-
-    await _playAlertSoundIfNotViewing(orderData.id.toString());
-
-    if (kIsWeb) {
-      await WebBrowserNotification.show(
-        title: 'New Order',
-        body: 'You have a new order waiting.',
-        tag: 'order-${orderData.id}',
-        requireInteraction: true,
-      );
-    }
-
-    await showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: dialogBuilder,
-    );
-    _stopAlertSound();
-    return true;
   }
 
   void _setupWebSocketListener() {
@@ -228,13 +209,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           );
 
           if (isTwoMinWarning) {
-            AppLogger.realtime(
-              'MainNavigation: triggering OrderWarningDialog (2-min)',
-            );
-            if (!kIsWeb) HapticFeedback.vibrate();
-            await _showOrderAlertDialog(
-              orderData: orderData,
-              dialogBuilder: (context) => OrderWarningDialog(
+            AppLogger.realtime('MainNavigation: triggering OrderWarningDialog (2-min)');
+            HapticFeedback.vibrate();
+            await _playAlertSoundIfNotViewing(orderData.id.toString());
+            await showDialog(
+              context: context,
+              barrierDismissible: true,
+              builder: (context) => OrderWarningDialog(
                 message: msg!,
                 order: orderData,
                 onTakeAction: () {
@@ -243,14 +224,17 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 },
               ),
             );
+            _stopAlertSound();
           } else if (status == 'PENDING' ||
               status == 'NEW' ||
               event['type'] == 'NEW_ORDER') {
             AppLogger.realtime('MainNavigation: triggering NewOrderDialog');
-            if (!kIsWeb) HapticFeedback.heavyImpact();
-            await _showOrderAlertDialog(
-              orderData: orderData,
-              dialogBuilder: (context) => NewOrderDialog(
+            HapticFeedback.heavyImpact();
+            await _playAlertSoundIfNotViewing(orderData.id.toString());
+            await showDialog(
+              context: context,
+              barrierDismissible: true,
+              builder: (context) => NewOrderDialog(
                 order: orderData,
                 onViewOrder: () {
                   Navigator.pop(context);
@@ -258,15 +242,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 },
               ),
             );
+            _stopAlertSound();
           } else if (msg != null && msg.trim().isNotEmpty) {
             // Generic warning for other status updates with messages
-            AppLogger.realtime(
-              'MainNavigation: triggering OrderWarningDialog (generic)',
-            );
-            if (!kIsWeb) HapticFeedback.vibrate();
-            await _showOrderAlertDialog(
-              orderData: orderData,
-              dialogBuilder: (context) => OrderWarningDialog(
+            AppLogger.realtime('MainNavigation: triggering OrderWarningDialog (generic)');
+            HapticFeedback.vibrate();
+            await _playAlertSoundIfNotViewing(orderData.id.toString());
+            await showDialog(
+              context: context,
+              barrierDismissible: true,
+              builder: (context) => OrderWarningDialog(
                 message: msg,
                 order: orderData,
                 onTakeAction: () {
@@ -275,6 +260,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 },
               ),
             );
+            _stopAlertSound();
           }
         }
       }
@@ -294,9 +280,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     });
 
     if (isAlreadyOnThisOrder) {
-      AppLogger.realtime(
-        'Already viewing order ${order.id}, skipping navigation.',
-      );
+      AppLogger.realtime('Already viewing order ${order.id}, skipping navigation.');
       return;
     }
 
@@ -333,6 +317,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       });
     }
   }
+
+
 
   Widget _buildGradientItem(IconData icon, String label) {
     return Padding(
@@ -381,6 +367,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     );
   }
 
+
+
   /// Overlays the live unread-chat count on top of the Chat tab icon.
   Widget _withChatBadge(Widget child) {
     return ValueListenableBuilder<int>(
@@ -395,10 +383,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 right: -2,
                 top: 4,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 5,
-                    vertical: 2,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                   decoration: const BoxDecoration(
                     color: Color(0xFFED3973),
                     shape: BoxShape.circle,
@@ -496,62 +481,28 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         elevation: 8,
         items: [
           BottomNavigationBarItem(
-            icon: _buildInactiveItem(
-              PhosphorIconsRegular.cookingPot,
-              t?.translate('order') ?? 'Order',
-            ),
-            activeIcon: _buildGradientItem(
-              PhosphorIconsFill.cookingPot,
-              t?.translate('order') ?? 'Order',
-            ),
+            icon: _buildInactiveItem(PhosphorIconsRegular.cookingPot, t?.translate('order') ?? 'Order'),
+            activeIcon: _buildGradientItem(PhosphorIconsFill.cookingPot, t?.translate('order') ?? 'Order'),
             label: t?.translate('order') ?? 'Order',
           ),
           BottomNavigationBarItem(
-            icon: _buildInactiveItem(
-              PhosphorIconsRegular.forkKnife,
-              t?.translate('menu') ?? 'Menu',
-            ),
-            activeIcon: _buildGradientItem(
-              PhosphorIconsFill.forkKnife,
-              t?.translate('menu') ?? 'Menu',
-            ),
+            icon: _buildInactiveItem(PhosphorIconsRegular.forkKnife, t?.translate('menu') ?? 'Menu'),
+            activeIcon: _buildGradientItem(PhosphorIconsFill.forkKnife, t?.translate('menu') ?? 'Menu'),
             label: t?.translate('menu') ?? 'Menu',
           ),
           BottomNavigationBarItem(
-            icon: _buildInactiveItem(
-              PhosphorIconsRegular.listHeart,
-              t?.translate('report') ?? 'Report',
-            ),
-            activeIcon: _buildGradientItem(
-              PhosphorIconsFill.listHeart,
-              t?.translate('report') ?? 'Report',
-            ),
+            icon: _buildInactiveItem(PhosphorIconsRegular.listHeart, t?.translate('report') ?? 'Report'),
+            activeIcon: _buildGradientItem(PhosphorIconsFill.listHeart, t?.translate('report') ?? 'Report'),
             label: t?.translate('report') ?? 'Report',
           ),
           BottomNavigationBarItem(
-            icon: _withChatBadge(
-              _buildInactiveItem(
-                PhosphorIconsRegular.chatCircle,
-                t?.translate('chat') ?? 'Chat',
-              ),
-            ),
-            activeIcon: _withChatBadge(
-              _buildGradientItem(
-                PhosphorIconsFill.chatCircle,
-                t?.translate('chat') ?? 'Chat',
-              ),
-            ),
+            icon: _withChatBadge(_buildInactiveItem(PhosphorIconsRegular.chatCircle, t?.translate('chat') ?? 'Chat')),
+            activeIcon: _withChatBadge(_buildGradientItem(PhosphorIconsFill.chatCircle, t?.translate('chat') ?? 'Chat')),
             label: t?.translate('chat') ?? 'Chat',
           ),
           BottomNavigationBarItem(
-            icon: _buildInactiveItem(
-              PhosphorIconsRegular.storefront,
-              t?.translate('profile') ?? 'Profile',
-            ),
-            activeIcon: _buildGradientItem(
-              PhosphorIconsFill.storefront,
-              t?.translate('profile') ?? 'Profile',
-            ),
+            icon: _buildInactiveItem(PhosphorIconsRegular.storefront, t?.translate('profile') ?? 'Profile'),
+            activeIcon: _buildGradientItem(PhosphorIconsFill.storefront, t?.translate('profile') ?? 'Profile'),
             label: t?.translate('profile') ?? 'Profile',
           ),
         ],

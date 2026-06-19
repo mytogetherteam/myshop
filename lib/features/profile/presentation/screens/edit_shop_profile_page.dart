@@ -1,12 +1,13 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/core/data/services/image_upload_service.dart';
-import 'package:my_shop/core/network/multipart_file_helper.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/core/presentation/widgets/fullscreen_image_viewer.dart';
 import 'package:my_shop/core/presentation/widgets/custom_search_dropdown.dart';
@@ -599,11 +600,27 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     };
 
     if (_pickedCover != null) {
-      payload['coverPhoto'] = await multipartFileFromXFile(_pickedCover!);
+      payload['coverPhoto'] = kIsWeb
+          ? MultipartFile.fromBytes(
+              await _pickedCover!.readAsBytes(),
+              filename: _pickedCover!.name,
+            )
+          : await MultipartFile.fromFile(
+              _pickedCover!.path,
+              filename: _pickedCover!.name,
+            );
     }
 
     if (_pickedLogo != null) {
-      payload['logoPhoto'] = await multipartFileFromXFile(_pickedLogo!);
+      payload['logoPhoto'] = kIsWeb
+          ? MultipartFile.fromBytes(
+              await _pickedLogo!.readAsBytes(),
+              filename: _pickedLogo!.name,
+            )
+          : await MultipartFile.fromFile(
+              _pickedLogo!.path,
+              filename: _pickedLogo!.name,
+            );
     }
 
     final success = await ProfileService().updateShopProfile(payload);

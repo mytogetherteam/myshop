@@ -51,12 +51,9 @@ class _CustomSearchDropdownState<T> extends State<CustomSearchDropdown<T>> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: _showBottomSheet,
-        child: Container(
+    return GestureDetector(
+      onTap: _showBottomSheet,
+      child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -86,7 +83,6 @@ class _CustomSearchDropdownState<T> extends State<CustomSearchDropdown<T>> {
               size: 24,
             ),
           ],
-        ),
         ),
       ),
     );
