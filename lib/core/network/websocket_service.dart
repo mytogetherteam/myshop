@@ -1,11 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 import 'package:my_shop/features/auth/data/services/auth_service.dart';
+import 'package:my_shop/core/auth/jwt_utils.dart';
 import 'package:my_shop/core/config/env_config.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/core/utils/app_logger.dart';
+import 'package:my_shop/core/network/api_client.dart';
+import 'package:my_shop/core/network/websocket_visibility_helper.dart'
+    if (dart.library.html) 'package:my_shop/core/network/websocket_visibility_helper_web.dart';
 
 class WebSocketService {
   static final WebSocketService _instance = WebSocketService._internal();
@@ -41,9 +46,10 @@ class WebSocketService {
   bool _isConnecting = false;
   bool _shouldReconnect = true;
   int _reconnectAttempts = 0;
-  static const int _maxReconnectAttempts = 5;
+  // No hard cap — always keep trying with a max 60-second delay ceiling.
   Timer? _reconnectTimer;
   int? _subscribedShopId;
+  bool _visibilityListenerSetUp = false;
 
   /// Normalises a STOMP frame body: strips the `\0` terminator and trims, so
   /// `json.decode` never chokes on the trailing null some brokers append.
@@ -52,6 +58,18 @@ class WebSocketService {
     if (raw == null || raw.isEmpty) return null;
     final cleaned = raw.replaceAll('\u0000', '').trim();
     return cleaned.isEmpty ? null : cleaned;
+  }
+
+  /// Set up a one-time web visibility listener so the socket reconnects
+  /// automatically whenever the user switches back to the PWA tab.
+  void _setupVisibilityListenerOnce() {
+    if (!kIsWeb || _visibilityListenerSetUp) return;
+    _visibilityListenerSetUp = true;
+    WebSocketVisibilityHelper.registerVisibilityListener(() {
+      AppLogger.realtime('[WS] Tab became visible — reconnecting');
+      _reconnectAttempts = 0; // Reset so we get the full retry budget.
+      connect(force: true);
+    });
   }
 
   Future<void> connect({bool force = false}) async {
@@ -82,11 +100,27 @@ class WebSocketService {
     _isConnecting = true;
     AppLogger.realtime('[WS] Connecting to ${EnvConfig.wsUrl}');
 
-    final token = await AuthService.instance.getAccessToken();
+    String? token = await AuthService.instance.getAccessToken();
     if (token == null || token.isEmpty) {
       _isConnecting = false;
+      _reconnectAttempts = 0;
       AppLogger.realtime('[WS] Connection aborted: no access token');
       return;
+    }
+
+    // Proactively refresh if the token is expired or about to expire
+    if (JwtUtils.isExpired(token, offsetSeconds: 30)) {
+      AppLogger.realtime('[WS] Token expired — refreshing before connect');
+      await AuthService.instance.performRefresh(ApiClient().dio);
+      // performRefresh handles logout + storage clear if refresh also fails
+      final fresh = await AuthService.instance.getAccessToken();
+      if (fresh == null || fresh.isEmpty) {
+        _isConnecting = false;
+        _reconnectAttempts = 0;
+        AppLogger.realtime('[WS] Connection aborted: token refresh failed');
+        return;
+      }
+      token = fresh;
     }
 
     _stompClient = StompClient(
@@ -131,17 +165,16 @@ class WebSocketService {
   void _scheduleReconnect() {
     if (!_shouldReconnect) return;
     if (_isConnecting) return; // Already trying to connect
-    if (_reconnectAttempts >= _maxReconnectAttempts) {
-      AppLogger.realtime('[WS] Max reconnection attempts reached');
-      return;
-    }
 
     _reconnectAttempts++;
-    final delay = Duration(seconds: _reconnectAttempts * 2);
+    // Cap delay at 60 seconds so the app never waits too long on mobile.
+    final baseSeconds = _reconnectAttempts < 10 ? _reconnectAttempts * 2 : 60;
+    final jitterSeconds = Random().nextInt(4); // 0–3 s random jitter
+    final delay = Duration(seconds: baseSeconds + jitterSeconds);
 
     AppLogger.realtime(
       '[WS] Scheduling reconnection in ${delay.inSeconds}s '
-      '(attempt $_reconnectAttempts/$_maxReconnectAttempts)',
+      '(attempt $_reconnectAttempts — unlimited retries)',
     );
 
     _reconnectTimer?.cancel();
@@ -156,6 +189,7 @@ class WebSocketService {
     _isConnecting = false;
     _reconnectAttempts = 0;
     connectionStatus.value = true;
+    _setupVisibilityListenerOnce(); // Register web tab-visible → reconnect (once only).
     AppLogger.realtime('[WS] Connected successfully');
 
     final token = await AuthService.instance.getAccessToken();
@@ -261,7 +295,8 @@ class WebSocketService {
     if (shopId != null && shopId != _subscribedShopId) {
       disconnect();
       await Future.delayed(const Duration(milliseconds: 300));
-      connect(force: true);
+      // FIX: await the reconnect so callers know when subscriptions are live.
+      await connect(force: true);
     }
   }
 

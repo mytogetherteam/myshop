@@ -16,10 +16,10 @@ class ReviewSummaryWidget extends StatelessWidget {
     final t = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
         border: Border.symmetric(
-          horizontal: BorderSide(color: Color(0xFFE2E8F0), width: 1),
+          horizontal: BorderSide(color: Theme.of(context).dividerColor, width: 1),
         ),
       ),
       child: Column(
@@ -30,12 +30,12 @@ class ReviewSummaryWidget extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF1E293B),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           _buildAverageRating(context),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           _buildRatingDistribution(context),
         ],
       ),
@@ -56,19 +56,19 @@ class ReviewSummaryWidget extends StatelessWidget {
               style: GoogleFonts.poppins(
                 fontSize: 32,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF1E293B),
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Text(
               t?.translate('out_of_5') ?? 'Out of 5',
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF1E293B),
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Row(
               children: List.generate(5, (index) {
                 return PhosphorIcon(
@@ -82,14 +82,14 @@ class ReviewSummaryWidget extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         Text(
           t?.translate('ratings_label') != null
               ? '${_formatNumber(summary.totalRatings)} ${t?.translate('ratings_label')}'
               : '${_formatNumber(summary.totalRatings)} ratings',
           style: GoogleFonts.poppins(
             fontSize: 14,
-            color: const Color(0xFF64748B),
+            color: Theme.of(context).textTheme.bodySmall?.color,
           ),
         ),
       ],
@@ -115,30 +115,30 @@ class ReviewSummaryWidget extends StatelessWidget {
                       : '$star stars',
                   style: GoogleFonts.poppins(
                     fontSize: 12,
-                    color: const Color(0xFF1E293B),
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: percentage,
                     minHeight: 8,
-                    backgroundColor: const Color(0xFFE2E8F0),
+                    backgroundColor: Theme.of(context).dividerColor,
                     valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               SizedBox(
                 width: 80,
                 child: Text(
                   '${(percentage * 100).toInt()}% (${_formatNumber(count)})',
                   style: GoogleFonts.poppins(
                     fontSize: 12,
-                    color: const Color(0xFF64748B),
+                    color: Theme.of(context).textTheme.bodySmall?.color,
                   ),
                 ),
               ),

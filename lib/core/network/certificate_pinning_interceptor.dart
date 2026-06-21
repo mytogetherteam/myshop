@@ -14,13 +14,14 @@ class CertificatePinningInterceptor extends Interceptor {
   }
 
   void _initPins() {
-    _hostPins['myshopdemoapi-production.up.railway.app'] = [
-      'd0971986fdb19fe936da41e20dfff66ced9754c1ba65660dd7b805cd69b7b131',
+    _hostPins['api.mytogether.org'] = [
+      'd7f995e9f25477b57a7e4208412706f09bf8cf8b168d867a97e6a44f9268fe73',
     ];
 
-    _hostPins['myshopdemoapi-staging.up.railway.app'] = [
-      'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
-    ];
+    // TODO: Add real certificate pin for staging server
+    // _hostPins['staging.api.mytogether.org'] = [
+    //   'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
+    // ];
   }
 
   void _setupPinning() {

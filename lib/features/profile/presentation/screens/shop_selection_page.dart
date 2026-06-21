@@ -69,7 +69,7 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      
       appBar: BackTitleAppBar(title: t?.translate('choose_shop') ?? 'Choose Shop'),
       body: RefreshIndicator(
         onRefresh: _loadShops,
@@ -106,7 +106,7 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(24),
       itemCount: _shops.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 16),
+      separatorBuilder: (context, index) => SizedBox(height: 16),
       itemBuilder: (context, index) => _buildShopCard(_shops[index]),
     );
   }
@@ -115,14 +115,14 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+        border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : const Color(0xFFF1F5F9)))),
       ),
       child: Row(
         children: [
           const Skeleton(width: 60, height: 60, borderRadius: 12),
-          const SizedBox(width: 16),
+          SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,7 +133,7 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           const Skeleton(width: 20, height: 20, borderRadius: 4),
         ],
       ),
@@ -151,9 +151,9 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFF1F5F9)),
+          border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : const Color(0xFFF1F5F9)))),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.03),
@@ -168,7 +168,7 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
+                color: Theme.of(context).dividerColor.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: ClipRRect(
@@ -177,18 +177,18 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
                     ? Image.network(
                         shop.logoUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stack) => const Icon(
+                        errorBuilder: (context, error, stack) => Icon(
                           PhosphorIconsRegular.storefront,
-                          color: Color(0xFF64748B),
+                          color: Theme.of(context).textTheme.bodySmall?.color,
                         ),
                       )
-                    : const Icon(
+                    : Icon(
                         PhosphorIconsRegular.storefront,
-                        color: Color(0xFF64748B),
+                        color: Theme.of(context).textTheme.bodySmall?.color,
                       ),
               ),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,27 +198,27 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1E293B),
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                   if (shop.address != null) ...[
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       shop.address!,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.poppins(
                         fontSize: 13,
-                        color: const Color(0xFF64748B),
+                        color: Theme.of(context).textTheme.bodySmall?.color,
                       ),
                     ),
                   ],
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               PhosphorIconsRegular.caretRight,
-              color: Color(0xFF94A3B8),
+              color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
               size: 20,
             ),
           ],

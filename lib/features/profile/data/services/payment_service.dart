@@ -1,6 +1,7 @@
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
@@ -17,7 +18,7 @@ class PaymentService {
       final response = await ApiClient().dio.get(
         _paymentsPath,
         options: forceRefresh
-            ? CacheOptions(store: MemCacheStore(), policy: CachePolicy.refresh).toOptions()
+            ? ApiClient.cacheOptions.copyWith(policy: CachePolicy.refresh).toOptions()
             : null,
       );
 
@@ -98,7 +99,6 @@ class PaymentService {
       final response = await ApiClient().dio.put(
         path,
         data: formData,
-        options: Options(headers: {'Content-Type': 'multipart/form-data'}),
       );
 
       if (response.statusCode != null &&

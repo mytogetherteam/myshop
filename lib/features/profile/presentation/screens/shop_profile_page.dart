@@ -204,23 +204,23 @@ class _ShopProfilePageState extends State<ShopProfilePage>
 
     if (_errorMessage != null) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        
         appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const PhosphorIcon(
+              PhosphorIcon(
                 PhosphorIconsRegular.warningCircle,
                 size: 48,
                 color: Color(0xFFED3973),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               Text(
                 _errorMessage!,
                 style: GoogleFonts.poppins(color: const Color(0xFF475569)),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               PrimaryGradientButton(
                 onPressed: _loadProfile,
                 text: t?.translate('retry') ?? 'Retry',
@@ -234,7 +234,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      
       body: Stack(
         children: [
           // ── Main scrollable content ──────────────────────────────────────
@@ -246,8 +246,8 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                 child: Transform.translate(
                   offset: const Offset(0, -32),
                   child: Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.vertical(
                         top: Radius.circular(32),
                       ),
@@ -267,7 +267,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                   TabBar(
                     controller: _tabController,
                     labelColor: AppColors.primary,
-                    unselectedLabelColor: const Color(0xFF64748B),
+                    unselectedLabelColor: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
                     indicatorColor: AppColors.primary,
                     indicatorWeight: 2,
                     labelStyle: GoogleFonts.poppins(
@@ -365,13 +365,13 @@ class _ShopProfilePageState extends State<ShopProfilePage>
       height: _heroHeight,
       width: double.infinity,
       clipBehavior: Clip.hardEdge,
-      decoration: const BoxDecoration(color: Colors.white),
+      decoration: BoxDecoration(color: Colors.white),
       child: Stack(
         children: [
           // Gradient as base / fallback (always visible)
           Positioned.fill(
             child: Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -423,9 +423,9 @@ class _ShopProfilePageState extends State<ShopProfilePage>
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 3),
+                border: Border.all(color: Theme.of(context).cardColor, width: 3),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.1),
@@ -445,7 +445,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                     : _buildLogoFallback(_shopProfile?.displayName ?? ''),
               ),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 4),
@@ -461,15 +461,15 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                             style: GoogleFonts.poppins(
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
-                              color: const Color(0xFF1E293B),
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         if (_shopProfile?.isVerified == true) ...[
-                          const SizedBox(width: 6),
-                          const PhosphorIcon(
+                          SizedBox(width: 6),
+                          PhosphorIcon(
                             PhosphorIconsFill.sealCheck,
                             size: 18,
                             color: Color(0xFF38BDF8),
@@ -482,7 +482,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                         '${_shopProfile?.categoryEn}${(_shopProfile?.subCategoryEn ?? '').isNotEmpty ? ' • ${_shopProfile?.subCategoryEn}' : ''}',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
-                          color: const Color(0xFF64748B),
+                          color: Theme.of(context).textTheme.bodySmall?.color,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -511,54 +511,54 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1E293B),
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
               _buildOpenStatusBadge(),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
 
           // Rating
           Row(
             children: [
-              const PhosphorIcon(
+              PhosphorIcon(
                 PhosphorIconsFill.star,
                 size: 16,
                 color: Color(0xFFF59E0B),
               ),
-              const SizedBox(width: 4),
+              SizedBox(width: 4),
               Text(
                 '${_shopProfile?.ratingAvg ?? 0.0}',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF1E293B),
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
-              const SizedBox(width: 4),
+              SizedBox(width: 4),
               Text(
                 t?.translate('reviews_count').replaceAll('{count}', '${_shopProfile?.ratingCount ?? 0}') ?? '(${_shopProfile?.ratingCount ?? 0} reviews)',
                 style: GoogleFonts.poppins(
                   fontSize: 13,
-                  color: const Color(0xFF94A3B8),
+                  color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
                 ),
               ),
               if ((_shopProfile?.viewCount ?? 0) > 0) ...[
-                const SizedBox(width: 8),
-                const PhosphorIcon(PhosphorIconsRegular.eye, size: 14, color: Color(0xFF94A3B8)),
-                const SizedBox(width: 4),
+                SizedBox(width: 8),
+                PhosphorIcon(PhosphorIconsRegular.eye, size: 14, color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                SizedBox(width: 4),
                 Text(
                   '${_shopProfile?.viewCount}',
                   style: GoogleFonts.poppins(
                     fontSize: 13,
-                    color: const Color(0xFF94A3B8),
+                    color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
                   ),
                 ),
               ],
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
 
           // Amenity chips
           Wrap(
@@ -575,7 +575,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                 _amenityChip(PhosphorIconsRegular.leaf, 'Vegetarian'),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
 
           // Delivery info row
           Container(
@@ -583,7 +583,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: Theme.of(context).dividerColor),
             ),
             child: Row(
               children: [
@@ -601,7 +601,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
               ],
             ),
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14),
 
           // Action buttons
           Row(
@@ -621,25 +621,25 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const PhosphorIcon(
+                      PhosphorIcon(
                         PhosphorIconsRegular.clock,
                         size: 18,
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Text(
                         t?.translate('operating_hours') ?? 'Operating Hours',
                         style: GoogleFonts.poppins(
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () {
@@ -651,21 +651,21 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                       ),
                     ).then((_) => _loadProfile());
                   },
-                  icon: const PhosphorIcon(
+                  icon: PhosphorIcon(
                     PhosphorIconsRegular.pencilSimple,
                     size: 18,
-                    color: Color(0xFF475569),
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
                   ),
                   label: Text(
                     t?.translate('edit_profile') ?? 'Edit Profile',
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
-                      color: const Color(0xFF475569),
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
                     ),
                   ),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFFE2E8F0)),
+                    side: BorderSide(color: Theme.of(context).dividerColor),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -678,23 +678,23 @@ class _ShopProfilePageState extends State<ShopProfilePage>
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14),
 
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: Theme.of(context).dividerColor),
             ),
             child: Row(
               children: [
-                const PhosphorIcon(
+                PhosphorIcon(
                   PhosphorIconsRegular.phone,
                   size: 18,
-                  color: Color(0xFF475569),
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -704,14 +704,14 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF1E293B),
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       Text(
                         t?.translate('phone_disclaimer') ?? 'This is the phone number currently shown to customers on your public profile.',
                         style: GoogleFonts.poppins(
                           fontSize: 11,
-                          color: const Color(0xFF94A3B8),
+                          color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
                         ),
                       ),
                     ],
@@ -749,20 +749,20 @@ class _ShopProfilePageState extends State<ShopProfilePage>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: Theme.of(context).dividerColor.withOpacity(0.3),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          PhosphorIcon(icon, size: 13, color: const Color(0xFF64748B)),
-          const SizedBox(width: 4),
+          PhosphorIcon(icon, size: 13, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)))),
+          SizedBox(width: 4),
           Text(
             label,
             style: GoogleFonts.poppins(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF475569),
+              color: Theme.of(context).textTheme.bodyMedium?.color,
             ),
           ),
         ],
@@ -775,20 +775,20 @@ class _ShopProfilePageState extends State<ShopProfilePage>
       child: Column(
         children: [
           GradientWidget(child: PhosphorIcon(icon, size: 18)),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             value,
             style: GoogleFonts.poppins(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF1E293B),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
           Text(
             label,
             style: GoogleFonts.poppins(
               fontSize: 10,
-              color: const Color(0xFF94A3B8),
+              color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
             ),
           ),
         ],
@@ -797,7 +797,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
   }
 
   Widget _infoStatDivider() {
-    return Container(width: 1, height: 24, color: const Color(0xFFE2E8F0));
+    return Container(width: 1, height: 24, color: Theme.of(context).dividerColor);
   }
 
   Widget _buildLogoFallback(String name) {
@@ -872,7 +872,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                     border: Border.all(
                       color: selected
                           ? const Color(0xFFED3973)
-                          : const Color(0xFFE2E8F0),
+                          : Theme.of(context).dividerColor,
                     ),
                   ),
                   child: Text(
@@ -895,7 +895,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
             style: GoogleFonts.poppins(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF1E293B),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
         ),
@@ -909,9 +909,9 @@ class _ShopProfilePageState extends State<ShopProfilePage>
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Row(
         children: [
@@ -927,16 +927,16 @@ class _ShopProfilePageState extends State<ShopProfilePage>
               errorBuilder: (_, _, _) => Container(
                 width: 90,
                 height: 80,
-                color: const Color(0xFFE2E8F0),
-                child: const PhosphorIcon(
+                color: Theme.of(context).dividerColor,
+                child: PhosphorIcon(
                   PhosphorIconsRegular.forkKnife,
                   size: 28,
-                  color: Color(0xFF94A3B8),
+                  color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
@@ -948,10 +948,10 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1E293B),
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Wrap(
                     spacing: 4,
                     children: [
@@ -981,7 +981,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                         ),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   Text(
                     '฿ ${item.price.toStringAsFixed(0)}',
                     style: GoogleFonts.poppins(
@@ -1027,9 +1027,9 @@ class _ShopProfilePageState extends State<ShopProfilePage>
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: Theme.of(context).dividerColor),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1041,7 +1041,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                     style: GoogleFonts.poppins(
                       fontSize: 48,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1E293B),
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                       height: 1,
                     ),
                   ),
@@ -1055,17 +1055,17 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   Text(
                     AppLocalizations.of(context)?.translate('reviews_count').replaceAll('{count}', '128') ?? '128 reviews',
                     style: GoogleFonts.poppins(
                       fontSize: 11,
-                      color: const Color(0xFF94A3B8),
+                      color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(width: 20),
+              SizedBox(width: 20),
               Expanded(
                 child: Column(
                   children: List.generate(5, (i) {
@@ -1079,20 +1079,20 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                             '$star',
                             style: GoogleFonts.poppins(
                               fontSize: 11,
-                              color: const Color(0xFF64748B),
+                              color: Theme.of(context).textTheme.bodySmall?.color,
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          const Icon(
+                          SizedBox(width: 4),
+                          Icon(
                             Icons.star,
                             size: 10,
                             color: Color(0xFFF59E0B),
                           ),
-                          const SizedBox(width: 6),
+                          SizedBox(width: 6),
                           Expanded(
                             child: LinearProgressIndicator(
                               value: vals[i],
-                              backgroundColor: const Color(0xFFE2E8F0),
+                              backgroundColor: Theme.of(context).dividerColor,
                               valueColor: const AlwaysStoppedAnimation(
                                 Color(0xFFF59E0B),
                               ),
@@ -1109,7 +1109,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         ..._reviews.map((r) => _buildReviewCard(r)),
       ],
     );
@@ -1120,9 +1120,9 @@ class _ShopProfilePageState extends State<ShopProfilePage>
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1141,7 +1141,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1151,14 +1151,14 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                       style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF1E293B),
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
                     Text(
                       r.date,
                       style: GoogleFonts.poppins(
                         fontSize: 11,
-                        color: const Color(0xFF94A3B8),
+                        color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
                       ),
                     ),
                   ],
@@ -1176,16 +1176,16 @@ class _ShopProfilePageState extends State<ShopProfilePage>
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             r.comment,
             style: GoogleFonts.poppins(
               fontSize: 13,
-              color: const Color(0xFF475569),
+              color: Theme.of(context).textTheme.bodyMedium?.color,
             ),
           ),
           if (r.tags.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Wrap(
               spacing: 6,
               children: r.tags
@@ -1196,14 +1196,14 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
+                        color: Theme.of(context).dividerColor.withOpacity(0.3),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
                         t,
                         style: GoogleFonts.poppins(
                           fontSize: 10,
-                          color: const Color(0xFF64748B),
+                          color: Theme.of(context).textTheme.bodySmall?.color,
                         ),
                       ),
                     ),
@@ -1240,7 +1240,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
           if (_shopProfile?.googleMapsLink?.isNotEmpty == true)
             _infoRow(PhosphorIconsRegular.mapTrifold, t?.translate('map_link') ?? 'Map Link', t?.translate('open_in_google_maps') ?? 'Open in Google Maps', highlight: true),
         ]),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         if (_shopProfile?.latitude != null && _shopProfile?.longitude != null)
           Container(
             height: 140,
@@ -1252,17 +1252,17 @@ class _ShopProfilePageState extends State<ShopProfilePage>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const PhosphorIcon(
+                  PhosphorIcon(
                     PhosphorIconsRegular.mapPin,
                     size: 32,
                     color: Color(0xFFED3973),
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   Text(
                     '$lat° N, $lng° E',
                     style: GoogleFonts.poppins(
                       fontSize: 12,
-                      color: const Color(0xFF475569),
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
                     ),
                   ),
                 ],
@@ -1270,7 +1270,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
             ),
           ),
         if (_shopProfile?.latitude != null && _shopProfile?.longitude != null)
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
         _sectionLabel(t?.translate('operating_hours') ?? 'Operating Hours'),
         _infoCard([
           if (_shopProfile?.operatingHours.isEmpty ?? true)
@@ -1287,7 +1287,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
               highlight: opHour.isClosed,
             ),
         ]),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         _sectionLabel(t?.translate('delivery_options') ?? 'Delivery Options'),
         _infoCard([
           _infoRow(
@@ -1301,7 +1301,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
             '฿ 50  •  15–20 min',
           ),
         ]),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         _sectionLabel(t?.translate('accepted_payments') ?? 'Accepted Payments'),
         _infoCard([
           _infoRow(PhosphorIconsRegular.money, t?.translate('cash_on_delivery') ?? 'Cash on Delivery', t?.translate('accepted') ?? 'Accepted'),
@@ -1324,7 +1324,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
         style: GoogleFonts.poppins(
           fontSize: 13,
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF475569),
+          color: Theme.of(context).textTheme.bodyMedium?.color,
         ),
       ),
     );
@@ -1333,9 +1333,9 @@ class _ShopProfilePageState extends State<ShopProfilePage>
   Widget _infoCard(List<Widget> rows) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
         children: rows
@@ -1346,9 +1346,9 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                 children: [
                   e.value,
                   if (e.key < rows.length - 1)
-                    const Divider(
+                    Divider(
                       height: 1,
-                      color: Color(0xFFE2E8F0),
+                      color: Theme.of(context).dividerColor,
                       indent: 14,
                       endIndent: 14,
                     ),
@@ -1371,8 +1371,8 @@ class _ShopProfilePageState extends State<ShopProfilePage>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          PhosphorIcon(icon, size: 18, color: const Color(0xFF94A3B8)),
-          const SizedBox(width: 10),
+          PhosphorIcon(icon, size: 18, color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)))),
+          SizedBox(width: 10),
           SizedBox(
             width: 90,
             child: Text(
@@ -1380,7 +1380,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
               style: GoogleFonts.poppins(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF475569),
+                color: Theme.of(context).textTheme.bodyMedium?.color,
               ),
             ),
           ),
@@ -1391,7 +1391,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                 fontSize: 13,
                 color: highlight
                     ? const Color(0xFFED3973)
-                    : const Color(0xFF1E293B),
+                    : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))),
                 fontWeight: highlight ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
@@ -1416,7 +1416,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
       itemBuilder: (context, index) {
         return Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFE2E8F0),
+            color: Theme.of(context).dividerColor,
             borderRadius: BorderRadius.circular(8),
           ),
         );
@@ -1429,7 +1429,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
   // -------------------------------------------------------------------------
   Widget _buildSkeletonProfile() {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -1444,9 +1444,9 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                     width: 72,
                     height: 72,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 3),
+                      border: Border.all(color: Theme.of(context).cardColor, width: 3),
                     ),
                     child: const ClipOval(
                       child: Skeleton(width: 72, height: 72),
@@ -1460,13 +1460,13 @@ class _ShopProfilePageState extends State<ShopProfilePage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   const Skeleton(width: 200, height: 24),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   const Skeleton(width: 120, height: 16),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   const Skeleton(width: 150, height: 16),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Row(
                     children: const [
                       Skeleton(width: 60, height: 24),
@@ -1476,9 +1476,9 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                       Skeleton(width: 70, height: 24),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   const Skeleton(width: double.infinity, height: 64),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Row(
                     children: const [
                       Expanded(child: Skeleton(height: 48)),
@@ -1486,7 +1486,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                       Expanded(child: Skeleton(height: 48)),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   const Skeleton(width: double.infinity, height: 60),
                 ],
               ),
@@ -1508,7 +1508,7 @@ class _TabHeaderDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    return Container(color: Colors.white, child: tabBar);
+    return Container(color: Theme.of(context).cardColor, child: tabBar);
   }
 
   @override

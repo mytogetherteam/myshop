@@ -520,5 +520,10 @@
   "terms_and_privacy": "I agree to the Terms of Service and Privacy Policy",
   "please_agree_terms": "Please agree to the Terms of Service and Privacy Policy",
   "display_over_apps": "Display Over Apps",
-  "display_over_apps_desc": "Required to wake up the screen and show new orders like a phone call."
+  "display_over_apps_desc": "Required to wake up the screen and show new orders like a phone call.",
+  "app_appearance": "App Appearance",
+  "choose_theme_mode": "Choose your preferred theme mode",
+  "system_default": "System Default",
+  "light_mode": "Light Mode",
+  "dark_mode": "Dark Mode"
 }

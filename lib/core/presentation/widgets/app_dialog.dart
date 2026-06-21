@@ -26,7 +26,7 @@ class AppDialog {
             children: [
               Icon(
                 isError ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded,
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 size: 20,
               ),
               const SizedBox(width: 12),
@@ -34,7 +34,7 @@ class AppDialog {
                 child: Text(
                   message,
                   style: GoogleFonts.poppins(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -78,13 +78,13 @@ class AppDialog {
       context: context,
       barrierDismissible: barrierDismissible,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).cardColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
         title: Row(
           children: [
-            Image.asset('assets/images/app_logo.png', width: 24, height: 24),
+            Image.asset('assets/images/app_logo2.png', width: 24, height: 24),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -92,7 +92,7 @@ class AppDialog {
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.w700,
                   fontSize: 16,
-                  color: const Color(0xFF1E293B),
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
             ),
@@ -102,7 +102,7 @@ class AppDialog {
           message,
           style: GoogleFonts.poppins(
             fontSize: 14,
-            color: const Color(0xFF475569),
+            color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
         actions: [
@@ -111,7 +111,7 @@ class AppDialog {
             child: Text(
               cancelLabel ?? 'Cancel',
               style: GoogleFonts.poppins(
-                color: const Color(0xFF475569),
+                color: Theme.of(context).textTheme.bodyMedium?.color,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -170,7 +170,7 @@ class _SuccessDialogState extends State<_SuccessDialog> with SingleTickerProvide
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).cardColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
@@ -191,10 +191,10 @@ class _SuccessDialogState extends State<_SuccessDialog> with SingleTickerProvide
                     color: AppColors.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const GradientWidget(
+                  child: GradientWidget(
                     child: Icon(
                       Icons.check_rounded,
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       size: 48,
                     ),
                   ),
@@ -207,7 +207,7 @@ class _SuccessDialogState extends State<_SuccessDialog> with SingleTickerProvide
               style: GoogleFonts.poppins(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF1E293B),
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
             const SizedBox(height: 12),
@@ -216,7 +216,7 @@ class _SuccessDialogState extends State<_SuccessDialog> with SingleTickerProvide
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 15,
-                color: const Color(0xFF64748B),
+                color: Theme.of(context).textTheme.bodySmall?.color,
                 height: 1.5,
               ),
             ),
@@ -228,12 +228,14 @@ class _SuccessDialogState extends State<_SuccessDialog> with SingleTickerProvide
               },
               height: 54,
               borderRadius: 16,
-              child: Text(
-                'Done',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
+              child: Center(
+                child: Text(
+                  'Done',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),

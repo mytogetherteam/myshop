@@ -23,7 +23,7 @@ class _SuccessSheetState extends State<SuccessSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
+              color: Theme.of(context).dividerColor,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -53,7 +53,7 @@ class _SuccessSheetState extends State<SuccessSheet> {
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF1E293B),
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
         const SizedBox(height: 12),
@@ -64,7 +64,7 @@ class _SuccessSheetState extends State<SuccessSheet> {
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 14,
-              color: const Color(0xFF64748B),
+              color: Theme.of(context).textTheme.bodySmall?.color,
               height: 1.5,
             ),
           ),

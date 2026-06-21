@@ -153,11 +153,11 @@ class _StatusProgressIndicatorState extends State<StatusProgressIndicator> with 
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: isActive ? null : const Color(0xFFF1F5F9),
+            color: isActive ? null : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : const Color(0xFFF1F5F9)))),
             gradient: isActive
                 ? LinearGradient(
                     colors: AppColors.primaryGradient.colors
-                        .map((c) => c.withValues(alpha: 0.15))
+                        .map((c) => c.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.15))
                         .toList(),
                   )
                 : null,
@@ -172,7 +172,7 @@ class _StatusProgressIndicatorState extends State<StatusProgressIndicator> with 
                   ]
                 : null,
             border: Border.all(
-              color: isActive ? AppColors.primary.withValues(alpha: 0.2) : const Color(0xFFE2E8F0),
+              color: isActive ? AppColors.primary.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.4 : 0.2) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : Theme.of(context).dividerColor),
               width: 2,
             ),
           ),
@@ -188,16 +188,18 @@ class _StatusProgressIndicatorState extends State<StatusProgressIndicator> with 
               : Icon(
                   icon,
                   size: 18,
-                  color: const Color(0xFF94A3B8),
+                  color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
                 ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6),
         Text(
           label,
           style: TextStyle(
             fontSize: 10,
             fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w500,
-            color: isCurrent ? const Color(0xFF1E293B) : const Color(0xFF94A3B8),
+            color: isCurrent 
+                ? (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))
+                : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
           ),
         ),
       ],
@@ -222,12 +224,12 @@ class _StatusProgressIndicatorState extends State<StatusProgressIndicator> with 
               // Background track
               Container(
                 height: 3,
-                color: const Color(0xFFE2E8F0),
+                color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : Theme.of(context).dividerColor,
               ),
               if (isCompleted)
                 Container(
                   height: 3,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     gradient: AppColors.primaryGradient,
                   ),
                 ),

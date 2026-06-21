@@ -26,9 +26,9 @@ class SummaryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -42,7 +42,7 @@ class SummaryCard extends StatelessWidget {
               fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -58,17 +58,17 @@ class SummaryCard extends StatelessWidget {
                             ? const Color(0xFF22C55E)
                             : ((label == "Cancelled" || label == (AppLocalizations.of(context)?.translate('cancelled') ?? "Cancelled"))
                                 ? const Color(0xFFEF4444)
-                                : const Color(0xFF1E293B)),
+                                : Theme.of(context).textTheme.bodyLarge?.color ?? (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)))),
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     if (unit != null) ...[
-                      const SizedBox(width: 4),
+                      SizedBox(width: 4),
                       Text(
                         unit!,
                         style: GoogleFonts.poppins(
-                          color: const Color(0xFF1E293B),
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -86,7 +86,7 @@ class SummaryCard extends StatelessWidget {
                       size: 12,
                       color: (isTrendPositive ?? isPositive) ? const Color(0xFF22C55E) : const Color(0xFFEF4444),
                     ),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Flexible(
                       child: FittedBox(
                         fit: BoxFit.scaleDown,

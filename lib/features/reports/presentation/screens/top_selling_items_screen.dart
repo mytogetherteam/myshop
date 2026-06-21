@@ -99,7 +99,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
     List<DateTime?>? results = await showModalBottomSheet<List<DateTime?>>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -142,9 +142,9 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                       children: [
                         IconButton(
                           onPressed: () => Navigator.pop(context),
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.expand_more,
-                            color: Color(0xFF64748B),
+                            color: Theme.of(context).textTheme.bodySmall?.color,
                           ),
                         ),
                         Expanded(
@@ -158,20 +158,20 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                             textAlign: TextAlign.center,
                           ),
                         ),
-                        const SizedBox(width: 48),
+                        SizedBox(width: 48),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   Text(
                     rangeText,
                     style: GoogleFonts.poppins(
                       fontSize: 28,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1E293B),
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   CalendarDatePicker2(
                     config: CalendarDatePicker2Config(
                       calendarType: CalendarDatePicker2Type.range,
@@ -185,21 +185,21 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                       disableVibration: true,
                       rangeBidirectional: true,
                       weekdayLabelTextStyle: GoogleFonts.poppins(
-                        color: const Color(0xFF64748B),
+                        color: Theme.of(context).textTheme.bodySmall?.color,
                         fontWeight: FontWeight.w500,
                         fontSize: 13,
                       ),
                       controlsTextStyle: GoogleFonts.poppins(
-                        color: const Color(0xFF1E293B),
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
                       ),
                       dayTextStyle: GoogleFonts.poppins(
-                        color: const Color(0xFF1E293B),
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                         fontWeight: FontWeight.w400,
                       ),
                       selectedDayTextStyle: GoogleFonts.poppins(
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         fontWeight: FontWeight.w600,
                       ),
                       todayTextStyle: GoogleFonts.poppins(
@@ -214,7 +214,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                       setModalState(() => tempValues = values);
                     },
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Row(
@@ -225,7 +225,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                           child: Text(
                             t?.translate('cancel').toUpperCase() ?? "CANCEL",
                             style: GoogleFonts.poppins(
-                              color: const Color(0xFF64748B),
+                              color: Theme.of(context).textTheme.bodySmall?.color,
                               fontWeight: FontWeight.w600,
                               fontSize: 15,
                             ),
@@ -276,13 +276,13 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -290,7 +290,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
         centerTitle: false,
@@ -299,7 +299,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -335,7 +335,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                         border: Border.all(
                           color: isSelected
                               ? const Color(0xFFED3973)
-                              : const Color(0xFFE2E8F0),
+                              : Theme.of(context).dividerColor,
                         ),
                       ),
                       child: Text(
@@ -343,7 +343,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                         style: GoogleFonts.poppins(
                           color: isSelected
                               ? Colors.white
-                              : const Color(0xFF64748B),
+                              : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
                           fontSize: 14,
                           fontWeight: isSelected
                               ? FontWeight.w500
@@ -356,7 +356,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
               }),
             ),
           ),
-          const Divider(color: Color(0xFFF1F5F9), height: 32, thickness: 1),
+          Divider(color: Theme.of(context).dividerColor.withOpacity(0.3), height: 32, thickness: 1),
           if (_selectedFilterIndex == 3 && _selectedDateRange != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 16, left: 20, right: 20),
@@ -365,9 +365,9 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      border: Border.all(color: Theme.of(context).dividerColor),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.03),
@@ -385,7 +385,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                             size: 18,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         GestureDetector(
                           onTap: _showCustomDatePicker,
                           child: GradientText(
@@ -396,7 +396,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         GestureDetector(
                           onTap: () {
                             setState(() {
@@ -405,10 +405,10 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                             });
                             _loadInitialData();
                           },
-                          child: const Icon(
+                          child: Icon(
                             Icons.close,
                             size: 16,
-                            color: Color(0xFF94A3B8),
+                            color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
                           ),
                         ),
                       ],
@@ -434,7 +434,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                                   t?.translate('no_top_selling_items_yet') ??
                                       "No sales data for this period",
                                   style: GoogleFonts.poppins(
-                                    color: const Color(0xFF64748B),
+                                    color: Theme.of(context).textTheme.bodySmall?.color,
                                   ),
                                 ),
                               ),
@@ -474,7 +474,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       itemCount: 8,
       itemBuilder: (context, index) {
-        return const Padding(
+        return Padding(
           padding: EdgeInsets.symmetric(vertical: 16),
           child: Row(
             children: [

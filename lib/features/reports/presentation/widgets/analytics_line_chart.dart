@@ -54,7 +54,7 @@ class _AnalyticsLineChartState extends State<AnalyticsLineChart> {
             horizontalInterval: 2000,
             getDrawingHorizontalLine: (value) {
               return FlLine(
-                color: const Color(0xFFE2E8F0),
+                color: Theme.of(context).dividerColor,
                 strokeWidth: 1,
                 dashArray: [4, 4],
               );
@@ -80,8 +80,8 @@ class _AnalyticsLineChartState extends State<AnalyticsLineChart> {
                       meta: meta,
                       child: Text(
                         widget.bottomLabels[index],
-                        style: const TextStyle(
-                          color: Color(0xFF94A3B8),
+                        style: TextStyle(
+                          color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
                           fontSize: 10,
                         ),
                       ),
@@ -100,10 +100,10 @@ class _AnalyticsLineChartState extends State<AnalyticsLineChart> {
                   if (value == widget.minY) {
                     return SideTitleWidget(
                       meta: meta,
-                      child: const Text(
+                      child: Text(
                         '0',
                         style: TextStyle(
-                          color: Color(0xFF94A3B8),
+                          color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
                           fontSize: 10,
                         ),
                       ),
@@ -113,8 +113,8 @@ class _AnalyticsLineChartState extends State<AnalyticsLineChart> {
                     meta: meta,
                     child: Text(
                       '฿ ${(value / 1000).toStringAsFixed(0)},000',
-                      style: const TextStyle(
-                        color: Color(0xFF94A3B8),
+                      style: TextStyle(
+                        color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
                         fontSize: 10,
                       ),
                     ),

@@ -57,7 +57,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      
       appBar: BackTitleAppBar(
         title: t?.translate('feedback') ?? 'Feedback',
         actions: [
@@ -75,11 +75,11 @@ class _FeedbackPageState extends State<FeedbackPage> {
                 itemBuilder: (_, _) => Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.outlineVariant),
                   ),
-                  child: const Column(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Skeleton(height: 12, width: double.infinity),
@@ -106,15 +106,15 @@ class _FeedbackPageState extends State<FeedbackPage> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.all(24),
                     itemCount: _feedbacks.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 16),
+                    separatorBuilder: (context, index) => SizedBox(height: 16),
                     itemBuilder: (context, index) {
                       final feedback = _feedbacks[index];
                       return Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          border: Border.all(color: Theme.of(context).dividerColor),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,16 +123,16 @@ class _FeedbackPageState extends State<FeedbackPage> {
                               feedback.description,
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
-                                color: const Color(0xFF1E293B),
+                                color: Theme.of(context).textTheme.bodyLarge?.color,
                                 height: 1.5,
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            SizedBox(height: 8),
                             Text(
                               DateFormat('MMM d, yyyy').format(feedback.createdAt),
                               style: GoogleFonts.poppins(
                                 fontSize: 12,
-                                color: const Color(0xFF94A3B8),
+                                color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
                               ),
                             ),
                           ],
@@ -196,7 +196,7 @@ class _SubmitFeedbackDialogState extends State<SubmitFeedbackDialog> {
     final t = AppLocalizations.of(context);
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -208,37 +208,37 @@ class _SubmitFeedbackDialogState extends State<SubmitFeedbackDialog> {
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF1E293B),
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             TextField(
               controller: _feedbackController,
               maxLines: 4,
               decoration: InputDecoration(
                 hintText: t?.translate('feedback_hint') ?? 'Tell us what you think...',
                 hintStyle: GoogleFonts.poppins(
-                  color: const Color(0xFF94A3B8),
+                  color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
                   fontSize: 14,
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  borderSide: BorderSide(color: Theme.of(context).dividerColor),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  borderSide: BorderSide(color: Theme.of(context).dividerColor),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFED3973)),
+                  borderSide: BorderSide(color: Color(0xFFED3973)),
                 ),
                 suffixIcon: ValueListenableBuilder<TextEditingValue>(
                   valueListenable: _feedbackController,
                   builder: (context, value, child) {
                     if (value.text.isEmpty) return const SizedBox.shrink();
                     return IconButton(
-                      icon: const Icon(Icons.clear, color: Color(0xFF94A3B8), size: 20),
+                      icon: Icon(Icons.clear, color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)), size: 20),
                       onPressed: () {
                         _feedbackController.clear();
                       },
@@ -249,7 +249,7 @@ class _SubmitFeedbackDialogState extends State<SubmitFeedbackDialog> {
                 fillColor: const Color(0xFFF8FAFC),
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             Row(
               children: [
                 Expanded(
@@ -259,12 +259,12 @@ class _SubmitFeedbackDialogState extends State<SubmitFeedbackDialog> {
                       t?.translate('cancel') ?? 'Cancel',
                       style: GoogleFonts.poppins(
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF64748B),
+                        color: Theme.of(context).textTheme.bodySmall?.color,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 Expanded(
                   child: PrimaryGradientButton(
                     onPressed: _isSubmitting ? null : _submit,

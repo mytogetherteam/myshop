@@ -6,6 +6,8 @@ import 'features/notifications/presentation/screens/notification_permission_scre
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/localization/app_localizations.dart';
 import 'core/presentation/widgets/connectivity_wrapper.dart';
+import 'core/theme/app_theme.dart';
+import 'core/theme/theme_service.dart';
 
 class App extends StatelessWidget {
   static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -14,17 +16,19 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<Locale>(
-      valueListenable: LocalizationService.instance.localeNotifier,
-      builder: (context, locale, child) {
-        return MaterialApp(
-          navigatorKey: navigatorKey,
-          title: 'My Shop',
-          theme: ThemeData(
-            useMaterial3: true,
-            colorSchemeSeed: AppColors.primary,
-          ),
-          debugShowCheckedModeBanner: false,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeService.instance.themeModeNotifier,
+      builder: (context, themeMode, _) {
+        return ValueListenableBuilder<Locale>(
+          valueListenable: LocalizationService.instance.localeNotifier,
+          builder: (context, locale, child) {
+            return MaterialApp(
+              navigatorKey: navigatorKey,
+              title: 'My Shop',
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: themeMode,
+              debugShowCheckedModeBanner: false,
           locale: locale,
           supportedLocales: const [
             Locale('en', ''),
@@ -58,5 +62,7 @@ class App extends StatelessWidget {
         );
       },
     );
+  },
+);
   }
 }

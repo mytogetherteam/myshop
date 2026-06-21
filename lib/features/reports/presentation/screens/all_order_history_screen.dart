@@ -4,6 +4,11 @@ import 'package:intl/intl.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/features/reports/presentation/widgets/order_history_item.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
+import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
+import 'package:my_shop/features/orders/data/services/order_service.dart';
+import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 import '../../data/models/report_model.dart';
 import '../../data/services/report_service.dart';
 
@@ -68,6 +73,48 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
     super.dispose();
   }
 
+  Future<void> _navigateToOrder(int orderId) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CustomLoadingIndicator(size: 40, color: Colors.white),
+      ),
+    );
+
+    final order = await OrderService().getOrderDetail(orderId.toString());
+
+    if (mounted) {
+      Navigator.pop(context); // Close loading
+      if (order != null) {
+        await Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                OrderDetailScreen(order: order),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              const begin = Offset(1.0, 0.0);
+              const end = Offset.zero;
+              const curve = Curves.easeOut;
+              var tween =
+                  Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+              return SlideTransition(
+                  position: animation.drive(tween), child: child);
+            },
+            reverseTransitionDuration: Duration.zero,
+          ),
+        );
+      } else {
+        AppDialog.showToast(
+          context,
+          AppLocalizations.of(context)?.translate('could_not_find_order_details') ??
+              'Could not find order details.',
+          isError: true,
+        );
+      }
+    }
+  }
+
   Future<void> _loadInitialData() async {
     if (mounted) {
       setState(() {
@@ -109,13 +156,13 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -123,7 +170,7 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
         centerTitle: false,
@@ -132,7 +179,7 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           SizedBox(
             height: 40,
             child: ListView.builder(
@@ -167,14 +214,11 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
                       alignment: Alignment.center,
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
-                        color: isSelected
-                            ? const Color(0xFFED3973)
-                            : Colors.white,
+                        gradient: isSelected ? AppColors.primaryGradient : null,
+                        color: isSelected ? null : Colors.transparent,
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isSelected
-                              ? const Color(0xFFED3973)
-                              : const Color(0xFFE2E8F0),
+                        border: isSelected ? null : Border.all(
+                          color: Theme.of(context).dividerColor,
                         ),
                       ),
                       child: Text(
@@ -182,7 +226,7 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
                         style: GoogleFonts.poppins(
                           color: isSelected
                               ? Colors.white
-                              : const Color(0xFF64748B),
+                              : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                           fontSize: 14,
                           fontWeight: isSelected
                               ? FontWeight.w500
@@ -195,7 +239,7 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
               },
             ),
           ),
-          const Divider(color: Color(0xFFF1F5F9), height: 32, thickness: 1),
+          Divider(color: Theme.of(context).dividerColor.withValues(alpha: 0.3), height: 32, thickness: 1),
           Expanded(
             child: RefreshIndicator(
               onRefresh: _loadInitialData,
@@ -213,7 +257,7 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
                                   t?.translate('no_orders_yet') ??
                                       "No orders found",
                                   style: GoogleFonts.poppins(
-                                    color: const Color(0xFF64748B),
+                                    color: Theme.of(context).textTheme.bodySmall?.color,
                                   ),
                                 ),
                               ),
@@ -244,7 +288,7 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
                                     style: GoogleFonts.poppins(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF1E293B),
+                                      color: Theme.of(context).textTheme.bodyLarge?.color,
                                     ),
                                   ),
                                 ),
@@ -266,17 +310,18 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
                                         statusColor: isCancelled
                                             ? const Color(0xFFEF4444)
                                             : const Color(0xFF22C55E),
+                                        onTap: () => _navigateToOrder(order.id),
                                       ),
                                       if (orderIndex < dayData.orders.length - 1)
-                                        const Divider(
-                                          color: Color(0xFFF1F5F9),
+                                        Divider(
+                                          color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
                                           height: 1,
                                           thickness: 1,
                                         ),
                                     ],
                                   );
                                 }),
-                                const SizedBox(height: 16),
+                                SizedBox(height: 16),
                               ],
                             );
                           },
@@ -296,7 +341,7 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
       itemBuilder: (_, _) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
             child: Skeleton(height: 16, width: 120),
           ),
@@ -309,7 +354,7 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
                   child: Row(
                     children: [
                       const Skeleton.circle(width: 8, height: 8),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,21 +365,21 @@ class _AllOrderHistoryScreenState extends State<AllOrderHistoryScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       const Skeleton(height: 14, width: 60),
                     ],
                   ),
                 ),
                 if (i < 2)
-                  const Divider(
-                    color: Color(0xFFF1F5F9),
+                  Divider(
+                    color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
                     height: 1,
                     thickness: 1,
                   ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
         ],
       ),
     );

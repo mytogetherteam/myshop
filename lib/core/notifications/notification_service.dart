@@ -289,62 +289,66 @@ class NotificationService {
     if (isNewOrder) {
       final String? orderIdStr = message.data['orderId']?.toString() ?? message.data['order_id']?.toString();
       if (orderIdStr != null) {
-        // Wait until navigator context is available
+        // Wait until navigator context is available using post-frame callback
         BuildContext? context = App.navigatorKey.currentContext;
-        int retries = 0;
-        while (context == null && retries < 10) {
-          await Future.delayed(const Duration(milliseconds: 500));
-          context = App.navigatorKey.currentContext;
-          retries++;
-        }
-
-        if (context != null) {
-          try {
-            final orderData = await OrderService().getOrderDetail(orderIdStr);
-            if (orderData != null) {
-              // Play loop alert if needed since the notification sound might only play once
-              NotificationService.globalAlertAudioPlayer = AudioPlayer();
-              NotificationService.globalAlertAudioPlayer!.setReleaseMode(ReleaseMode.loop);
-              NotificationService.globalAlertAudioPlayer!.play(AssetSource('alert/alert.mp3'));
-
-              showDialog(
-                context: context,
-                barrierDismissible: true,
-                builder: (context) => NewOrderDialog(
-                  order: orderData,
-                  onViewOrder: () {
-                    NotificationService.stopGlobalAlert();
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      PageRouteBuilder(
-                        settings: RouteSettings(name: 'order_detail_$orderIdStr'),
-                        pageBuilder: (context, animation, secondaryAnimation) =>
-                            OrderDetailScreen(order: orderData),
-                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                          const begin = Offset(1.0, 0.0);
-                          const end = Offset.zero;
-                          const curve = Curves.easeOut;
-                          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                          return SlideTransition(position: animation.drive(tween), child: child);
-                        },
-                      ),
-                    );
-                  },
-                ),
-              ).then((_) {
-                NotificationService.stopGlobalAlert();
-              });
-              return;
-            }
-          } catch (e) {
-            debugPrint('Failed to load order from notification: $e');
-          }
+        
+        if (context == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _processOrderNotification(orderIdStr);
+          });
+        } else {
+          _processOrderNotification(orderIdStr);
         }
       }
+    } else {
+      // Default: Navigate to notifications screen
+      App.navigatorKey.currentState?.pushNamed('/notifications');
     }
+  }
 
-    // Default: Navigate to notifications screen
-    App.navigatorKey.currentState?.pushNamed('/notifications');
+  void _processOrderNotification(String orderIdStr) async {
+    final context = App.navigatorKey.currentContext;
+    if (context == null) return;
+    
+    try {
+      final orderData = await OrderService().getOrderDetail(orderIdStr);
+      if (orderData != null) {
+        // Play loop alert if needed since the notification sound might only play once
+        NotificationService.globalAlertAudioPlayer = AudioPlayer();
+        NotificationService.globalAlertAudioPlayer!.setReleaseMode(ReleaseMode.loop);
+        NotificationService.globalAlertAudioPlayer!.play(AssetSource('alert/alert.mp3'));
+
+        showDialog(
+          context: context,
+          barrierDismissible: true,
+          builder: (context) => NewOrderDialog(
+            order: orderData,
+            onViewOrder: () {
+              NotificationService.stopGlobalAlert();
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                PageRouteBuilder(
+                  settings: RouteSettings(name: 'order_detail_$orderIdStr'),
+                  pageBuilder: (context, animation, secondaryAnimation) =>
+                      OrderDetailScreen(order: orderData),
+                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                    const begin = Offset(1.0, 0.0);
+                    const end = Offset.zero;
+                    const curve = Curves.easeOut;
+                    var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                    return SlideTransition(position: animation.drive(tween), child: child);
+                  },
+                ),
+              );
+            },
+          ),
+        ).then((_) {
+          NotificationService.stopGlobalAlert();
+        });
+      }
+    } catch (e) {
+      debugPrint('Failed to load order from notification: $e');
+    }
   }
 }

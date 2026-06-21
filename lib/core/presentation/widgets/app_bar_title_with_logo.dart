@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 class AppBarTitleWithLogo extends StatelessWidget {
   final String title;
   final String? subtitle;
-  final Color titleColor;
+  final Color? titleColor;
   final double fontSize;
   final Color? subtitleColor;
 
@@ -14,7 +14,7 @@ class AppBarTitleWithLogo extends StatelessWidget {
     super.key,
     required this.title,
     this.subtitle,
-    this.titleColor = const Color(0xFF1E293B),
+    this.titleColor,
     this.fontSize = 20,
     this.subtitleColor,
     this.trailing,
@@ -27,7 +27,7 @@ class AppBarTitleWithLogo extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Image.asset(
-          'assets/images/app_logo.png',
+          'assets/images/app_logo2.png',
           height: 28,
           fit: BoxFit.contain,
         ),
@@ -42,7 +42,7 @@ class AppBarTitleWithLogo extends StatelessWidget {
                 style: GoogleFonts.poppins(
                   fontSize: fontSize,
                   fontWeight: FontWeight.w600,
-                  color: titleColor,
+                  color: titleColor ?? Theme.of(context).textTheme.bodyLarge?.color,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),

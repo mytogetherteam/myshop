@@ -29,6 +29,7 @@ import 'global_shop_selection_page.dart';
 import 'package:my_shop/core/utils/app_version.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import '../widgets/language_selector_sheet.dart';
+import '../widgets/theme_selector_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -161,11 +162,18 @@ class ProfilePageState extends State<ProfilePage>
     );
   }
 
+  void _showThemeSelector() {
+    GlobalModal.show(
+      context: context,
+      child: const ThemeSelectorSheet(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      
       // AppBar removed, handled by global AppBar
       body: RefreshIndicator(
         onRefresh: _handleRefresh,
@@ -174,24 +182,24 @@ class ProfilePageState extends State<ProfilePage>
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             children: [
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
               _buildProfileHeader(),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               _buildShopSection(),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               _buildMenuItems(),
-              const SizedBox(height: 32),
+              SizedBox(height: 32),
               Center(
                 child: Text(
                   AppVersion.fullVersion,
                   style: GoogleFonts.poppins(
                     fontSize: 12,
-                    color: const Color(0xFF94A3B8),
+                    color: Theme.of(context).textTheme.bodySmall?.color,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
-              const SizedBox(height: 40),
+              SizedBox(height: 40),
             ],
           ),
         ),
@@ -208,10 +216,10 @@ class ProfilePageState extends State<ProfilePage>
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
         border: Border(
-          bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1),
+          bottom: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.3), width: 1),
         ),
       ),
       child: Row(
@@ -219,21 +227,21 @@ class ProfilePageState extends State<ProfilePage>
           PhosphorIcon(
             icon,
             size: 24,
-            color: const Color(0xFF475569),
+            color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 16),
           Expanded(
             child: Text(
               title,
               style: GoogleFonts.poppins(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF1E293B),
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
           ),
           if (isLoading)
-            const SizedBox(
+            SizedBox(
               width: 24,
               height: 24,
               child: CircularProgressIndicator(
@@ -261,10 +269,10 @@ class ProfilePageState extends State<ProfilePage>
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
           border: Border.symmetric(
-            horizontal: BorderSide(color: Color(0xFFE2E8F0), width: 1),
+            horizontal: BorderSide(color: Theme.of(context).dividerColor, width: 1),
           ),
         ),
       child: Row(
@@ -293,7 +301,7 @@ class ProfilePageState extends State<ProfilePage>
                   : _buildInitialPlaceholder(),
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,24 +313,24 @@ class ProfilePageState extends State<ProfilePage>
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1E293B),
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
                 Text(
                   _userInfo?.email ?? 'admin@shop.com',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
-                    color: const Color(0xFF64748B),
+                    color: Theme.of(context).textTheme.bodySmall?.color,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
+                    color: Theme.of(context).dividerColor.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -330,7 +338,7 @@ class ProfilePageState extends State<ProfilePage>
                     style: GoogleFonts.poppins(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF475569),
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
                     ),
                   ),
                 ),
@@ -355,7 +363,7 @@ class ProfilePageState extends State<ProfilePage>
           style: GoogleFonts.poppins(
             fontSize: 28,
             fontWeight: FontWeight.w700,
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
           ),
         ),
       ),
@@ -374,7 +382,7 @@ class ProfilePageState extends State<ProfilePage>
             style: GoogleFonts.poppins(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF94A3B8),
+              color: Theme.of(context).textTheme.bodySmall?.color,
               letterSpacing: 0.8,
             ),
           ),
@@ -442,7 +450,7 @@ class ProfilePageState extends State<ProfilePage>
             style: GoogleFonts.poppins(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF94A3B8),
+              color: Theme.of(context).textTheme.bodySmall?.color,
               letterSpacing: 0.8,
             ),
           ),
@@ -467,6 +475,11 @@ class ProfilePageState extends State<ProfilePage>
           icon: PhosphorIconsRegular.translate,
           title: t?.translate('language') ?? 'Language',
           onTap: _showLanguageSelector,
+        ),
+        _buildMenuOption(
+          icon: PhosphorIconsRegular.palette,
+          title: t?.translate('app_appearance') ?? 'App Appearance',
+          onTap: _showThemeSelector,
         ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.headset,
@@ -497,7 +510,7 @@ class ProfilePageState extends State<ProfilePage>
               ),
             ).then((_) => _loadUserInfo()),
           ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24),
         _buildMenuOption(
           icon: PhosphorIconsRegular.signOut,
           title: t?.translate('logout') ?? 'Logout',
@@ -522,10 +535,10 @@ class ProfilePageState extends State<ProfilePage>
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
           border: Border(
-            bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1),
+            bottom: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.3), width: 1),
           ),
         ),
         child: Row(
@@ -543,9 +556,9 @@ class ProfilePageState extends State<ProfilePage>
               PhosphorIcon(
                 icon,
                 size: 24,
-                color: titleColor ?? const Color(0xFF475569),
+                color: titleColor ?? Theme.of(context).iconTheme.color,
               ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16),
             Expanded(
               child: isDestructive
                   ? ShaderMask(
@@ -564,15 +577,15 @@ class ProfilePageState extends State<ProfilePage>
                       style: GoogleFonts.poppins(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
-                        color: titleColor ?? const Color(0xFF1E293B),
+                        color: titleColor ?? Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
             ),
             if (showArrow)
-              const PhosphorIcon(
+              PhosphorIcon(
                 PhosphorIconsRegular.caretRight,
                 size: 18,
-                color: Color(0xFF94A3B8),
+                color: Theme.of(context).textTheme.bodySmall?.color,
               ),
           ],
         ),

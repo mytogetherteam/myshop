@@ -291,9 +291,9 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
           decoration: BoxDecoration(
             color: const Color(0xFFEF4444),
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 2),
+            border: Border.all(color: Theme.of(context).cardColor, width: 2),
           ),
-          child: const Icon(Icons.close, size: 14, color: Colors.white),
+          child: Icon(Icons.close, size: 14, color: Colors.white),
         ),
       ),
     );
@@ -305,13 +305,13 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
       badgeDecoration = BoxDecoration(
         gradient: widget.themeGradient,
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
+        border: Border.all(color: Theme.of(context).cardColor, width: 2),
       );
     } else {
       badgeDecoration = BoxDecoration(
         color: widget.themeColor ?? Theme.of(context).colorScheme.primary,
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
+        border: Border.all(color: Theme.of(context).cardColor, width: 2),
       );
     }
 
@@ -322,7 +322,7 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
         width: 30,
         height: 30,
         decoration: badgeDecoration,
-        child: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
+        child: Icon(Icons.camera_alt, size: 16, color: Colors.white),
       ),
     );
   }
@@ -437,7 +437,7 @@ class _PickerSheet extends StatelessWidget {
               width: double.infinity,
               child: TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
+                child: Text('Cancel'),
               ),
             ),
           ),

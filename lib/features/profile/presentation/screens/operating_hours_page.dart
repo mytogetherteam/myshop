@@ -239,13 +239,13 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
         if (shouldPop && context.mounted) Navigator.of(context).pop();
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
           elevation: 0,
           scrolledUnderElevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            icon: Icon(Icons.arrow_back, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
             onPressed: () async {
               final shouldPop = await _onWillPop();
               if (shouldPop && context.mounted) {
@@ -258,14 +258,14 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF1E293B),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
           centerTitle: false,
           actions: const [SizedBox(width: 8)],
         ),
         body: _isLoadingHours
-            ? const Center(child: CustomLoadingIndicator())
+            ? Center(child: CustomLoadingIndicator())
             : _loadError != null
                 ? _buildErrorState()
                 : _buildContent(),
@@ -299,14 +299,14 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Color(0xFFEF4444)),
-            const SizedBox(height: 16),
+            Icon(Icons.error_outline, size: 48, color: Color(0xFFEF4444)),
+            SizedBox(height: 16),
             Text(
               _loadError!,
               textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(color: const Color(0xFF1E293B)),
+              style: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)))),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             PrimaryGradientButton(
               onPressed: _fetchOperatingHours,
               text: t?.translate('retry') ?? 'Retry',
@@ -324,14 +324,14 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         // Day rows
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: Theme.of(context).dividerColor),
           ),
           child: Column(
             children: List.generate(_days.length, (i) {
@@ -355,7 +355,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF1E293B),
+                                color: Theme.of(context).textTheme.bodyLarge?.color,
                               ),
                             ),
                           ),
@@ -366,7 +366,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                                   : '${_formatTime(h.openTime)} – ${_formatTime(h.closeTime)}',
                               style: GoogleFonts.poppins(
                                 fontSize: 13,
-                                color: h.isClosed ? AppColors.primary : const Color(0xFF64748B),
+                                color: h.isClosed ? AppColors.primary : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
                               ),
                             ),
                           ),
@@ -375,11 +375,11 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                       trailing: PhosphorIcon(
                         PhosphorIconsRegular.caretDown,
                         size: 16,
-                        color: const Color(0xFF94A3B8),
+                        color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
                       ),
                       children: [
                         Container(
-                          color: const Color(0xFFF8FAFC),
+                          color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
                           padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                           child: Column(
                             children: [
@@ -389,13 +389,13 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                                   time: h.openTime,
                                   onTap: () => _pickTime(i, true),
                                 ),
-                                const SizedBox(height: 10),
+                                SizedBox(height: 10),
                                 _TimePickerRow(
                                   label: t?.translate('close') ?? 'Close',
                                   time: h.closeTime,
                                   onTap: () => _pickTime(i, false),
                                 ),
-                                const SizedBox(height: 12),
+                                SizedBox(height: 12),
                               ],
                               Row(
                                 children: [
@@ -404,7 +404,7 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                                     size: 18,
                                     color: h.isClosed ? const Color(0xFF10B981) : AppColors.primary,
                                   ),
-                                  const SizedBox(width: 8),
+                                  SizedBox(width: 8),
                                   GestureDetector(
                                     onTap: () {
                                       setState(() => _hours[i] = _hours[i].copyWith(isClosed: !h.isClosed));
@@ -429,11 +429,11 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                       child: Row(
                                         children: [
-                                          const PhosphorIcon(PhosphorIconsRegular.copy, size: 14, color: Color(0xFF64748B)),
-                                          const SizedBox(width: 4),
+                                          PhosphorIcon(PhosphorIconsRegular.copy, size: 14, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
+                                          SizedBox(width: 4),
                                           Text(
                                             t?.translate('copy_to_all') ?? 'Copy to All',
-                                            style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF64748B)),
+                                            style: GoogleFonts.poppins(fontSize: 12, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)))),
                                           ),
                                         ],
                                       ),
@@ -448,18 +448,18 @@ class _OperatingHoursPageState extends State<OperatingHoursPage> {
                     ),
                   ),
                   if (!isLast)
-                    const Divider(height: 1, color: Color(0xFFE2E8F0), indent: 16, endIndent: 16),
+                    Divider(height: 1, color: Theme.of(context).dividerColor, indent: 16, endIndent: 16),
                 ],
               );
             }),
           ),
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
             t?.translate('operating_hours_disclaimer') ?? 'Changes are saved when you tap the Save button.',
-            style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF94A3B8)),
+            style: GoogleFonts.poppins(fontSize: 12, color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)))),
             textAlign: TextAlign.center,
           ),
         ),
@@ -489,23 +489,23 @@ class _TimePickerRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(color: Theme.of(context).dividerColor),
         ),
         child: Row(
           children: [
             Text(
               label,
-              style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF64748B), fontWeight: FontWeight.w500),
+              style: GoogleFonts.poppins(fontSize: 13, color: Theme.of(context).textTheme.bodySmall?.color, fontWeight: FontWeight.w500),
             ),
             const Spacer(),
             Text(
               _fmt(time),
-              style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),
+              style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)))),
             ),
-            const SizedBox(width: 8),
-            const PhosphorIcon(PhosphorIconsRegular.clock, size: 16, color: Color(0xFF94A3B8)),
+            SizedBox(width: 8),
+            PhosphorIcon(PhosphorIconsRegular.clock, size: 16, color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
           ],
         ),
       ),

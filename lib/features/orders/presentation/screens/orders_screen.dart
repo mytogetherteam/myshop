@@ -80,9 +80,8 @@ class OrdersScreenState extends State<OrdersScreen>
           }
         }
       });
-      // After fetching, we can trigger refreshAll to notify any built tabs,
-      // but they will also load themselves if they were built during the fetch.
-      refreshAll();
+      // Tabs load their own lists independently on init or via lazy loading.
+      // We don't call refreshAll() here because it causes a double load.
     }
   }
 
@@ -158,18 +157,18 @@ class OrdersScreenState extends State<OrdersScreen>
     super.build(context);
     final t = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      
       body: Column(
         children: [
           Container(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
               tabAlignment: TabAlignment.start,
               labelPadding: const EdgeInsets.symmetric(horizontal: 16),
               labelColor: AppColors.primary,
-              unselectedLabelColor: const Color(0xFF94A3B8),
+              unselectedLabelColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
               indicatorColor: AppColors.primary,
               indicatorSize: TabBarIndicatorSize.label,
               labelStyle: GoogleFonts.poppins(
@@ -312,15 +311,15 @@ class OrdersScreenState extends State<OrdersScreen>
               isSelected
                   ? GradientText(
                       label,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      style: TextStyle(fontWeight: FontWeight.w600),
                     )
                   : Text(label),
               if (count > 0) ...[
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: isSelected ? null : const Color(0xFFE2E8F0),
+                    color: isSelected ? null : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)),
                     gradient: isSelected ? AppColors.primaryGradient : null,
                     shape: BoxShape.circle,
                   ),
@@ -331,7 +330,7 @@ class OrdersScreenState extends State<OrdersScreen>
                       fontWeight: FontWeight.w600,
                       color: isSelected
                           ? Colors.white
-                          : const Color(0xFF64748B),
+                          : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                     ),
                   ),
                 ),
@@ -553,25 +552,25 @@ class _OrderListTabViewState extends State<OrderListTabView>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 64, color: Color(0xFFCBD5E1)),
-                    const SizedBox(height: 16),
+                    Icon(Icons.error_outline, size: 64, color: Color(0xFFCBD5E1)),
+                    SizedBox(height: 16),
                     Text(
                       t?.translate('failed_load_orders') ?? 'Failed to Load Orders',
                       style: GoogleFonts.poppins(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF64748B),
+                        color: Theme.of(context).textTheme.bodySmall?.color,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Text(
                       t?.translate('pull_to_retry') ?? 'Pull down to retry',
                       style: GoogleFonts.poppins(
                         fontSize: 13,
-                        color: const Color(0xFF94A3B8),
+                        color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     PrimaryGradientButton(
                       onPressed: () => _fetchOrders(isRefresh: true),
                       text: t?.translate('retry') ?? 'Retry',
@@ -601,21 +600,21 @@ class _OrderListTabViewState extends State<OrderListTabView>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.receipt_long_outlined,
                       size: 64,
                       color: Color(0xFFCBD5E1),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     Text(
                       t?.translate('no_orders_yet') ?? 'No Orders Yet',
                       style: GoogleFonts.poppins(
-                        color: const Color(0xFF94A3B8),
+                        color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       t?.translate('pull_to_refresh') ?? 'Pull down to refresh',
                       style: GoogleFonts.poppins(
@@ -643,7 +642,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
         itemCount: _orders.length + (_isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == _orders.length) {
-            return const Padding(
+            return Padding(
               padding: EdgeInsets.all(16.0),
               child: Center(
                 child: CircularProgressIndicator(color: Color(0xFFED3973)),
@@ -671,9 +670,9 @@ class _OrderListTabViewState extends State<OrderListTabView>
           margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFF1F5F9)),
+            border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : const Color(0xFFF1F5F9)))),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -685,14 +684,14 @@ class _OrderListTabViewState extends State<OrderListTabView>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Skeleton(width: 80, height: 20),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       const Skeleton(width: 60, height: 14),
                     ],
                   ),
                   const Skeleton(width: 100, height: 24),
                 ],
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               Row(
                 children: const [
                   Skeleton(width: 70, height: 14),
@@ -700,15 +699,15 @@ class _OrderListTabViewState extends State<OrderListTabView>
                   Skeleton(width: 80, height: 14),
                 ],
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               const Skeleton(width: double.infinity, height: 40),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               const Skeleton(width: double.infinity, height: 16),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               const Skeleton(width: 200, height: 16),
-              const SizedBox(height: 24),
-              const Divider(color: Color(0xFFF1F5F9), height: 1),
-              const SizedBox(height: 16),
+              SizedBox(height: 24),
+              Divider(color: Theme.of(context).dividerColor.withOpacity(0.3), height: 1),
+              SizedBox(height: 16),
               Row(
                 children: const [
                   Expanded(child: Skeleton(height: 54)),

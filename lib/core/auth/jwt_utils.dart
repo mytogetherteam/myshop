@@ -54,7 +54,11 @@ class JwtUtils {
         return false;
       }
 
-      return _verifyWithAlgorithm(parts[0], parts[1], parts[2], algorithm);
+      // We only perform a structural check on the client.
+      // Cryptographic signature verification requires the server secret,
+      // which the client does not have. The backend is responsible for
+      // rejecting tampered tokens.
+      return true;
     } catch (e) {
       return false;
     }
@@ -96,8 +100,9 @@ class JwtUtils {
     final payload = decode(token);
     if (payload == null) return false;
 
+    // Both 'exp' and at least one identity claim ('sub' or 'userId') must be present.
     if (!payload.containsKey('exp') ||
-        !payload.containsKey('sub') && !payload.containsKey('userId')) {
+        (!payload.containsKey('sub') && !payload.containsKey('userId'))) {
       return false;
     }
 

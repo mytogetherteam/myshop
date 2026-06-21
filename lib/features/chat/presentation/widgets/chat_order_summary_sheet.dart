@@ -63,18 +63,18 @@ class _SheetBody extends StatelessWidget {
     final t = AppLocalizations.of(context);
 
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         children: [
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Container(
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
+              color: Theme.of(context).dividerColor,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -88,13 +88,13 @@ class _SheetBody extends StatelessWidget {
                     style: GoogleFonts.poppins(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1E293B),
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
+                  icon: Icon(Icons.close_rounded, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
                 ),
               ],
             ),
@@ -109,7 +109,7 @@ class _SheetBody extends StatelessWidget {
 
   Widget _buildContent(BuildContext context, AppLocalizations? t) {
     if (isLoading) {
-      return const Center(
+      return Center(
         child: Padding(
           padding: EdgeInsets.all(24),
           child: CircularProgressIndicator(strokeWidth: 2.5),
@@ -132,11 +132,11 @@ class _SheetBody extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                   fontSize: 14,
-                  color: const Color(0xFF64748B),
+                  color: Theme.of(context).textTheme.bodySmall?.color,
                 ),
               ),
               if (onRetry != null) ...[
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 TextButton(
                   onPressed: onRetry,
                   child: Text(
@@ -168,31 +168,31 @@ class _SheetBody extends StatelessWidget {
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF1E293B),
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
             ),
             _StatusChip(label: order!.statusLabel ?? order!.status),
           ],
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         Text(
           '${order!.items.length} ${t?.translate('items') ?? 'items'} · ${order!.displayTotalAmount}',
           style: GoogleFonts.poppins(
             fontSize: 13,
-            color: const Color(0xFF64748B),
+            color: Theme.of(context).textTheme.bodySmall?.color,
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         Text(
           t?.translate('items') ?? 'Items',
           style: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF1E293B),
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
         ...order!.items.map(
           (item) => Padding(
             padding: const EdgeInsets.only(bottom: 12),
@@ -206,7 +206,7 @@ class _SheetBody extends StatelessWidget {
                     style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF475569),
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
                     ),
                   ),
                 ),
@@ -219,7 +219,7 @@ class _SheetBody extends StatelessWidget {
                         style: GoogleFonts.poppins(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
-                          color: const Color(0xFF1E293B),
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       if (item.specialInstructions != null &&
@@ -229,7 +229,7 @@ class _SheetBody extends StatelessWidget {
                           style: GoogleFonts.poppins(
                             fontSize: 12,
                             fontStyle: FontStyle.italic,
-                            color: const Color(0xFF64748B),
+                            color: Theme.of(context).textTheme.bodySmall?.color,
                           ),
                         ),
                     ],
@@ -239,14 +239,14 @@ class _SheetBody extends StatelessWidget {
                   item.displayPrice,
                   style: GoogleFonts.poppins(
                     fontSize: 12,
-                    color: const Color(0xFF64748B),
+                    color: Theme.of(context).textTheme.bodySmall?.color,
                   ),
                 ),
               ],
             ),
           ),
         ),
-        const Divider(height: 24, color: Color(0xFFE2E8F0)),
+        Divider(height: 24, color: Theme.of(context).dividerColor),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -255,7 +255,7 @@ class _SheetBody extends StatelessWidget {
               style: GoogleFonts.poppins(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF1E293B),
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
             Text(
@@ -269,7 +269,7 @@ class _SheetBody extends StatelessWidget {
           ],
         ),
         if (onViewDetails != null) ...[
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
@@ -277,7 +277,7 @@ class _SheetBody extends StatelessWidget {
                 Navigator.pop(context);
                 onViewDetails!();
               },
-              icon: const Icon(PhosphorIconsRegular.receipt, size: 18),
+              icon: Icon(PhosphorIconsRegular.receipt, size: 18),
               label: Text(
                 t?.translate('view_details') ?? 'View Details',
                 style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
@@ -309,16 +309,16 @@ class _StatusChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Text(
         label,
         style: GoogleFonts.poppins(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: const Color(0xFF475569),
+          color: Theme.of(context).textTheme.bodyMedium?.color,
         ),
       ),
     );

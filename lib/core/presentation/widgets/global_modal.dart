@@ -18,8 +18,8 @@ class GlobalModal {
         return KeyboardPaddingWrapper(
           child: Container(
             width: double.infinity,
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.vertical(top: Radius.circular(36.0)),
             ),
             child: SafeArea(

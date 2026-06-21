@@ -96,13 +96,13 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -110,21 +110,21 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
         centerTitle: false,
         actions: const [SizedBox(width: 8)],
       ),
       body: _isLoadingData
-          ? const Center(child: CustomLoadingIndicator())
+          ? Center(child: CustomLoadingIndicator())
           : ListView(
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
               children: [
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
@@ -146,7 +146,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
                           letterSpacing: 0.8,
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
 
 
 
@@ -156,12 +156,12 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: const Color(0xFF1E293B),
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12),
                       _buildIconGallery(),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
 
                       // Name Lang Switcher
                       Text(
@@ -169,10 +169,10 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: const Color(0xFF1E293B),
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12),
                       _buildLangField(
                         selectedLang: _nameLang,
                         onLangChanged: (l) => setState(() => _nameLang = l),
@@ -190,7 +190,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
             ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           border: Border(
             top: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
           ),
@@ -216,7 +216,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
     if (_gallery.isEmpty) {
       return Text(
         AppLocalizations.of(context)?.translate('no_icons_available') ?? 'No Icons Available',
-        style: const TextStyle(fontSize: 12, color: Colors.grey),
+        style: TextStyle(fontSize: 12, color: Colors.grey),
       );
     }
 
@@ -225,7 +225,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _gallery.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 12),
+        separatorBuilder: (context, index) => SizedBox(width: 12),
         itemBuilder: (context, index) {
           final isSelected = _selectedGalleryIndex == index;
           return GestureDetector(
@@ -239,16 +239,16 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
                 border: Border.all(
                   color: isSelected
                       ? const Color(0xFFED3973)
-                      : const Color(0xFFE2E8F0),
+                      : Theme.of(context).dividerColor,
                   width: 2,
                 ),
               ),
               child: Image.network(
                 _gallery[index]['imageUrl'],
-                errorBuilder: (context, error, stackTrace) => const Icon(
+                errorBuilder: (context, error, stackTrace) => Icon(
                   Icons.restaurant,
                   size: 24,
-                  color: Color(0xFF94A3B8),
+                  color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
                 ),
               ),
             ),
@@ -285,7 +285,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
                     border: Border.all(
                       color: selected
                           ? const Color(0xFFED3973)
-                          : const Color(0xFFE2E8F0),
+                          : Theme.of(context).dividerColor,
                     ),
                   ),
                   child: Text(
@@ -293,7 +293,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: selected ? Colors.white : const Color(0xFF64748B),
+                      color: selected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
                     ),
                   ),
                 ),
@@ -301,7 +301,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
             );
           }).toList(),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         TextField(
           controller: controller,
           maxLength: 100,
@@ -320,7 +320,7 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
               builder: (context, value, child) {
                 if (value.text.isEmpty) return const SizedBox.shrink();
                 return IconButton(
-                  icon: const Icon(Icons.clear, color: Colors.grey, size: 20),
+                  icon: Icon(Icons.clear, color: Colors.grey, size: 20),
                   onPressed: () {
                     controller.clear();
                   },

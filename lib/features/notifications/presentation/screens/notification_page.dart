@@ -152,7 +152,7 @@ class _NotificationPageState extends State<NotificationPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(
+      builder: (context) => Center(
         child: CustomLoadingIndicator(size: 40, color: Colors.white),
       ),
     );
@@ -191,7 +191,7 @@ class _NotificationPageState extends State<NotificationPage> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      
       appBar: BackTitleAppBar(
         title: t?.translate('notifications') ?? 'Notifications',
         onBack: () => Navigator.pop(context, true),
@@ -200,7 +200,7 @@ class _NotificationPageState extends State<NotificationPage> {
             TextButton(
               onPressed: _isMarkingAllRead ? null : _markAllAsRead,
               child: _isMarkingAllRead
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 18,
                       height: 18,
                       child: CustomLoadingIndicator(
@@ -228,15 +228,15 @@ class _NotificationPageState extends State<NotificationPage> {
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 itemBuilder: (_, _) => Container(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
                     border: Border(bottom: BorderSide(color: AppColors.surfaceVariant, width: 1)),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Skeleton.circle(width: 40, height: 40),
-                      const SizedBox(width: 16),
+                      SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,7 +263,7 @@ class _NotificationPageState extends State<NotificationPage> {
             : _notifications.isEmpty
                 ? EmptyState(
                     circleBackground: true,
-                    icon: const Icon(PhosphorIconsRegular.bellSlash, size: 48, color: AppColors.outline),
+                    icon: Icon(PhosphorIconsRegular.bellSlash, size: 48, color: AppColors.outline),
                     title: t?.translate('no_notifications_yet') ?? 'No Notifications Yet',
                   )
                 : ListView.builder(
@@ -273,7 +273,7 @@ class _NotificationPageState extends State<NotificationPage> {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     itemBuilder: (context, index) {
                       if (index == _notifications.length) {
-                        return const Padding(
+                        return Padding(
                           padding: EdgeInsets.all(16.0),
                           child: Center(
                             child: CustomLoadingIndicator(size: 20, color: Colors.white),
@@ -294,8 +294,8 @@ class _NotificationPageState extends State<NotificationPage> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
           color: noti.isRead ? Colors.white : const Color(0xFFED3973).withValues(alpha: 0.04),
-          border: const Border(
-            bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1),
+          border: Border(
+            bottom: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.3), width: 1),
           ),
         ),
         child: Row(
@@ -309,7 +309,7 @@ class _NotificationPageState extends State<NotificationPage> {
               ),
               child: Icon(_getIcon(noti), size: 20, color: _getIconColor(noti)),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -323,7 +323,7 @@ class _NotificationPageState extends State<NotificationPage> {
                           style: GoogleFonts.poppins(
                             fontSize: 15,
                             fontWeight: noti.isRead ? FontWeight.w600 : FontWeight.w700,
-                            color: const Color(0xFF1E293B),
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                           ),
                         ),
                       ),
@@ -331,14 +331,14 @@ class _NotificationPageState extends State<NotificationPage> {
                         noti.timeAgo,
                         style: GoogleFonts.poppins(
                           fontSize: 12,
-                          color: const Color(0xFF94A3B8),
+                          color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
                         ),
                       ),
                     ],
                   ),
                   if (noti.displayBody.isNotEmpty && 
                       noti.displayBody.toLowerCase() != noti.displayTitle.toLowerCase()) ...[
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       noti.displayBody,
                       maxLines: 2,
@@ -347,7 +347,7 @@ class _NotificationPageState extends State<NotificationPage> {
                         fontSize: 14,
                         color: _isCancelMessage(noti.displayTitle, noti.displayBody) 
                             ? const Color(0xFFEF4444) 
-                            : const Color(0xFF64748B),
+                            : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
                         height: 1.4,
                       ),
                     ),
@@ -360,7 +360,7 @@ class _NotificationPageState extends State<NotificationPage> {
                 margin: const EdgeInsets.only(left: 12, top: 4),
                 width: 8,
                 height: 8,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFFED3973),
                   shape: BoxShape.circle,
                 ),

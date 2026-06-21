@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
+import 'package:my_shop/core/utils/app_logger.dart';
 import '../models/shop_model.dart';
 
 class ShopService {
@@ -9,7 +9,7 @@ class ShopService {
 
   Future<List<Shop>> getShops() async {
     try {
-      debugPrint('GET REQUEST: $_shopsPath');
+      AppLogger.network('GET $_shopsPath');
       final response = await ApiClient().dio.get(_shopsPath);
 
       if (response.statusCode != null &&
@@ -32,7 +32,7 @@ class ShopService {
   Future<Shop?> getShopById(int id) async {
     try {
       final String path = '$_shopsPath/$id';
-      debugPrint('GET REQUEST: $path');
+      AppLogger.network('GET $path');
       final response = await ApiClient().dio.get(path);
 
       if (response.statusCode != null &&

@@ -86,7 +86,7 @@ class _OrderQrScannerScreenState extends State<OrderQrScannerScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(
+      builder: (context) => Center(
         child: CustomLoadingIndicator(size: 40, color: Colors.white),
       ),
     );
@@ -194,7 +194,7 @@ class _OrderQrScannerScreenState extends State<OrderQrScannerScreen> {
                     isOn
                         ? PhosphorIconsFill.flashlight
                         : PhosphorIconsRegular.flashlight,
-                    color: isOn ? AppColors.primary : Colors.black,
+                    color: isOn ? AppColors.primary : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
                   );
                 },
               ),
@@ -207,7 +207,7 @@ class _OrderQrScannerScreenState extends State<OrderQrScannerScreen> {
 
   Widget _buildBody(AppLocalizations? t) {
     if (!_permissionChecked) {
-      return const Center(
+      return Center(
         child: CustomLoadingIndicator(size: 40, color: Colors.white),
       );
     }
@@ -251,7 +251,7 @@ class _OrderQrScannerScreenState extends State<OrderQrScannerScreen> {
             height: 250,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white, width: 3),
+              border: Border.all(color: Theme.of(context).cardColor, width: 3),
             ),
           ),
         ),
@@ -264,7 +264,7 @@ class _OrderQrScannerScreenState extends State<OrderQrScannerScreen> {
                 'Point your camera at the order QR code',
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               fontSize: 15,
               fontWeight: FontWeight.w500,
             ),
@@ -273,7 +273,7 @@ class _OrderQrScannerScreenState extends State<OrderQrScannerScreen> {
         if (_isProcessing)
           Container(
             color: Colors.black.withValues(alpha: 0.35),
-            child: const Center(
+            child: Center(
               child: CustomLoadingIndicator(size: 40, color: Colors.white),
             ),
           ),
@@ -301,22 +301,22 @@ class _PermissionDeniedView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               PhosphorIconsRegular.cameraSlash,
               color: Colors.white70,
               size: 56,
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             Text(
               message,
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             TextButton(
               onPressed: onRetry,
               child: Text(

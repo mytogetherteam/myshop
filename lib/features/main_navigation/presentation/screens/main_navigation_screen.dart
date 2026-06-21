@@ -22,9 +22,8 @@ import 'package:my_shop/core/utils/app_logger.dart';
 import 'dart:async';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:my_shop/core/notifications/notification_service.dart';
-import 'package:my_shop/core/notifications/notification_service.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
+import 'package:my_shop/core/data/services/storage_service.dart';
 
 /// Lets deep order/pickup flows return to the Orders tab after completion.
 class OrdersTabNavigation {
@@ -44,6 +43,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   late List<Widget> _pages;
   StreamSubscription? _socketSubscription;
   AudioPlayer? _alertAudioPlayer;
+  late final AppLifecycleListener _lifecycleListener;
 
   final GlobalKey<OrdersScreenState> _ordersKey =
       GlobalKey<OrdersScreenState>();
@@ -71,9 +71,25 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     ChatUnreadController.instance.start();
     OrdersTabNavigation.returnToOrdersTab = _returnToOrdersTab;
 
+    // Reconnect WS + refresh orders whenever app comes back from background.
+    _lifecycleListener = AppLifecycleListener(
+      onResume: _onAppResumed,
+    );
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showMenuWarningModal();
+      _maybeShowMenuWarningModal();
     });
+  }
+
+  /// Called when the app returns from background (minimize, screen-off, etc.).
+  /// Re-establishes the WebSocket and syncs the orders list so both devices
+  /// always reflect the latest order state.
+  Future<void> _onAppResumed() async {
+    AppLogger.realtime('[Lifecycle] App resumed — reconnecting WS & refreshing orders');
+    await WebSocketService().connect(force: true);
+    if (mounted) {
+      _ordersKey.currentState?.refresh();
+    }
   }
 
   void _returnToOrdersTab(String status) {
@@ -84,6 +100,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       _ordersKey.currentState?.refresh();
       _ordersKey.currentState?.switchToStatus(status);
     });
+  }
+
+  Future<void> _maybeShowMenuWarningModal() async {
+    final alreadySeen = await StorageService.instance.isMenuWarningSeen();
+    if (alreadySeen || !mounted) return;
+    _showMenuWarningModal();
   }
 
   void _showMenuWarningModal() {
@@ -98,17 +120,17 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Image.asset(
-                  'assets/images/app_logo.png',
+                  'assets/images/app_logo2.png',
                   height: 60,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 Text(
                   'အရေးကြီးသတိပေးချက် - Partner ဆိုင်ရှင်များ အားလုံး သိရှိရန်',
                   textAlign: TextAlign.center,
@@ -118,21 +140,24 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                     color: const Color(0xFFE11D48),
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 Text(
                   'Partner ဆိုင်ရှင်များခင်ဗျာ - မိမိတို့ဆိုင်၏ စာမျက်နှာတွင် Menu Image နှင့် အချက်အလက် (Data) များ ဖြည့်စွက်ထားခြင်း ရှိ၊ မရှိကို ယခုပဲ အမြန်ဆုံး စစ်ဆေးပေးကြပါရန်။\n\nနောင်တွင် ကျွန်တော်တို့ App အနေဖြင့် အချက်အလက်စုံလင်သော ဆိုင်များကိုသာ ဦးစားပေး (Priority) စနစ်ဖြင့် အပေါ်ဆုံးတွင် ချပြတော့မည် ဖြစ်သည်။ ပုံနှင့် Data မပြည့်စုံသော ဆိုင်များသည် Customer များ ရှာဖွေရခက်ခဲသည့် နောက်တန်းနေရာများသို့ အလိုအလျောက် ရောက်ရှိသွားမည် ဖြစ်သဖြင့် ရောင်းအား ထိခိုက်မှုများ ရှိလာနိုင်ပါသည်။\n\nမိမိတို့ဆိုင်၏ မြင်သာမှုနှုန်း ကျဆင်းမသွားစေရန်အတွက် ဆိုင်စာမျက်နှာကို အချက်အလက်အပြည့်အစုံဖြင့် အခုပဲ ချက်ချင်း ဝင်ရောက် Update ပြုလုပ်ပေးကြပါရန် အသိပေးအပ်ပါသည်။',
                   textAlign: TextAlign.justify,
                   style: GoogleFonts.poppins(
                     fontSize: 13,
-                    color: const Color(0xFF1E293B),
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                     height: 1.6,
                   ),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
                   child: PrimaryGradientButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () async {
+                      await StorageService.instance.setMenuWarningSeen();
+                      if (context.mounted) Navigator.pop(context);
+                    },
                     text: 'သိရှိပါသည်',
                     height: 52,
                     borderRadius: 12,
@@ -151,6 +176,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     if (OrdersTabNavigation.returnToOrdersTab == _returnToOrdersTab) {
       OrdersTabNavigation.returnToOrdersTab = null;
     }
+    _lifecycleListener.dispose();
     _socketSubscription?.cancel();
     _alertAudioPlayer?.dispose();
     super.dispose();
@@ -169,6 +195,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     if (!isAlreadyOnThisOrder) {
       try {
         _alertAudioPlayer?.stop();
+        _alertAudioPlayer?.dispose();
         _alertAudioPlayer = AudioPlayer();
         _alertAudioPlayer?.setReleaseMode(ReleaseMode.loop);
         _alertAudioPlayer?.play(AssetSource('alert/alert.mp3'));
@@ -332,7 +359,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             PhosphorIcon(icon, size: 28, color: Colors.white),
-            const SizedBox(height: 2),
+            SizedBox(height: 2),
             Text(
               label,
               style: GoogleFonts.poppins(
@@ -353,14 +380,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          PhosphorIcon(icon, size: 28, color: const Color(0xFF94A3B8)),
-          const SizedBox(height: 2),
+          PhosphorIcon(icon, size: 28, color: Theme.of(context).textTheme.bodySmall?.color),
+          SizedBox(height: 2),
           Text(
             label,
             style: GoogleFonts.poppins(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF94A3B8),
+              color: Theme.of(context).textTheme.bodySmall?.color,
             ),
           ),
         ],
@@ -385,7 +412,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 top: 4,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: Color(0xFFED3973),
                     shape: BoxShape.circle,
                   ),
@@ -422,9 +449,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       t?.translate('profile') ?? 'Profile',
     ];
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
@@ -444,8 +471,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         }).toList(),
       ),
 
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
+      bottomNavigationBar: Theme(
+        data: Theme.of(context).copyWith(
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
         onTap: (index) {
           if (_currentIndex == index) {
             switch (index) {
@@ -471,9 +503,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             _visited[index] = true;
           });
         },
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).cardColor,
         selectedItemColor: const Color(0xFFED3973),
-        unselectedItemColor: const Color(0xFF94A3B8),
+        unselectedItemColor: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
         showSelectedLabels: false,
         showUnselectedLabels: false,
         selectedFontSize: 0,
@@ -508,6 +540,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           ),
         ],
       ),
+      ),
     );
   }
 
@@ -529,18 +562,18 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(7),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const PhosphorIcon(
+              PhosphorIcon(
                 PhosphorIconsFill.chartPieSlice,
                 size: 14,
                 color: Color(0xFFED3973),
               ),
-              const SizedBox(width: 4),
+              SizedBox(width: 4),
               Text(
                 "Analytics",
                 style: GoogleFonts.poppins(

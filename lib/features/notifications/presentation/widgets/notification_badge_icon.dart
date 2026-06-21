@@ -4,10 +4,11 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:my_shop/features/notifications/data/repositories/notification_repository.dart';
 import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:my_shop/features/notifications/presentation/screens/notification_page.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 
 class NotificationBadgeIcon extends StatefulWidget {
-  final Color color;
-  const NotificationBadgeIcon({super.key, this.color = const Color(0xFF1E293B)});
+  final Color? color;
+  const NotificationBadgeIcon({super.key, this.color});
 
   @override
   State<NotificationBadgeIcon> createState() => _NotificationBadgeIconState();
@@ -59,7 +60,7 @@ class _NotificationBadgeIconState extends State<NotificationBadgeIcon> {
               _fetchUnreadCount();
             }
           },
-          icon: Icon(PhosphorIconsRegular.bell, color: widget.color, size: 26),
+          icon: Icon(PhosphorIconsRegular.bell, color: widget.color ?? Theme.of(context).iconTheme.color, size: 26),
         ),
         if (_unreadCount > 0)
           Positioned(
@@ -68,8 +69,8 @@ class _NotificationBadgeIconState extends State<NotificationBadgeIcon> {
             child: IgnorePointer(
               child: Container(
                 padding: const EdgeInsets.all(4),
-              decoration: const BoxDecoration(
-                color: Color(0xFFED3973),
+              decoration: BoxDecoration(
+                gradient: AppColors.primaryGradient,
                 shape: BoxShape.circle,
               ),
               constraints: const BoxConstraints(
@@ -78,8 +79,8 @@ class _NotificationBadgeIconState extends State<NotificationBadgeIcon> {
               ),
               child: Text(
                 _unreadCount > 99 ? '99+' : '$_unreadCount',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: Theme.of(context).cardColor,
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
                 ),

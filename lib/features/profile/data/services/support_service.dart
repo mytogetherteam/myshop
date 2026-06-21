@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
+import 'package:my_shop/core/utils/app_logger.dart';
 import '../models/support_info_model.dart';
 
 class SupportService {
@@ -9,7 +9,7 @@ class SupportService {
 
   Future<SupportInfoModel?> getSupportInfo() async {
     try {
-      debugPrint('GET REQUEST: $_path');
+      AppLogger.network('GET $_path');
       final response = await ApiClient().dio.get(_path);
       if (response.statusCode != null &&
           response.statusCode! >= 200 &&

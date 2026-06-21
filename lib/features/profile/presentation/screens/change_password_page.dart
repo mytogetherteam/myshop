@@ -80,7 +80,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      
       appBar: BackTitleAppBar(
         title: t?.translate('change_password') ?? 'Change Password',
       ),
@@ -108,7 +108,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       _buildPasswordField(
                         label: t?.translate('new_password') ?? 'New Password',
                         controller: _newPasswordController,
@@ -126,7 +126,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       _buildPasswordField(
                         label: t?.translate('confirm_new_password') ?? 'Confirm New Password',
                         controller: _confirmPasswordController,
@@ -151,7 +151,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           border: Border(
             top: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
           ),
@@ -192,16 +192,16 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           style: GoogleFonts.poppins(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF475569),
+            color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         TextFormField(
           controller: controller,
           obscureText: !isVisible,
           style: GoogleFonts.poppins(
             fontSize: 14,
-            color: const Color(0xFF1E293B),
+            color: Theme.of(context).textTheme.bodyLarge?.color,
             fontWeight: FontWeight.w500,
           ),
           decoration: InputDecoration(
@@ -212,32 +212,32 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderSide: BorderSide(color: Theme.of(context).dividerColor),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderSide: BorderSide(color: Theme.of(context).dividerColor),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFED3973), width: 1.5),
+              borderSide: BorderSide(color: Color(0xFFED3973), width: 1.5),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Colors.red),
+              borderSide: BorderSide(color: Colors.red),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Colors.red, width: 1.5),
+              borderSide: BorderSide(color: Colors.red, width: 1.5),
             ),
             suffixIcon: IconButton(
               icon: PhosphorIcon(
                 isVisible ? PhosphorIconsRegular.eye : PhosphorIconsRegular.eyeSlash,
                 size: 20,
-                color: const Color(0xFF94A3B8),
+                color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
               ),
               onPressed: onToggleVisibility,
             ),
@@ -258,7 +258,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Skeleton(height: 18, width: 120),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Skeleton(height: 48, width: double.infinity, borderRadius: 10),
             ],
           ),

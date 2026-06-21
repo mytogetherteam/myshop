@@ -44,28 +44,28 @@ class _PhoneNumbersSectionState extends State<PhoneNumbersSection> {
           vertical: 12,
         ),
         prefixIcon: icon != null
-            ? PhosphorIcon(icon, size: 18, color: const Color(0xFF94A3B8))
+            ? PhosphorIcon(icon, size: 18, color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF94A3B8))
             : null,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderSide: BorderSide(color: Theme.of(context).dividerColor),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderSide: BorderSide(color: Theme.of(context).dividerColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFFED3973), width: 1.5),
+          borderSide: BorderSide(color: Color(0xFFED3973), width: 1.5),
         ),
         suffixIcon: ValueListenableBuilder<TextEditingValue>(
           valueListenable: ctrl,
           builder: (context, value, child) {
             if (value.text.isEmpty) return const SizedBox.shrink();
             return IconButton(
-              icon: const Icon(Icons.clear, color: Color(0xFF94A3B8), size: 20),
+              icon: Icon(Icons.clear, color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)), size: 20),
               onPressed: () {
                 ctrl.clear();
                 widget.onMarkChanged();
@@ -74,7 +74,7 @@ class _PhoneNumbersSectionState extends State<PhoneNumbersSection> {
           },
         ),
       ),
-      style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B)),
+      style: GoogleFonts.poppins(fontSize: 14, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)))),
     );
   }
 
@@ -103,7 +103,7 @@ class _PhoneNumbersSectionState extends State<PhoneNumbersSection> {
                   ),
                   if (widget.phoneControllers.length > 1 ||
                       i == widget.phoneControllers.length - 1)
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                   if (widget.phoneControllers.length > 1)
                     IconButton(
                       onPressed: () {
@@ -113,7 +113,7 @@ class _PhoneNumbersSectionState extends State<PhoneNumbersSection> {
                           widget.onMarkChanged();
                         });
                       },
-                      icon: const Icon(
+                      icon: Icon(
                         PhosphorIconsRegular.minusCircle,
                         color: Color(0xFFEF4444),
                       ),
@@ -122,7 +122,7 @@ class _PhoneNumbersSectionState extends State<PhoneNumbersSection> {
                     ),
                   if (widget.phoneControllers.length > 1 &&
                       i == widget.phoneControllers.length - 1)
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                   if (i == widget.phoneControllers.length - 1)
                     IconButton(
                       onPressed: () {

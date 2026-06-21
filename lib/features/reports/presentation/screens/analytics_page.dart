@@ -131,7 +131,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
     List<DateTime?>? results = await showModalBottomSheet<List<DateTime?>>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -172,9 +172,9 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                       children: [
                         IconButton(
                           onPressed: () => Navigator.pop(context),
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.expand_more,
-                            color: Color(0xFF64748B),
+                            color: Theme.of(context).textTheme.bodySmall?.color,
                           ),
                         ),
                         Expanded(
@@ -188,21 +188,21 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                             textAlign: TextAlign.center,
                           ),
                         ),
-                        const SizedBox(width: 48), // Balance for back button
+                        SizedBox(width: 48), // Balance for back button
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   // Big Range Display
                   Text(
                     rangeText,
                     style: GoogleFonts.poppins(
                       fontSize: 28,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1E293B),
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   // Calendar Component
                   CalendarDatePicker2(
                     config: CalendarDatePicker2Config(
@@ -217,21 +217,21 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                       disableVibration: true,
                       rangeBidirectional: true,
                       weekdayLabelTextStyle: GoogleFonts.poppins(
-                        color: const Color(0xFF64748B),
+                        color: Theme.of(context).textTheme.bodySmall?.color,
                         fontWeight: FontWeight.w500,
                         fontSize: 13,
                       ),
                       controlsTextStyle: GoogleFonts.poppins(
-                        color: const Color(0xFF1E293B),
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
                       ),
                       dayTextStyle: GoogleFonts.poppins(
-                        color: const Color(0xFF1E293B),
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                         fontWeight: FontWeight.w400,
                       ),
                       selectedDayTextStyle: GoogleFonts.poppins(
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         fontWeight: FontWeight.w600,
                       ),
                       todayTextStyle: GoogleFonts.poppins(
@@ -246,7 +246,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                       setModalState(() => tempValues = values);
                     },
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   // Action Buttons
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -258,7 +258,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                           child: Text(
                             t?.translate('cancel').toUpperCase() ?? "CANCEL",
                             style: GoogleFonts.poppins(
-                              color: const Color(0xFF64748B),
+                              color: Theme.of(context).textTheme.bodySmall?.color,
                               fontWeight: FontWeight.w600,
                               fontSize: 15,
                             ),
@@ -310,15 +310,15 @@ class _AnalyticsPageState extends State<AnalyticsPage>
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
         elevation: 0,
         centerTitle: false,
         leading: IconButton(
-          icon: const PhosphorIcon(
+          icon: PhosphorIcon(
             PhosphorIconsRegular.arrowLeft,
-            color: Color(0xFF1E293B),
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
           onPressed: () {
             Navigator.pop(context);
@@ -327,7 +327,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
         title: Text(
           t?.translate('analytics') ?? "Analytics",
           style: GoogleFonts.poppins(
-            color: const Color(0xFF1E293B),
+            color: Theme.of(context).textTheme.bodyLarge?.color,
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
@@ -337,15 +337,15 @@ class _AnalyticsPageState extends State<AnalyticsPage>
             padding: const EdgeInsets.only(right: 16),
             child: TextButton.icon(
               onPressed: () {},
-              icon: const PhosphorIcon(
+              icon: PhosphorIcon(
                 PhosphorIconsRegular.uploadSimple,
                 size: 16,
-                color: Color(0xFF64748B),
+                color: Theme.of(context).textTheme.bodySmall?.color,
               ),
               label: Text(
                 t?.translate('export') ?? "Export",
                 style: GoogleFonts.poppins(
-                  color: const Color(0xFF64748B),
+                  color: Theme.of(context).textTheme.bodySmall?.color,
                   fontWeight: FontWeight.w500,
                   fontSize: 14,
                 ),
@@ -353,7 +353,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               style: TextButton.styleFrom(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
-                  side: const BorderSide(color: Color(0xFFE2E8F0)),
+                  side: BorderSide(color: Theme.of(context).dividerColor),
                 ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -367,7 +367,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
       body: Column(
         children: [
           Container(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: TabBar(
               controller: _tabController,
@@ -377,7 +377,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               indicatorColor: Colors.transparent,
               dividerColor: Colors.transparent,
               labelColor: Colors.white,
-              unselectedLabelColor: const Color(0xFF94A3B8),
+              unselectedLabelColor: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
               labelPadding: const EdgeInsets.symmetric(horizontal: 4),
               labelStyle: GoogleFonts.poppins(
                 fontSize: 14,
@@ -400,7 +400,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
             child: RefreshIndicator(
               onRefresh: _loadData,
               color: AppColors.primary,
-              backgroundColor: Colors.white,
+              backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 children: _isLoading ? _buildSkeletons() : _buildContent(),
@@ -420,7 +420,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
           gradient: isSelected ? AppColors.primaryGradient : null,
           color: isSelected ? null : Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: isSelected ? null : Border.all(color: const Color(0xFFE2E8F0)),
+          border: isSelected ? null : Border.all(color: Theme.of(context).dividerColor),
         ),
         child: InkWell(
           onTap: () {
@@ -435,7 +435,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
             child: Text(
               text,
               style: GoogleFonts.poppins(
-                color: isSelected ? Colors.white : const Color(0xFF64748B),
+                color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
                 fontSize: 14,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),
@@ -460,10 +460,10 @@ class _AnalyticsPageState extends State<AnalyticsPage>
           style: GoogleFonts.poppins(
             fontSize: 16,
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF1E293B),
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         Row(
           children: [
             PhosphorIcon(
@@ -475,7 +475,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                   ? const Color(0xFF22C55E)
                   : const Color(0xFFEF4444),
             ),
-            const SizedBox(width: 4),
+            SizedBox(width: 4),
             Text(
               trend,
               style: GoogleFonts.poppins(
@@ -486,13 +486,13 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                     : const Color(0xFFEF4444),
               ),
             ),
-            const SizedBox(width: 4),
+            SizedBox(width: 4),
             if (subtitle != null) ...[
               Text(
                 subtitle,
                 style: GoogleFonts.poppins(
                   fontSize: 12,
-                  color: const Color(0xFF64748B),
+                  color: Theme.of(context).textTheme.bodySmall?.color,
                 ),
               ),
             ],
@@ -505,9 +505,9 @@ class _AnalyticsPageState extends State<AnalyticsPage>
   Widget _buildCard({required Widget child}) {
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor)),
       ),
       padding: const EdgeInsets.all(20),
       child: child,
@@ -537,7 +537,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                   size: 20,
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               GradientText(
                 "${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.start)} - ${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.end)}",
                 style: GoogleFonts.poppins(
@@ -558,14 +558,14 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               orders['trendPositive'],
               subtitle: t?.translate('from_previous_30_days') ?? "From Previous 30 Days",
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             ProgressBarItem(
               label: t?.translate('last_30_days') ?? "Last 30 Days",
               value: "2,764",
               percentage: 0.9,
               barGradient: AppColors.primaryGradient,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             ProgressBarItem(
               label: t?.translate('previous_30_days') ?? "Previous 30 Days",
               value: "2,003",
@@ -585,7 +585,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               revenue['trendPositive'],
               subtitle: t?.translate('from_previous_30_days') ?? "From Previous 30 Days",
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
             AnalyticsLineChart(
               spots: (revenue['chartData'] as List).asMap().entries.map((e) {
                 return FlSpot(e.key.toDouble(), e.value['value'] as double);
@@ -608,7 +608,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               newCustomers['trendPositive'],
               subtitle: t?.translate('from_previous_28_days') ?? "From Previous 28 Days",
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             AnalyticsDonutChart(
               section1Value: newCustomers['organicPercentage'].toDouble(),
               section2Value: newCustomers['adsPercentage'].toDouble(),
@@ -619,7 +619,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               centerTitle: "${newCustomers['adsPercentage']}%",
               centerSubtitle: "${newCustomers['adsPromotion']}",
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -629,7 +629,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                   "${newCustomers['adsPercentage']}%",
                   "${newCustomers['adsPromotion']}",
                 ),
-                const SizedBox(width: 32),
+                SizedBox(width: 32),
                 _buildLegendDot(
                   t?.translate('organic') ?? "Organic",
                   AppColors.primary,
@@ -652,7 +652,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               orderStatus['trendPositive'],
               subtitle: t?.translate('from_previous_28_days') ?? "From Previous 28 Days",
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             AnalyticsDonutChart(
               section1Value: orderStatus['completedPercentage'].toDouble(),
               section2Value: orderStatus['cancelledPercentage'].toDouble(),
@@ -663,7 +663,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               centerTitle: "${orderStatus['cancelledPercentage']}%",
               centerSubtitle: "${orderStatus['cancelled']}",
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -673,7 +673,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                   "${orderStatus['cancelledPercentage']}%",
                   "${orderStatus['cancelled']}",
                 ),
-                const SizedBox(width: 32),
+                SizedBox(width: 32),
                 _buildLegendDot(
                   t?.translate('completed') ?? "Completed",
                   AppColors.primary,
@@ -696,7 +696,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               interactions['trendPositive'],
               subtitle: t?.translate('from_previous_30_days') ?? "From Previous 30 Days",
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             ...List.generate(interactions['items'].length, (index) {
               final item = interactions['items'][index];
               return Padding(
@@ -722,7 +722,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               totalCustomers['trendPositive'],
               subtitle: t?.translate('from_previous_30_days') ?? "From Previous 30 Days",
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             Row(
               children: [
                 _buildSimpleLegendDot(
@@ -730,11 +730,11 @@ class _AnalyticsPageState extends State<AnalyticsPage>
                   AppColors.primary,
                   useGradient: true,
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 _buildSimpleLegendDot(t?.translate('new_customers') ?? "New Customers", const Color(0xFF22C55E)),
               ],
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             ...List.generate(totalCustomers['items'].length, (index) {
               final item = totalCustomers['items'][index];
               return Padding(
@@ -750,7 +750,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
           ],
         ),
       ),
-      const SizedBox(height: 40), // Padding for BottomNav
+      SizedBox(height: 40), // Padding for BottomNav
     ];
   }
 
@@ -768,27 +768,27 @@ class _AnalyticsPageState extends State<AnalyticsPage>
           style: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF1E293B),
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
         Text(
           count,
           style: GoogleFonts.poppins(
             fontSize: 12,
-            color: const Color(0xFF64748B),
+            color: Theme.of(context).textTheme.bodySmall?.color,
           ),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         Row(
           children: [
             Text(
               label,
               style: GoogleFonts.poppins(
                 fontSize: 12,
-                color: const Color(0xFF64748B),
+                color: Theme.of(context).textTheme.bodySmall?.color,
               ),
             ),
-            const SizedBox(width: 6),
+            SizedBox(width: 6),
             Container(
               width: 8,
               height: 8,
@@ -820,12 +820,12 @@ class _AnalyticsPageState extends State<AnalyticsPage>
             shape: BoxShape.circle,
           ),
         ),
-        const SizedBox(width: 6),
+        SizedBox(width: 6),
         Text(
           label,
           style: GoogleFonts.poppins(
             fontSize: 12,
-            color: const Color(0xFF64748B),
+            color: Theme.of(context).textTheme.bodySmall?.color,
           ),
         ),
       ],
@@ -840,9 +840,9 @@ class _AnalyticsPageState extends State<AnalyticsPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Skeleton(width: 150, height: 24),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             const Skeleton(width: 200, height: 20),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             const Skeleton(
               width: double.infinity,
               height: 160,

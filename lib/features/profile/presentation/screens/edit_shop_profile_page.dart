@@ -433,12 +433,12 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
-            Image.asset('assets/images/app_logo.png', width: 24, height: 24),
-            const SizedBox(width: 8),
+            Image.asset('assets/images/app_logo2.png', width: 24, height: 24),
+            SizedBox(width: 8),
             Text(
               t?.translate('discard_changes_title') ?? 'Discard changes?',
               style: GoogleFonts.poppins(
@@ -452,7 +452,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
           t?.translate('discard_changes_content') ?? 'You have unsaved changes. Do you want to discard them?',
           style: GoogleFonts.poppins(
             fontSize: 14,
-            color: const Color(0xFF475569),
+            color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
         actions: [
@@ -461,7 +461,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             child: Text(
               t?.translate('continue_editing') ?? 'Continue Editing',
               style: GoogleFonts.poppins(
-                color: const Color(0xFF475569),
+                color: Theme.of(context).textTheme.bodyMedium?.color,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -665,9 +665,9 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(color: Theme.of(context).dividerColor),
         ),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<MasterDataModel>(
@@ -676,7 +676,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             hint: Text(
               hint,
               style: GoogleFonts.poppins(
-                color: const Color(0xFF94A3B8),
+                color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
                 fontSize: 13,
               ),
             ),
@@ -688,7 +688,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                   t?.translate('no_data_found') ?? 'No Data Found',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
-                    color: const Color(0xFF94A3B8),
+                    color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
                   ),
                 ),
               ),
@@ -716,17 +716,17 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     final t = AppLocalizations.of(context);
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        
         appBar: AppBar(
           title: Text(
             t?.translate('edit_profile') ?? 'Edit Profile',
             style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
           ),
-          backgroundColor: Colors.white,
-          foregroundColor: const Color(0xFF1E293B),
+          backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
+          foregroundColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))),
           elevation: 0,
         ),
-        body: const Center(child: CustomLoadingIndicator()),
+        body: Center(child: CustomLoadingIndicator()),
       );
     }
 
@@ -738,7 +738,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         if (should && context.mounted) Navigator.pop(context);
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        
         extendBodyBehindAppBar: true,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
@@ -752,13 +752,13 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 if (should && context.mounted) Navigator.pop(context);
               },
               child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.arrow_back,
-                  color: Colors.black,
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
                   size: 20,
                 ),
               ),
@@ -783,7 +783,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
               onPickLogo: _pickLogo,
             ),
 
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
 
             FormSection(
               key: _nameKey,
@@ -802,7 +802,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 onChanged: _markChanged,
               ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
             FormSection(
               key: _categoryKey,
               label: t?.translate('category') ?? 'Category',
@@ -820,7 +820,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 }),
               ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
             FormSection(
               key: _subCategoryKey,
               label: t?.translate('sub_category') ?? 'SubCategory',
@@ -836,7 +836,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 }),
               ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
             CuisineTypesSection(
               key: _cuisineTypeKey,
               cuisineTypes: _cuisineTypes,
@@ -846,7 +846,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 _markChanged();
               },
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
 
             FormSection(
               label: t?.translate('description') ?? 'Description',
@@ -864,14 +864,14 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 onChanged: _markChanged,
               ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
 
             PhoneNumbersSection(
               key: _phoneKey,
               phoneControllers: _phoneControllers,
               onMarkChanged: _markChanged,
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
 
             FormSection(
               label: 'Email',
@@ -883,7 +883,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 maxLength: 100,
               ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
 
             ShopLocationSection(
               key: _addressKey,
@@ -914,7 +914,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
               }),
               onMarkChanged: _markChanged,
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
 
              AmenitiesAndDietarySection(
                hasParking: _hasParking,
@@ -931,7 +931,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                  _markChanged();
                },
              ),
-             const SizedBox(height: 32),
+             SizedBox(height: 32),
 
              PriceRangeSection(
               initialPriceRange: _priceRange,
@@ -940,12 +940,12 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 _markChanged();
               },
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
           ],
         ),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             border: Border(
               top: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
             ),
@@ -1128,7 +1128,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
           t?.translate('photo_library_permission_msg') ?? 'Photo library access is required. Please enable it in Settings.',
           style: GoogleFonts.poppins(
             fontSize: 14,
-            color: const Color(0xFF475569),
+            color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
         actions: [
@@ -1180,28 +1180,28 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
           vertical: 12,
         ),
         prefixIcon: icon != null
-            ? PhosphorIcon(icon, size: 18, color: const Color(0xFF94A3B8))
+            ? PhosphorIcon(icon, size: 18, color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF94A3B8))
             : null,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderSide: BorderSide(color: Theme.of(context).dividerColor),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderSide: BorderSide(color: Theme.of(context).dividerColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFFED3973), width: 1.5),
+          borderSide: BorderSide(color: Color(0xFFED3973), width: 1.5),
         ),
         suffixIcon: ValueListenableBuilder<TextEditingValue>(
           valueListenable: ctrl,
           builder: (context, value, child) {
             if (value.text.isEmpty) return const SizedBox.shrink();
             return IconButton(
-              icon: const Icon(Icons.clear, color: Color(0xFF94A3B8), size: 20),
+              icon: Icon(Icons.clear, color: const Color(0xFF94A3B8), size: 20),
               onPressed: () {
                 ctrl.clear();
                 _markChanged();
@@ -1210,7 +1210,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
           },
         ),
       ),
-      style: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF1E293B)),
+      style: GoogleFonts.poppins(fontSize: 14, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)))),
     );
   }
 }

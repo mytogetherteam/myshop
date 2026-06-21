@@ -32,10 +32,7 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
       
       if (orderId == widget.order.id.toString() && status?.toUpperCase() == 'CANCELED') {
         if (mounted) {
-          final route = ModalRoute.of(context);
-          if (route != null) {
-            Navigator.of(context).removeRoute(route);
-          }
+          Navigator.of(context).maybePop();
         }
       }
     });
@@ -63,7 +60,7 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
               Container(
                 height: 110,
                 width: double.infinity,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [Color(0xFFF06292), Color(0xFFFF8A65)],
                     begin: Alignment.topLeft,
@@ -80,7 +77,7 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
                         padding: const EdgeInsets.all(8.0),
                         child: Icon(
                           _getFoodIcon(i * 8 + j),
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                           size: 20,
                         ),
                       )),
@@ -94,7 +91,7 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
                   width: 70,
                   height: 70,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
@@ -104,14 +101,14 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
                       ),
                     ],
                   ),
-                  child: const Center(
+                  child: Center(
                     child: _RingingBell(),
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 45),
+          SizedBox(height: 45),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
@@ -122,20 +119,20 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
                   style: GoogleFonts.poppins(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1E293B),
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                     letterSpacing: -0.5,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(
                   '#${widget.order.lastOrderNo}',
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF475569),
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -144,38 +141,38 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
                       style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: const Color(0xFF94A3B8),
+                        color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Container(
                       width: 4,
                       height: 4,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: Color(0xFFCBD5E1),
                         shape: BoxShape.circle,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Icon(
                       widget.order.isDeliveryFulfillment
                           ? PhosphorIconsRegular.moped
                           : PhosphorIconsRegular.shoppingBag,
                       size: 16,
-                      color: const Color(0xFF64748B),
+                      color: Theme.of(context).textTheme.bodySmall?.color,
                     ),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Text(
                       widget.order.isDeliveryFulfillment ? 'Delivery' : 'Pickup',
                       style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: const Color(0xFF64748B),
+                        color: Theme.of(context).textTheme.bodySmall?.color,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
                 ConstrainedBox(
                   constraints: BoxConstraints(
                     maxHeight: MediaQuery.of(context).size.height * 0.25,
@@ -198,28 +195,28 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
                                 style: GoogleFonts.poppins(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF64748B),
+                                  color: Theme.of(context).textTheme.bodySmall?.color,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            SizedBox(width: 12),
                             Expanded(
                               child: Text(
                                 item.displayName,
                                 style: GoogleFonts.poppins(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF1E293B),
+                                  color: Theme.of(context).textTheme.bodyLarge?.color,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            SizedBox(width: 12),
                             Text(
                               item.displayPrice,
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
-                                color: const Color(0xFF475569),
+                                color: Theme.of(context).textTheme.bodyMedium?.color,
                               ),
                             ),
                           ],
@@ -228,9 +225,9 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
                     },
                   ),
                 ),
-                const Padding(
+                Padding(
                   padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Divider(color: Color(0xFFF1F5F9), thickness: 1.5),
+                  child: Divider(color: Theme.of(context).dividerColor.withOpacity(0.3), thickness: 1.5),
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -240,7 +237,7 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
                       style: GoogleFonts.poppins(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF1E293B),
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
                     Text(
@@ -253,14 +250,14 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
                 PrimaryGradientButton(
                   onPressed: widget.onViewOrder,
                   text: 'View Order',
                   height: 56,
                   borderRadius: 16,
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
               ],
             ),
           ),
@@ -319,7 +316,7 @@ class _RingingBellState extends State<_RingingBell> with SingleTickerProviderSta
       builder: (context, child) {
         return Transform.rotate(
           angle: _animation.value,
-          child: const Icon(
+          child: Icon(
             PhosphorIconsFill.bell,
             color: Color(0xFFED3973),
             size: 32,

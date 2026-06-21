@@ -28,11 +28,11 @@ class QuickActionCards extends StatelessWidget {
                 topText: t?.translate('manage_category_top') ?? 'Manage',
                 bottomText: t?.translate('manage_category_bottom') ?? 'Category',
                 imagePath: 'assets/images/Category.png',
-                backgroundColor: const Color(0xFFFDE6D2), // Soft cream/orange
+                backgroundColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4A2A18) : const Color(0xFFFDE6D2),
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Expanded(
             child: GestureDetector(
               onTap: () async {
@@ -46,7 +46,7 @@ class QuickActionCards extends StatelessWidget {
                 topText: t?.translate('manage_menu_top') ?? 'Manage',
                 bottomText: t?.translate('manage_menu_bottom') ?? 'Shop Menu',
                 imagePath: 'assets/images/Promotion.png',
-                backgroundColor: const Color(0xFFFBD2D1), // Soft pink/red
+                backgroundColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4A1A1D) : const Color(0xFFFBD2D1),
               ),
             ),
           ),
@@ -96,7 +96,7 @@ class _ActionCard extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     fontWeight: FontWeight.w400,
-                    color: const Color(0xFF1E293B),
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                     height: hasDiacritics ? 1.5 : 1.3,
                   ),
                 ),
@@ -106,7 +106,7 @@ class _ActionCard extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1E293B),
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                     height: hasDiacritics ? 1.4 : 1.1,
                   ),
                 ),
@@ -121,7 +121,7 @@ class _ActionCard extends StatelessWidget {
               width: 53,
               height: 53,
               fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => const SizedBox(),
+              errorBuilder: (context, error, stackTrace) => SizedBox(),
             ),
           ),
         ],

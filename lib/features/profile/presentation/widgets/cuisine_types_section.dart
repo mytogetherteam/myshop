@@ -60,21 +60,21 @@ class _CuisineTypesSectionState extends State<CuisineTypesSection> {
                 ),
                 decoration: BoxDecoration(
                   gradient: isSelected ? AppColors.primaryGradient : null,
-                  color: isSelected ? null : Colors.white,
+                  color: isSelected ? null : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : Colors.white),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: isSelected ? Colors.transparent : const Color(0xFFE2E8F0),
+                    color: isSelected ? Colors.transparent : Theme.of(context).dividerColor,
                   ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (isSelected)
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.only(right: 6),
                         child: Icon(
                           Icons.check,
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                           size: 14,
                         ),
                       ),
@@ -83,7 +83,7 @@ class _CuisineTypesSectionState extends State<CuisineTypesSection> {
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                        color: isSelected ? Colors.white : const Color(0xFF64748B),
+                        color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
                       ),
                     ),
                   ],

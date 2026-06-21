@@ -75,7 +75,7 @@ class _NoConnectionPage extends StatelessWidget {
     final t = AppLocalizations.of(context);
     
     return Material(
-      color: Colors.white,
+      color: Theme.of(context).cardColor,
       child: SafeArea(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -86,7 +86,7 @@ class _NoConnectionPage extends StatelessWidget {
                 color: Color(0xFFFFF1F2),
                 shape: BoxShape.circle,
               ),
-              child: const PhosphorIcon(
+              child: PhosphorIcon(
                 PhosphorIconsFill.wifiX,
                 size: 80,
                 color: Color(0xFFED3973),
@@ -98,7 +98,7 @@ class _NoConnectionPage extends StatelessWidget {
               style: GoogleFonts.poppins(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF1E293B),
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
             const SizedBox(height: 12),
@@ -110,7 +110,7 @@ class _NoConnectionPage extends StatelessWidget {
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
-                  color: const Color(0xFF64748B),
+                  color: Theme.of(context).textTheme.bodySmall?.color,
                   height: 1.5,
                 ),
               ),

@@ -155,24 +155,24 @@ class _ReviewCardState extends State<ReviewCard>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+        border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : const Color(0xFFF1F5F9)))),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeader(),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           _buildRatingAndDate(context),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           _buildComment(),
           // Reply section
           if (_hasReply && !_isReplyOpen) ...[
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             _buildReplyDisplay(context),
           ] else if (!_hasReply && _replyEnabled) ...[
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             if (!_isReplyOpen) _buildReplyButton(context),
             if (_isReplyOpen)
               FadeTransition(
@@ -227,7 +227,7 @@ class _ReviewCardState extends State<ReviewCard>
                 )
               : _buildAvatarFallback(),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,7 +237,7 @@ class _ReviewCardState extends State<ReviewCard>
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1E293B),
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
             ],
@@ -271,12 +271,12 @@ class _ReviewCardState extends State<ReviewCard>
             );
           }),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: 8),
         Text(
           _getTimeAgo(context, widget.review.createdAt),
           style: GoogleFonts.poppins(
             fontSize: 14,
-            color: const Color(0xFF64748B),
+            color: Theme.of(context).textTheme.bodySmall?.color,
           ),
         ),
       ],
@@ -287,7 +287,7 @@ class _ReviewCardState extends State<ReviewCard>
     final textStyle = GoogleFonts.poppins(
       fontSize: 14,
       height: 1.5,
-      color: const Color(0xFF1E293B),
+      color: Theme.of(context).textTheme.bodyLarge?.color,
     );
 
     return LayoutBuilder(
@@ -314,7 +314,7 @@ class _ReviewCardState extends State<ReviewCard>
     final seeMoreText = t?.translate('see_more') ?? ' ..... see more';
     final seeMoreStyle = textStyle.copyWith(
       fontWeight: FontWeight.w600,
-      color: const Color(0xFF64748B),
+      color: Theme.of(context).textTheme.bodySmall?.color,
     );
 
     return LayoutBuilder(
@@ -363,7 +363,7 @@ class _ReviewCardState extends State<ReviewCard>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(color: Theme.of(context).dividerColor),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -374,7 +374,7 @@ class _ReviewCardState extends State<ReviewCard>
               size: 15,
               color: AppColors.primary,
             ),
-            const SizedBox(width: 6),
+            SizedBox(width: 6),
             Text(
               t?.translate('reply') ?? 'Reply',
               style: GoogleFonts.poppins(
@@ -400,7 +400,7 @@ class _ReviewCardState extends State<ReviewCard>
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -411,10 +411,10 @@ class _ReviewCardState extends State<ReviewCard>
             style: GoogleFonts.poppins(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF64748B),
+              color: Theme.of(context).textTheme.bodySmall?.color,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           // Chips — styled same as cuisine types
           Wrap(
             spacing: 8,
@@ -435,18 +435,18 @@ class _ReviewCardState extends State<ReviewCard>
                     border: Border.all(
                       color: isSelected
                           ? Colors.transparent
-                          : const Color(0xFFE2E8F0),
+                          : Theme.of(context).dividerColor,
                     ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (isSelected)
-                        const Padding(
+                        Padding(
                            padding: EdgeInsets.only(right: 5),
                           child: Icon(
                             Icons.check,
-                            color: Colors.white,
+                            color: Theme.of(context).cardColor,
                             size: 13,
                           ),
                         ),
@@ -459,7 +459,7 @@ class _ReviewCardState extends State<ReviewCard>
                               : FontWeight.w500,
                           color: isSelected
                               ? Colors.white
-                              : const Color(0xFF64748B),
+                              : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
                         ),
                       ),
                     ],
@@ -468,7 +468,7 @@ class _ReviewCardState extends State<ReviewCard>
               );
             }).toList(),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           // Text field
           TextField(
             controller: _replyController,
@@ -477,7 +477,7 @@ class _ReviewCardState extends State<ReviewCard>
             maxLines: 4,
             style: GoogleFonts.poppins(
               fontSize: 14,
-              color: const Color(0xFF1E293B),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
             onChanged: (val) {
               // Deselect chip if text changed manually
@@ -493,18 +493,18 @@ class _ReviewCardState extends State<ReviewCard>
                 color: const Color(0xFFB0BEC5),
               ),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
               contentPadding: const EdgeInsets.symmetric(
                   horizontal: 14, vertical: 12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide:
-                    const BorderSide(color: Color(0xFFE2E8F0)),
+                    BorderSide(color: Theme.of(context).dividerColor),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide:
-                    const BorderSide(color: Color(0xFFE2E8F0)),
+                    BorderSide(color: Theme.of(context).dividerColor),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -513,7 +513,7 @@ class _ReviewCardState extends State<ReviewCard>
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           // Action buttons
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
@@ -526,7 +526,7 @@ class _ReviewCardState extends State<ReviewCard>
                       horizontal: 16, vertical: 9),
                   decoration: BoxDecoration(
                     border:
-                        Border.all(color: const Color(0xFFE2E8F0)),
+                        Border.all(color: Theme.of(context).dividerColor),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -534,12 +534,12 @@ class _ReviewCardState extends State<ReviewCard>
                     style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF64748B),
+                      color: Theme.of(context).textTheme.bodySmall?.color,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               // Send
               GestureDetector(
                 onTap: _isSending ? null : _sendReply,
@@ -552,7 +552,7 @@ class _ReviewCardState extends State<ReviewCard>
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: _isSending
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 16,
                           height: 16,
                           child: CircularProgressIndicator(
@@ -564,15 +564,15 @@ class _ReviewCardState extends State<ReviewCard>
                       : Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.send_rounded,
-                                color: Colors.white, size: 14),
-                            const SizedBox(width: 6),
+                            Icon(Icons.send_rounded,
+                                color: Theme.of(context).cardColor, size: 14),
+                            SizedBox(width: 6),
                             Text(
                               t?.translate('send') ?? 'Send',
                               style: GoogleFonts.poppins(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                                color: Theme.of(context).cardColor,
                               ),
                             ),
                           ],
@@ -612,7 +612,7 @@ class _ReviewCardState extends State<ReviewCard>
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               ShaderMask(
                 shaderCallback: (bounds) =>
                     AppColors.primaryGradient.createShader(bounds),
@@ -621,20 +621,20 @@ class _ReviewCardState extends State<ReviewCard>
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Padding(
             padding: const EdgeInsets.only(left: 11),
             child: Text(
               _effectiveReply,
               style: GoogleFonts.poppins(
                 fontSize: 13,
-                color: const Color(0xFF475569),
+                color: Theme.of(context).textTheme.bodyMedium?.color,
                 height: 1.5,
               ),
             ),

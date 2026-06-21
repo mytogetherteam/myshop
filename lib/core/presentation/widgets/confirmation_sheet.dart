@@ -34,7 +34,7 @@ class ConfirmationSheet extends StatelessWidget {
           height: 5,
           margin: const EdgeInsets.only(bottom: 24),
           decoration: BoxDecoration(
-            color: const Color(0xFFE2E8F0),
+            color: Theme.of(context).dividerColor,
             borderRadius: BorderRadius.circular(2.5),
           ),
         ),
@@ -44,7 +44,7 @@ class ConfirmationSheet extends StatelessWidget {
           style: GoogleFonts.poppins(
             fontSize: 22,
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF1E293B),
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
         const SizedBox(height: 12),
@@ -53,7 +53,7 @@ class ConfirmationSheet extends StatelessWidget {
           textAlign: TextAlign.center,
           style: GoogleFonts.poppins(
             fontSize: 15,
-            color: const Color(0xFF64748B),
+            color: Theme.of(context).textTheme.bodySmall?.color,
             height: 1.5,
           ),
         ),
@@ -90,7 +90,7 @@ class ConfirmationSheet extends StatelessWidget {
               style: GoogleFonts.poppins(
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF64748B),
+                color: Theme.of(context).textTheme.bodySmall?.color,
               ),
             ),
           ),

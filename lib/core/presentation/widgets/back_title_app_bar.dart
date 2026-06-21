@@ -28,14 +28,14 @@ class BackTitleAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
       elevation: 0,
       scrolledUnderElevation: 0,
       centerTitle: centerTitle,
       automaticallyImplyLeading: showBackButton,
       leading: showBackButton
           ? IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black),
+              icon: Icon(Icons.arrow_back, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
               onPressed: onBack ?? () => Navigator.pop(context),
             )
           : null,
@@ -45,7 +45,7 @@ class BackTitleAppBar extends StatelessWidget implements PreferredSizeWidget {
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: AppColors.onSurface,
+              color: Theme.of(context).textTheme.bodyLarge?.color ?? AppColors.onSurface,
             ),
           ),
       actions: actions,
@@ -65,7 +65,7 @@ class GradientAddIconButton extends StatelessWidget {
       onPressed: onPressed,
       icon: ShaderMask(
         shaderCallback: (bounds) => AppColors.primaryGradient.createShader(bounds),
-        child: const PhosphorIcon(PhosphorIconsRegular.plus, color: Colors.white),
+        child: PhosphorIcon(PhosphorIconsRegular.plus, color: Colors.white),
       ),
     );
   }

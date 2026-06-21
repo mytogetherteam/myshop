@@ -50,12 +50,12 @@ class LanguageTextField extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     gradient: selected ? AppColors.primaryGradient : null,
-                    color: selected ? null : Colors.white,
+                    color: selected ? null : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : Colors.white),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: selected
                           ? Colors.transparent
-                          : const Color(0xFFE2E8F0),
+                          : Theme.of(context).dividerColor,
                     ),
                   ),
                   child: RichText(
@@ -68,7 +68,7 @@ class LanguageTextField extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                             color: selected
                                 ? Colors.white
-                                : const Color(0xFF64748B),
+                                : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
                           ),
                         ),
                         if (isRequired)
@@ -90,7 +90,7 @@ class LanguageTextField extends StatelessWidget {
             );
           }).toList(),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         TextField(
           controller: controller,
           maxLines: maxLines,
@@ -109,18 +109,18 @@ class LanguageTextField extends StatelessWidget {
               vertical: 12,
             ),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderSide: BorderSide(color: Theme.of(context).dividerColor),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderSide: BorderSide(color: Theme.of(context).dividerColor),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(
+              borderSide: BorderSide(
                 color: Color(0xFFED3973),
                 width: 1.5,
               ),
@@ -130,7 +130,7 @@ class LanguageTextField extends StatelessWidget {
               builder: (context, value, child) {
                 if (value.text.isEmpty) return const SizedBox.shrink();
                 return IconButton(
-                  icon: const Icon(Icons.clear, color: Color(0xFF94A3B8), size: 20),
+                  icon: Icon(Icons.clear, color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)), size: 20),
                   onPressed: () {
                     controller.clear();
                     if (onChanged != null) onChanged!();
@@ -141,7 +141,7 @@ class LanguageTextField extends StatelessWidget {
           ),
           style: GoogleFonts.poppins(
             fontSize: 14,
-            color: const Color(0xFF1E293B),
+            color: Theme.of(context).textTheme.bodyLarge?.color,
             height: selectedLang == 'MM' ? 1.5 : 1.2,
             letterSpacing: selectedLang == 'MM' ? 0.3 : null,
           ),

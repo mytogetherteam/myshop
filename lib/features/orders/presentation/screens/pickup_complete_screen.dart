@@ -79,7 +79,7 @@ class _PickupCompleteScreenState extends State<PickupCompleteScreen> {
     final order = widget.order;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      
       appBar: BackTitleAppBar(
         title: t?.translate('verify_pickup') ?? 'Verify Pickup',
         actions: const [
@@ -96,7 +96,7 @@ class _PickupCompleteScreenState extends State<PickupCompleteScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _HeaderCard(order: order, t: t),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
@@ -108,12 +108,12 @@ class _PickupCompleteScreenState extends State<PickupCompleteScreen> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(
+                        Icon(
                           PhosphorIconsRegular.info,
                           color: Color(0xFF16A34A),
                           size: 20,
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             t?.translate('pickup_verify_hint') ??
@@ -128,16 +128,16 @@ class _PickupCompleteScreenState extends State<PickupCompleteScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Text(
                     t?.translate('items') ?? 'Items',
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1E293B),
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   ...order.items.map(
                     (item) => Padding(
                       padding: const EdgeInsets.only(bottom: 10),
@@ -151,7 +151,7 @@ class _PickupCompleteScreenState extends State<PickupCompleteScreen> {
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF475569),
+                                color: Theme.of(context).textTheme.bodyMedium?.color,
                               ),
                             ),
                           ),
@@ -161,7 +161,7 @@ class _PickupCompleteScreenState extends State<PickupCompleteScreen> {
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
-                                color: const Color(0xFF1E293B),
+                                color: Theme.of(context).textTheme.bodyLarge?.color,
                               ),
                             ),
                           ),
@@ -169,21 +169,21 @@ class _PickupCompleteScreenState extends State<PickupCompleteScreen> {
                             item.displayPrice,
                             style: GoogleFonts.poppins(
                               fontSize: 13,
-                              color: const Color(0xFF64748B),
+                              color: Theme.of(context).textTheme.bodySmall?.color,
                             ),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  const Divider(height: 24, color: Color(0xFFE2E8F0)),
+                  Divider(height: 24, color: Theme.of(context).dividerColor),
                   if (order.waitingTimeMinutes > 0) ...[
                     _SummaryRow(
                       label: t?.translate('est_prep_time') ?? 'Est. Prep Time',
                       value:
                           '${order.waitingTimeMinutes} ${t?.translate('mins') ?? 'mins'}',
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                   ],
                   _SummaryRow(
                     label: t?.translate('total') ?? 'Total',
@@ -197,7 +197,7 @@ class _PickupCompleteScreenState extends State<PickupCompleteScreen> {
           Container(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               border: Border(
                 top: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
               ),
@@ -211,19 +211,19 @@ class _PickupCompleteScreenState extends State<PickupCompleteScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (!_isSubmitting) ...[
-                    const Icon(
+                    Icon(
                       PhosphorIconsRegular.check,
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       size: 20,
                     ),
-                    const SizedBox(width: 10),
+                    SizedBox(width: 10),
                   ],
                   Text(
                     t?.translate('order_handed_over') ?? 'Order Handed Over',
                     style: GoogleFonts.poppins(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                     ),
                   ),
                 ],
@@ -248,9 +248,9 @@ class _HeaderCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -278,12 +278,12 @@ class _HeaderCard extends StatelessWidget {
                 style: GoogleFonts.poppins(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF64748B),
+                  color: Theme.of(context).textTheme.bodySmall?.color,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Text(
             order.lastOrderNo.isNotEmpty
                 ? order.lastOrderNo
@@ -291,15 +291,15 @@ class _HeaderCard extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF1E293B),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             order.customerName,
             style: GoogleFonts.poppins(
               fontSize: 14,
-              color: const Color(0xFF64748B),
+              color: Theme.of(context).textTheme.bodySmall?.color,
             ),
           ),
         ],
@@ -329,7 +329,7 @@ class _SummaryRow extends StatelessWidget {
           style: GoogleFonts.poppins(
             fontSize: emphasized ? 15 : 13,
             fontWeight: emphasized ? FontWeight.w600 : FontWeight.w500,
-            color: emphasized ? const Color(0xFF1E293B) : const Color(0xFF64748B),
+            color: emphasized ? (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
           ),
         ),
         Text(
@@ -337,7 +337,7 @@ class _SummaryRow extends StatelessWidget {
           style: GoogleFonts.poppins(
             fontSize: emphasized ? 16 : 13,
             fontWeight: emphasized ? FontWeight.w700 : FontWeight.w500,
-            color: emphasized ? AppColors.primary : const Color(0xFF1E293B),
+            color: emphasized ? AppColors.primary : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))),
           ),
         ),
       ],

@@ -11,6 +11,8 @@ class StorageService {
       'notification_permission_handled';
   static const String _keySelectedShopId = 'selected_shop_id';
   static const String _keyLanguage = 'app_language';
+  static const String _keyMenuWarningSeen = 'menu_warning_seen';
+  static const String _keyThemeMode = 'app_theme_mode';
 
   static final StorageService instance = StorageService._();
 
@@ -115,6 +117,16 @@ class StorageService {
     await _prefs!.remove(_keySelectedShopId);
   }
 
+  Future<void> setMenuWarningSeen() async {
+    await _ensureInitialized();
+    await _prefs!.setBool(_keyMenuWarningSeen, true);
+  }
+
+  Future<bool> isMenuWarningSeen() async {
+    await _ensureInitialized();
+    return _prefs!.getBool(_keyMenuWarningSeen) ?? false;
+  }
+
   Future<void> saveLanguage(String langCode) async {
     await _ensureInitialized();
     await _prefs!.setString(_keyLanguage, langCode);
@@ -123,5 +135,15 @@ class StorageService {
   Future<String> getLanguage() async {
     await _ensureInitialized();
     return _prefs!.getString(_keyLanguage) ?? 'en'; // default English
+  }
+
+  Future<void> saveThemeMode(String themeModeStr) async {
+    await _ensureInitialized();
+    await _prefs!.setString(_keyThemeMode, themeModeStr);
+  }
+
+  Future<String?> getThemeMode() async {
+    await _ensureInitialized();
+    return _prefs!.getString(_keyThemeMode);
   }
 }

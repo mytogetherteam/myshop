@@ -125,7 +125,7 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      
       appBar: BackTitleAppBar(
         title: t?.translate('rider_management') ?? 'Rider Management',
         actions: [GradientAddIconButton(onPressed: () => _showRiderForm())],
@@ -167,14 +167,14 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Row(
         children: [
           const Skeleton.circle(width: 40, height: 40),
-          const SizedBox(width: 16),
+          SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,9 +187,9 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           const Skeleton(width: 20, height: 20, borderRadius: 4),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           const Skeleton(width: 20, height: 20, borderRadius: 4),
         ],
       ),
@@ -199,18 +199,18 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
   Widget _buildRiderCard(Rider rider) {
     final t = AppLocalizations.of(context);
     final isBusy = rider.isBusy;
-    final muted = const Color(0xFF94A3B8);
-    final titleColor = isBusy ? muted : const Color(0xFF1E293B);
+    final muted = (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)));
+    final titleColor = isBusy ? muted : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)));
     final subtitleColor =
-        isBusy ? const Color(0xFFCBD5E1) : const Color(0xFF64748B);
+        isBusy ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)));
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: isBusy ? const Color(0xFFF1F5F9) : Colors.white,
+        color: isBusy ? (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9)) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : Colors.white),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isBusy ? const Color(0xFFE2E8F0) : const Color(0xFFE2E8F0),
+          color: isBusy ? Theme.of(context).dividerColor : Theme.of(context).dividerColor,
         ),
       ),
       child: Material(
@@ -222,7 +222,7 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
               const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           leading: CircleAvatar(
             backgroundColor: isBusy
-                ? const Color(0xFFE2E8F0)
+                ? Theme.of(context).dividerColor
                 : AppColors.primary.withValues(alpha: 0.1),
             child: rider.profileUrl != null && rider.profileUrl!.isNotEmpty
                 ? ClipOval(
@@ -290,7 +290,7 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
                     color: subtitleColor,
                   ),
                 ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Wrap(
                 spacing: 8,
                 runSpacing: 4,
@@ -320,7 +320,7 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
               IconButton(
                 icon: PhosphorIcon(
                   PhosphorIconsRegular.pencilSimple,
-                  color: isBusy ? muted : const Color(0xFF64748B),
+                  color: isBusy ? muted : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
                   size: 20,
                 ),
                 onPressed: isBusy ? null : () => _showRiderForm(rider),
@@ -354,7 +354,7 @@ class _RiderStatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayColor = muted ? const Color(0xFF94A3B8) : color;
+    final displayColor = muted ? (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))) : color;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
@@ -471,7 +471,7 @@ class _RiderFormSheetState extends State<RiderFormSheet> {
                 height: 5,
                 margin: const EdgeInsets.only(bottom: 24),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
+                  color: Theme.of(context).dividerColor,
                   borderRadius: BorderRadius.circular(2.5),
                 ),
               ),
@@ -483,10 +483,10 @@ class _RiderFormSheetState extends State<RiderFormSheet> {
               style: GoogleFonts.poppins(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF1E293B),
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             Align(
               alignment: Alignment.center,
               child: ImagePickerWidget(
@@ -499,29 +499,29 @@ class _RiderFormSheetState extends State<RiderFormSheet> {
                 },
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             _buildTextField(
               controller: _nameController,
               label: t?.translate('name') ?? 'Name',
               hint: t?.translate('enter_rider_name') ?? 'Enter Rider Name',
               validator: (value) => value == null || value.isEmpty ? 'Required field' : null,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             _buildTextField(
               controller: _phoneController,
               label: t?.translate('phone_number') ?? 'Phone Number',
               hint: t?.translate('enter_phone_number') ?? 'Enter Phone Number',
               keyboardType: TextInputType.phone,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             _buildTextField(
               controller: _licensePlateController,
               label: t?.translate('license_plate') ?? 'License Plate',
               hint: t?.translate('enter_license_plate') ?? 'Enter License Plate',
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             _buildActiveToggle(),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
               child: PrimaryGradientButton(
@@ -545,17 +545,17 @@ class _RiderFormSheetState extends State<RiderFormSheet> {
           style: GoogleFonts.poppins(
             fontSize: 13,
             fontWeight: FontWeight.w500,
-            color: const Color(0xFF475569),
+            color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Container(
           height: 50,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: Theme.of(context).dividerColor),
           ),
           child: Row(
             children: [
@@ -563,7 +563,7 @@ class _RiderFormSheetState extends State<RiderFormSheet> {
                 t?.translate('is_active') ?? 'Is Active',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
-                  color: const Color(0xFF1E293B),
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
               const Spacer(),
@@ -593,33 +593,33 @@ class _RiderFormSheetState extends State<RiderFormSheet> {
           style: GoogleFonts.poppins(
             fontSize: 13,
             fontWeight: FontWeight.w500,
-            color: const Color(0xFF475569),
+            color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
           style: GoogleFonts.poppins(
             fontSize: 14,
-            color: const Color(0xFF1E293B),
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: GoogleFonts.poppins(
               fontSize: 14,
-              color: const Color(0xFF94A3B8),
+              color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderSide: BorderSide(color: Theme.of(context).dividerColor),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderSide: BorderSide(color: Theme.of(context).dividerColor),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
@@ -630,7 +630,7 @@ class _RiderFormSheetState extends State<RiderFormSheet> {
               builder: (context, value, child) {
                 if (value.text.isEmpty) return const SizedBox.shrink();
                 return IconButton(
-                  icon: const Icon(Icons.clear, color: Color(0xFF94A3B8), size: 20),
+                  icon: Icon(Icons.clear, color: const Color(0xFF94A3B8), size: 20),
                   onPressed: () {
                     controller.clear();
                   },

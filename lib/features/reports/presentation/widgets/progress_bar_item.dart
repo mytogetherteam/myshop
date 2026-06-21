@@ -4,7 +4,7 @@ class ProgressBarItem extends StatefulWidget {
   final String label;
   final String value;
   final double percentage; // 0.0 to 1.0
-  final Color backgroundColor;
+  final Color? backgroundColor;
   final Color? barColor;
   final Gradient? barGradient;
 
@@ -13,7 +13,7 @@ class ProgressBarItem extends StatefulWidget {
     required this.label,
     required this.value,
     this.percentage = 0.0,
-    this.backgroundColor = const Color(0xFFF1F5F9),
+    this.backgroundColor,
     this.barColor,
     this.barGradient,
   });
@@ -60,28 +60,28 @@ class _ProgressBarItemState extends State<ProgressBarItem>
           children: [
             Text(
               widget.label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: Color(0xFF1E293B),
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
             Text(
               widget.value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: Color(0xFF64748B),
+                color: Theme.of(context).textTheme.bodySmall?.color,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Container(
           height: 6,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: widget.backgroundColor,
+            color: widget.backgroundColor ?? (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : const Color(0xFFF1F5F9)),
             borderRadius: BorderRadius.circular(4),
           ),
           child: AnimatedBuilder(
