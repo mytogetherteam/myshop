@@ -6,12 +6,12 @@ import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 
 class OrderCancelledDialog extends StatelessWidget {
   final OrderModel order;
-  final VoidCallback onClose;
+  final VoidCallback onViewOrder;
 
   const OrderCancelledDialog({
     super.key,
     required this.order,
-    required this.onClose,
+    required this.onViewOrder,
   });
 
   @override
@@ -115,7 +115,7 @@ class OrderCancelledDialog extends StatelessWidget {
                       style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                        color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                       ),
                     ),
                     SizedBox(width: 8),
@@ -226,21 +226,23 @@ class OrderCancelledDialog extends StatelessWidget {
                 ),
                 SizedBox(height: 24),
                 PrimaryGradientButton(
-                  onPressed: onClose,
+                  onPressed: onViewOrder,
                   height: 56,
                   borderRadius: 16,
                   gradient: const LinearGradient(
-                    colors: [Colors.white, Colors.white],
+                    colors: [Color(0xFFEF4444), Color(0xFFF87171)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  child: Text(
-                    'Close',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                  child: Center(
+                    child: Text(
+                      'View Order',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.3,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),

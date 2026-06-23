@@ -81,7 +81,7 @@ class _AnalyticsLineChartState extends State<AnalyticsLineChart> {
                       child: Text(
                         widget.bottomLabels[index],
                         style: TextStyle(
-                          color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
+                          color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                           fontSize: 10,
                         ),
                       ),
@@ -103,7 +103,7 @@ class _AnalyticsLineChartState extends State<AnalyticsLineChart> {
                       child: Text(
                         '0',
                         style: TextStyle(
-                          color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
+                          color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                           fontSize: 10,
                         ),
                       ),
@@ -114,7 +114,7 @@ class _AnalyticsLineChartState extends State<AnalyticsLineChart> {
                     child: Text(
                       '฿ ${(value / 1000).toStringAsFixed(0)},000',
                       style: TextStyle(
-                        color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
+                        color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                         fontSize: 10,
                       ),
                     ),

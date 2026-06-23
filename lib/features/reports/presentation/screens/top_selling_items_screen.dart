@@ -343,7 +343,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                         style: GoogleFonts.poppins(
                           color: isSelected
                               ? Colors.white
-                              : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
+                              : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                           fontSize: 14,
                           fontWeight: isSelected
                               ? FontWeight.w500
@@ -408,7 +408,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
                           child: Icon(
                             Icons.close,
                             size: 16,
-                            color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
+                            color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                           ),
                         ),
                       ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 
 class CustomLoadingIndicator extends StatefulWidget {
   final double size;
@@ -28,7 +29,7 @@ class _CustomLoadingIndicatorState extends State<CustomLoadingIndicator>
     )..repeat();
 
     // The order: top-right -> bottom-right -> bottom-left -> top-left -> top-right
-    // Positions: 
+    // Positions:
     // TR: (1, 0)
     // BR: (1, 1)
     // BL: (0, 1)
@@ -63,27 +64,43 @@ class _CustomLoadingIndicatorState extends State<CustomLoadingIndicator>
     super.dispose();
   }
 
+  // Interpolate between primary (#ED3973) and secondary (#EFA240) gradient colors
+  Color _gradientColor(double t) {
+    const c1 = AppColors.primary;   // #ED3973 (pink-red)
+    const c2 = AppColors.secondary; // #EFA240 (orange)
+    return Color.lerp(c1, c2, t)!;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final primaryColor = widget.color ?? const Color(0xFFED3973);
     final dotSize = widget.size / 2.2;
     final spacing = widget.size * 0.1;
+
+    // Each background dot gets a gradient-interpolated color:
+    // TL = 0.0 (primary pink), TR = 0.33, BL = 0.67, BR = 1.0 (secondary orange)
+    final dotColors = [
+      _gradientColor(0.0).withValues(alpha: 0.25),  // TL
+      _gradientColor(0.33).withValues(alpha: 0.25), // TR
+      _gradientColor(0.67).withValues(alpha: 0.25), // BL
+      _gradientColor(1.0).withValues(alpha: 0.25),  // BR
+    ];
 
     return SizedBox(
       width: widget.size,
       height: widget.size,
       child: Stack(
         children: [
-          // Background Dots
-          _buildDot(0, 0, primaryColor.withValues(alpha: 0.1), dotSize), // TL
-          _buildDot(1, 0, primaryColor.withValues(alpha: 0.1), dotSize), // TR
-          _buildDot(0, 1, primaryColor.withValues(alpha: 0.1), dotSize), // BL
-          _buildDot(1, 1, primaryColor.withValues(alpha: 0.1), dotSize), // BR
+          // Background dots with gradient-interpolated colors
+          _buildDot(0, 0, dotColors[0], dotSize, spacing), // TL
+          _buildDot(1, 0, dotColors[1], dotSize, spacing), // TR
+          _buildDot(0, 1, dotColors[2], dotSize, spacing), // BL
+          _buildDot(1, 1, dotColors[3], dotSize, spacing), // BR
 
-          // Active Dot
+          // Active dot — moves around with gradient fill + glow shadow
           AnimatedBuilder(
             animation: _animation,
             builder: (context, child) {
+              final t = (_animation.value.dx + _animation.value.dy) / 2.0;
               return Positioned(
                 left: _animation.value.dx * (dotSize + spacing),
                 top: _animation.value.dy * (dotSize + spacing),
@@ -91,8 +108,22 @@ class _CustomLoadingIndicatorState extends State<CustomLoadingIndicator>
                   width: dotSize,
                   height: dotSize,
                   decoration: BoxDecoration(
-                    color: primaryColor,
+                    gradient: LinearGradient(
+                      colors: [
+                        _gradientColor(t),
+                        _gradientColor((t + 0.4).clamp(0.0, 1.0)),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                     borderRadius: BorderRadius.circular(dotSize * 0.3),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _gradientColor(t).withValues(alpha: 0.45),
+                        blurRadius: dotSize * 0.6,
+                        offset: Offset(0, dotSize * 0.15),
+                      ),
+                    ],
                   ),
                 ),
               );
@@ -103,8 +134,7 @@ class _CustomLoadingIndicatorState extends State<CustomLoadingIndicator>
     );
   }
 
-  Widget _buildDot(double xIndex, double yIndex, Color color, double size) {
-    final spacing = widget.size * 0.1;
+  Widget _buildDot(double xIndex, double yIndex, Color color, double size, double spacing) {
     return Positioned(
       left: xIndex * (size + spacing),
       top: yIndex * (size + spacing),

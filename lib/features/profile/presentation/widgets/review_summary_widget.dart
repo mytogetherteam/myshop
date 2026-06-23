@@ -4,6 +4,7 @@ import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import '../../data/models/review_model.dart';
 
 class ReviewSummaryWidget extends StatelessWidget {
@@ -71,12 +72,14 @@ class ReviewSummaryWidget extends StatelessWidget {
             SizedBox(width: 8),
             Row(
               children: List.generate(5, (index) {
-                return PhosphorIcon(
-                  index < summary.averageRating.floor()
-                      ? PhosphorIconsFill.star
-                      : PhosphorIconsRegular.star,
-                  color: const Color(0xFFFFB800),
-                  size: 24,
+                return GradientWidget(
+                  child: PhosphorIcon(
+                    index < summary.averageRating.floor()
+                        ? PhosphorIconsFill.star
+                        : PhosphorIconsRegular.star,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 );
               }),
             ),
@@ -121,13 +124,21 @@ class ReviewSummaryWidget extends StatelessWidget {
               ),
               SizedBox(width: 12),
               Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: percentage,
-                    minHeight: 8,
-                    backgroundColor: Theme.of(context).dividerColor,
-                    valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                child: Container(
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).dividerColor,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  alignment: Alignment.centerLeft,
+                  child: FractionallySizedBox(
+                    widthFactor: percentage,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: AppColors.primaryGradient,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
                   ),
                 ),
               ),

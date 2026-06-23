@@ -349,7 +349,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text('Cancel',
-                style: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+                style: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)))),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, controller.text.trim()),
@@ -389,7 +389,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text('Cancel',
-                style: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+                style: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)))),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -706,7 +706,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         child: Text(
           'Say hello 👋',
           style: GoogleFonts.poppins(
-              fontSize: 14, color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)))),
+              fontSize: 14, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B))),
         ),
       );
     }
@@ -760,7 +760,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             message.content ?? '',
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
-                fontSize: 12, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)))),
+                fontSize: 12, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
           ),
         ),
       ),
@@ -780,7 +780,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               style: GoogleFonts.poppins(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
               ),
             ),
           ),
@@ -874,14 +874,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.block_rounded, size: 14, color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+          Icon(Icons.block_rounded, size: 14, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B))),
           SizedBox(width: 6),
           Text(
             'This message was deleted',
             style: GoogleFonts.poppins(
               fontSize: 13,
               fontStyle: FontStyle.italic,
-              color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
             ),
           ),
         ],
@@ -914,7 +914,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   height: 120,
                   color: Theme.of(context).dividerColor.withOpacity(0.3),
                   child: Icon(Icons.broken_image_outlined,
-                      color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                      color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B))),
                 ),
               ),
             ),
@@ -927,7 +927,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 message.content!,
                 style: GoogleFonts.poppins(
                   fontSize: 14,
-                  color: isMe ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))),
+                  color: isMe ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                 ),
               ),
             ),
@@ -949,7 +949,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           style: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.w400,
-            color: isMe ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))),
+            color: isMe ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
             height: 1.4,
           ),
         ),
@@ -961,7 +961,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   Widget _buildMetaRow(ChatMessage message, bool isMe) {
     final mutedColor =
-        isMe ? Colors.white.withValues(alpha: 0.7) : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)));
+        isMe ? Colors.white.withValues(alpha: 0.7) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B));
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

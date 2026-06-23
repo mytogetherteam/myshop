@@ -448,7 +448,7 @@ class ReportPageState extends State<ReportPage>
                           child: Icon(
                             Icons.close,
                             size: 16,
-                            color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
+                            color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                           ),
                         ),
                       ],
@@ -636,7 +636,7 @@ class ReportPageState extends State<ReportPage>
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Text(
               t?.translate('no_top_selling_items_yet') ?? "No sales data for this period",
-              style: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)))),
+              style: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
             ),
           ),
         )
@@ -702,7 +702,7 @@ class ReportPageState extends State<ReportPage>
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Text(
               t?.translate('no_orders_yet') ?? "No orders found",
-              style: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)))),
+              style: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
             ),
           ),
         )

@@ -63,7 +63,7 @@ class ShopLocationSection extends StatelessWidget {
             isExpanded: true,
             hint: Text(
               hint,
-              style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)), fontSize: 13),
+              style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)), fontSize: 13),
             ),
             items: [
               DropdownMenuItem<MasterDataModel>(
@@ -73,7 +73,7 @@ class ShopLocationSection extends StatelessWidget {
                   t?.translate('no_data_found') ?? 'No Data Found',
                   style: TextStyle(
                     fontSize: 14,
-                    color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
+                    color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                   ),
                 ),
               ),

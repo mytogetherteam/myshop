@@ -14,6 +14,7 @@ import 'package:my_shop/core/network/api_helper.dart';
 import 'package:my_shop/features/notifications/data/repositories/notification_repository.dart';
 import 'package:my_shop/features/orders/data/services/order_service.dart';
 import 'package:my_shop/features/orders/presentation/widgets/new_order_dialog.dart';
+import 'package:my_shop/features/main_navigation/presentation/screens/main_navigation_screen.dart';
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:audioplayers/audioplayers.dart';
 
@@ -313,13 +314,20 @@ class NotificationService {
     try {
       final orderData = await OrderService().getOrderDetail(orderIdStr);
       if (orderData != null) {
+        // Navigate to the main navigation screen and switch to the 'NEW' orders tab
+        App.navigatorKey.currentState?.popUntil((route) => route.isFirst);
+        OrdersTabNavigation.returnToOrdersTab?.call('NEW');
+
         // Play loop alert if needed since the notification sound might only play once
         NotificationService.globalAlertAudioPlayer = AudioPlayer();
         NotificationService.globalAlertAudioPlayer!.setReleaseMode(ReleaseMode.loop);
         NotificationService.globalAlertAudioPlayer!.play(AssetSource('alert/alert.mp3'));
 
+        // Get the latest valid context after popping routes
+        final dialogContext = App.navigatorKey.currentContext ?? context;
+
         showDialog(
-          context: context,
+          context: dialogContext,
           barrierDismissible: true,
           builder: (context) => NewOrderDialog(
             order: orderData,

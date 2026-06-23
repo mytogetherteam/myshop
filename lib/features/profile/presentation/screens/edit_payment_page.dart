@@ -549,14 +549,14 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
           Icon(
             Icons.add_a_photo_outlined,
             size: 40,
-            color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
+            color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
           ),
           SizedBox(height: 8),
           Text(
             AppLocalizations.of(context)?.translate('tap_to_upload_qr') ?? 'Tap to Upload QR Code',
             style: GoogleFonts.poppins(
               fontSize: 12,
-              color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
             ),
           ),
         ],
@@ -570,7 +570,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
       style: GoogleFonts.poppins(
         fontSize: 12,
         fontWeight: FontWeight.w700,
-        color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+        color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
         letterSpacing: 0.5,
       ),
     );
@@ -606,7 +606,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
           decoration: InputDecoration(
             counterText: '',
             hintText: hint,
-            prefixIcon: Icon(icon, size: 20, color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)))),
+            prefixIcon: Icon(icon, size: 20, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B))),
             filled: true,
             fillColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
             contentPadding: const EdgeInsets.symmetric(
@@ -633,7 +633,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
               builder: (context, value, child) {
                 if (value.text.isEmpty) return const SizedBox.shrink();
                 return IconButton(
-                  icon: Icon(Icons.clear, color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)), size: 20),
+                  icon: Icon(Icons.clear, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)), size: 20),
                   onPressed: () {
                     controller.clear();
                   },

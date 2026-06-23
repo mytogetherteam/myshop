@@ -191,7 +191,7 @@ class _NotificationPageState extends State<NotificationPage> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Scaffold(
-      
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
       appBar: BackTitleAppBar(
         title: t?.translate('notifications') ?? 'Notifications',
         onBack: () => Navigator.pop(context, true),
@@ -293,7 +293,9 @@ class _NotificationPageState extends State<NotificationPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
-          color: noti.isRead ? Colors.white : const Color(0xFFED3973).withValues(alpha: 0.04),
+          color: noti.isRead 
+              ? Theme.of(context).cardColor 
+              : const Color(0xFFED3973).withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.15 : 0.04),
           border: Border(
             bottom: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.3), width: 1),
           ),
@@ -331,7 +333,7 @@ class _NotificationPageState extends State<NotificationPage> {
                         noti.timeAgo,
                         style: GoogleFonts.poppins(
                           fontSize: 12,
-                          color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                          color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                         ),
                       ),
                     ],
@@ -347,7 +349,7 @@ class _NotificationPageState extends State<NotificationPage> {
                         fontSize: 14,
                         color: _isCancelMessage(noti.displayTitle, noti.displayBody) 
                             ? const Color(0xFFEF4444) 
-                            : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
+                            : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                         height: 1.4,
                       ),
                     ),

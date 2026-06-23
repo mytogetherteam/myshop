@@ -72,7 +72,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                       style: GoogleFonts.poppins(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                        color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                         letterSpacing: 0.8,
                       ),
                     ),
@@ -129,7 +129,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                       style: GoogleFonts.poppins(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                        color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                         letterSpacing: 0.8,
                       ),
                     ),
@@ -189,7 +189,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
             PhosphorIcon(
               PhosphorIconsRegular.caretRight,
               size: 18,
-              color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
             ),
           ],
         ),
@@ -400,7 +400,7 @@ class _DeleteAccountFrictionSheetState extends State<_DeleteAccountFrictionSheet
                 icon: PhosphorIcon(
                   _isPasswordVisible ? PhosphorIconsRegular.eye : PhosphorIconsRegular.eyeSlash,
                   size: 20,
-                  color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                 ),
                 onPressed: () {
                   setState(() => _isPasswordVisible = !_isPasswordVisible);

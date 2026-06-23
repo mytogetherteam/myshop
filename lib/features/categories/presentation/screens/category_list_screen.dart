@@ -90,7 +90,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w700,
-            color: Theme.of(context).cardColor,
+            color: Colors.white,
           ),
         ),
         centerTitle: false,
@@ -112,7 +112,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: Theme.of(context).cardColor,
+                  color: Colors.white,
                 ),
               ),
             ),
@@ -132,7 +132,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
       return Center(
         child: Text(
           AppLocalizations.of(context)?.translate('no_categories_found') ?? 'No Categories Found',
-          style: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)))),
+          style: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B))),
         ),
       );
     }
@@ -284,7 +284,7 @@ class _CategoryCard extends StatelessWidget {
                 ),
                 child: Icon(
                   Icons.drag_indicator,
-                  color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
+                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                   size: 24,
                 ),
               ),
@@ -312,7 +312,7 @@ class _CategoryCard extends StatelessWidget {
                       errorBuilder: (context, error, stackTrace) => Icon(
                         Icons.restaurant,
                         size: 20,
-                        color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
+                        color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                       ),
                     ),
             ),
@@ -341,7 +341,7 @@ class _CategoryCard extends StatelessWidget {
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                      color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                     ),
                   ),
                 ],
@@ -351,7 +351,7 @@ class _CategoryCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: Theme.of(context).dividerColor),
               ),
@@ -368,19 +368,20 @@ class _CategoryCard extends StatelessWidget {
   }
 
   Color _getCategoryColor(BuildContext context, String? name) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (name?.toLowerCase()) {
       case 'main dish':
-        return const Color(0xFFFFF7ED);
+        return isDark ? const Color(0xFF431407) : const Color(0xFFFFF7ED);
       case 'drinks':
-        return const Color(0xFFF0F9FF);
+        return isDark ? const Color(0xFF0C4A6E) : const Color(0xFFF0F9FF);
       case 'soup':
-        return const Color(0xFFF0FDFA);
+        return isDark ? const Color(0xFF134E4A) : const Color(0xFFF0FDFA);
       case 'dessert':
-        return (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : const Color(0xFFFFF1F2)));
+        return isDark ? const Color(0xFF4C0519) : const Color(0xFFFFF1F2);
       case 'salad':
-        return const Color(0xFFF0FDF4);
+        return isDark ? const Color(0xFF14532D) : const Color(0xFFF0FDF4);
       default:
-        return const Color(0xFFF8FAFC);
+        return isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
     }
   }
 }

@@ -114,7 +114,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
             child: Icon(
               PhosphorIconsRegular.chatCenteredText,
               size: 40,
-              color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
             ),
           ),
           SizedBox(height: 16),

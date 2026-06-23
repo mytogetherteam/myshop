@@ -269,7 +269,7 @@ class _GlobalShopSelectionPageState extends State<GlobalShopSelectionPage> {
                       : PhosphorIconsRegular.caretRight,
                   color: isSelected
                       ? const Color(0xFFED3973)
-                      : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                      : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                   size: 24,
                 ),
               ],

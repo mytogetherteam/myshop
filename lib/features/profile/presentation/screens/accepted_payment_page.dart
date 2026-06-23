@@ -369,7 +369,7 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
             child: Icon(
               Icons.credit_card_off_rounded,
               size: 64,
-              color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
             ),
           ),
           SizedBox(height: 24),

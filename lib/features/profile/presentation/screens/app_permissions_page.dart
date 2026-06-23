@@ -7,6 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/presentation/widgets/back_title_app_bar.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 
 class AppPermissionsPage extends StatefulWidget {
   const AppPermissionsPage({super.key});
@@ -151,13 +152,21 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isGranted ? (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : const Color(0xFFFFF1F2))) : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : const Color(0xFFF1F5F9))),
+                  color: isGranted 
+                      ? AppColors.primary.withValues(alpha: 0.15) 
+                      : (Theme.of(context).brightness == Brightness.dark 
+                          ? Theme.of(context).dividerColor.withValues(alpha: 0.1) 
+                          : const Color(0xFFF1F5F9)),
                   shape: BoxShape.circle,
                 ),
                 child: PhosphorIcon(
                   icon,
                   size: 24,
-                  color: isGranted ? const Color(0xFFED3973) : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                  color: isGranted 
+                      ? AppColors.primary 
+                      : (Theme.of(context).brightness == Brightness.dark 
+                          ? const Color(0xFF94A3B8) 
+                          : const Color(0xFF94A3B8)),
                 ),
               ),
               SizedBox(width: 16),
@@ -186,7 +195,7 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
                           Icon(
                             isGranted ? PhosphorIconsFill.checkCircle : PhosphorIconsFill.xCircle,
                             size: 14,
-                            color: isGranted ? const Color(0xFF15803D) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
+                            color: isGranted ? const Color(0xFF15803D) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                           ),
                           SizedBox(width: 6),
                           Text(

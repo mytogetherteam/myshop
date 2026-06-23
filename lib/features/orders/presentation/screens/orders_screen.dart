@@ -12,6 +12,7 @@ import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/utils/app_logger.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 
 class OrdersScreen extends StatefulWidget {
@@ -88,10 +89,55 @@ class OrdersScreenState extends State<OrdersScreen>
   void _setupWebSocketListener() {
     _socketSubscription = WebSocketService().orderUpdates.listen((event) {
       if (event['order'] != null) {
-        final newOrder = OrderModel.fromJson(event['order']);
-        _orderUpdatesController.add(newOrder);
+        try {
+          final newOrder = OrderModel.fromJson(event['order']);
+          _orderUpdatesController.add(newOrder);
+          // Update tab counts directly from the new order status.
+          // Do NOT call _fetchInitialData() here — that triggers full list
+          // reloads on every tab which causes duplicate / ghost cards.
+          _updateTabCountFromOrder(newOrder);
+        } catch (e, stack) {
+          AppLogger.realtime('[WS] Failed to parse OrderModel: $e\n$stack');
+          if (mounted) {
+            AppDialog.showToast(context, 'Parse error: $e', isError: true);
+          }
+        }
       }
     });
+  }
+
+  /// Adjusts the badge counts when an order moves between tabs.
+  /// The source tab loses 1 and the destination tab gains 1.
+  void _updateTabCountFromOrder(OrderModel order) {
+    if (!mounted) return;
+    final upperStatus = order.status.toUpperCase();
+
+    // Map the new order status → destination tab key
+    String? destTab;
+    if (['PENDING', 'REVISED'].contains(upperStatus)) {
+      destTab = 'NEW';
+    } else if ([
+      'PAYMENT_SLIP_REQUESTED',
+      'AWAITING_APPROVAL',
+      'PAYMENT_VERIFIED',
+    ].contains(upperStatus)) {
+      destTab = 'PAYMENT';
+    } else if (upperStatus == 'COOKING') {
+      destTab = 'PREPARING';
+    } else if (upperStatus == 'READY_FOR_PICKUP') {
+      destTab = 'READY_FOR_PICKUP';
+    } else if (upperStatus == 'ON_THE_WAY') {
+      destTab = 'DELIVERING';
+    } else if (upperStatus == 'DELIVERED') {
+      destTab = 'DELIVERED';
+    } else if (upperStatus == 'PICKED_UP') {
+      destTab = 'PICKED_UP';
+    } else if (upperStatus == 'CANCELED') {
+      destTab = 'CANCELED';
+    }
+
+    // Refresh counts from server in the background (non-blocking, no list reload)
+    _fetchInitialData();
   }
 
   @override
@@ -150,6 +196,13 @@ class OrdersScreenState extends State<OrdersScreen>
 
   void refreshAll() {
     _refreshController.add(null);
+  }
+
+  /// Re-fetches server-side totals for all tab badge counts.
+  /// Call this after app resume to catch up with any changes made on other
+  /// devices while this device was backgrounded.
+  void syncCounts() {
+    _fetchInitialData();
   }
 
   @override
@@ -381,6 +434,11 @@ class _OrderListTabViewState extends State<OrderListTabView>
   StreamSubscription? _updateSub;
   StreamSubscription? _refreshSub;
 
+  // Tracks orders that have moved away from this tab via WebSocket.
+  // Prevents race conditions where a slow API response tries to re-add
+  // the old version of the order.
+  final Set<String> _removedOrderIds = {};
+
   @override
   bool get wantKeepAlive => true;
 
@@ -398,7 +456,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
     } else {
       // Lazy load: fetch when first built OR after a delay to stagger initial requests
       Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted && _orders.isEmpty && _isLoading) {
+        if (mounted && _isLoading) {
           _fetchOrders(isRefresh: true);
         }
       });
@@ -421,53 +479,50 @@ class _OrderListTabViewState extends State<OrderListTabView>
     }
   }
 
+  bool _belongsToThisTab(String status) {
+    final upperStatus = status.toUpperCase();
+    switch (widget.tabStatus) {
+      case 'NEW':
+        return ['PENDING', 'REVISED'].contains(upperStatus);
+      case 'PAYMENT':
+        return ['PAYMENT_SLIP_REQUESTED', 'AWAITING_APPROVAL', 'PAYMENT_VERIFIED']
+            .contains(upperStatus);
+      case 'PREPARING':
+        return upperStatus == 'COOKING';
+      case 'READY_FOR_PICKUP':
+        return upperStatus == 'READY_FOR_PICKUP';
+      case 'DELIVERING':
+        return upperStatus == 'ON_THE_WAY';
+      case 'DELIVERED':
+        return upperStatus == 'DELIVERED';
+      case 'PICKED_UP':
+        return upperStatus == 'PICKED_UP';
+      case 'CANCELED':
+        return upperStatus == 'CANCELED';
+      default:
+        return false;
+    }
+  }
+
   void _onOrderUpdated(OrderModel newOrder) {
     if (!mounted) return;
 
-    // Check if the order belongs to this tab
-    bool belongsHere = false;
-    final upperStatus = newOrder.status.toUpperCase();
-    switch (widget.tabStatus) {
-      case 'NEW':
-        belongsHere = ['PENDING', 'REVISED'].contains(upperStatus);
-        break;
-      case 'PAYMENT':
-        belongsHere = [
-          'PAYMENT_SLIP_REQUESTED',
-          'AWAITING_APPROVAL',
-          'PAYMENT_VERIFIED',
-        ].contains(upperStatus);
-        break;
-      case 'PREPARING':
-        belongsHere = upperStatus == 'COOKING';
-        break;
-      case 'READY_FOR_PICKUP':
-        belongsHere = upperStatus == 'READY_FOR_PICKUP';
-        break;
-      case 'DELIVERING':
-        belongsHere = upperStatus == 'ON_THE_WAY';
-        break;
-      case 'DELIVERED':
-        belongsHere = upperStatus == 'DELIVERED';
-        break;
-      case 'PICKED_UP':
-        belongsHere = upperStatus == 'PICKED_UP';
-        break;
-      case 'CANCELED':
-        belongsHere = upperStatus == 'CANCELED';
-        break;
-    }
+    final belongsHere = _belongsToThisTab(newOrder.status);
 
     setState(() {
-      final index = _orders.indexWhere((o) => o.id == newOrder.id);
-      if (index != -1) {
-        if (belongsHere) {
-          _orders[index] = newOrder; // Update existing
-        } else {
-          _orders.removeAt(index); // Moved to another tab
-        }
-      } else if (belongsHere) {
-        _orders.insert(0, newOrder); // Add new
+      if (!belongsHere) {
+        _removedOrderIds.add(newOrder.id);
+        _removedOrderIds.add(newOrder.lastOrderNo); // Track both just in case
+      } else {
+        _removedOrderIds.remove(newOrder.id);
+        _removedOrderIds.remove(newOrder.lastOrderNo);
+      }
+
+      // Aggressively remove any existing copy of this order (by id OR orderNo)
+      _orders.removeWhere((o) => o.id == newOrder.id || o.lastOrderNo == newOrder.lastOrderNo);
+
+      if (belongsHere) {
+        _orders.insert(0, newOrder); // Insert the fresh copy
       }
     });
     widget.onCountUpdated(_orders.length);
@@ -513,15 +568,27 @@ class _OrderListTabViewState extends State<OrderListTabView>
     setState(() {
       if (isRefresh) {
         _orders.clear();
+        _removedOrderIds.clear(); // Reset the blacklist on manual full refresh
       }
-      _orders.addAll(result.orders);
+      // Filter out orders that no longer belong to this tab
+      // and orders that have been removed via real-time WebSocket events.
+      final filtered = result.orders.where(
+        (o) => _belongsToThisTab(o.status) && 
+               !_removedOrderIds.contains(o.id) && 
+               !_removedOrderIds.contains(o.lastOrderNo),
+      ).toList();
+      
+      // Avoid duplicates: skip orders already in the list by ID or OrderNo
+      final existingIds = _orders.map((o) => o.id).toSet();
+      final existingNos = _orders.map((o) => o.lastOrderNo).toSet();
+      
+      _orders.addAll(filtered.where((o) => !existingIds.contains(o.id) && !existingNos.contains(o.lastOrderNo)));
       _hasMore = result.hasMore;
       if (_hasMore) _page++;
       _isLoading = false;
       _isLoadingMore = false;
       _hasError = false;
     });
-    widget.onCountUpdated(_orders.length);
   }
 
   @override
@@ -567,7 +634,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
                       t?.translate('pull_to_retry') ?? 'Pull down to retry',
                       style: GoogleFonts.poppins(
                         fontSize: 13,
-                        color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF94A3B8),
                       ),
                     ),
                     SizedBox(height: 16),
@@ -609,7 +676,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
                     Text(
                       t?.translate('no_orders_yet') ?? 'No Orders Yet',
                       style: GoogleFonts.poppins(
-                        color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF94A3B8),
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
