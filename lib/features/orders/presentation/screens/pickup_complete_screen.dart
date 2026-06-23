@@ -329,7 +329,7 @@ class _SummaryRow extends StatelessWidget {
           style: GoogleFonts.poppins(
             fontSize: emphasized ? 15 : 13,
             fontWeight: emphasized ? FontWeight.w600 : FontWeight.w500,
-            color: emphasized ? (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
+            color: emphasized ? (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
           ),
         ),
         Text(
@@ -337,7 +337,7 @@ class _SummaryRow extends StatelessWidget {
           style: GoogleFonts.poppins(
             fontSize: emphasized ? 16 : 13,
             fontWeight: emphasized ? FontWeight.w700 : FontWeight.w500,
-            color: emphasized ? AppColors.primary : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))),
+            color: emphasized ? AppColors.primary : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
           ),
         ),
       ],

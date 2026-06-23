@@ -267,7 +267,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                   TabBar(
                     controller: _tabController,
                     labelColor: AppColors.primary,
-                    unselectedLabelColor: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
+                    unselectedLabelColor: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                     indicatorColor: AppColors.primary,
                     indicatorWeight: 2,
                     labelStyle: GoogleFonts.poppins(
@@ -541,18 +541,18 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                 t?.translate('reviews_count').replaceAll('{count}', '${_shopProfile?.ratingCount ?? 0}') ?? '(${_shopProfile?.ratingCount ?? 0} reviews)',
                 style: GoogleFonts.poppins(
                   fontSize: 13,
-                  color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                 ),
               ),
               if ((_shopProfile?.viewCount ?? 0) > 0) ...[
                 SizedBox(width: 8),
-                PhosphorIcon(PhosphorIconsRegular.eye, size: 14, color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                PhosphorIcon(PhosphorIconsRegular.eye, size: 14, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B))),
                 SizedBox(width: 4),
                 Text(
                   '${_shopProfile?.viewCount}',
                   style: GoogleFonts.poppins(
                     fontSize: 13,
-                    color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                    color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                   ),
                 ),
               ],
@@ -711,7 +711,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                         t?.translate('phone_disclaimer') ?? 'This is the phone number currently shown to customers on your public profile.',
                         style: GoogleFonts.poppins(
                           fontSize: 11,
-                          color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                          color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                         ),
                       ),
                     ],
@@ -755,7 +755,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          PhosphorIcon(icon, size: 13, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)))),
+          PhosphorIcon(icon, size: 13, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
           SizedBox(width: 4),
           Text(
             label,
@@ -788,7 +788,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
             label,
             style: GoogleFonts.poppins(
               fontSize: 10,
-              color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
             ),
           ),
         ],
@@ -931,7 +931,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                 child: PhosphorIcon(
                   PhosphorIconsRegular.forkKnife,
                   size: 28,
-                  color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
+                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                 ),
               ),
             ),
@@ -1060,7 +1060,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                     AppLocalizations.of(context)?.translate('reviews_count').replaceAll('{count}', '128') ?? '128 reviews',
                     style: GoogleFonts.poppins(
                       fontSize: 11,
-                      color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                      color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                     ),
                   ),
                 ],
@@ -1158,7 +1158,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                       r.date,
                       style: GoogleFonts.poppins(
                         fontSize: 11,
-                        color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                        color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                       ),
                     ),
                   ],
@@ -1371,7 +1371,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          PhosphorIcon(icon, size: 18, color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)))),
+          PhosphorIcon(icon, size: 18, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B))),
           SizedBox(width: 10),
           SizedBox(
             width: 90,
@@ -1391,7 +1391,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                 fontSize: 13,
                 color: highlight
                     ? const Color(0xFFED3973)
-                    : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))),
+                    : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                 fontWeight: highlight ? FontWeight.w600 : FontWeight.w400,
               ),
             ),

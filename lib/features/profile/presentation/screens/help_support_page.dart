@@ -93,7 +93,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
                 ),
                 child: Icon(
                   PhosphorIconsRegular.headset,
-                  color: Theme.of(context).cardColor,
+                  color: Colors.white,
                   size: 26,
                 ),
               ),
@@ -107,7 +107,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
                       style: GoogleFonts.poppins(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
-                        color: Theme.of(context).cardColor,
+                        color: Colors.white,
                       ),
                     ),
                     SizedBox(height: 4),
@@ -139,6 +139,12 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
               value: info.email!,
               onTap: () => _launchEmail(info.email!),
             ),
+          _buildContactTile(
+            icon: PhosphorIconsRegular.envelopeSimple,
+            label: t?.translate('email_support_alt') ?? 'Alternative Email',
+            value: 'mytogether@gmail.com',
+            onTap: () => _launchEmail('mytogether@gmail.com'),
+          ),
           if (info.phone?.isNotEmpty ?? false)
             _buildContactTile(
               icon: PhosphorIconsRegular.phone,
@@ -189,7 +195,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
       style: GoogleFonts.poppins(
         fontSize: 11,
         fontWeight: FontWeight.w600,
-        color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
         letterSpacing: 0.8,
       ),
     );
@@ -241,7 +247,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                      color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                     ),
                   ),
                   SizedBox(height: 2),
@@ -283,7 +289,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
           style: GoogleFonts.poppins(
             fontSize: 15,
             fontWeight: FontWeight.w500,
-            color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+            color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
           ),
         ),
         SizedBox(height: 8),

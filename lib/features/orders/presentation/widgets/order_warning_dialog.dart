@@ -27,7 +27,7 @@ class OrderWarningDialog extends StatelessWidget {
     final Color alertBoxColor = isPaymentUploaded ? const Color(0xFFF6D8DE) : primaryColor.withValues(alpha: 0.05);
     final Color alertBoxBorderColor = isPaymentUploaded ? const Color(0xFFE5BBC4) : primaryColor.withValues(alpha: 0.1);
     final Color pillColor = isPaymentUploaded ? const Color(0xFFF0BDC8) : primaryColor.withValues(alpha: 0.1);
-    final Color textColor = (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)));
+    final Color textColor = (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B));
     final IconData icon = isPaymentUploaded ? PhosphorIconsBold.exclamationMark : PhosphorIconsFill.warningCircle;
 
     return Dialog(

@@ -71,7 +71,7 @@ class _AmenitiesAndDietarySectionState extends State<AmenitiesAndDietarySection>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)))),
+          Icon(icon, size: 20, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
           SizedBox(width: 12),
           Text(
             label,

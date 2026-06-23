@@ -43,8 +43,10 @@ class _FeedbackPageState extends State<FeedbackPage> {
   }
 
   void _showSubmitFeedbackDialog() {
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) => const SubmitFeedbackDialog(),
     ).then((submitted) {
       if (submitted == true) {
@@ -132,7 +134,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                               DateFormat('MMM d, yyyy').format(feedback.createdAt),
                               style: GoogleFonts.poppins(
                                 fontSize: 12,
-                                color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                                color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                               ),
                             ),
                           ],
@@ -194,15 +196,29 @@ class _SubmitFeedbackDialogState extends State<SubmitFeedbackDialog> {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
-      child: Padding(
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 24),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).dividerColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
             Text(
               t?.translate('submit_feedback') ?? 'Submit Feedback',
               style: GoogleFonts.poppins(
@@ -218,7 +234,7 @@ class _SubmitFeedbackDialogState extends State<SubmitFeedbackDialog> {
               decoration: InputDecoration(
                 hintText: t?.translate('feedback_hint') ?? 'Tell us what you think...',
                 hintStyle: GoogleFonts.poppins(
-                  color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                   fontSize: 14,
                 ),
                 border: OutlineInputBorder(
@@ -238,7 +254,7 @@ class _SubmitFeedbackDialogState extends State<SubmitFeedbackDialog> {
                   builder: (context, value, child) {
                     if (value.text.isEmpty) return const SizedBox.shrink();
                     return IconButton(
-                      icon: Icon(Icons.clear, color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)), size: 20),
+                      icon: Icon(Icons.clear, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)), size: 20),
                       onPressed: () {
                         _feedbackController.clear();
                       },
@@ -246,7 +262,7 @@ class _SubmitFeedbackDialogState extends State<SubmitFeedbackDialog> {
                   },
                 ),
                 filled: true,
-                fillColor: const Color(0xFFF8FAFC),
+                fillColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
               ),
             ),
             SizedBox(height: 24),

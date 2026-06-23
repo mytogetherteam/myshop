@@ -377,7 +377,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
               indicatorColor: Colors.transparent,
               dividerColor: Colors.transparent,
               labelColor: Colors.white,
-              unselectedLabelColor: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+              unselectedLabelColor: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
               labelPadding: const EdgeInsets.symmetric(horizontal: 4),
               labelStyle: GoogleFonts.poppins(
                 fontSize: 14,
@@ -435,7 +435,7 @@ class _AnalyticsPageState extends State<AnalyticsPage>
             child: Text(
               text,
               style: GoogleFonts.poppins(
-                color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
+                color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                 fontSize: 14,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),

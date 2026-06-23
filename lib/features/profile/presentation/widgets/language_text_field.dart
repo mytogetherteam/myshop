@@ -68,7 +68,7 @@ class LanguageTextField extends StatelessWidget {
                             fontWeight: FontWeight.w600,
                             color: selected
                                 ? Colors.white
-                                : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
+                                : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                           ),
                         ),
                         if (isRequired)
@@ -130,7 +130,7 @@ class LanguageTextField extends StatelessWidget {
               builder: (context, value, child) {
                 if (value.text.isEmpty) return const SizedBox.shrink();
                 return IconButton(
-                  icon: Icon(Icons.clear, color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)), size: 20),
+                  icon: Icon(Icons.clear, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)), size: 20),
                   onPressed: () {
                     controller.clear();
                     if (onChanged != null) onChanged!();

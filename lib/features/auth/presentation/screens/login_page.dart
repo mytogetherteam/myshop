@@ -300,7 +300,7 @@ class _LoginPageState extends State<LoginPage>
           },
         ),
         filled: true,
-        fillColor: Theme.of(context).brightness == Brightness.dark ? (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))) : Colors.grey[50],
+        fillColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : Colors.grey[50],
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 16,

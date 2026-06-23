@@ -876,7 +876,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       style: GoogleFonts.poppins(
         fontSize: 11,
         fontWeight: FontWeight.w700,
-        color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+        color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
         letterSpacing: 1.2,
       ),
     );
@@ -886,7 +886,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     final t = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Theme.of(context).dividerColor),
       ),
@@ -1026,7 +1026,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                 style: GoogleFonts.poppins(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
+                  color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                 ),
               ),
             ),
@@ -1064,7 +1064,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Theme.of(context).dividerColor, width: 1.0),
       ),
@@ -1191,7 +1191,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Theme.of(context).dividerColor),
       ),
@@ -1292,7 +1292,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Theme.of(context).dividerColor, width: 1.0),
       ),
@@ -1602,7 +1602,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                 icon: Icon(
                   Icons.close,
                   size: 18,
-                  color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
+                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                 ),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
@@ -1677,7 +1677,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             ),
             hintText: hint,
             hintStyle: GoogleFonts.poppins(
-              color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
               fontSize: 13,
             ),
             filled: true,
@@ -1700,7 +1700,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               builder: (context, value, child) {
                 if (value.text.isEmpty) return const SizedBox.shrink();
                 return IconButton(
-                  icon: Icon(Icons.clear, color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)), size: 20),
+                  icon: Icon(Icons.clear, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)), size: 20),
                   onPressed: () {
                     controller.clear();
                     if (onChanged != null) onChanged!('');
@@ -1861,7 +1861,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               style: GoogleFonts.poppins(
                 fontSize: 12,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                color: selected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
+                color: selected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
               ),
             ),
           ],
@@ -1951,7 +1951,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         width: double.infinity,
         height: 200,
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
+          color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(16),
           border: _pickedImage == null && existingUrl == null
               ? Border.all(color: Theme.of(context).dividerColor, width: 1.5)

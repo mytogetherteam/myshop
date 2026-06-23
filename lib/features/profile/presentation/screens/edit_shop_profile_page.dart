@@ -676,7 +676,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             hint: Text(
               hint,
               style: GoogleFonts.poppins(
-                color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                 fontSize: 13,
               ),
             ),
@@ -688,7 +688,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                   t?.translate('no_data_found') ?? 'No Data Found',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
-                    color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                    color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                   ),
                 ),
               ),
@@ -723,7 +723,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
           ),
           backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
-          foregroundColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))),
+          foregroundColor: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
           elevation: 0,
         ),
         body: Center(child: CustomLoadingIndicator()),
@@ -1210,7 +1210,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
           },
         ),
       ),
-      style: GoogleFonts.poppins(fontSize: 14, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)))),
+      style: GoogleFonts.poppins(fontSize: 14, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))),
     );
   }
 }

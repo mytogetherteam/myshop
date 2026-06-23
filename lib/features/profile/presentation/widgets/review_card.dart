@@ -5,6 +5,7 @@ import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import '../../data/models/review_model.dart';
 import '../../data/services/review_service.dart';
 
@@ -262,12 +263,14 @@ class _ReviewCardState extends State<ReviewCard>
       children: [
         Row(
           children: List.generate(5, (index) {
-            return PhosphorIcon(
-              index < widget.review.rating.floor()
-                  ? PhosphorIconsFill.star
-                  : PhosphorIconsRegular.star,
-              color: const Color(0xFFFFB800),
-              size: 20,
+            return GradientWidget(
+              child: PhosphorIcon(
+                index < widget.review.rating.floor()
+                    ? PhosphorIconsFill.star
+                    : PhosphorIconsRegular.star,
+                color: Colors.white,
+                size: 20,
+              ),
             );
           }),
         ),
@@ -398,7 +401,7 @@ class _ReviewCardState extends State<ReviewCard>
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Theme.of(context).dividerColor),
       ),
@@ -430,7 +433,7 @@ class _ReviewCardState extends State<ReviewCard>
                   decoration: BoxDecoration(
                     gradient:
                         isSelected ? AppColors.primaryGradient : null,
-                    color: isSelected ? null : Colors.white,
+                    color: isSelected ? null : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: isSelected
@@ -459,7 +462,7 @@ class _ReviewCardState extends State<ReviewCard>
                               : FontWeight.w500,
                           color: isSelected
                               ? Colors.white
-                              : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
+                              : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                         ),
                       ),
                     ],
@@ -621,7 +624,7 @@ class _ReviewCardState extends State<ReviewCard>
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: Theme.of(context).cardColor,
+                    color: Colors.white,
                   ),
                 ),
               ),

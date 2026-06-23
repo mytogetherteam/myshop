@@ -236,7 +236,7 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
               child: TextField(
                 controller: _searchController,
                 style: GoogleFonts.poppins(
-                    fontSize: 14, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)))),
+                    fontSize: 14, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))),
                 decoration: InputDecoration(
                   hintText: t?.translate('search_hint') ?? 'Search...',
                   hintStyle: GoogleFonts.poppins(
@@ -377,7 +377,7 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
                   'When customers message you, their conversations will appear here.',
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
-                color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
                 height: 1.4,
@@ -538,7 +538,7 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
         style: GoogleFonts.poppins(
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: hasUnread ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
+          color: hasUnread ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
         ),
       ),
     );

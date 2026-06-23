@@ -235,7 +235,7 @@ class OrderCard extends StatelessWidget {
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : const Color(0xFFF1F5F9))),
-            foregroundColor: Theme.of(context).textTheme.bodyLarge?.color ?? (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))),
+            foregroundColor: Theme.of(context).textTheme.bodyLarge?.color ?? (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
             minimumSize: const Size(double.infinity, 54),
             elevation: 0,
             shape: RoundedRectangleBorder(

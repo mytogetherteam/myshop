@@ -233,7 +233,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
                             child: Text(
                               AppLocalizations.of(context)?.translate('no_items_found') ?? 'No Items Found',
                               style: GoogleFonts.poppins(
-                                color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+                                color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                               ),
                             ),
                           ),

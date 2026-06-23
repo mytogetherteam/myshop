@@ -66,7 +66,7 @@ class PrimaryGradientButton extends StatelessWidget {
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                               letterSpacing: 0.3,
-                              color: Theme.of(context).cardColor,
+                              color: Colors.white,
                             ),
                           ),
                     ),

@@ -218,7 +218,7 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
             ),
             Icon(
               PhosphorIconsRegular.caretRight,
-              color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
               size: 20,
             ),
           ],

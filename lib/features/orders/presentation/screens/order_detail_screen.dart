@@ -593,7 +593,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         style: GoogleFonts.poppins(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+                          color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                         ),
                       ),
                       const Spacer(),
@@ -645,7 +645,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           'Only active drivers who are not on another delivery can be assigned. Add a new driver or wait until someone is free.',
                           style: GoogleFonts.poppins(
                             fontSize: 12,
-                            color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))))),
+                            color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -740,7 +740,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+                      color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                     ),
                   ),
                   if (rider.phone != null && rider.phone!.isNotEmpty)
@@ -748,7 +748,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       rider.phone!,
                       style: GoogleFonts.poppins(
                         fontSize: 12,
-                        color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+                        color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                       ),
                     ),
                   if (rider.vehicleNo != null && rider.vehicleNo!.isNotEmpty)
@@ -795,7 +795,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           style: GoogleFonts.poppins(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+            color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
           ),
         ),
         SizedBox(height: 6),
@@ -882,7 +882,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         Icon(
                           PhosphorIconsRegular.caretDown,
                           size: 16,
-                          color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)))),
+                          color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                         ),
                     ],
                   ),
@@ -942,7 +942,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               style: GoogleFonts.poppins(
                 fontWeight: FontWeight.w700,
                 fontSize: 16,
-                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
               ),
             ),
           ],
@@ -1079,7 +1079,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 style: GoogleFonts.poppins(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
-                  color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+                  color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                 ),
               ),
               SizedBox(height: 4),
@@ -1087,7 +1087,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 '#${_currentOrder.lastOrderNo} • ${_formatTimeAgo(_currentOrder.createdAt)} • ${_currentOrder.orderType == "DELIVERY" ? "🚚 Delivery" : "📦 Pickup"}',
                 style: GoogleFonts.poppins(
                   fontSize: 13,
-                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                 ),
               ),
               SizedBox(height: 24),
@@ -1232,7 +1232,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               style: GoogleFonts.poppins(
                 fontWeight: FontWeight.w700,
                 fontSize: 16,
-                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
               ),
             ),
           ],
@@ -1255,7 +1255,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               style: GoogleFonts.poppins(fontSize: 14),
               decoration: InputDecoration(
                 hintText: 'Enter reason here...',
-                hintStyle: GoogleFonts.poppins(fontSize: 14, color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)))))),
+                hintStyle: GoogleFonts.poppins(fontSize: 14, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B))),
                 filled: true,
                 fillColor: Theme.of(context).cardColor,
                 suffixIcon: ValueListenableBuilder<TextEditingValue>(
@@ -1550,7 +1550,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
               ),
             ),
             _currentOrder.status == 'CANCELED' 
@@ -1595,7 +1595,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                             : null,
                       ),
                       child: _currentOrder.customerAvatar == null
-                          ? Icon(PhosphorIconsRegular.user, color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)))), size: 20)
+                          ? Icon(PhosphorIconsRegular.user, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)), size: 20)
                           : null,
                     ),
                     if (_chatUnreadCount > 0)
@@ -2544,7 +2544,7 @@ Widget _buildAnimatedProgress() {
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
               ),
             ),
             if (_currentOrder.status == 'PENDING' ||
@@ -2592,7 +2592,7 @@ Widget _buildAnimatedProgress() {
             'No Image',
             style: GoogleFonts.poppins(
               fontSize: 8,
-              color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))))),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -2641,7 +2641,7 @@ Widget _buildAnimatedProgress() {
                             style: GoogleFonts.poppins(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+                              color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                             ),
                           ),
                           if (item.secondaryName != null)
@@ -2650,7 +2650,7 @@ Widget _buildAnimatedProgress() {
                               style: GoogleFonts.poppins(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w400,
-                                color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+                                color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                               ),
                             ),
                         ],
@@ -2663,14 +2663,14 @@ Widget _buildAnimatedProgress() {
                     item.optionsString!,
                     style: GoogleFonts.poppins(
                       fontSize: 13,
-                      color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+                      color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                     ),
                   ),
                 ...item.options.map((opt) => Text(
                       '+ ${opt.name} (+${opt.displayPrice})',
                       style: GoogleFonts.poppins(
                         fontSize: 13,
-                        color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+                        color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                       ),
                     )),
                 if (item.specialInstructions != null && item.specialInstructions!.isNotEmpty)
@@ -2705,7 +2705,7 @@ Widget _buildAnimatedProgress() {
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+                  color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                 ),
               ),
             ],
@@ -2724,7 +2724,7 @@ Widget _buildAnimatedProgress() {
           style: GoogleFonts.poppins(
             fontSize: 16,
             fontWeight: FontWeight.w700,
-            color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+            color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
           ),
         ),
         if (_currentOrder.paymentSlipUrl != null) ...[
@@ -2739,14 +2739,14 @@ Widget _buildAnimatedProgress() {
                   fit: BoxFit.contain,
                 )
               else
-                Icon(PhosphorIconsRegular.qrCode, size: 20, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+                Icon(PhosphorIconsRegular.qrCode, size: 20, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
               SizedBox(width: 8),
               Text(
                 _currentOrder.paymentMethodName ?? 'QR Prompt Pay',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                 ),
               ),
             ],
@@ -2793,7 +2793,7 @@ Widget _buildAnimatedProgress() {
               _currentOrder.deliveryFee > 0 ? 'Delivery Fee' : 'Est. Amount',
               style: GoogleFonts.poppins(
                 fontSize: 15,
-                color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+                color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
               ),
             ),
             SizedBox(width: 8),
@@ -2831,7 +2831,7 @@ Widget _buildAnimatedProgress() {
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
               ),
             ),
             Row(
@@ -2843,7 +2843,7 @@ Widget _buildAnimatedProgress() {
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+                    color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                   ),
                 ),
               ],
@@ -2862,7 +2862,7 @@ Widget _buildAnimatedProgress() {
           label,
           style: GoogleFonts.poppins(
             fontSize: 15,
-            color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+            color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
           ),
         ),
         Text(
@@ -2870,7 +2870,7 @@ Widget _buildAnimatedProgress() {
           style: GoogleFonts.poppins(
             fontSize: 15,
             fontWeight: FontWeight.w600,
-            color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+            color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
           ),
         ),
       ],
@@ -2894,7 +2894,7 @@ Widget _buildAnimatedProgress() {
             style: GoogleFonts.poppins(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+              color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
             ),
           ),
           SizedBox(height: 16),
@@ -2941,7 +2941,7 @@ Widget _buildAnimatedProgress() {
             'Open $name',
             style: GoogleFonts.poppins(
               fontSize: 12,
-              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
             ),
           ),
         ],
@@ -3072,7 +3072,7 @@ Widget _buildAnimatedProgress() {
                           style: GoogleFonts.poppins(
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
-                            color: Theme.of(context).cardColor,
+                            color: (onPressed == null || _isUpdating) ? Colors.white.withValues(alpha: 0.6) : Colors.white,
                           ),
                         )
                       : Text(
@@ -3083,7 +3083,7 @@ Widget _buildAnimatedProgress() {
                           style: GoogleFonts.poppins(
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
-                            color: Theme.of(context).cardColor,
+                            color: (onPressed == null || _isUpdating) ? Colors.white.withValues(alpha: 0.6) : Colors.white,
                           ),
                         ),
                 ),
@@ -3166,7 +3166,7 @@ Widget _buildAnimatedProgress() {
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+                  color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                 ),
               ),
             ],
@@ -3182,7 +3182,7 @@ Widget _buildAnimatedProgress() {
               hintText: 'Enter minutes...',
               hintStyle: GoogleFonts.poppins(
                 fontSize: 14,
-                color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))))),
+                color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
               ),
               suffixText: 'mins',
               suffixIcon: ValueListenableBuilder<TextEditingValue>(
@@ -3201,7 +3201,7 @@ Widget _buildAnimatedProgress() {
               suffixStyle: GoogleFonts.poppins(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+                color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
               ),
               filled: true,
               fillColor: Theme.of(context).cardColor,
@@ -3240,7 +3240,7 @@ Widget _buildAnimatedProgress() {
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+              color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
             ),
           ),
           SizedBox(height: 16),
@@ -3261,7 +3261,7 @@ Widget _buildAnimatedProgress() {
             'Optional photo proving the food was delivered. Shown to the customer once the order is marked Delivered.',
             style: GoogleFonts.poppins(
               fontSize: 12,
-              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
             ),
           ),
         ],
@@ -3282,7 +3282,7 @@ Widget _buildAnimatedProgress() {
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+              color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
             ),
           ),
           SizedBox(height: 16),
@@ -3327,7 +3327,7 @@ Widget _buildAnimatedProgress() {
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+                    color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                   ),
                 ),
                 SizedBox(height: 8),
@@ -3336,7 +3336,7 @@ Widget _buildAnimatedProgress() {
                       'Set how long the customer should wait before pickup.',
                   style: GoogleFonts.poppins(
                     fontSize: 13,
-                    color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+                    color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                     height: 1.4,
                   ),
                 ),
@@ -3375,7 +3375,7 @@ Widget _buildAnimatedProgress() {
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: _deliveryOption == 'PREPAID' ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+                            color: _deliveryOption == 'PREPAID' ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                           ),
                         ),
                       ),
@@ -3403,7 +3403,7 @@ Widget _buildAnimatedProgress() {
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: _deliveryOption == 'NORMAL' ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+                            color: _deliveryOption == 'NORMAL' ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                           ),
                         ),
                       ),
@@ -3427,7 +3427,7 @@ Widget _buildAnimatedProgress() {
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+                  color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                 ),
               ),
               SizedBox(height: 16),
@@ -3459,7 +3459,7 @@ Widget _buildAnimatedProgress() {
                             style: GoogleFonts.poppins(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+                              color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                             ),
                           ),
                           SizedBox(height: 2),
@@ -3467,7 +3467,7 @@ Widget _buildAnimatedProgress() {
                             'Shop admin choose delivery service to send food to customer. So user must pay order fee first and delivery fees later separately.',
                             style: GoogleFonts.poppins(
                               fontSize: 13,
-                              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+                              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                               height: 1.5,
                             ),
                           ),
@@ -3599,7 +3599,7 @@ Widget _buildAnimatedProgress() {
                   'Mark this order ready for pickup when the food is prepared. The customer can then show their QR code at the counter.',
                   style: GoogleFonts.poppins(
                     fontSize: 13,
-                    color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+                    color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                     height: 1.5,
                   ),
                 ),
@@ -3618,7 +3618,7 @@ Widget _buildAnimatedProgress() {
                       'Hand the order to the customer and scan their QR code, or tap Verify Pickup when ready.',
                   style: GoogleFonts.poppins(
                     fontSize: 13,
-                    color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+                    color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                     height: 1.5,
                   ),
                 ),
@@ -3653,7 +3653,7 @@ Widget _buildAnimatedProgress() {
           style: GoogleFonts.poppins(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+            color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
           ),
         ),
         SizedBox(height: 6),
@@ -3774,7 +3774,7 @@ Widget _buildAnimatedProgress() {
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
               ),
             ),
             Row(
@@ -3787,14 +3787,14 @@ Widget _buildAnimatedProgress() {
                     fit: BoxFit.contain,
                   )
                 else
-                  Icon(PhosphorIconsRegular.qrCode, size: 20, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+                  Icon(PhosphorIconsRegular.qrCode, size: 20, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
                 SizedBox(width: 8),
                 Text(
                   _currentOrder.paymentMethodName ?? 'QR Prompt Pay',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+                    color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                   ),
                 ),
               ],
@@ -3809,7 +3809,7 @@ Widget _buildAnimatedProgress() {
               'Total',
               style: GoogleFonts.poppins(
                 fontSize: 14,
-                color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+                color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
               ),
             ),
             Text(
@@ -3817,7 +3817,7 @@ Widget _buildAnimatedProgress() {
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
               ),
             ),
           ],
@@ -3838,11 +3838,11 @@ Widget _buildAnimatedProgress() {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(PhosphorIconsRegular.warningCircle, color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)))), size: 32),
+          Icon(PhosphorIconsRegular.warningCircle, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)), size: 32),
           SizedBox(height: 8),
           Text(
             'Failed to load receipt',
-            style: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))), fontSize: 13),
+            style: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)), fontSize: 13),
           ),
         ],
       ),
@@ -4023,7 +4023,7 @@ class _FullScreenTextInputState extends State<_FullScreenTextInput> {
           Text(
             'Open $name',
             style: GoogleFonts.poppins(
-              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
               fontSize: 12,
             ),
           ),
@@ -4054,7 +4054,7 @@ class _FullScreenTextInputState extends State<_FullScreenTextInput> {
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
               ),
             ),
             if (widget.description != null) ...[
@@ -4063,7 +4063,7 @@ class _FullScreenTextInputState extends State<_FullScreenTextInput> {
                 widget.description!,
                 style: GoogleFonts.poppins(
                   fontSize: 14,
-                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                 ),
               ),
             ],
@@ -4074,7 +4074,7 @@ class _FullScreenTextInputState extends State<_FullScreenTextInput> {
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))))),
+                  color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                 ),
               ),
               SizedBox(height: 12),
@@ -4115,7 +4115,7 @@ class _FullScreenTextInputState extends State<_FullScreenTextInput> {
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))),
+                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                 ),
               ),
               SizedBox(height: 8),
@@ -4132,7 +4132,7 @@ class _FullScreenTextInputState extends State<_FullScreenTextInput> {
                 hintText: widget.placeholder ?? 'Enter ${widget.label}',
                 hintStyle: GoogleFonts.poppins(color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
                 suffixText: widget.suffixText,
-                suffixStyle: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))))), fontWeight: FontWeight.w500),
+                suffixStyle: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)), fontWeight: FontWeight.w500),
                 suffixIcon: ValueListenableBuilder<TextEditingValue>(
                   valueListenable: _controller,
                   builder: (context, value, child) {

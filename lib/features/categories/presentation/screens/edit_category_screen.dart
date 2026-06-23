@@ -315,7 +315,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
               width: 60,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isSelected
@@ -329,7 +329,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
                 errorBuilder: (context, error, stackTrace) => Icon(
                   Icons.restaurant,
                   size: 24,
-                  color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)),
+                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                 ),
               ),
             ),
@@ -361,7 +361,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: selected ? const Color(0xFFED3973) : Colors.white,
+                    color: selected ? const Color(0xFFED3973) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : Colors.white),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: selected
@@ -374,7 +374,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: selected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
+                      color: selected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                     ),
                   ),
                 ),
@@ -386,12 +386,13 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
         TextField(
           controller: controller,
           maxLength: 100,
+          style: GoogleFonts.poppins(color: Theme.of(context).textTheme.bodyLarge?.color),
           decoration: InputDecoration(
             counterText: '',
             hintText: hint,
-            hintStyle: GoogleFonts.poppins(color: const Color(0xFFCBD5E1)),
+            hintStyle: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFFCBD5E1))),
             filled: true,
-            fillColor: const Color(0xFFF8FAFC),
+            fillColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,

@@ -199,10 +199,10 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
   Widget _buildRiderCard(Rider rider) {
     final t = AppLocalizations.of(context);
     final isBusy = rider.isBusy;
-    final muted = (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8)));
-    final titleColor = isBusy ? muted : (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)));
+    final muted = (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B));
+    final titleColor = isBusy ? muted : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B));
     final subtitleColor =
-        isBusy ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)));
+        isBusy ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B));
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -320,7 +320,7 @@ class _RiderManagementPageState extends State<RiderManagementPage> {
               IconButton(
                 icon: PhosphorIcon(
                   PhosphorIconsRegular.pencilSimple,
-                  color: isBusy ? muted : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
+                  color: isBusy ? muted : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                   size: 20,
                 ),
                 onPressed: isBusy ? null : () => _showRiderForm(rider),
@@ -354,7 +354,7 @@ class _RiderStatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayColor = muted ? (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))) : color;
+    final displayColor = muted ? (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)) : color;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
@@ -608,7 +608,7 @@ class _RiderFormSheetState extends State<RiderFormSheet> {
             hintText: hint,
             hintStyle: GoogleFonts.poppins(
               fontSize: 14,
-              color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             filled: true,

@@ -242,7 +242,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                   key: const ValueKey('searchField'),
                   controller: _searchCtrl,
                   autofocus: true,
-                  style: GoogleFonts.poppins(color: Theme.of(context).cardColor, fontSize: 16),
+                  style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),
                   decoration: InputDecoration(
                     hintText: t?.translate('search_menu_items') ?? 'Search menu items...',
                     hintStyle: GoogleFonts.poppins(color: Colors.white70, fontSize: 14),
@@ -255,7 +255,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: Theme.of(context).cardColor,
+                    color: Colors.white,
                   ),
                 ),
         ),
@@ -289,7 +289,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Theme.of(context).cardColor,
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -411,7 +411,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                 : (t?.translate('start_adding_items') ?? 'Start Adding Items to Your Shop Menu'),
             style: GoogleFonts.poppins(
               fontSize: 14,
-              color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
             ),
           ),
         ],

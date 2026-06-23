@@ -11,6 +11,7 @@ import 'package:my_shop/features/reports/presentation/screens/report_page.dart';
 import 'package:my_shop/features/orders/data/models/order_model.dart';
 import 'package:my_shop/features/orders/presentation/widgets/new_order_dialog.dart';
 import 'package:my_shop/features/orders/presentation/widgets/order_warning_dialog.dart';
+import 'package:my_shop/features/orders/presentation/widgets/order_cancelled_dialog.dart';
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
@@ -66,29 +67,37 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ChatPage(key: _chatKey),
       ProfilePage(key: _profileKey),
     ];
-    WebSocketService().connect();
+
+    // IMPORTANT: Register listener FIRST so we never miss events fired during
+    // the very first WebSocket connection/subscription handshake.
     _setupWebSocketListener();
     ChatUnreadController.instance.start();
     OrdersTabNavigation.returnToOrdersTab = _returnToOrdersTab;
+
+    // Connect AFTER listener is ready (post-frame ensures widget is mounted
+    // and the stream listener is active before any events can arrive).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      WebSocketService().connect();
+      _maybeShowMenuWarningModal();
+    });
 
     // Reconnect WS + refresh orders whenever app comes back from background.
     _lifecycleListener = AppLifecycleListener(
       onResume: _onAppResumed,
     );
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _maybeShowMenuWarningModal();
-    });
   }
 
   /// Called when the app returns from background (minimize, screen-off, etc.).
-  /// Re-establishes the WebSocket and syncs the orders list so both devices
-  /// always reflect the latest order state.
+  /// Re-establishes the WebSocket and does a full re-sync so both devices
+  /// always reflect the latest order state even after missing WS events.
   Future<void> _onAppResumed() async {
-    AppLogger.realtime('[Lifecycle] App resumed — reconnecting WS & refreshing orders');
+    AppLogger.realtime('[Lifecycle] App resumed — reconnecting WS & syncing orders');
     await WebSocketService().connect(force: true);
     if (mounted) {
+      // Refresh all tab lists from API (catches any missed WS events)
       _ordersKey.currentState?.refresh();
+      // Also re-sync badge counts from server totals
+      _ordersKey.currentState?.syncCounts();
     }
   }
 
@@ -271,6 +280,25 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               ),
             );
             _stopAlertSound();
+          } else if (status == 'CANCELED') {
+            AppLogger.realtime('MainNavigation: triggering OrderCancelledDialog');
+            _stopAlertSound();
+            HapticFeedback.vibrate();
+            // Close any currently open dialog (e.g. NewOrderDialog)
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+            await showDialog(
+              context: context,
+              barrierDismissible: true,
+              builder: (context) => OrderCancelledDialog(
+                order: orderData,
+                onViewOrder: () {
+                  Navigator.pop(context);
+                  _navigateToOrderDetail(orderData);
+                },
+              ),
+            );
           } else if (msg != null && msg.trim().isNotEmpty) {
             // Generic warning for other status updates with messages
             AppLogger.realtime('MainNavigation: triggering OrderWarningDialog (generic)');
@@ -505,7 +533,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         },
         backgroundColor: Theme.of(context).cardColor,
         selectedItemColor: const Color(0xFFED3973),
-        unselectedItemColor: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).dividerColor : const Color(0xFF94A3B8))),
+        unselectedItemColor: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
         showSelectedLabels: false,
         showUnselectedLabels: false,
         selectedFontSize: 0,

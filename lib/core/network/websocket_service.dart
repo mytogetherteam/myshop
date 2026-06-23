@@ -101,6 +101,7 @@ class WebSocketService {
     AppLogger.realtime('[WS] Connecting to ${EnvConfig.wsUrl}');
 
     String? token = await AuthService.instance.getAccessToken();
+    final connectShopId = await StorageService.instance.getSelectedShopId();
     if (token == null || token.isEmpty) {
       _isConnecting = false;
       _reconnectAttempts = 0;
@@ -145,7 +146,10 @@ class WebSocketService {
             AppLogger.realtime('[WS] $message');
           }
         },
-        stompConnectHeaders: {'Authorization': 'Bearer $token'},
+        stompConnectHeaders: {
+          'Authorization': 'Bearer $token',
+          if (connectShopId != null) 'X-Shop-Id': connectShopId.toString(),
+        },
         onStompError: (frame) =>
             AppLogger.realtime('[WS] STOMP error: ${frame.body}'),
         onDisconnect: (frame) {
@@ -193,7 +197,11 @@ class WebSocketService {
     AppLogger.realtime('[WS] Connected successfully');
 
     final token = await AuthService.instance.getAccessToken();
-    final headers = {if (token != null) 'Authorization': 'Bearer $token'};
+    final shopId = await StorageService.instance.getSelectedShopId();
+    final headers = {
+      if (token != null) 'Authorization': 'Bearer $token',
+      if (shopId != null) 'X-Shop-Id': shopId.toString(),
+    };
 
     _stompClient?.subscribe(
       destination: '/topic/shop-menu-updates',
@@ -218,7 +226,6 @@ class WebSocketService {
     );
     AppLogger.realtime('[WS] Subscribed to /topic/shop-menu-updates');
 
-    final shopId = await StorageService.instance.getSelectedShopId();
     if (shopId == null) {
       AppLogger.realtime('[WS] No shop selected — skipping shop topic subscriptions');
       return;
@@ -239,6 +246,9 @@ class WebSocketService {
 
           if (type == 'NEW_ORDER' ||
               type == 'ORDER_UPDATE' ||
+              type == 'ORDER_STATUS' ||
+              type == 'ORDER_CANCELED' ||
+              type == 'ORDER_CANCELLED' ||
               type == 'PAYMENT_REMINDER') {
             final String orderId = raw['orderId']?.toString() ?? 'unknown';
             final String status =

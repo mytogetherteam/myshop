@@ -58,7 +58,7 @@ class SummaryCard extends StatelessWidget {
                             ? const Color(0xFF22C55E)
                             : ((label == "Cancelled" || label == (AppLocalizations.of(context)?.translate('cancelled') ?? "Cancelled"))
                                 ? const Color(0xFFEF4444)
-                                : Theme.of(context).textTheme.bodyLarge?.color ?? (Theme.of(context).brightness == Brightness.dark ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)))),
+                                : Theme.of(context).textTheme.bodyLarge?.color ?? (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))),
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
                       ),
