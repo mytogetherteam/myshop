@@ -8,6 +8,7 @@ import 'package:my_shop/core/notifications/notification_service.dart';
 import 'package:my_shop/core/utils/app_version.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/core/theme/theme_service.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'app.dart';
 
 @pragma('vm:entry-point')
@@ -21,6 +22,9 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Enable Wakelock to keep the screen awake for this merchant app
+  WakelockPlus.enable();
 
   // Firebase & FCM push notifications are not configured for web (no web
   // Firebase options / flutter_local_notifications has no web support), so we
