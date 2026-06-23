@@ -1988,22 +1988,62 @@ Widget _buildAnimatedProgress() {
   Widget _buildCustomerSection() {
     return Row(
       children: [
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Theme.of(context).cardColor,
-            image: _currentOrder.customerAvatar != null
-                ? DecorationImage(
-                    image: NetworkImage(_currentOrder.customerAvatar!),
-                    fit: BoxFit.cover,
-                  )
+        GestureDetector(
+          onTap: () {
+            if (_currentOrder.customerAvatar != null) {
+              showDialog(
+                context: context,
+                builder: (context) => Dialog(
+                  backgroundColor: Colors.transparent,
+                  insetPadding: EdgeInsets.zero,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Positioned.fill(
+                        child: GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(color: Colors.black54),
+                        ),
+                      ),
+                      InteractiveViewer(
+                        child: CachedNetworkImage(
+                          imageUrl: _currentOrder.customerAvatar!,
+                          fit: BoxFit.contain,
+                          placeholder: (context, url) => const CustomLoadingIndicator(size: 32),
+                          errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.white),
+                        ),
+                      ),
+                      Positioned(
+                        top: 40,
+                        right: 20,
+                        child: IconButton(
+                          icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+          },
+          child: Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Theme.of(context).cardColor,
+              image: _currentOrder.customerAvatar != null
+                  ? DecorationImage(
+                      image: NetworkImage(_currentOrder.customerAvatar!),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+            ),
+            child: _currentOrder.customerAvatar == null
+                ? Icon(PhosphorIconsRegular.user, color: Theme.of(context).iconTheme.color)
                 : null,
           ),
-          child: _currentOrder.customerAvatar == null
-              ? Icon(PhosphorIconsRegular.user, color: Theme.of(context).iconTheme.color)
-              : null,
         ),
         SizedBox(width: 12),
         Expanded(

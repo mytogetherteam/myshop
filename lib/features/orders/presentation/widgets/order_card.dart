@@ -362,8 +362,8 @@ class OrderCard extends StatelessWidget {
     final t = AppLocalizations.of(context);
     final difference = DateTime.now().difference(dateTime);
     if (difference.inMinutes < 1) return t?.translate('just_now') ?? 'Just Now';
-    if (difference.inMinutes < 60) return '${difference.inMinutes}${t?.translate('mins_ago') ?? 'M Ago'}';
-    if (difference.inHours < 24) return '${difference.inHours}${t?.translate('hours_ago') ?? 'H Ago'}';
+    if (difference.inMinutes < 60) return '${difference.inMinutes}${t?.translate('mins_ago') ?? ' min(s) ago'}';
+    if (difference.inHours < 24) return '${difference.inHours}${t?.translate('hours_ago') ?? ' hr(s) ago'}';
     return DateFormat('dd MMM').format(dateTime);
   }
 }
