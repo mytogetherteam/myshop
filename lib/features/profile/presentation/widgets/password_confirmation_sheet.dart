@@ -88,32 +88,32 @@ class _PasswordConfirmationSheetState extends State<PasswordConfirmationSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
+              color: Theme.of(context).dividerColor,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
         ),
-        const SizedBox(height: 32),
+        SizedBox(height: 32),
         Center(
           child: Text(
             t?.translate('enter_your_password') ?? 'Enter Your Password',
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF1E293B),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
         ),
-        const SizedBox(height: 32),
+        SizedBox(height: 32),
         Text(
           t?.translate('password') ?? 'Password',
           style: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: const Color(0xFF64748B),
+            color: Theme.of(context).textTheme.bodySmall?.color,
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         TextField(
           controller: _passwordController,
           obscureText: _obscurePassword,
@@ -128,13 +128,13 @@ class _PasswordConfirmationSheetState extends State<PasswordConfirmationSheet> {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: _errorMessage != null 
-                ? const BorderSide(color: Colors.red, width: 1)
+                ? BorderSide(color: Colors.red, width: 1)
                 : BorderSide.none,
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: _errorMessage != null 
-                ? const BorderSide(color: Colors.red, width: 1)
+                ? BorderSide(color: Colors.red, width: 1)
                 : BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
@@ -155,7 +155,7 @@ class _PasswordConfirmationSheetState extends State<PasswordConfirmationSheet> {
           ),
         ),
         if (_errorMessage != null) ...[
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.only(left: 4),
             child: Text(
@@ -168,7 +168,7 @@ class _PasswordConfirmationSheetState extends State<PasswordConfirmationSheet> {
             ),
           ),
         ],
-        const SizedBox(height: 32),
+        SizedBox(height: 32),
         SizedBox(
           width: double.infinity,
           height: 56,

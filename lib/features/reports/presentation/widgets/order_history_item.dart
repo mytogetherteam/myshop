@@ -9,6 +9,7 @@ class OrderHistoryItem extends StatelessWidget {
   final String status;
   final String amount;
   final Color statusColor;
+  final VoidCallback? onTap;
 
   const OrderHistoryItem({
     super.key,
@@ -17,16 +18,19 @@ class OrderHistoryItem extends StatelessWidget {
     required this.status,
     required this.amount,
     required this.statusColor,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     final displayStatus = t?.translate(status.toLowerCase()) ?? status;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
           Container(
             width: 8,
             height: 8,
@@ -35,7 +39,7 @@ class OrderHistoryItem extends StatelessWidget {
               shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,12 +49,12 @@ class OrderHistoryItem extends StatelessWidget {
                     Text(
                       orderId,
                       style: GoogleFonts.poppins(
-                        color: const Color(0xFF1E293B),
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
@@ -81,19 +85,20 @@ class OrderHistoryItem extends StatelessWidget {
           Text(
             "฿ $amount",
             style: GoogleFonts.poppins(
-              color: const Color(0xFF1E293B),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
               fontSize: 14,
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(width: 4),
-          const PhosphorIcon(
+          SizedBox(width: 4),
+          PhosphorIcon(
             PhosphorIconsRegular.caretRight,
             size: 16,
-            color: Color(0xFF94A3B8),
+            color: const Color(0xFF94A3B8),
           ),
         ],
       ),
+    ),
     );
   }
 }

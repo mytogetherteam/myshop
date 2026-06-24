@@ -11,6 +11,8 @@ class StorageService {
       'notification_permission_handled';
   static const String _keySelectedShopId = 'selected_shop_id';
   static const String _keyLanguage = 'app_language';
+  static const String _keyMenuWarningSeen = 'menu_warning_seen';
+  static const String _keyThemeMode = 'app_theme_mode';
 
   static final StorageService instance = StorageService._();
 
@@ -54,21 +56,27 @@ class StorageService {
 
   Future<void> saveUserInfo(UserInfo userInfo) async {
     await _ensureInitialized();
-    await _prefs!.setString(_keyUserInfo, json.encode(userInfo.toJson()));
+    await _secureStorage.write(
+        key: _keyUserInfo, value: json.encode(userInfo.toJson()));
   }
 
   Future<UserInfo?> getUserInfo() async {
     await _ensureInitialized();
-    final data = _prefs!.getString(_keyUserInfo);
+    final data = await _secureStorage.read(key: _keyUserInfo);
     if (data == null) return null;
-    return UserInfo.fromJson(json.decode(data));
+    try {
+      return UserInfo.fromJson(json.decode(data));
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> clearAll() async {
     await _ensureInitialized();
     await _secureStorage.delete(key: _keyToken);
     await _secureStorage.delete(key: _keyRefreshToken);
-    await _prefs!.remove(_keyUserInfo);
+    await _secureStorage.delete(key: _keyUserInfo);
+    await _prefs!.remove(_keyUserInfo); // Clean up legacy plaintext storage if exists
     await _prefs!.remove(_keySelectedShopId);
     await _prefs!.remove(_keyLanguage);
   }
@@ -115,6 +123,16 @@ class StorageService {
     await _prefs!.remove(_keySelectedShopId);
   }
 
+  Future<void> setMenuWarningSeen() async {
+    await _ensureInitialized();
+    await _prefs!.setBool(_keyMenuWarningSeen, true);
+  }
+
+  Future<bool> isMenuWarningSeen() async {
+    await _ensureInitialized();
+    return _prefs!.getBool(_keyMenuWarningSeen) ?? false;
+  }
+
   Future<void> saveLanguage(String langCode) async {
     await _ensureInitialized();
     await _prefs!.setString(_keyLanguage, langCode);
@@ -123,5 +141,15 @@ class StorageService {
   Future<String> getLanguage() async {
     await _ensureInitialized();
     return _prefs!.getString(_keyLanguage) ?? 'en'; // default English
+  }
+
+  Future<void> saveThemeMode(String themeModeStr) async {
+    await _ensureInitialized();
+    await _prefs!.setString(_keyThemeMode, themeModeStr);
+  }
+
+  Future<String?> getThemeMode() async {
+    await _ensureInitialized();
+    return _prefs!.getString(_keyThemeMode);
   }
 }

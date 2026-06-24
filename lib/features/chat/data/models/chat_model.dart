@@ -165,7 +165,7 @@ class ChatConversation {
     final rawName = (user?['name'] as String?)?.trim();
 
     return ChatConversation(
-      id: (json['id'] as num).toInt(),
+      id: (json['id'] as num?)?.toInt() ?? 0,
       orderId: ((order?['id'] ?? json['orderId']) as num).toInt(),
       userId: (json['userId'] as num?)?.toInt(),
       name: (rawName != null && rawName.isNotEmpty) ? rawName : 'Customer',
@@ -175,6 +175,8 @@ class ChatConversation {
       lastMessage: previewFor(latest),
       timestamp: _parseDate(json['lastMessageAt']) ??
           _parseDate(latest?['createdAt']) ??
+          _parseDate(json['createdAt']) ??
+          _parseDate(order?['createdAt']) ??
           DateTime.now(),
       unreadCount: (json['shopUnreadCount'] as num?)?.toInt() ?? 0,
     );

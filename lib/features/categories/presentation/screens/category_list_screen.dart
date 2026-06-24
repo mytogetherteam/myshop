@@ -73,16 +73,16 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
       appBar: AppBar(
         flexibleSpace: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: AppColors.primaryGradient,
           ),
         ),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -132,7 +132,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
       return Center(
         child: Text(
           AppLocalizations.of(context)?.translate('no_categories_found') ?? 'No Categories Found',
-          style: GoogleFonts.poppins(color: const Color(0xFF94A3B8)),
+          style: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B))),
         ),
       );
     }
@@ -194,8 +194,8 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: const Color(0xFFF1F5F9)),
+              color: Theme.of(context).cardColor,
+              border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : const Color(0xFFF1F5F9)))),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
@@ -204,19 +204,19 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
                   width: 24,
                   height: 24,
                 ), // Drag handle placeholder
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 const Skeleton(
                   width: 50,
                   height: 50,
                   borderRadius: 12,
                 ), // Icon placeholder
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Skeleton(width: 120, height: 16),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       const Skeleton(width: 60, height: 12),
                     ],
                   ),
@@ -257,9 +257,9 @@ class _CategoryCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           border: Border.all(
-            color: const Color(0xFFF1F5F9),
+            color: Theme.of(context).dividerColor.withOpacity(0.3),
           ),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
@@ -282,18 +282,18 @@ class _CategoryCard extends StatelessWidget {
                   right: 8,
                   left: 0,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.drag_indicator,
-                  color: Color(0xFF94A3B8),
+                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                   size: 24,
                 ),
               ),
             ),
-            const SizedBox(width: 4),
+            SizedBox(width: 4),
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: _getCategoryColor(category.displayName),
+                color: _getCategoryColor(context, category.displayName),
                 borderRadius: BorderRadius.circular(16),
               ),
               child:
@@ -309,14 +309,14 @@ class _CategoryCard extends StatelessWidget {
                       (category.imageUrl ?? ''),
                       width: 32,
                       height: 32,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
+                      errorBuilder: (context, error, stackTrace) => Icon(
                         Icons.restaurant,
                         size: 20,
-                        color: Color(0xFF94A3B8),
+                        color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                       ),
                     ),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -331,7 +331,7 @@ class _CategoryCard extends StatelessWidget {
                         style: GoogleFonts.poppins(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1E293B),
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                     ],
@@ -341,23 +341,23 @@ class _CategoryCard extends StatelessWidget {
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF94A3B8),
+                      color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: Theme.of(context).dividerColor),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.edit_note_rounded,
-                color: Color(0xFF1E293B),
+                color: Theme.of(context).textTheme.bodyLarge?.color,
                 size: 24,
               ),
             ),
@@ -367,20 +367,21 @@ class _CategoryCard extends StatelessWidget {
     );
   }
 
-  Color _getCategoryColor(String? name) {
+  Color _getCategoryColor(BuildContext context, String? name) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     switch (name?.toLowerCase()) {
       case 'main dish':
-        return const Color(0xFFFFF7ED);
+        return isDark ? const Color(0xFF431407) : const Color(0xFFFFF7ED);
       case 'drinks':
-        return const Color(0xFFF0F9FF);
+        return isDark ? const Color(0xFF0C4A6E) : const Color(0xFFF0F9FF);
       case 'soup':
-        return const Color(0xFFF0FDFA);
+        return isDark ? const Color(0xFF134E4A) : const Color(0xFFF0FDFA);
       case 'dessert':
-        return const Color(0xFFFFF1F2);
+        return isDark ? const Color(0xFF4C0519) : const Color(0xFFFFF1F2);
       case 'salad':
-        return const Color(0xFFF0FDF4);
+        return isDark ? const Color(0xFF14532D) : const Color(0xFFF0FDF4);
       default:
-        return const Color(0xFFF8FAFC);
+        return isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
     }
   }
 }

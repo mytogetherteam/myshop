@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
+import 'package:my_shop/core/utils/app_logger.dart';
 import '../models/shop_profile_model.dart';
 import '../models/operating_hours_model.dart';
 
@@ -14,7 +14,7 @@ class ProfileService {
 
   Future<List<OperatingHoursModel>> getOperatingHours() async {
     try {
-      debugPrint('GET REQUEST: $_operatingHoursPath');
+      AppLogger.network('GET $_operatingHoursPath');
       final response = await ApiClient().dio.get(_operatingHoursPath);
 
       if (response.statusCode != null &&
@@ -44,7 +44,7 @@ class ProfileService {
 
   Future<ShopProfileModel?> getShopProfile() async {
     try {
-      debugPrint('GET REQUEST: $_profilePath');
+      AppLogger.network('GET $_profilePath');
       final response = await ApiClient().dio.get(_profilePath);
 
       if (response.statusCode != null &&
@@ -65,9 +65,8 @@ class ProfileService {
 
   Future<bool> updateShopProfile(Map<String, dynamic> payload) async {
     try {
-      debugPrint('PUT REQUEST: $_profilePath, Data: $payload');
-      
-       final formData = FormData();
+      AppLogger.network('PUT $_profilePath, Data: $payload');
+      final formData = FormData();
       
       for (final entry in payload.entries) {
         final value = entry.value;
@@ -112,7 +111,7 @@ class ProfileService {
     Map<String, dynamic> payload,
   ) async {
     try {
-      debugPrint('PUT REQUEST: $_operatingHoursPath, Data: $payload');
+      AppLogger.network('PUT $_operatingHoursPath, Data: $payload');
       final response = await ApiClient().dio.put(
         _operatingHoursPath,
         data: payload,
@@ -122,7 +121,7 @@ class ProfileService {
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
-        debugPrint('PUT RESPONSE: $data');
+        AppLogger.network('PUT RESPONSE: $data');
         return data;
       }
     } on DioException catch (e) {
@@ -156,7 +155,7 @@ class ProfileService {
         'confirmPassword': confirmPassword,
       };
 
-      debugPrint('POST REQUEST: $_changePasswordPath, Data: $payload');
+      AppLogger.network('POST $_changePasswordPath');
       final response = await ApiClient().dio.post(
             _changePasswordPath,
             data: payload,

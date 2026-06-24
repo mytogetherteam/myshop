@@ -22,6 +22,21 @@ class RiderService {
     return [];
   }
 
+  Map<String, dynamic>? _unwrapListPayload(Map<String, dynamic> body) {
+    if (body['success'] == true && body['data'] != null) {
+      final data = body['data'];
+      if (data is Map<String, dynamic>) return data;
+      if (data is Map) return Map<String, dynamic>.from(data);
+    }
+    if (body['content'] is List) return body;
+    return null;
+  }
+
+  /// Keeps only drivers that are active and not currently on another delivery.
+  List<Rider> _eligibleForOrderAssignment(Iterable<Rider> riders) {
+    return riders.where((r) => r.isSelectableForOrder).toList();
+  }
+
   Future<RiderListResult> getRiders({
     int page = 1,
     int size = 100,
@@ -35,7 +50,7 @@ class RiderService {
           'page': page,
           'size': size,
           if (search != null && search.isNotEmpty) 'search': search,
-          'isActive': ?isActive,
+          if (isActive != null) 'isActive': isActive,
         },
       );
 
@@ -45,24 +60,15 @@ class RiderService {
         final Map<String, dynamic> body = Map<String, dynamic>.from(
           response.data as Map,
         );
-        if (body['success'] == true && body['data'] != null) {
-          final rawData = body['data'];
+        final rawData = _unwrapListPayload(body);
+        if (rawData != null) {
           final riders = _parseRiderList(rawData);
-          if (rawData is Map) {
-            return RiderListResult(
-              riders: riders,
-              totalElements: rawData['totalElements'] as int? ?? riders.length,
-              totalPages: rawData['totalPages'] as int? ?? 1,
-              page: rawData['page'] as int? ?? page,
-              size: rawData['size'] as int? ?? size,
-            );
-          }
           return RiderListResult(
             riders: riders,
-            totalElements: riders.length,
-            totalPages: 1,
-            page: page,
-            size: size,
+            totalElements: rawData['totalElements'] as int? ?? riders.length,
+            totalPages: rawData['totalPages'] as int? ?? 1,
+            page: rawData['page'] as int? ?? page,
+            size: rawData['size'] as int? ?? size,
           );
         }
       }
@@ -80,17 +86,13 @@ class RiderService {
     );
   }
 
-  /// Riders shown in the order driver picker.
+  /// Riders eligible for assignment in the order driver picker.
   ///
-  /// Returns the shop's full roster (same unfiltered call Rider Management
-  /// uses), NOT just `isActive` ones. Filtering by `isActive` here made the
-  /// picker show "no drivers" whenever the saved riders happened to be flagged
-  /// inactive, even though the shop clearly has riders to assign. The backend
-  /// accepts any of the shop's `driverId`s when dispatching, so the full list
-  /// is the correct, predictable set to choose from.
+  /// Requests active drivers from the API, then keeps only those who are also
+  /// not busy on another delivery (`isActive && !isBusy`).
   Future<List<Rider>> getSelectableRiders() async {
-    final result = await getRiders(page: 1, size: 100);
-    return result.riders;
+    final result = await getRiders(page: 1, size: 100, isActive: true);
+    return _eligibleForOrderAssignment(result.riders);
   }
 
   Future<Rider?> createRider(Map<String, dynamic> riderData, {XFile? image}) async {

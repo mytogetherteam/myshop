@@ -132,23 +132,23 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
+              color: Theme.of(context).dividerColor,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
         ),
-        const SizedBox(height: 32),
+        SizedBox(height: 32),
         Center(
           child: Text(
             t?.translate('otp_verification') ?? 'OTP Verification',
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF1E293B),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -157,19 +157,19 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 14,
-                color: const Color(0xFF64748B),
+                color: Theme.of(context).textTheme.bodySmall?.color,
                 height: 1.5,
               ),
             ),
           ),
         ),
-        const SizedBox(height: 32),
+        SizedBox(height: 32),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: List.generate(6, (index) => _buildOtpBox(index)),
         ),
         if (_errorMessage != null) ...[
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Center(
             child: Text(
               _errorMessage!,
@@ -181,7 +181,7 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
             ),
           ),
         ],
-        const SizedBox(height: 32),
+        SizedBox(height: 32),
         SizedBox(
           width: double.infinity,
           height: 56,
@@ -193,7 +193,7 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
             borderRadius: 16,
           ),
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24),
         Center(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -202,7 +202,7 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
                 t?.translate('did_not_receive_code') ?? "Didn't receive code? ",
                 style: GoogleFonts.poppins(
                   fontSize: 14,
-                  color: const Color(0xFF64748B),
+                  color: Theme.of(context).textTheme.bodySmall?.color,
                 ),
               ),
               GestureDetector(
@@ -219,7 +219,7 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
             ],
           ),
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24),
       ],
     );
   }
@@ -250,7 +250,7 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
         style: GoogleFonts.poppins(
           fontSize: 20,
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF1E293B),
+          color: Theme.of(context).textTheme.bodyLarge?.color,
         ),
         decoration: const InputDecoration(
           border: InputBorder.none,

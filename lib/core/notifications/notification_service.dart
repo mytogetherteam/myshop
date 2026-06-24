@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
 
 import 'dart:typed_data';
 
@@ -11,11 +12,24 @@ import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
 import 'package:my_shop/features/notifications/data/repositories/notification_repository.dart';
+import 'package:my_shop/features/orders/data/services/order_service.dart';
+import 'package:my_shop/features/orders/presentation/widgets/new_order_dialog.dart';
+import 'package:my_shop/features/main_navigation/presentation/screens/main_navigation_screen.dart';
+import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
+
+  static AudioPlayer? globalAlertAudioPlayer;
+
+  static void stopGlobalAlert() {
+    globalAlertAudioPlayer?.stop();
+    globalAlertAudioPlayer?.dispose();
+    globalAlertAudioPlayer = null;
+  }
 
   // Resolved lazily so constructing the singleton on web (where Firebase is
   // not initialized) does not throw. All usages are guarded by `kIsWeb`.
@@ -33,7 +47,7 @@ class NotificationService {
 
     // Initialize local notifications
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@drawable/ic_notification');
     const DarwinInitializationSettings initializationSettingsIOS = DarwinInitializationSettings();
     const InitializationSettings initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
@@ -76,6 +90,15 @@ class NotificationService {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final String? type = message.data['type'];
       final String? subType = message.data['subType'];
+      
+      if (type == 'ORDER_ACKNOWLEDGED') {
+        final String? orderIdStr = message.data['orderId']?.toString() ?? message.data['order_id']?.toString();
+        if (orderIdStr != null) {
+          cancelNotification(orderIdStr.hashCode);
+        }
+        return;
+      }
+
       final bool isNewOrder = type == 'NEW_ORDER' || subType == 'PENDING_ORDER';
 
       // Skip showing system banner for new orders in the foreground, 
@@ -258,16 +281,99 @@ class NotificationService {
       android: androidPlatformChannelSpecifics,
       iOS: iosPlatformChannelSpecifics,
     );
+    
+    final String? orderIdStr = message.data['orderId']?.toString() ?? message.data['order_id']?.toString();
+    final int notiId = isNewOrder && orderIdStr != null ? orderIdStr.hashCode : message.hashCode;
+
     await _localNotifications.show(
-      message.hashCode,
+      notiId,
       title,
       body,
       platformChannelSpecifics,
     );
   }
 
-  void _handleNotificationClick(RemoteMessage? message) {
-    // Navigate to notifications screen
-    App.navigatorKey.currentState?.pushNamed('/notifications');
+  Future<void> cancelNotification(int id) async {
+    await _localNotifications.cancel(id);
+  }
+
+  void _handleNotificationClick(RemoteMessage? message) async {
+    if (message == null) return;
+
+    final String? type = message.data['type'];
+    final String? subType = message.data['subType'];
+    final bool isNewOrder = type == 'NEW_ORDER' || subType == 'PENDING_ORDER';
+
+    if (isNewOrder) {
+      final String? orderIdStr = message.data['orderId']?.toString() ?? message.data['order_id']?.toString();
+      if (orderIdStr != null) {
+        // Wait until navigator context is available using post-frame callback
+        BuildContext? context = App.navigatorKey.currentContext;
+        
+        if (context == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _processOrderNotification(orderIdStr);
+          });
+        } else {
+          _processOrderNotification(orderIdStr);
+        }
+      }
+    } else {
+      // Default: Navigate to notifications screen
+      App.navigatorKey.currentState?.pushNamed('/notifications');
+    }
+  }
+
+  void _processOrderNotification(String orderIdStr) async {
+    final context = App.navigatorKey.currentContext;
+    if (context == null) return;
+    
+    try {
+      final orderData = await OrderService().getOrderDetail(orderIdStr);
+      if (orderData != null) {
+        // Navigate to the main navigation screen and switch to the 'NEW' orders tab
+        App.navigatorKey.currentState?.popUntil((route) => route.isFirst);
+        OrdersTabNavigation.returnToOrdersTab?.call('NEW');
+
+        // Play loop alert if needed since the notification sound might only play once
+        NotificationService.globalAlertAudioPlayer = AudioPlayer();
+        NotificationService.globalAlertAudioPlayer!.setReleaseMode(ReleaseMode.loop);
+        NotificationService.globalAlertAudioPlayer!.play(AssetSource('alert/alert.mp3'));
+
+        // Get the latest valid context after popping routes
+        final dialogContext = App.navigatorKey.currentContext ?? context;
+
+        showDialog(
+          context: dialogContext,
+          barrierDismissible: true,
+          builder: (context) => NewOrderDialog(
+            order: orderData,
+            onViewOrder: () {
+              NotificationService.stopGlobalAlert();
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                PageRouteBuilder(
+                  settings: RouteSettings(name: 'order_detail_$orderIdStr'),
+                  pageBuilder: (context, animation, secondaryAnimation) =>
+                      OrderDetailScreen(order: orderData),
+                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                    const begin = Offset(1.0, 0.0);
+                    const end = Offset.zero;
+                    const curve = Curves.easeOut;
+                    var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                    return SlideTransition(position: animation.drive(tween), child: child);
+                  },
+                ),
+              );
+            },
+          ),
+        ).then((_) {
+          NotificationService.stopGlobalAlert();
+        });
+      }
+    } catch (e) {
+      debugPrint('Failed to load order from notification: $e');
+    }
   }
 }

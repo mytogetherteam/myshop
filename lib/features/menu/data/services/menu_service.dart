@@ -256,7 +256,7 @@ class MenuService {
     return null;
   }
 
-  Future<List<MasterDataModel>?> getMasterCategories({bool forceRefresh = false}) async {
+  Future<List<MasterDataModel>?> getMasterCategories() async {
     try {
       AppLogger.network('GET $_masterCategoriesPath');
       final response = await ApiClient().dio.get(_masterCategoriesPath);
@@ -288,7 +288,7 @@ class MenuService {
     return null;
   }
 
-  Future<List<MasterDataModel>?> getMenuTags({bool forceRefresh = false}) async {
+  Future<List<MasterDataModel>?> getMenuTags() async {
     try {
       AppLogger.network('GET $_masterTagsPath');
       final response = await ApiClient().dio.get(_masterTagsPath);
@@ -340,8 +340,6 @@ class MenuService {
     }
     return null;
   }
-
-
   Future<bool> createMenuItem(Map<String, dynamic> payload, {File? imageFile}) async {
     try {
       AppLogger.network('POST $_menuItemsPath, Data: $payload');

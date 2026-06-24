@@ -58,7 +58,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      
       appBar: BackTitleAppBar(
         title: t?.translate('help_support') ?? 'Help & Support',
       ),
@@ -91,13 +91,13 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
                   color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   PhosphorIconsRegular.headset,
                   color: Colors.white,
                   size: 26,
                 ),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,7 +110,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
                         color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       info?.workingHours ?? (t?.translate('contact_us_anytime') ?? 'Contact Us Anytime'),
                       style: GoogleFonts.poppins(
@@ -125,13 +125,13 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
           ),
         ),
 
-        const SizedBox(height: 28),
+        SizedBox(height: 28),
 
         if (info == null || !info.hasAnyContact) ...[
           _buildEmptyState(),
         ] else ...[
           _buildSectionLabel(t?.translate('contact_us') ?? 'Contact Us'),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           if (info.email?.isNotEmpty ?? false)
             _buildContactTile(
               icon: PhosphorIconsRegular.envelope,
@@ -139,6 +139,12 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
               value: info.email!,
               onTap: () => _launchEmail(info.email!),
             ),
+          _buildContactTile(
+            icon: PhosphorIconsRegular.envelopeSimple,
+            label: t?.translate('email_support_alt') ?? 'Alternative Email',
+            value: 'mytogether@gmail.com',
+            onTap: () => _launchEmail('mytogether@gmail.com'),
+          ),
           if (info.phone?.isNotEmpty ?? false)
             _buildContactTile(
               icon: PhosphorIconsRegular.phone,
@@ -189,7 +195,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
       style: GoogleFonts.poppins(
         fontSize: 11,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF94A3B8),
+        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
         letterSpacing: 0.8,
       ),
     );
@@ -209,9 +215,9 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+          border: Border.all(color: Theme.of(context).dividerColor, width: 1),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
@@ -231,7 +237,7 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
               ),
               child: Icon(icon, color: tileColor, size: 22),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,16 +247,16 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF94A3B8),
+                      color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   Text(
                     value,
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1E293B),
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                 ],
@@ -271,22 +277,22 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
     final t = AppLocalizations.of(context);
     return Column(
       children: [
-        const SizedBox(height: 32),
+        SizedBox(height: 32),
         Icon(
           PhosphorIconsRegular.smiley,
           size: 56,
           color: const Color(0xFFCBD5E1),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         Text(
           t?.translate('support_not_configured') ?? 'Support Info Not Configured Yet',
           style: GoogleFonts.poppins(
             fontSize: 15,
             fontWeight: FontWeight.w500,
-            color: const Color(0xFF94A3B8),
+            color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Text(
           t?.translate('check_back_later') ?? 'Please check back later.',
           style: GoogleFonts.poppins(

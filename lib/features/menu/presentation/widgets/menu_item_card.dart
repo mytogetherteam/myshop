@@ -55,7 +55,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -106,7 +106,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                         : _buildPlaceholderImage(),
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 // Content
                 Expanded(
                   child: Column(
@@ -125,7 +125,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                                   style: GoogleFonts.poppins(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w700,
-                                    color: AppColors.onSurface,
+                                    color: Theme.of(context).textTheme.bodyLarge?.color ?? AppColors.onSurface,
                                   ),
                                 ),
                                 if (widget.item.nameMm != null &&
@@ -136,7 +136,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                                     style: GoogleFonts.poppins(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w500,
-                                      color: AppColors.onSurfaceVariant,
+                                      color: Theme.of(context).textTheme.bodySmall?.color ?? AppColors.onSurfaceVariant,
                                     ),
                                   ),
                               ],
@@ -144,7 +144,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6),
                       Row(
                         children: [
                           if (widget.item.originalPrice != null &&
@@ -162,7 +162,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                                 decoration: TextDecoration.lineThrough,
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            SizedBox(width: 8),
                             GradientText(
                               widget.item.price.toFormattedPrice(
                                 currency: widget.item.currency ?? 'K',
@@ -198,7 +198,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 _buildActionSwitches(),
               ],
             ),
@@ -213,7 +213,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
       width: 76,
       height: 76,
       color: AppColors.surfaceVariant,
-      child: const Icon(Icons.fastfood_rounded, color: AppColors.outline, size: 28),
+      child: Icon(Icons.fastfood_rounded, color: AppColors.outline, size: 28),
     );
   }
 
@@ -247,7 +247,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
           },
           activeColor: AppColors.primary,
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         _buildSwitch(
           value: _inStock,
           label: _inStock ? (t?.translate('available') ?? 'Available') : (t?.translate('unavailable') ?? 'Unavailable'),
@@ -289,7 +289,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
           value: value,
           onChanged: onChanged,
         ),
-        const SizedBox(height: 2),
+        SizedBox(height: 2),
         Text(
           label,
           style: GoogleFonts.poppins(

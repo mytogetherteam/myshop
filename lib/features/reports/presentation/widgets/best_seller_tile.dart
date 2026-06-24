@@ -66,27 +66,27 @@ class _BestSellerTileState extends State<BestSellerTile>
               Container(
                 width: 28,
                 height: 28,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF1F5F9),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).dividerColor.withOpacity(0.3),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Text(
                     widget.rank.toString(),
                     style: GoogleFonts.poppins(
-                      color: const Color(0xFF1E293B),
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: Text(
                   widget.name,
                   style: GoogleFonts.poppins(
-                    color: const Color(0xFF1E293B),
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -101,12 +101,12 @@ class _BestSellerTileState extends State<BestSellerTile>
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Container(
             height: 6,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
+              color: Theme.of(context).dividerColor.withOpacity(0.3),
               borderRadius: BorderRadius.circular(3),
             ),
             child: AnimatedBuilder(

@@ -21,7 +21,7 @@ class ImageActionSheet extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 32),
       child: Material(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24),
         clipBehavior: Clip.antiAlias,
         child: Column(
@@ -32,7 +32,7 @@ class ImageActionSheet extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
+              color: Theme.of(context).dividerColor,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -43,11 +43,11 @@ class ImageActionSheet extends StatelessWidget {
               style: GoogleFonts.poppins(
                 fontWeight: FontWeight.w600,
                 fontSize: 17,
-                color: const Color(0xFF1E293B),
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
           ),
-          const Divider(height: 1),
+          Divider(height: 1),
           ListTile(
             leading: const GradientWidget(
               child: Icon(
@@ -64,7 +64,7 @@ class ImageActionSheet extends StatelessWidget {
               vertical: 4,
             ),
           ),
-          const Divider(height: 1, indent: 64),
+          Divider(height: 1, indent: 64),
           ListTile(
             leading: const GradientWidget(
               child: Icon(
@@ -81,7 +81,7 @@ class ImageActionSheet extends StatelessWidget {
               vertical: 4,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: SizedBox(
@@ -90,7 +90,7 @@ class ImageActionSheet extends StatelessWidget {
                 onPressed: () => Navigator.of(context).pop(),
                 child: Text(
                   t?.translate('cancel') ?? 'Cancel',
-                  style: GoogleFonts.poppins(color: const Color(0xFF64748B)),
+                  style: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
                 ),
               ),
             ),

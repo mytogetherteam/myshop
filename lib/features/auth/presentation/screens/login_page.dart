@@ -13,6 +13,8 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:my_shop/core/presentation/widgets/global_modal.dart';
 import 'package:my_shop/features/profile/presentation/widgets/language_selector_sheet.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
+import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
+import 'package:my_shop/core/localization/app_localizations.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -101,7 +103,7 @@ class _LoginPageState extends State<LoginPage>
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Stack(
           children: [
@@ -116,12 +118,12 @@ class _LoginPageState extends State<LoginPage>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 64),
+                    SizedBox(height: 64),
 
                     // Logo
-                    const Center(child: AppLogo(size: 88)),
+                    Center(child: AppLogo(size: 88)),
 
-                    const SizedBox(height: 48),
+                    SizedBox(height: 48),
 
                     // Welcome text
                     Text(
@@ -129,23 +131,23 @@ class _LoginPageState extends State<LoginPage>
                       style: GoogleFonts.poppins(
                         fontSize: 26,
                         fontWeight: FontWeight.w700,
-                        color: Colors.black,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6),
                     Text(
                       t?.translate('login_subtitle') ?? 'Manage your shop with ease',
                       style: GoogleFonts.poppins(
                         fontSize: 14,
-                        color: Colors.grey[600],
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
                       ),
                     ),
 
-                    const SizedBox(height: 40),
+                    SizedBox(height: 40),
 
                     // Username / Email field
                     _buildLabel(t?.translate('username_or_email') ?? 'Username or Email'),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     _buildTextField(
                       controller: _identifierController,
                       hint: t?.translate('username_email_hint') ?? 'admin@shop.com',
@@ -158,11 +160,11 @@ class _LoginPageState extends State<LoginPage>
                       },
                     ),
 
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20),
 
                     // Password field
                     _buildLabel(t?.translate('password') ?? 'Password'),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     _buildTextField(
                       controller: _passwordController,
                       hint: t?.translate('enter_your_password') ?? 'Enter your password',
@@ -188,12 +190,12 @@ class _LoginPageState extends State<LoginPage>
                       },
                     ),
 
-                    const SizedBox(height: 32),
+                    SizedBox(height: 32),
 
                     // Login Button
                     _buildLoginButton(),
 
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24),
 
                     // Register Link
                     Row(
@@ -203,7 +205,7 @@ class _LoginPageState extends State<LoginPage>
                           t?.translate('no_account') ?? "Don't have a shop account? ",
                           style: GoogleFonts.poppins(
                             fontSize: 14,
-                            color: Colors.grey[600],
+                            color: Theme.of(context).textTheme.bodyMedium?.color,
                           ),
                         ),
                         GestureDetector(
@@ -215,19 +217,18 @@ class _LoginPageState extends State<LoginPage>
                               ),
                             );
                           },
-                          child: Text(
+                          child: GradientText(
                             t?.translate('apply_now') ?? "Apply Now",
                             style: GoogleFonts.poppins(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
                             ),
                           ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 48),
+                    SizedBox(height: 48),
 
                     // Version Info
                     Center(
@@ -240,7 +241,7 @@ class _LoginPageState extends State<LoginPage>
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24),
                   ],
                 ),
               ),
@@ -264,7 +265,7 @@ class _LoginPageState extends State<LoginPage>
       style: GoogleFonts.poppins(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: Colors.black87,
+        color: Theme.of(context).textTheme.bodyLarge?.color,
       ),
     );
   }
@@ -281,37 +282,48 @@ class _LoginPageState extends State<LoginPage>
       controller: controller,
       obscureText: obscure,
       validator: validator,
-      style: GoogleFonts.poppins(fontSize: 15, color: Colors.black),
+      style: GoogleFonts.poppins(fontSize: 15, color: Theme.of(context).textTheme.bodyLarge?.color),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: GoogleFonts.poppins(color: Colors.grey[400], fontSize: 14),
         prefixIcon: Icon(icon, color: Colors.grey[500], size: 20),
-        suffixIcon: suffixWidget,
+        suffixIcon: suffixWidget ?? ValueListenableBuilder<TextEditingValue>(
+          valueListenable: controller,
+          builder: (context, value, child) {
+            if (value.text.isEmpty) return const SizedBox.shrink();
+            return IconButton(
+              icon: Icon(Icons.clear, color: Colors.grey, size: 20),
+              onPressed: () {
+                controller.clear();
+              },
+            );
+          },
+        ),
         filled: true,
-        fillColor: Colors.grey[50],
+        fillColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : Colors.grey[50],
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 16,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.grey[200]!, width: 1),
+          borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : Colors.grey[200]!, width: 1),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.grey[200]!, width: 1),
+          borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : Colors.grey[200]!, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          borderSide: BorderSide(color: AppColors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Colors.red, width: 1),
+          borderSide: BorderSide(color: Colors.red, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Colors.red, width: 1.5),
+          borderSide: BorderSide(color: Colors.red, width: 1.5),
         ),
       ),
     );
@@ -343,7 +355,7 @@ class _LoginPageState extends State<LoginPage>
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
@@ -352,23 +364,23 @@ class _LoginPageState extends State<LoginPage>
                   offset: const Offset(0, 4),
                 ),
               ],
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(color: Theme.of(context).dividerColor),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const PhosphorIcon(PhosphorIconsRegular.globe, color: Colors.black87, size: 20),
-                const SizedBox(width: 8),
+                PhosphorIcon(PhosphorIconsRegular.globe, color: Theme.of(context).textTheme.bodyLarge?.color, size: 20),
+                SizedBox(width: 8),
                 Text(
                   langCode,
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
-                const SizedBox(width: 4),
-                const PhosphorIcon(PhosphorIconsRegular.caretDown, color: Colors.black54, size: 16),
+                SizedBox(width: 4),
+                PhosphorIcon(PhosphorIconsRegular.caretDown, color: Theme.of(context).textTheme.bodySmall?.color, size: 16),
               ],
             ),
           ),

@@ -71,14 +71,14 @@ class _AmenitiesAndDietarySectionState extends State<AmenitiesAndDietarySection>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: const Color(0xFF64748B)),
-          const SizedBox(width: 12),
+          Icon(icon, size: 20, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
+          SizedBox(width: 12),
           Text(
             label,
             style: GoogleFonts.poppins(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF1E293B),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
           const Spacer(),
@@ -101,9 +101,9 @@ class _AmenitiesAndDietarySectionState extends State<AmenitiesAndDietarySection>
           label: t?.translate('amenities') ?? 'Amenities',
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: Theme.of(context).dividerColor),
             ),
             child: Column(
               children: [
@@ -116,7 +116,7 @@ class _AmenitiesAndDietarySectionState extends State<AmenitiesAndDietarySection>
                     _notify();
                   },
                 ),
-                const Divider(height: 1, indent: 48),
+                Divider(height: 1, indent: 48),
                 _buildToggleRow(
                   icon: PhosphorIconsRegular.wifiHigh,
                   label: t?.translate('wifi') ?? 'WiFi',
@@ -126,7 +126,7 @@ class _AmenitiesAndDietarySectionState extends State<AmenitiesAndDietarySection>
                     _notify();
                   },
                 ),
-                const Divider(height: 1, indent: 48),
+                Divider(height: 1, indent: 48),
                 _buildToggleRow(
                   icon: PhosphorIconsRegular.motorcycle,
                   label: t?.translate('delivery_enabled') ?? 'Delivery',
@@ -140,14 +140,14 @@ class _AmenitiesAndDietarySectionState extends State<AmenitiesAndDietarySection>
             ),
           ),
         ),
-        const SizedBox(height: 32),
+        SizedBox(height: 32),
         FormSection(
           label: t?.translate('dietary_tags') ?? 'Dietary Tags',
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: Theme.of(context).dividerColor),
             ),
             child: Column(
               children: [
@@ -160,7 +160,7 @@ class _AmenitiesAndDietarySectionState extends State<AmenitiesAndDietarySection>
                     _notify();
                   },
                 ),
-                const Divider(height: 1, indent: 48),
+                Divider(height: 1, indent: 48),
                 _buildToggleRow(
                   icon: PhosphorIconsRegular.leaf,
                   label: t?.translate('vegetarian') ?? 'Vegetarian',

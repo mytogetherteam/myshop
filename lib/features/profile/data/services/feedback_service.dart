@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
+import 'package:my_shop/core/utils/app_logger.dart';
 import '../models/feedback_model.dart';
 
 class FeedbackService {
@@ -9,7 +9,7 @@ class FeedbackService {
 
   Future<List<FeedbackModel>> getFeedbacks() async {
     try {
-      debugPrint('GET REQUEST: $_feedbackPath');
+      AppLogger.network('GET $_feedbackPath');
       final response = await ApiClient().dio.get(_feedbackPath);
 
       if (response.statusCode != null &&
@@ -39,7 +39,7 @@ class FeedbackService {
 
   Future<bool> createFeedback(String description) async {
     try {
-      debugPrint('POST REQUEST: $_feedbackPath');
+      AppLogger.network('POST $_feedbackPath');
       final response = await ApiClient().dio.post(
         _feedbackPath,
         data: {'message': description},

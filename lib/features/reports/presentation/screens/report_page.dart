@@ -13,6 +13,10 @@ import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:intl/intl.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
+import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
+import 'package:my_shop/features/orders/data/services/order_service.dart';
+import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import '../../data/models/report_model.dart';
 import '../../data/services/report_service.dart';
 
@@ -51,6 +55,48 @@ class ReportPageState extends State<ReportPage>
 
   Future<void> refresh() async {
     await _loadData();
+  }
+
+  Future<void> _navigateToOrder(int orderId) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CustomLoadingIndicator(size: 40, color: Colors.white),
+      ),
+    );
+
+    final order = await OrderService().getOrderDetail(orderId.toString());
+
+    if (mounted) {
+      Navigator.pop(context); // Close loading
+      if (order != null) {
+        await Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                OrderDetailScreen(order: order),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              const begin = Offset(1.0, 0.0);
+              const end = Offset.zero;
+              const curve = Curves.easeOut;
+              var tween =
+                  Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+              return SlideTransition(
+                  position: animation.drive(tween), child: child);
+            },
+            reverseTransitionDuration: Duration.zero,
+          ),
+        );
+      } else {
+        AppDialog.showToast(
+          context,
+          AppLocalizations.of(context)?.translate('could_not_find_order_details') ??
+              'Could not find order details.',
+          isError: true,
+        );
+      }
+    }
   }
 
   Future<void> _loadData() async {
@@ -113,7 +159,7 @@ class ReportPageState extends State<ReportPage>
     List<DateTime?>? results = await showModalBottomSheet<List<DateTime?>>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -156,9 +202,9 @@ class ReportPageState extends State<ReportPage>
                       children: [
                         IconButton(
                           onPressed: () => Navigator.pop(context),
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.expand_more,
-                            color: Color(0xFF64748B),
+                            color: Theme.of(context).textTheme.bodySmall?.color,
                           ),
                         ),
                         Expanded(
@@ -172,20 +218,20 @@ class ReportPageState extends State<ReportPage>
                             textAlign: TextAlign.center,
                           ),
                         ),
-                        const SizedBox(width: 48),
+                        SizedBox(width: 48),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   Text(
                     rangeText,
                     style: GoogleFonts.poppins(
                       fontSize: 28,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1E293B),
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   CalendarDatePicker2(
                     config: CalendarDatePicker2Config(
                       calendarType: CalendarDatePicker2Type.range,
@@ -199,21 +245,21 @@ class ReportPageState extends State<ReportPage>
                       disableVibration: true,
                       rangeBidirectional: true,
                       weekdayLabelTextStyle: GoogleFonts.poppins(
-                        color: const Color(0xFF64748B),
+                        color: Theme.of(context).textTheme.bodySmall?.color,
                         fontWeight: FontWeight.w500,
                         fontSize: 13,
                       ),
                       controlsTextStyle: GoogleFonts.poppins(
-                        color: const Color(0xFF1E293B),
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
                       ),
                       dayTextStyle: GoogleFonts.poppins(
-                        color: const Color(0xFF1E293B),
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                         fontWeight: FontWeight.w400,
                       ),
                       selectedDayTextStyle: GoogleFonts.poppins(
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         fontWeight: FontWeight.w600,
                       ),
                       todayTextStyle: GoogleFonts.poppins(
@@ -228,7 +274,7 @@ class ReportPageState extends State<ReportPage>
                       setModalState(() => tempValues = values);
                     },
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Row(
@@ -239,7 +285,7 @@ class ReportPageState extends State<ReportPage>
                           child: Text(
                             t?.translate('cancel').toUpperCase() ?? "CANCEL",
                             style: GoogleFonts.poppins(
-                              color: const Color(0xFF64748B),
+                              color: Theme.of(context).textTheme.bodySmall?.color,
                               fontWeight: FontWeight.w600,
                               fontSize: 15,
                             ),
@@ -292,11 +338,11 @@ class ReportPageState extends State<ReportPage>
     super.build(context);
     final t = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      
       body: Column(
         children: [
           Container(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             padding: const EdgeInsets.only(top: 8, bottom: 8),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -332,14 +378,14 @@ class ReportPageState extends State<ReportPage>
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
                           gradient: isSelected ? AppColors.primaryGradient : null,
-                          color: isSelected ? null : Colors.white,
+                          color: isSelected ? null : Colors.transparent,
                           borderRadius: BorderRadius.circular(12),
-                          border: isSelected ? null : Border.all(color: const Color(0xFFE2E8F0)),
+                          border: isSelected ? null : Border.all(color: Theme.of(context).dividerColor),
                         ),
                         child: Text(
                           filterTexts[index],
                           style: GoogleFonts.poppins(
-                            color: isSelected ? Colors.white : const Color(0xFF64748B),
+                            color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                             fontSize: 14,
                             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                           ),
@@ -359,9 +405,9 @@ class ReportPageState extends State<ReportPage>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      border: Border.all(color: Theme.of(context).dividerColor),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.03),
@@ -379,7 +425,7 @@ class ReportPageState extends State<ReportPage>
                             size: 18,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         GestureDetector(
                           onTap: _showCustomDatePicker,
                           child: GradientText(
@@ -390,7 +436,7 @@ class ReportPageState extends State<ReportPage>
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         GestureDetector(
                           onTap: () {
                             setState(() {
@@ -399,10 +445,10 @@ class ReportPageState extends State<ReportPage>
                             });
                             _loadData();
                           },
-                          child: const Icon(
+                          child: Icon(
                             Icons.close,
                             size: 16,
-                            color: Color(0xFF94A3B8),
+                            color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                           ),
                         ),
                       ],
@@ -486,7 +532,7 @@ class ReportPageState extends State<ReportPage>
         orders: _summary?.orders.toString() ?? '0', // This is Total Orders
         cancelled: _summary?.cancelledCount.toString() ?? '0',
       ),
-      const SizedBox(height: 20),
+      SizedBox(height: 20),
       Column(
         children: [
           Row(
@@ -501,7 +547,7 @@ class ReportPageState extends State<ReportPage>
                   isPositive: true,
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: SummaryCard(
                   label: t?.translate('cancelled') ?? "Cancelled",
@@ -513,7 +559,7 @@ class ReportPageState extends State<ReportPage>
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Row(
             children: [
               Expanded(
@@ -527,7 +573,7 @@ class ReportPageState extends State<ReportPage>
                   isPositive: true,
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: SummaryCard(
                   label: t?.translate('items_sold') ?? "Items Sold",
@@ -540,7 +586,7 @@ class ReportPageState extends State<ReportPage>
           ),
         ],
       ),
-      const SizedBox(height: 32),
+      SizedBox(height: 32),
       Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -549,7 +595,7 @@ class ReportPageState extends State<ReportPage>
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF1E293B),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
           if (_bestSellers.isNotEmpty)
@@ -572,8 +618,8 @@ class ReportPageState extends State<ReportPage>
                       color: AppColors.primary,
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  const PhosphorIcon(
+                  SizedBox(width: 4),
+                  PhosphorIcon(
                     PhosphorIconsRegular.arrowRight,
                     size: 16,
                     color: AppColors.primary,
@@ -583,14 +629,14 @@ class ReportPageState extends State<ReportPage>
             ),
         ],
       ),
-      const SizedBox(height: 16),
+      SizedBox(height: 16),
       if (_bestSellers.isEmpty)
         Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Text(
               t?.translate('no_top_selling_items_yet') ?? "No sales data for this period",
-              style: GoogleFonts.poppins(color: const Color(0xFF64748B)),
+              style: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
             ),
           ),
         )
@@ -606,7 +652,7 @@ class ReportPageState extends State<ReportPage>
             isTopThree: index < 3,
           );
         }),
-      const SizedBox(height: 32),
+      SizedBox(height: 32),
       Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -615,7 +661,7 @@ class ReportPageState extends State<ReportPage>
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF1E293B),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
           if (_orderHistory.isNotEmpty)
@@ -638,8 +684,8 @@ class ReportPageState extends State<ReportPage>
                       color: AppColors.primary,
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  const PhosphorIcon(
+                  SizedBox(width: 4),
+                  PhosphorIcon(
                     PhosphorIconsRegular.arrowRight,
                     size: 16,
                     color: AppColors.primary,
@@ -649,14 +695,14 @@ class ReportPageState extends State<ReportPage>
             ),
         ],
       ),
-      const SizedBox(height: 16),
+      SizedBox(height: 16),
       if (_orderHistory.isEmpty)
         Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Text(
               t?.translate('no_orders_yet') ?? "No orders found",
-              style: GoogleFonts.poppins(color: const Color(0xFF64748B)),
+              style: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
             ),
           ),
         )
@@ -668,42 +714,43 @@ class ReportPageState extends State<ReportPage>
             status: order.status,
             amount: currencyFormat.format(order.totalAmount),
             statusColor: order.status == 'CANCELLED' ? const Color(0xFFEF4444) : const Color(0xFF22C55E),
+            onTap: () => _navigateToOrder(order.id),
           );
         }),
-      const SizedBox(height: 20),
-      const SizedBox(height: 40),
+      SizedBox(height: 20),
+      SizedBox(height: 40),
     ];
   }
 
   List<Widget> _buildSkeletons() {
     return [
       const Skeleton(height: 200, borderRadius: 24),
-      const SizedBox(height: 20),
+      SizedBox(height: 20),
       Column(
         children: [
           Row(
             children: [
               const Expanded(child: Skeleton(height: 100, borderRadius: 16)),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               const Expanded(child: Skeleton(height: 100, borderRadius: 16)),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Row(
             children: [
               const Expanded(child: Skeleton(height: 100, borderRadius: 16)),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               const Expanded(child: Skeleton(height: 100, borderRadius: 16)),
             ],
           ),
         ],
       ),
-      const SizedBox(height: 32),
+      SizedBox(height: 32),
       const Skeleton(width: 150, height: 24),
-      const SizedBox(height: 16),
+      SizedBox(height: 16),
       ...List.generate(
         5,
-        (_) => const Padding(
+        (_) => Padding(
           padding: EdgeInsets.symmetric(vertical: 8),
           child: Skeleton(height: 40),
         ),

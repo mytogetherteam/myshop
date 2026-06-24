@@ -30,7 +30,7 @@ class _CustomSearchDropdownState<T> extends State<CustomSearchDropdown<T>> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -56,8 +56,8 @@ class _CustomSearchDropdownState<T> extends State<CustomSearchDropdown<T>> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          color: Theme.of(context).cardColor,
+          border: Border.all(color: Theme.of(context).dividerColor),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -71,15 +71,15 @@ class _CustomSearchDropdownState<T> extends State<CustomSearchDropdown<T>> {
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   color: widget.value != null
-                      ? const Color(0xFF1E293B)
+                      ? Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1E293B)
                       : const Color(0xFF94A3B8),
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const Icon(
+            Icon(
               Icons.keyboard_arrow_down,
-              color: Color(0xFF1E293B),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
               size: 24,
             ),
           ],
@@ -152,7 +152,7 @@ class _SearchBottomSheetState<T> extends State<_SearchBottomSheet<T>> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
+              color: Theme.of(context).dividerColor,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -162,7 +162,7 @@ class _SearchBottomSheetState<T> extends State<_SearchBottomSheet<T>> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: TextField(
@@ -174,7 +174,7 @@ class _SearchBottomSheetState<T> extends State<_SearchBottomSheet<T>> {
                     color: const Color(0xFF94A3B8),
                     fontSize: 14,
                   ),
-                  prefixIcon: const Icon(
+                  prefixIcon: Icon(
                     Icons.search,
                     color: Color(0xFF94A3B8),
                   ),
@@ -193,9 +193,9 @@ class _SearchBottomSheetState<T> extends State<_SearchBottomSheet<T>> {
             child: ListView.separated(
               shrinkWrap: true,
               itemCount: _filteredItems.length,
-              separatorBuilder: (context, index) => const Divider(
+              separatorBuilder: (context, index) => Divider(
                 height: 1,
-                color: Color(0xFFF1F5F9),
+                color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
                 indent: 20,
                 endIndent: 20,
               ),
@@ -215,7 +215,7 @@ class _SearchBottomSheetState<T> extends State<_SearchBottomSheet<T>> {
                       fontSize: 15,
                       color: isSelected
                           ? const Color(0xFFED3973)
-                          : const Color(0xFF1E293B),
+                          : Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFF1E293B),
                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                     ),
                   ),

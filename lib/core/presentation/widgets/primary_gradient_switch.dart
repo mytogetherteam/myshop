@@ -36,8 +36,8 @@ class PrimaryGradientSwitch extends StatelessWidget {
               child: Container(
                 width: 22,
                 height: 22,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(

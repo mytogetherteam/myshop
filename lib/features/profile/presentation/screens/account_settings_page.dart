@@ -53,17 +53,17 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      
       appBar: BackTitleAppBar(
         title: t?.translate('account_settings') ?? 'Account Settings',
       ),
       body: _isLoading
-          ? const Center(child: CupertinoActivityIndicator())
+          ? Center(child: CupertinoActivityIndicator())
           : SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20),
                   // User info section header
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
@@ -72,7 +72,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                       style: GoogleFonts.poppins(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF94A3B8),
+                        color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                         letterSpacing: 0.8,
                       ),
                     ),
@@ -81,10 +81,10 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(24),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
                       border: Border.symmetric(
-                        horizontal: BorderSide(color: Color(0xFFE2E8F0), width: 1),
+                        horizontal: BorderSide(color: Theme.of(context).dividerColor, width: 1),
                       ),
                     ),
                     child: Column(
@@ -95,17 +95,17 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                           style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1E293B),
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
+                            color: Theme.of(context).dividerColor.withOpacity(0.3),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -113,14 +113,14 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                             style: GoogleFonts.poppins(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF475569),
+                              color: Theme.of(context).textTheme.bodyMedium?.color,
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
                   // Actions header
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
@@ -129,7 +129,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                       style: GoogleFonts.poppins(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF94A3B8),
+                        color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                         letterSpacing: 0.8,
                       ),
                     ),
@@ -143,10 +143,10 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                       CupertinoPageRoute(builder: (_) => const ChangePasswordPage()),
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  SizedBox(height: 40),
                   // Subtle Delete Account option
                   _buildDeleteAccountOption(),
-                  const SizedBox(height: 40),
+                  SizedBox(height: 40),
                 ],
               ),
             ),
@@ -162,10 +162,10 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
           border: Border(
-            bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1),
+            bottom: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.3), width: 1),
           ),
         ),
         child: Row(
@@ -173,23 +173,23 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
             PhosphorIcon(
               icon,
               size: 24,
-              color: const Color(0xFF475569),
+              color: Theme.of(context).textTheme.bodyMedium?.color,
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16),
             Expanded(
               child: Text(
                 title,
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
-                  color: const Color(0xFF1E293B),
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
             ),
-            const PhosphorIcon(
+            PhosphorIcon(
               PhosphorIconsRegular.caretRight,
               size: 18,
-              color: Color(0xFF94A3B8),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
             ),
           ],
         ),
@@ -203,10 +203,10 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
       onTap: _handleDeleteAccount,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
           border: Border.symmetric(
-            horizontal: BorderSide(color: Color(0xFFF1F5F9), width: 1),
+            horizontal: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.3), width: 1),
           ),
         ),
         child: Row(
@@ -216,7 +216,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
               size: 24,
               color: Colors.red.shade400,
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16),
             Expanded(
               child: Text(
                 t?.translate('delete_account') ?? 'Delete Account',
@@ -322,7 +322,7 @@ class _DeleteAccountFrictionSheetState extends State<_DeleteAccountFrictionSheet
             height: 5,
             margin: const EdgeInsets.only(bottom: 24),
             decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
+              color: Theme.of(context).dividerColor,
               borderRadius: BorderRadius.circular(2.5),
             ),
           ),
@@ -332,21 +332,21 @@ class _DeleteAccountFrictionSheetState extends State<_DeleteAccountFrictionSheet
             style: GoogleFonts.poppins(
               fontSize: 22,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF1E293B),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Text(
             t?.translate('delete_account_message') ??
                 'Are you sure you want to permanently delete your account? This action cannot be undone and all your shop data will be removed.',
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 15,
-              color: const Color(0xFF64748B),
+              color: Theme.of(context).textTheme.bodySmall?.color,
               height: 1.5,
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
@@ -354,17 +354,17 @@ class _DeleteAccountFrictionSheetState extends State<_DeleteAccountFrictionSheet
               style: GoogleFonts.poppins(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF475569),
+                color: Theme.of(context).textTheme.bodyMedium?.color,
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           TextFormField(
             controller: _passwordController,
             obscureText: !_isPasswordVisible,
             style: GoogleFonts.poppins(
               fontSize: 14,
-              color: const Color(0xFF1E293B),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
               fontWeight: FontWeight.w500,
             ),
             decoration: InputDecoration(
@@ -378,29 +378,29 @@ class _DeleteAccountFrictionSheetState extends State<_DeleteAccountFrictionSheet
               fillColor: const Color(0xFFF8FAFC),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                borderSide: BorderSide(color: Theme.of(context).dividerColor),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                borderSide: BorderSide(color: Theme.of(context).dividerColor),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Colors.red, width: 1.5),
+                borderSide: BorderSide(color: Colors.red, width: 1.5),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Colors.red),
+                borderSide: BorderSide(color: Colors.red),
               ),
               focusedErrorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Colors.red, width: 1.5),
+                borderSide: BorderSide(color: Colors.red, width: 1.5),
               ),
               suffixIcon: IconButton(
                 icon: PhosphorIcon(
                   _isPasswordVisible ? PhosphorIconsRegular.eye : PhosphorIconsRegular.eyeSlash,
                   size: 20,
-                  color: const Color(0xFF94A3B8),
+                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                 ),
                 onPressed: () {
                   setState(() => _isPasswordVisible = !_isPasswordVisible);
@@ -414,7 +414,7 @@ class _DeleteAccountFrictionSheetState extends State<_DeleteAccountFrictionSheet
               return null;
             },
           ),
-          const SizedBox(height: 32),
+          SizedBox(height: 32),
           SizedBox(
             width: double.infinity,
             height: 60,
@@ -426,7 +426,7 @@ class _DeleteAccountFrictionSheetState extends State<_DeleteAccountFrictionSheet
               borderRadius: 18,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             height: 60,
@@ -446,7 +446,7 @@ class _DeleteAccountFrictionSheetState extends State<_DeleteAccountFrictionSheet
                 style: GoogleFonts.poppins(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF64748B),
+                  color: Theme.of(context).textTheme.bodySmall?.color,
                 ),
               ),
             ),

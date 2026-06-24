@@ -1,11 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:stomp_dart_client/stomp_dart_client.dart';
 import 'package:my_shop/features/auth/data/services/auth_service.dart';
+import 'package:my_shop/core/auth/jwt_utils.dart';
 import 'package:my_shop/core/config/env_config.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/core/utils/app_logger.dart';
+import 'package:my_shop/core/network/api_client.dart';
+import 'package:my_shop/core/network/websocket_visibility_helper.dart'
+    if (dart.library.html) 'package:my_shop/core/network/websocket_visibility_helper_web.dart';
 
 class WebSocketService {
   static final WebSocketService _instance = WebSocketService._internal();
@@ -38,12 +43,20 @@ class WebSocketService {
   Stream<Map<String, dynamic>> get menuUpdates =>
       _menuUpdateController.stream;
 
+  final StreamController<Map<String, dynamic>> _broadcastUpdateController =
+      StreamController<Map<String, dynamic>>.broadcast();
+
+  /// Realtime broadcast events (system announcements, USERS/ALL, SINGLE_SHOP)
+  Stream<Map<String, dynamic>> get broadcastUpdates =>
+      _broadcastUpdateController.stream;
+
   bool _isConnecting = false;
   bool _shouldReconnect = true;
   int _reconnectAttempts = 0;
-  static const int _maxReconnectAttempts = 5;
+  // No hard cap — always keep trying with a max 60-second delay ceiling.
   Timer? _reconnectTimer;
   int? _subscribedShopId;
+  bool _visibilityListenerSetUp = false;
 
   /// Normalises a STOMP frame body: strips the `\0` terminator and trims, so
   /// `json.decode` never chokes on the trailing null some brokers append.
@@ -54,8 +67,20 @@ class WebSocketService {
     return cleaned.isEmpty ? null : cleaned;
   }
 
+  /// Set up a one-time web visibility listener so the socket reconnects
+  /// automatically whenever the user switches back to the PWA tab.
+  void _setupVisibilityListenerOnce() {
+    if (!kIsWeb || _visibilityListenerSetUp) return;
+    _visibilityListenerSetUp = true;
+    WebSocketVisibilityHelper.registerVisibilityListener(() {
+      AppLogger.realtime('[WS] Tab became visible — reconnecting');
+      _reconnectAttempts = 0; // Reset so we get the full retry budget.
+      connect(force: true);
+    });
+  }
+
   Future<void> connect({bool force = false}) async {
-    if (_isConnecting && !force) return;
+    if (_isConnecting) return; // Already connecting, ignore concurrent requests
     if (isConnected && !force) return;
 
     // We've decided to (re)connect — re-enable auto-reconnect and cancel any
@@ -82,11 +107,28 @@ class WebSocketService {
     _isConnecting = true;
     AppLogger.realtime('[WS] Connecting to ${EnvConfig.wsUrl}');
 
-    final token = await AuthService.instance.getAccessToken();
+    String? token = await AuthService.instance.getAccessToken();
+    final connectShopId = await StorageService.instance.getSelectedShopId();
     if (token == null || token.isEmpty) {
       _isConnecting = false;
+      _reconnectAttempts = 0;
       AppLogger.realtime('[WS] Connection aborted: no access token');
       return;
+    }
+
+    // Proactively refresh if the token is expired or about to expire
+    if (JwtUtils.isExpired(token, offsetSeconds: 30)) {
+      AppLogger.realtime('[WS] Token expired — refreshing before connect');
+      await AuthService.instance.performRefresh(ApiClient().dio);
+      // performRefresh handles logout + storage clear if refresh also fails
+      final fresh = await AuthService.instance.getAccessToken();
+      if (fresh == null || fresh.isEmpty) {
+        _isConnecting = false;
+        _reconnectAttempts = 0;
+        AppLogger.realtime('[WS] Connection aborted: token refresh failed');
+        return;
+      }
+      token = fresh;
     }
 
     _stompClient = StompClient(
@@ -111,7 +153,10 @@ class WebSocketService {
             AppLogger.realtime('[WS] $message');
           }
         },
-        stompConnectHeaders: {'Authorization': 'Bearer $token'},
+        stompConnectHeaders: {
+          'Authorization': 'Bearer $token',
+          if (connectShopId != null) 'X-Shop-Id': connectShopId.toString(),
+        },
         onStompError: (frame) =>
             AppLogger.realtime('[WS] STOMP error: ${frame.body}'),
         onDisconnect: (frame) {
@@ -131,17 +176,16 @@ class WebSocketService {
   void _scheduleReconnect() {
     if (!_shouldReconnect) return;
     if (_isConnecting) return; // Already trying to connect
-    if (_reconnectAttempts >= _maxReconnectAttempts) {
-      AppLogger.realtime('[WS] Max reconnection attempts reached');
-      return;
-    }
 
     _reconnectAttempts++;
-    final delay = Duration(seconds: _reconnectAttempts * 2);
+    // Cap delay at 60 seconds so the app never waits too long on mobile.
+    final baseSeconds = _reconnectAttempts < 10 ? _reconnectAttempts * 2 : 60;
+    final jitterSeconds = Random().nextInt(4); // 0–3 s random jitter
+    final delay = Duration(seconds: baseSeconds + jitterSeconds);
 
     AppLogger.realtime(
       '[WS] Scheduling reconnection in ${delay.inSeconds}s '
-      '(attempt $_reconnectAttempts/$_maxReconnectAttempts)',
+      '(attempt $_reconnectAttempts — unlimited retries)',
     );
 
     _reconnectTimer?.cancel();
@@ -156,10 +200,15 @@ class WebSocketService {
     _isConnecting = false;
     _reconnectAttempts = 0;
     connectionStatus.value = true;
+    _setupVisibilityListenerOnce(); // Register web tab-visible → reconnect (once only).
     AppLogger.realtime('[WS] Connected successfully');
 
     final token = await AuthService.instance.getAccessToken();
-    final headers = {if (token != null) 'Authorization': 'Bearer $token'};
+    final shopId = await StorageService.instance.getSelectedShopId();
+    final headers = {
+      if (token != null) 'Authorization': 'Bearer $token',
+      if (shopId != null) 'X-Shop-Id': shopId.toString(),
+    };
 
     _stompClient?.subscribe(
       destination: '/topic/shop-menu-updates',
@@ -184,7 +233,6 @@ class WebSocketService {
     );
     AppLogger.realtime('[WS] Subscribed to /topic/shop-menu-updates');
 
-    final shopId = await StorageService.instance.getSelectedShopId();
     if (shopId == null) {
       AppLogger.realtime('[WS] No shop selected — skipping shop topic subscriptions');
       return;
@@ -205,6 +253,9 @@ class WebSocketService {
 
           if (type == 'NEW_ORDER' ||
               type == 'ORDER_UPDATE' ||
+              type == 'ORDER_STATUS' ||
+              type == 'ORDER_CANCELED' ||
+              type == 'ORDER_CANCELLED' ||
               type == 'PAYMENT_REMINDER') {
             final String orderId = raw['orderId']?.toString() ?? 'unknown';
             final String status =
@@ -220,6 +271,49 @@ class WebSocketService {
     );
 
     AppLogger.realtime('[WS] Subscribed to $orderDestination');
+
+    // ──────────────────────────────────────────
+    // Broadcasts Setup
+    // ──────────────────────────────────────────
+
+    _stompClient?.subscribe(
+      destination: '/topic/broadcasts/shop-admins',
+      headers: {...headers, 'receipt': 'rcpt-shop-admins-broadcasts'},
+      callback: (StompFrame frame) {
+        final body = _frameBody(frame);
+        if (body == null) return;
+        try {
+          final Map<String, dynamic> raw = json.decode(body);
+          if (raw['type'] == 'BROADCAST') {
+            AppLogger.realtime('[WS] BROADCAST shop-admins | ${raw['id']}');
+            _broadcastUpdateController.add(raw);
+          }
+        } catch (e) {
+          AppLogger.realtime('[WS] Error parsing broadcast update: $e');
+        }
+      },
+    );
+    AppLogger.realtime('[WS] Subscribed to /topic/broadcasts/shop-admins');
+
+    final broadcastDestination = '/topic/shop/$shopId/broadcasts';
+    _stompClient?.subscribe(
+      destination: broadcastDestination,
+      headers: {...headers, 'receipt': 'rcpt-shop-broadcasts'},
+      callback: (StompFrame frame) {
+        final body = _frameBody(frame);
+        if (body == null) return;
+        try {
+          final Map<String, dynamic> raw = json.decode(body);
+          if (raw['type'] == 'BROADCAST') {
+            AppLogger.realtime('[WS] BROADCAST single-shop | ${raw['id']}');
+            _broadcastUpdateController.add(raw);
+          }
+        } catch (e) {
+          AppLogger.realtime('[WS] Error parsing broadcast update: $e');
+        }
+      },
+    );
+    AppLogger.realtime('[WS] Subscribed to $broadcastDestination');
 
     final chatDestination = '/topic/shop/$shopId/chat';
 
@@ -261,7 +355,8 @@ class WebSocketService {
     if (shopId != null && shopId != _subscribedShopId) {
       disconnect();
       await Future.delayed(const Duration(milliseconds: 300));
-      connect(force: true);
+      // FIX: await the reconnect so callers know when subscriptions are live.
+      await connect(force: true);
     }
   }
 

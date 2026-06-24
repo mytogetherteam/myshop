@@ -14,8 +14,8 @@ class LanguageSelectorSheet extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -32,7 +32,7 @@ class LanguageSelectorSheet extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1E293B),
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
                 InkWell(
@@ -40,20 +40,20 @@ class LanguageSelectorSheet extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
+                      color: Theme.of(context).dividerColor.withOpacity(0.3),
                       shape: BoxShape.circle,
                     ),
-                    child: const PhosphorIcon(
+                    child: PhosphorIcon(
                       PhosphorIconsRegular.x,
                       size: 20,
-                      color: Color(0xFF64748B),
+                      color: Theme.of(context).textTheme.bodySmall?.color,
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           _buildLanguageOption(
             context,
             code: 'en',
@@ -95,9 +95,9 @@ class LanguageSelectorSheet extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withValues(alpha: 0.05) : Colors.white,
-          border: const Border(
-            bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1),
+          color: isSelected ? AppColors.primary.withValues(alpha: 0.05) : Theme.of(context).cardColor,
+          border: Border(
+            bottom: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.3), width: 1),
           ),
         ),
         child: Row(
@@ -108,12 +108,12 @@ class LanguageSelectorSheet extends StatelessWidget {
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                  color: isSelected ? AppColors.primary : const Color(0xFF1E293B),
+                  color: isSelected ? AppColors.primary : Theme.of(context).textTheme.bodyLarge?.color ?? (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                 ),
               ),
             ),
             if (isSelected)
-              const PhosphorIcon(
+              PhosphorIcon(
                 PhosphorIconsFill.checkCircle,
                 color: AppColors.primary,
                 size: 24,

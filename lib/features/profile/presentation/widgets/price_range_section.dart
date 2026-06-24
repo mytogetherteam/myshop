@@ -33,9 +33,9 @@ class _PriceRangeSectionState extends State<PriceRangeSection> {
       label: t?.translate('price_range') ?? 'Price Range',
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(color: Theme.of(context).dividerColor),
         ),
         child: Row(
           children: [

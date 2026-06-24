@@ -106,17 +106,17 @@ class ShopProfileImageHeader extends StatelessWidget {
                                   color: Colors.white.withValues(alpha: 0.25),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const PhosphorIcon(
+                                child: PhosphorIcon(
                                   PhosphorIconsRegular.camera,
                                   size: 28,
-                                  color: Colors.white,
+                                  color: Theme.of(context).cardColor,
                                 ),
                               ),
-                              const SizedBox(height: 10),
+                              SizedBox(height: 10),
                               Text(
                                 t?.translate('tap_to_add_cover_photo') ?? 'Tap to Add Cover Photo',
                                 style: GoogleFonts.poppins(
-                                  color: Colors.white,
+                                  color: Theme.of(context).cardColor,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -139,7 +139,7 @@ class ShopProfileImageHeader extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
@@ -160,7 +160,7 @@ class ShopProfileImageHeader extends StatelessWidget {
                           width: 64,
                           height: 64,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
+                            color: Theme.of(context).dividerColor.withOpacity(0.3),
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: ClipRRect(
@@ -180,11 +180,11 @@ class ShopProfileImageHeader extends StatelessWidget {
                                     imageUrl: logoUrl!,
                                     fit: BoxFit.cover,
                                     placeholder: (_, _) =>
-                                        _buildLogoPlaceholder(),
+                                        _buildLogoPlaceholder(context),
                                     errorWidget: (_, _, _) =>
-                                        _buildLogoPlaceholder(),
+                                        _buildLogoPlaceholder(context),
                                   )
-                                : _buildLogoPlaceholder(),
+                                : _buildLogoPlaceholder(context),
                           ),
                         ),
                         Positioned(
@@ -196,26 +196,26 @@ class ShopProfileImageHeader extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: const Color(0xFFED3973),
                               shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
+                              border: Border.all(color: Theme.of(context).cardColor, width: 2),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.camera_alt,
                               size: 11,
-                              color: Colors.white,
+                              color: Theme.of(context).cardColor,
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  SizedBox(width: 14),
                   Expanded(
                     child: Text(
                       shopName,
                       style: GoogleFonts.poppins(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1E293B),
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -232,7 +232,7 @@ class ShopProfileImageHeader extends StatelessWidget {
 
   Widget _buildCoverGradient() {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFFED3973), Color(0xFFFF8C69)],
           begin: Alignment.topLeft,
@@ -242,20 +242,20 @@ class ShopProfileImageHeader extends StatelessWidget {
     );
   }
 
-  Widget _buildLogoPlaceholder() {
+  Widget _buildLogoPlaceholder(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFFED3973), Color(0xFFFF8C69)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       ),
-      child: const Center(
+      child: Center(
         child: PhosphorIcon(
           PhosphorIconsRegular.storefront,
           size: 26,
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
         ),
       ),
     );

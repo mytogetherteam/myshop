@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/features/orders/data/models/order_model.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+import 'dart:async';
+import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
+import 'package:my_shop/features/orders/data/services/order_service.dart';
+import 'package:my_shop/core/notifications/notification_service.dart';
 
-class NewOrderDialog extends StatelessWidget {
+class NewOrderDialog extends StatefulWidget {
   final OrderModel order;
   final VoidCallback onViewOrder;
 
@@ -13,6 +17,39 @@ class NewOrderDialog extends StatelessWidget {
     required this.order,
     required this.onViewOrder,
   });
+
+  @override
+  State<NewOrderDialog> createState() => _NewOrderDialogState();
+}
+
+class _NewOrderDialogState extends State<NewOrderDialog> {
+  StreamSubscription? _wsSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _wsSubscription = WebSocketService().orderUpdates.listen((event) {
+      final orderId = event['orderId']?.toString() ?? event['order']?['id']?.toString();
+      final status = event['order']?['status']?.toString() ?? event['status']?.toString();
+      final type = event['type']?.toString();
+      
+      if (orderId == widget.order.id.toString()) {
+        if (type == 'ORDER_ACKNOWLEDGED' || status?.toUpperCase() == 'CANCELED') {
+          if (mounted) {
+            NotificationService.stopGlobalAlert();
+            NotificationService().cancelNotification(orderId.hashCode);
+            Navigator.of(context).maybePop();
+          }
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _wsSubscription?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +67,7 @@ class NewOrderDialog extends StatelessWidget {
               Container(
                 height: 110,
                 width: double.infinity,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [Color(0xFFF06292), Color(0xFFFF8A65)],
                     begin: Alignment.topLeft,
@@ -47,7 +84,7 @@ class NewOrderDialog extends StatelessWidget {
                         padding: const EdgeInsets.all(8.0),
                         child: Icon(
                           _getFoodIcon(i * 8 + j),
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                           size: 20,
                         ),
                       )),
@@ -61,7 +98,7 @@ class NewOrderDialog extends StatelessWidget {
                   width: 70,
                   height: 70,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
@@ -71,14 +108,14 @@ class NewOrderDialog extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: const Center(
+                  child: Center(
                     child: _RingingBell(),
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 45),
+          SizedBox(height: 45),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
@@ -89,20 +126,20 @@ class NewOrderDialog extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1E293B),
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                     letterSpacing: -0.5,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(
-                  '#${order.lastOrderNo}',
+                  '#${widget.order.lastOrderNo}',
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF475569),
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -111,38 +148,38 @@ class NewOrderDialog extends StatelessWidget {
                       style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: const Color(0xFF94A3B8),
+                        color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Container(
                       width: 4,
                       height: 4,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: Color(0xFFCBD5E1),
                         shape: BoxShape.circle,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Icon(
-                      order.isDeliveryFulfillment
+                      widget.order.isDeliveryFulfillment
                           ? PhosphorIconsRegular.moped
                           : PhosphorIconsRegular.shoppingBag,
                       size: 16,
-                      color: const Color(0xFF64748B),
+                      color: Theme.of(context).textTheme.bodySmall?.color,
                     ),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Text(
-                      order.isDeliveryFulfillment ? 'Delivery' : 'Pickup',
+                      widget.order.isDeliveryFulfillment ? 'Delivery' : 'Pickup',
                       style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: const Color(0xFF64748B),
+                        color: Theme.of(context).textTheme.bodySmall?.color,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
                 ConstrainedBox(
                   constraints: BoxConstraints(
                     maxHeight: MediaQuery.of(context).size.height * 0.25,
@@ -150,9 +187,9 @@ class NewOrderDialog extends StatelessWidget {
                   child: ListView.builder(
                     shrinkWrap: true,
                     padding: EdgeInsets.zero,
-                    itemCount: order.items.length,
+                    itemCount: widget.order.items.length,
                     itemBuilder: (context, index) {
-                      final item = order.items[index];
+                      final item = widget.order.items[index];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: Row(
@@ -165,28 +202,28 @@ class NewOrderDialog extends StatelessWidget {
                                 style: GoogleFonts.poppins(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF64748B),
+                                  color: Theme.of(context).textTheme.bodySmall?.color,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            SizedBox(width: 12),
                             Expanded(
                               child: Text(
                                 item.displayName,
                                 style: GoogleFonts.poppins(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF1E293B),
+                                  color: Theme.of(context).textTheme.bodyLarge?.color,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            SizedBox(width: 12),
                             Text(
                               item.displayPrice,
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
-                                color: const Color(0xFF475569),
+                                color: Theme.of(context).textTheme.bodyMedium?.color,
                               ),
                             ),
                           ],
@@ -195,23 +232,27 @@ class NewOrderDialog extends StatelessWidget {
                     },
                   ),
                 ),
-                const Padding(
+                Padding(
                   padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Divider(color: Color(0xFFF1F5F9), thickness: 1.5),
+                  child: Divider(color: Theme.of(context).dividerColor.withOpacity(0.3), thickness: 1.5),
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Total',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF1E293B),
+                    Expanded(
+                      child: Text(
+                        widget.order.deliveryType == 'NORMAL' 
+                            ? 'Est Total' 
+                            : 'Total',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
+                        ),
                       ),
                     ),
                     Text(
-                      order.displayTotalAmount,
+                      widget.order.displayTotalAmount,
                       style: GoogleFonts.poppins(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
@@ -220,14 +261,17 @@ class NewOrderDialog extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
                 PrimaryGradientButton(
-                  onPressed: onViewOrder,
+                  onPressed: () {
+                    OrderService().acknowledgeOrder(widget.order.id.toString());
+                    widget.onViewOrder();
+                  },
                   text: 'View Order',
                   height: 56,
                   borderRadius: 16,
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
               ],
             ),
           ),
@@ -286,7 +330,7 @@ class _RingingBellState extends State<_RingingBell> with SingleTickerProviderSta
       builder: (context, child) {
         return Transform.rotate(
           angle: _animation.value,
-          child: const Icon(
+          child: Icon(
             PhosphorIconsFill.bell,
             color: Color(0xFFED3973),
             size: 32,

@@ -194,7 +194,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -210,7 +210,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
                       // Dropdown / Selection Section
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -218,9 +218,11 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
                           children: [Expanded(child: _buildCategoryDropdown())],
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 20),
+                      _buildWarningAlert(),
+                      SizedBox(height: 24),
                       QuickActionCards(onRefresh: refresh),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       // Menu Sections
                       if (_isLoadingCategories || _isLoadingItems)
                         _buildSkeletonList()
@@ -231,7 +233,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
                             child: Text(
                               AppLocalizations.of(context)?.translate('no_items_found') ?? 'No Items Found',
                               style: GoogleFonts.poppins(
-                                color: const Color(0xFF94A3B8),
+                                color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                               ),
                             ),
                           ),
@@ -239,7 +241,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
                       else
                         ..._buildMenuSections(),
                       if (_isLoadingMoreItems)
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.symmetric(vertical: 24),
                           child: Center(
                             child: CustomLoadingIndicator(
@@ -248,7 +250,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
                             ),
                           ),
                         ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
                     ],
                   ),
                 ),
@@ -271,7 +273,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF1E293B),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
         ),
@@ -303,7 +305,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
             );
           },
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
       ],
     );
   }
@@ -352,6 +354,40 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
     return sections;
   }
 
+  Widget _buildWarningAlert() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : const Color(0xFFFEF2F2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF9F1239) : const Color(0xFFFECACA)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline, color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFFFDA4AF) : const Color(0xFFE11D48), size: 20),
+          SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  AppLocalizations.of(context)?.translate('food_with_pictures_attract_more_customers') ?? 'ပုံပါရှိသော အစားအသောက်များသည် Customer များကို ပိုမိုဆွဲဆောင်နိုင်ပါသည်။',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFFFDA4AF) : const Color(0xFFE11D48),
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCategoryDropdown() {
     return CustomSearchDropdown<MenuCategoryModel>(
       items: _categories,
@@ -375,7 +411,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
             children: [
               // Image Skeleton
               const Skeleton(width: 72, height: 72),
-              const SizedBox(width: 16),
+              SizedBox(width: 16),
               // Text Content Skeleton
               Expanded(
                 child: Column(
@@ -388,11 +424,11 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
                         Skeleton(width: 32, height: 16),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     const Skeleton(width: double.infinity, height: 12),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     const Skeleton(width: 150, height: 12),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     const Skeleton(width: 60, height: 14),
                   ],
                 ),

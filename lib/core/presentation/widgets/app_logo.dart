@@ -16,7 +16,7 @@ class AppLogo extends StatelessWidget {
       width: size,
       height: size,
       child: Image.asset(
-        'assets/images/app_logo.png', // Pointing to the new rebranding logo
+        'assets/images/app_logo2.png', // Pointing to the new rebranding logo
         fit: fit,
         errorBuilder: (context, error, stackTrace) {
           // If a logo is not found, render a placeholder

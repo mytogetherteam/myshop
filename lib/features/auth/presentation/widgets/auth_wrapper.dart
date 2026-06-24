@@ -55,8 +55,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
       }
     }
 
-    WebSocketService().connect();
-    
     final notiHandled = await StorageService.instance.isNotificationHandled();
     if (!notiHandled) {
       return const NotificationPermissionScreen();

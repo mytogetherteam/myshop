@@ -90,7 +90,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      
       appBar: BackTitleAppBar(title: t?.translate('reviews') ?? 'Reviews'),
       body: _isLoading 
         ? const ReviewSkeleton()
@@ -107,33 +107,33 @@ class _ReviewsPageState extends State<ReviewsPage> {
           Container(
             width: 88,
             height: 88,
-            decoration: const BoxDecoration(
-              color: Color(0xFFF1F5F9),
+            decoration: BoxDecoration(
+              color: Theme.of(context).dividerColor.withOpacity(0.3),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               PhosphorIconsRegular.chatCenteredText,
               size: 40,
-              color: Color(0xFF94A3B8),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(
             t?.translate('no_reviews_yet') ?? 'No Reviews Yet',
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF1E293B),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Text(
             t?.translate('no_reviews_desc') ??
                 'Customer reviews will appear here once you receive them.',
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 13,
-              color: const Color(0xFF64748B),
+              color: Theme.of(context).textTheme.bodySmall?.color,
               height: 1.5,
             ),
           ),
@@ -155,7 +155,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
             return Column(
               children: [
                 if (_summary != null) ReviewSummaryWidget(summary: _summary!),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
                 if (_reviews.isEmpty)
                   _buildEmptyState(t)
                 else ...[
@@ -166,11 +166,11 @@ class _ReviewsPageState extends State<ReviewsPage> {
                       style: GoogleFonts.poppins(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1E293B),
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                 ],
               ],
             );
@@ -189,7 +189,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
             padding: const EdgeInsets.symmetric(vertical: 24),
             child: Center(
               child: _hasMore 
-                ? const SizedBox(
+                ? SizedBox(
                     width: 24,
                     height: 24,
                     child: CircularProgressIndicator(
@@ -201,7 +201,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
                     t?.translate('no_more_reviews') ?? 'No More Reviews',
                     style: GoogleFonts.poppins(
                       fontSize: 14,
-                      color: const Color(0xFF64748B),
+                      color: Theme.of(context).textTheme.bodySmall?.color,
                     ),
                   ),
             ),

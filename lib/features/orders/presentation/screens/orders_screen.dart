@@ -12,6 +12,7 @@ import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:my_shop/core/utils/app_logger.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 
 class OrdersScreen extends StatefulWidget {
@@ -80,19 +81,63 @@ class OrdersScreenState extends State<OrdersScreen>
           }
         }
       });
-      // After fetching, we can trigger refreshAll to notify any built tabs,
-      // but they will also load themselves if they were built during the fetch.
-      refreshAll();
+      // Tabs load their own lists independently on init or via lazy loading.
+      // We don't call refreshAll() here because it causes a double load.
     }
   }
 
   void _setupWebSocketListener() {
     _socketSubscription = WebSocketService().orderUpdates.listen((event) {
       if (event['order'] != null) {
-        final newOrder = OrderModel.fromJson(event['order']);
-        _orderUpdatesController.add(newOrder);
+        try {
+          final newOrder = OrderModel.fromJson(event['order']);
+          _orderUpdatesController.add(newOrder);
+          // Update tab counts directly from the new order status.
+          // Do NOT call _fetchInitialData() here — that triggers full list
+          // reloads on every tab which causes duplicate / ghost cards.
+          _updateTabCountFromOrder(newOrder);
+        } catch (e, stack) {
+          AppLogger.realtime('[WS] Failed to parse OrderModel: $e\n$stack');
+          if (mounted) {
+            AppDialog.showToast(context, 'Parse error: $e', isError: true);
+          }
+        }
       }
     });
+  }
+
+  /// Adjusts the badge counts when an order moves between tabs.
+  /// The source tab loses 1 and the destination tab gains 1.
+  void _updateTabCountFromOrder(OrderModel order) {
+    if (!mounted) return;
+    final upperStatus = order.status.toUpperCase();
+
+    // Map the new order status → destination tab key
+    String? destTab;
+    if (['PENDING', 'REVISED'].contains(upperStatus)) {
+      destTab = 'NEW';
+    } else if ([
+      'PAYMENT_SLIP_REQUESTED',
+      'AWAITING_APPROVAL',
+      'PAYMENT_VERIFIED',
+    ].contains(upperStatus)) {
+      destTab = 'PAYMENT';
+    } else if (upperStatus == 'COOKING') {
+      destTab = 'PREPARING';
+    } else if (upperStatus == 'READY_FOR_PICKUP') {
+      destTab = 'READY_FOR_PICKUP';
+    } else if (upperStatus == 'ON_THE_WAY') {
+      destTab = 'DELIVERING';
+    } else if (upperStatus == 'DELIVERED') {
+      destTab = 'DELIVERED';
+    } else if (upperStatus == 'PICKED_UP') {
+      destTab = 'PICKED_UP';
+    } else if (upperStatus == 'CANCELED') {
+      destTab = 'CANCELED';
+    }
+
+    // Refresh counts from server in the background (non-blocking, no list reload)
+    _fetchInitialData();
   }
 
   @override
@@ -153,23 +198,30 @@ class OrdersScreenState extends State<OrdersScreen>
     _refreshController.add(null);
   }
 
+  /// Re-fetches server-side totals for all tab badge counts.
+  /// Call this after app resume to catch up with any changes made on other
+  /// devices while this device was backgrounded.
+  void syncCounts() {
+    _fetchInitialData();
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
     final t = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      
       body: Column(
         children: [
           Container(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
               tabAlignment: TabAlignment.start,
               labelPadding: const EdgeInsets.symmetric(horizontal: 16),
               labelColor: AppColors.primary,
-              unselectedLabelColor: const Color(0xFF94A3B8),
+              unselectedLabelColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
               indicatorColor: AppColors.primary,
               indicatorSize: TabBarIndicatorSize.label,
               labelStyle: GoogleFonts.poppins(
@@ -312,15 +364,15 @@ class OrdersScreenState extends State<OrdersScreen>
               isSelected
                   ? GradientText(
                       label,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      style: TextStyle(fontWeight: FontWeight.w600),
                     )
                   : Text(label),
               if (count > 0) ...[
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: isSelected ? null : const Color(0xFFE2E8F0),
+                    color: isSelected ? null : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)),
                     gradient: isSelected ? AppColors.primaryGradient : null,
                     shape: BoxShape.circle,
                   ),
@@ -331,7 +383,7 @@ class OrdersScreenState extends State<OrdersScreen>
                       fontWeight: FontWeight.w600,
                       color: isSelected
                           ? Colors.white
-                          : const Color(0xFF64748B),
+                          : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                     ),
                   ),
                 ),
@@ -382,6 +434,11 @@ class _OrderListTabViewState extends State<OrderListTabView>
   StreamSubscription? _updateSub;
   StreamSubscription? _refreshSub;
 
+  // Tracks orders that have moved away from this tab via WebSocket.
+  // Prevents race conditions where a slow API response tries to re-add
+  // the old version of the order.
+  final Set<String> _removedOrderIds = {};
+
   @override
   bool get wantKeepAlive => true;
 
@@ -399,7 +456,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
     } else {
       // Lazy load: fetch when first built OR after a delay to stagger initial requests
       Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted && _orders.isEmpty && _isLoading) {
+        if (mounted && _isLoading) {
           _fetchOrders(isRefresh: true);
         }
       });
@@ -422,53 +479,50 @@ class _OrderListTabViewState extends State<OrderListTabView>
     }
   }
 
+  bool _belongsToThisTab(String status) {
+    final upperStatus = status.toUpperCase();
+    switch (widget.tabStatus) {
+      case 'NEW':
+        return ['PENDING', 'REVISED'].contains(upperStatus);
+      case 'PAYMENT':
+        return ['PAYMENT_SLIP_REQUESTED', 'AWAITING_APPROVAL', 'PAYMENT_VERIFIED']
+            .contains(upperStatus);
+      case 'PREPARING':
+        return upperStatus == 'COOKING';
+      case 'READY_FOR_PICKUP':
+        return upperStatus == 'READY_FOR_PICKUP';
+      case 'DELIVERING':
+        return upperStatus == 'ON_THE_WAY';
+      case 'DELIVERED':
+        return upperStatus == 'DELIVERED';
+      case 'PICKED_UP':
+        return upperStatus == 'PICKED_UP';
+      case 'CANCELED':
+        return upperStatus == 'CANCELED';
+      default:
+        return false;
+    }
+  }
+
   void _onOrderUpdated(OrderModel newOrder) {
     if (!mounted) return;
 
-    // Check if the order belongs to this tab
-    bool belongsHere = false;
-    final upperStatus = newOrder.status.toUpperCase();
-    switch (widget.tabStatus) {
-      case 'NEW':
-        belongsHere = ['PENDING', 'REVISED'].contains(upperStatus);
-        break;
-      case 'PAYMENT':
-        belongsHere = [
-          'PAYMENT_SLIP_REQUESTED',
-          'AWAITING_APPROVAL',
-          'PAYMENT_VERIFIED',
-        ].contains(upperStatus);
-        break;
-      case 'PREPARING':
-        belongsHere = upperStatus == 'COOKING';
-        break;
-      case 'READY_FOR_PICKUP':
-        belongsHere = upperStatus == 'READY_FOR_PICKUP';
-        break;
-      case 'DELIVERING':
-        belongsHere = upperStatus == 'ON_THE_WAY';
-        break;
-      case 'DELIVERED':
-        belongsHere = upperStatus == 'DELIVERED';
-        break;
-      case 'PICKED_UP':
-        belongsHere = upperStatus == 'PICKED_UP';
-        break;
-      case 'CANCELED':
-        belongsHere = upperStatus == 'CANCELED';
-        break;
-    }
+    final belongsHere = _belongsToThisTab(newOrder.status);
 
     setState(() {
-      final index = _orders.indexWhere((o) => o.id == newOrder.id);
-      if (index != -1) {
-        if (belongsHere) {
-          _orders[index] = newOrder; // Update existing
-        } else {
-          _orders.removeAt(index); // Moved to another tab
-        }
-      } else if (belongsHere) {
-        _orders.insert(0, newOrder); // Add new
+      if (!belongsHere) {
+        _removedOrderIds.add(newOrder.id);
+        _removedOrderIds.add(newOrder.lastOrderNo); // Track both just in case
+      } else {
+        _removedOrderIds.remove(newOrder.id);
+        _removedOrderIds.remove(newOrder.lastOrderNo);
+      }
+
+      // Aggressively remove any existing copy of this order (by id OR orderNo)
+      _orders.removeWhere((o) => o.id == newOrder.id || o.lastOrderNo == newOrder.lastOrderNo);
+
+      if (belongsHere) {
+        _orders.insert(0, newOrder); // Insert the fresh copy
       }
     });
     widget.onCountUpdated(_orders.length);
@@ -514,15 +568,27 @@ class _OrderListTabViewState extends State<OrderListTabView>
     setState(() {
       if (isRefresh) {
         _orders.clear();
+        _removedOrderIds.clear(); // Reset the blacklist on manual full refresh
       }
-      _orders.addAll(result.orders);
+      // Filter out orders that no longer belong to this tab
+      // and orders that have been removed via real-time WebSocket events.
+      final filtered = result.orders.where(
+        (o) => _belongsToThisTab(o.status) && 
+               !_removedOrderIds.contains(o.id) && 
+               !_removedOrderIds.contains(o.lastOrderNo),
+      ).toList();
+      
+      // Avoid duplicates: skip orders already in the list by ID or OrderNo
+      final existingIds = _orders.map((o) => o.id).toSet();
+      final existingNos = _orders.map((o) => o.lastOrderNo).toSet();
+      
+      _orders.addAll(filtered.where((o) => !existingIds.contains(o.id) && !existingNos.contains(o.lastOrderNo)));
       _hasMore = result.hasMore;
       if (_hasMore) _page++;
       _isLoading = false;
       _isLoadingMore = false;
       _hasError = false;
     });
-    widget.onCountUpdated(_orders.length);
   }
 
   @override
@@ -553,25 +619,25 @@ class _OrderListTabViewState extends State<OrderListTabView>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 64, color: Color(0xFFCBD5E1)),
-                    const SizedBox(height: 16),
+                    Icon(Icons.error_outline, size: 64, color: Color(0xFFCBD5E1)),
+                    SizedBox(height: 16),
                     Text(
                       t?.translate('failed_load_orders') ?? 'Failed to Load Orders',
                       style: GoogleFonts.poppins(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF64748B),
+                        color: Theme.of(context).textTheme.bodySmall?.color,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Text(
                       t?.translate('pull_to_retry') ?? 'Pull down to retry',
                       style: GoogleFonts.poppins(
                         fontSize: 13,
-                        color: const Color(0xFF94A3B8),
+                        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF94A3B8),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     PrimaryGradientButton(
                       onPressed: () => _fetchOrders(isRefresh: true),
                       text: t?.translate('retry') ?? 'Retry',
@@ -601,21 +667,21 @@ class _OrderListTabViewState extends State<OrderListTabView>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.receipt_long_outlined,
                       size: 64,
                       color: Color(0xFFCBD5E1),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     Text(
                       t?.translate('no_orders_yet') ?? 'No Orders Yet',
                       style: GoogleFonts.poppins(
-                        color: const Color(0xFF94A3B8),
+                        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF94A3B8),
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       t?.translate('pull_to_refresh') ?? 'Pull down to refresh',
                       style: GoogleFonts.poppins(
@@ -643,7 +709,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
         itemCount: _orders.length + (_isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == _orders.length) {
-            return const Padding(
+            return Padding(
               padding: EdgeInsets.all(16.0),
               child: Center(
                 child: CircularProgressIndicator(color: Color(0xFFED3973)),
@@ -671,9 +737,9 @@ class _OrderListTabViewState extends State<OrderListTabView>
           margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFF1F5F9)),
+            border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : const Color(0xFFF1F5F9)))),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -685,14 +751,14 @@ class _OrderListTabViewState extends State<OrderListTabView>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Skeleton(width: 80, height: 20),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       const Skeleton(width: 60, height: 14),
                     ],
                   ),
                   const Skeleton(width: 100, height: 24),
                 ],
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               Row(
                 children: const [
                   Skeleton(width: 70, height: 14),
@@ -700,15 +766,15 @@ class _OrderListTabViewState extends State<OrderListTabView>
                   Skeleton(width: 80, height: 14),
                 ],
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               const Skeleton(width: double.infinity, height: 40),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               const Skeleton(width: double.infinity, height: 16),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               const Skeleton(width: 200, height: 16),
-              const SizedBox(height: 24),
-              const Divider(color: Color(0xFFF1F5F9), height: 1),
-              const SizedBox(height: 16),
+              SizedBox(height: 24),
+              Divider(color: Theme.of(context).dividerColor.withOpacity(0.3), height: 1),
+              SizedBox(height: 16),
               Row(
                 children: const [
                   Expanded(child: Skeleton(height: 54)),

@@ -174,7 +174,9 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
       "id": _currentPayment?.id ?? widget.paymentMethod.id,
     };
 
-    debugPrint('PAYMENT UPDATE DATA: ${jsonEncode(requestData)}');
+    if (kDebugMode) {
+      debugPrint('PAYMENT UPDATE DATA: ${jsonEncode(requestData)}');
+    }
 
     XFile? qrPhoto;
     final pickedFile = _pickedImages[_currentPayment?.id.toString()];
@@ -208,7 +210,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
       builder: (_) => Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 32),
         child: Material(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(20),
           clipBehavior: Clip.antiAlias,
           child: Column(
@@ -219,7 +221,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: const Color(0xFFE2E8F0),
+                color: Theme.of(context).dividerColor,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -230,11 +232,11 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
-                  color: const Color(0xFF1E293B),
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
             ),
-            const Divider(height: 1),
+            Divider(height: 1),
             ListTile(
               leading: const GradientWidget(
                 child: Icon(
@@ -256,7 +258,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                 }
               },
             ),
-            const Divider(height: 1, indent: 56),
+            Divider(height: 1, indent: 56),
             ListTile(
               leading: const GradientWidget(
                 child: Icon(
@@ -278,7 +280,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                 }
               },
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: SizedBox(
@@ -299,12 +301,12 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -318,7 +320,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
         centerTitle: false,
       ),
       body: _isLoading
-          ? const Center(child: CustomLoadingIndicator())
+          ? Center(child: CustomLoadingIndicator())
           : Column(
               children: [
                 Expanded(
@@ -338,7 +340,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
             ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           border: Border(
             top: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
           ),
@@ -370,7 +372,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                   ),
                 ),
               ),
@@ -387,11 +389,11 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildPaymentIconAndName(),
-        const SizedBox(height: 24),
+        SizedBox(height: 24),
         SizedBox(key: _qrImageKey, child: _buildImagePicker()),
-        const SizedBox(height: 32),
+        SizedBox(height: 32),
         _buildSectionTitle(t?.translate('account_details') ?? 'Account Details'),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         _buildInputField(
           key: _accountNameKey,
           label: t?.translate('account_name') ?? 'Account Name',
@@ -400,7 +402,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
           icon: PhosphorIconsRegular.user,
           maxLength: 100,
         ),
-        const SizedBox(height: 20),
+        SizedBox(height: 20),
         _buildInputField(
           key: _accountNumberKey,
           label: t?.translate('account_number') ?? 'Account Number',
@@ -409,9 +411,9 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
           icon: PhosphorIconsRegular.hash,
           maxLength: 50,
         ),
-        const SizedBox(height: 20),
+        SizedBox(height: 20),
         _buildStatusToggle(),
-        const SizedBox(height: 40),
+        SizedBox(height: 40),
       ],
     );
   }
@@ -422,23 +424,23 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFF1F5F9)),
+            border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : const Color(0xFFF1F5F9)))),
           ),
           child: Icon(
             _getPaymentIcon(_currentPayment?.paymentMethodCode ?? ''),
             size: 24,
-            color: const Color(0xFF475569),
+            color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         Text(
           _currentPayment?.paymentMethodName ?? '',
           style: GoogleFonts.poppins(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
       ],
@@ -475,9 +477,9 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFF1F5F9)),
+              border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : const Color(0xFFF1F5F9)))),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
@@ -516,12 +518,12 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
               onTap: () => _pickImage(_currentPayment!.id.toString()),
               child: Container(
                 padding: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
                   shape: BoxShape.circle,
                   boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.refresh_rounded,
                   size: 20,
                   color: AppColors.primary,
@@ -544,17 +546,17 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
+          Icon(
             Icons.add_a_photo_outlined,
             size: 40,
-            color: Color(0xFF94A3B8),
+            color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             AppLocalizations.of(context)?.translate('tap_to_upload_qr') ?? 'Tap to Upload QR Code',
             style: GoogleFonts.poppins(
               fontSize: 12,
-              color: const Color(0xFF94A3B8),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
             ),
           ),
         ],
@@ -568,7 +570,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
       style: GoogleFonts.poppins(
         fontSize: 12,
         fontWeight: FontWeight.w700,
-        color: const Color(0xFF94A3B8),
+        color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
         letterSpacing: 0.5,
       ),
     );
@@ -592,10 +594,10 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
           style: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: const Color(0xFF475569),
+            color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         TextField(
           controller: controller,
           keyboardType: keyboardType,
@@ -604,27 +606,39 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
           decoration: InputDecoration(
             counterText: '',
             hintText: hint,
-            prefixIcon: Icon(icon, size: 20, color: const Color(0xFF94A3B8)),
+            prefixIcon: Icon(icon, size: 20, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B))),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 12,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderSide: BorderSide(color: Theme.of(context).dividerColor),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderSide: BorderSide(color: Theme.of(context).dividerColor),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
+              borderSide: BorderSide(
                 color: AppColors.primary,
                 width: 1.5,
               ),
+            ),
+            suffixIcon: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: controller,
+              builder: (context, value, child) {
+                if (value.text.isEmpty) return const SizedBox.shrink();
+                return IconButton(
+                  icon: Icon(Icons.clear, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)), size: 20),
+                  onPressed: () {
+                    controller.clear();
+                  },
+                );
+              },
             ),
           ),
         ),
@@ -642,17 +656,17 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
           style: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: const Color(0xFF475569),
+            color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Container(
           height: 50,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: Theme.of(context).dividerColor),
           ),
           child: Row(
             children: [
@@ -660,7 +674,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                 t?.translate('is_active') ?? 'Is Active',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
-                  color: const Color(0xFF1E293B),
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
               const Spacer(),

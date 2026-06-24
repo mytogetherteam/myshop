@@ -160,13 +160,13 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -174,14 +174,14 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
         centerTitle: false,
         actions: const [SizedBox(width: 8)],
       ),
       body: _isLoadingData
-          ? const Center(child: CustomLoadingIndicator())
+          ? Center(child: CustomLoadingIndicator())
           : ListView(
               padding: const EdgeInsets.all(24.0),
               children: [
@@ -189,7 +189,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
@@ -211,7 +211,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
                           letterSpacing: 0.8,
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
 
 
 
@@ -221,12 +221,12 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: const Color(0xFF1E293B),
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12),
                       _buildIconGallery(),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
 
                       // Name Lang Switcher
                       Text(
@@ -234,10 +234,10 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: const Color(0xFF1E293B),
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12),
                       _buildLangField(
                         selectedLang: _nameLang,
                         onLangChanged: (l) => setState(() => _nameLang = l),
@@ -251,10 +251,10 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
                 TextButton.icon(
                   onPressed: _deleteCategory,
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.delete_outline,
                     color: Color(0xFFEF4444),
                   ),
@@ -271,7 +271,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
             ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           border: Border(
             top: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
           ),
@@ -297,7 +297,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
     if (_gallery.isEmpty) {
       return Text(
         AppLocalizations.of(context)?.translate('no_icons_available') ?? 'No Icons Available',
-        style: const TextStyle(fontSize: 12, color: Colors.grey),
+        style: TextStyle(fontSize: 12, color: Colors.grey),
       );
     }
 
@@ -306,7 +306,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _gallery.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 12),
+        separatorBuilder: (context, index) => SizedBox(width: 12),
         itemBuilder: (context, index) {
           final isSelected = _selectedGalleryIndex == index;
           return GestureDetector(
@@ -315,21 +315,21 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
               width: 60,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isSelected
                       ? const Color(0xFFED3973)
-                      : const Color(0xFFE2E8F0),
+                      : Theme.of(context).dividerColor,
                   width: 2,
                 ),
               ),
               child: Image.network(
                 _gallery[index]['imageUrl'].toString(),
-                errorBuilder: (context, error, stackTrace) => const Icon(
+                errorBuilder: (context, error, stackTrace) => Icon(
                   Icons.restaurant,
                   size: 24,
-                  color: Color(0xFF94A3B8),
+                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                 ),
               ),
             ),
@@ -361,12 +361,12 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: selected ? const Color(0xFFED3973) : Colors.white,
+                    color: selected ? const Color(0xFFED3973) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : Colors.white),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: selected
                           ? const Color(0xFFED3973)
-                          : const Color(0xFFE2E8F0),
+                          : Theme.of(context).dividerColor,
                     ),
                   ),
                   child: Text(
@@ -374,7 +374,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: selected ? Colors.white : const Color(0xFF64748B),
+                      color: selected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                     ),
                   ),
                 ),
@@ -382,19 +382,32 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
             );
           }).toList(),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         TextField(
           controller: controller,
           maxLength: 100,
+          style: GoogleFonts.poppins(color: Theme.of(context).textTheme.bodyLarge?.color),
           decoration: InputDecoration(
             counterText: '',
             hintText: hint,
-            hintStyle: GoogleFonts.poppins(color: const Color(0xFFCBD5E1)),
+            hintStyle: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFFCBD5E1))),
             filled: true,
-            fillColor: const Color(0xFFF8FAFC),
+            fillColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
+            ),
+            suffixIcon: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: controller,
+              builder: (context, value, child) {
+                if (value.text.isEmpty) return const SizedBox.shrink();
+                return IconButton(
+                  icon: Icon(Icons.clear, color: Colors.grey, size: 20),
+                  onPressed: () {
+                    controller.clear();
+                  },
+                );
+              },
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,

@@ -27,7 +27,7 @@ class OrderWarningDialog extends StatelessWidget {
     final Color alertBoxColor = isPaymentUploaded ? const Color(0xFFF6D8DE) : primaryColor.withValues(alpha: 0.05);
     final Color alertBoxBorderColor = isPaymentUploaded ? const Color(0xFFE5BBC4) : primaryColor.withValues(alpha: 0.1);
     final Color pillColor = isPaymentUploaded ? const Color(0xFFF0BDC8) : primaryColor.withValues(alpha: 0.1);
-    final Color textColor = const Color(0xFF1E293B);
+    final Color textColor = (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B));
     final IconData icon = isPaymentUploaded ? PhosphorIconsBold.exclamationMark : PhosphorIconsFill.warningCircle;
 
     return Dialog(
@@ -65,13 +65,13 @@ class OrderWarningDialog extends StatelessWidget {
                     size: isPaymentUploaded ? 40 : 56,
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 Text(
                   'URGENT ALERT',
                   style: GoogleFonts.poppins(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     letterSpacing: 1.5,
                   ),
                 ),
@@ -91,7 +91,7 @@ class OrderWarningDialog extends StatelessWidget {
                     color: textColor,
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 
                 // Alert Box for Message
                 Container(
@@ -114,7 +114,7 @@ class OrderWarningDialog extends StatelessWidget {
                           height: 1.5,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                         decoration: BoxDecoration(
@@ -133,7 +133,7 @@ class OrderWarningDialog extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 32),
+                SizedBox(height: 32),
                 
                 // Action Buttons
                 Row(
@@ -151,12 +151,12 @@ class OrderWarningDialog extends StatelessWidget {
                           'Dismiss',
                           style: GoogleFonts.poppins(
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF64748B),
+                            color: Theme.of(context).textTheme.bodySmall?.color,
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       flex: 2,
                       child: PrimaryGradientButton(

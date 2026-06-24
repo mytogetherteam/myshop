@@ -72,7 +72,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
     try {
       await Future.wait([
         _menuService.getCategories(forceRefresh: false),
-        _menuService.getMasterCategories(forceRefresh: false),
+        _menuService.getMasterCategories(),
         _menuService.getMenuTags(),
       ]);
       AppLogger.lifecycle('ManageShopMenuPage: master data pre-fetched');
@@ -214,16 +214,16 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
       appBar: AppBar(
         flexibleSpace: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: AppColors.primaryGradient,
           ),
         ),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             if (_isSearching) {
               setState(() {
@@ -265,7 +265,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
             IconButton(
               constraints: const BoxConstraints(),
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              icon: const Icon(Icons.search, color: Colors.white),
+              icon: Icon(Icons.search, color: Colors.white),
               onPressed: () => setState(() => _isSearching = true),
             ),
             Padding(
@@ -297,7 +297,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
           ],
           if (_isSearching)
             IconButton(
-              icon: const Icon(Icons.close, color: Colors.white),
+              icon: Icon(Icons.close, color: Colors.white),
               onPressed: () {
                 setState(() {
                   _isSearching = false;
@@ -310,7 +310,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           // Menu List
           Expanded(
             child: AnimatedSwitcher(
@@ -337,14 +337,14 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                                 style: GoogleFonts.poppins(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF64748B),
+                                  color: Theme.of(context).textTheme.bodySmall?.color,
                                 ),
                               ),
                             );
                           }
                           final itemIndex = index - 1;
                           if (itemIndex == _filteredItems.length) {
-                            return const Padding(
+                            return Padding(
                               padding: EdgeInsets.all(16.0),
                               child: Center(
                                 child: CircularProgressIndicator(
@@ -390,28 +390,28 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
+          Icon(
             Icons.fastfood_outlined,
             size: 64,
             color: Color(0xFFCBD5E1),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(
             t?.translate('no_items_found') ?? 'No menu items found',
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF64748B),
+              color: Theme.of(context).textTheme.bodySmall?.color,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             _searchCtrl.text.isNotEmpty
                 ? (t?.translate('try_different_search') ?? 'Try a Different Search Query')
                 : (t?.translate('start_adding_items') ?? 'Start Adding Items to Your Shop Menu'),
             style: GoogleFonts.poppins(
               fontSize: 14,
-              color: const Color(0xFF94A3B8),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
             ),
           ),
         ],
@@ -430,7 +430,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
           child: Row(
             children: [
               const Skeleton(width: 72, height: 72),
-              const SizedBox(width: 16),
+              SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

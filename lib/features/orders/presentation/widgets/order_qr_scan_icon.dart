@@ -3,9 +3,9 @@ import 'package:my_shop/features/orders/presentation/screens/order_qr_scanner_sc
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 class OrderQrScanIcon extends StatelessWidget {
-  final Color color;
+  final Color? color;
 
-  const OrderQrScanIcon({super.key, this.color = const Color(0xFF1E293B)});
+  const OrderQrScanIcon({super.key, this.color});
 
   static Future<void> openScanner(BuildContext context) {
     return Navigator.push<void>(
@@ -18,7 +18,7 @@ class OrderQrScanIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       onPressed: () => openScanner(context),
-      icon: Icon(PhosphorIconsRegular.qrCode, color: color, size: 26),
+      icon: Icon(PhosphorIconsRegular.qrCode, color: color ?? Theme.of(context).iconTheme.color, size: 26),
     );
   }
 }

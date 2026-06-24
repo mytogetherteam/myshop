@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -36,6 +37,25 @@ import 'package:my_shop/features/chat/presentation/chat_navigation.dart';
 import 'package:my_shop/features/orders/presentation/screens/pickup_complete_screen.dart';
 import 'package:my_shop/features/orders/presentation/widgets/order_qr_scan_icon.dart';
 
+
+void _showAppNotInstalledSnackbar(BuildContext context, String name) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: AppColors.primaryGradient,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text('$name app is not installed', style: GoogleFonts.poppins(color: Colors.white)),
+      ),
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      padding: EdgeInsets.zero,
+      behavior: SnackBarBehavior.floating,
+    ),
+  );
+}
 
 class OrderDetailScreen extends StatefulWidget {
   final OrderModel order;
@@ -74,6 +94,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   int? _shopId;
   int? _userId;
   bool _isLoadingRiders = false;
+  bool _isScrolled = false;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -89,6 +111,20 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     // Eagerly load the saved drivers so the picker is always populated,
     // regardless of whether the order payload carried any.
     _loadDrivers();
+
+    _scrollController.addListener(() {
+      if (_scrollController.offset > 80 && !_isScrolled) {
+        setState(() => _isScrolled = true);
+      } else if (_scrollController.offset <= 80 && _isScrolled) {
+        setState(() => _isScrolled = false);
+      }
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_currentOrder.status == 'AWAITING_APPROVAL' && _currentOrder.paymentSlipUrl != null) {
+        _showPaymentVerificationModal();
+      }
+    });
   }
 
   /// Loads the unread customer-message count for this order so the chat icon
@@ -133,21 +169,65 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final riders = await RiderService().getSelectableRiders();
     if (mounted) {
       setState(() {
-        // Merge so any driver already known from the order (e.g. the assigned
-        // one) is preserved even if it isn't in the active list.
-        final byId = <int, Rider>{for (final r in _availableDrivers) r.id: r};
-        for (final r in riders) {
-          byId[r.id] = r;
+        final byId = <int, Rider>{for (final r in riders) r.id: r};
+
+        // Keep the already-assigned driver for read-only display after dispatch,
+        // even if they are now busy or inactive.
+        final assigned = _assignedRiderFromOrder();
+        if (assigned != null) {
+          byId.putIfAbsent(assigned.id, () => assigned);
         }
+
         _availableDrivers = byId.values.toList();
+        if (_selectedDriverId != null && !_hasValidSelectedDriver) {
+          _selectedDriverId = null;
+        }
         _isLoadingRiders = false;
       });
+      _validateFormState();
     }
+  }
+
+  Rider? _assignedRiderFromOrder() {
+    final assignedId = _currentOrder.driverId;
+    if (assignedId == null) return null;
+
+    for (final r in _availableDrivers) {
+      if (r.id == assignedId) return r;
+    }
+
+    for (final d in _currentOrder.shopDeliveryDrivers) {
+      if (d.id == assignedId) {
+        return Rider(
+          id: d.id,
+          name: d.name,
+          phone: d.phone,
+          vehicleNo: d.vehicleNo,
+          profileUrl: d.profileUrl,
+          shopId: 0,
+          isActive: d.isActive,
+          isBusy: d.isBusy,
+        );
+      }
+    }
+
+    final name = _currentOrder.riderName?.trim();
+    if (name == null || name.isEmpty) return null;
+    return Rider(
+      id: assignedId,
+      name: name,
+      phone: _currentOrder.riderPhone,
+      vehicleNo: _currentOrder.vehicleNo,
+      profileUrl: null,
+      shopId: 0,
+      isActive: true,
+      isBusy: true,
+    );
   }
 
   void _initControllers() {
     final formatter = NumberFormat('#,##0');
-    _deliveryFeeController.text = _currentOrder.deliveryFee > 0 ? formatter.format(_currentOrder.deliveryFee) : _currentOrder.deliveryFee.toString();
+    _deliveryFeeController.text = _currentOrder.deliveryFee > 0 ? formatter.format(_currentOrder.deliveryFee) : '';
     _deliveryCycleNoController.text = _currentOrder.deliveryCycleNo ?? '';
     _deliveryRiderNameController.text = _currentOrder.riderName ?? '';
     _deliveryPhoneNoController.text = (_currentOrder.riderPhone == null || _currentOrder.riderPhone!.isEmpty) ? '+66' : _currentOrder.riderPhone!;
@@ -159,38 +239,26 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _validateFormState();
   }
 
-  Future<void> _fetchOrderDetails({bool showLoading = true}) async {
+  Future<void> _fetchOrderDetails({bool showLoading = true, String? previousStatus}) async {
     if (showLoading) setState(() => _isFirstLoading = true);
+    final oldStatus = previousStatus ?? _currentOrder.status;
     final updatedOrder = await OrderService().getOrderDetail(_currentOrder.id);
     if (updatedOrder != null && mounted) {
       setState(() {
         _currentOrder = updatedOrder;
         _selectedDriverId = updatedOrder.driverId;
-        // Merge any drivers carried on the order (e.g. the already-assigned
-        // one) into the roster instead of replacing it — replacing with the
-        // order's active-only list could wipe out riders loaded elsewhere and
-        // leave the picker empty.
-        if (updatedOrder.shopDeliveryDrivers.isNotEmpty) {
-          final byId = <int, Rider>{for (final r in _availableDrivers) r.id: r};
-          for (final d in updatedOrder.shopDeliveryDrivers) {
-            byId[d.id] = Rider(
-              id: d.id,
-              name: d.name,
-              phone: d.phone,
-              vehicleNo: d.vehicleNo,
-              profileUrl: d.profileUrl,
-              shopId: 0,
-              isActive: d.isActive,
-            );
-          }
-          _availableDrivers = byId.values.toList();
-        }
         _initControllers();
         _isFirstLoading = false;
       });
       // Always (re)load the shop's full rider roster so the picker shows every
       // saved rider, regardless of what the order payload carried.
       _loadDrivers();
+
+      if (oldStatus != 'AWAITING_APPROVAL' &&
+          _currentOrder.status == 'AWAITING_APPROVAL' &&
+          _currentOrder.paymentSlipUrl != null) {
+        _showPaymentVerificationModal();
+      }
     } else if (mounted) {
       setState(() => _isFirstLoading = false);
     }
@@ -198,6 +266,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _wsSubscription?.cancel();
     _chatSubscription?.cancel();
     _chatReadSubscription?.cancel();
@@ -241,7 +310,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     } else if (_currentOrder.status == 'AWAITING_APPROVAL') {
       isValid = true;
     } else if (_currentOrder.status == 'COOKING') {
-      isValid = _currentOrder.isPickupFulfillment || _selectedDriverId != null;
+      bool baseValid = _currentOrder.isPickupFulfillment || 
+                _selectedDriverId != null || 
+                _deliveryTrackingUrlController.text.trim().isNotEmpty;
+      if (!_currentOrder.isPickupFulfillment && _currentOrder.deliveryType == 'NORMAL') {
+        isValid = baseValid && fee.isNotEmpty && double.tryParse(fee) != null;
+      } else {
+        isValid = baseValid;
+      }
     } else {
       isValid = true;
     }
@@ -259,6 +335,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       if (orderId != null && orderId == _currentOrder.id.toString()) {
         debugPrint('Real-time update received for Order ${_currentOrder.id}');
         
+        final previousStatus = _currentOrder.status;
+        
         setState(() {
           _isUpdating = true;
           // If the event contains a full order object, we can reconstruct it
@@ -273,7 +351,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         // so its file fields (paymentSlipUrl, proofPhotoUrl, images) are raw
         // storage keys that don't resolve. Re-fetch over HTTP to get the
         // properly-built absolute URLs (otherwise the receipt fails to load).
-        _fetchOrderDetails(showLoading: false);
+        _fetchOrderDetails(showLoading: false, previousStatus: previousStatus);
 
         // Small delay to show the "updated" flash or animation
         Future.delayed(const Duration(milliseconds: 500), () {
@@ -300,8 +378,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
-          decoration: const BoxDecoration(
-            color: Colors.white,
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: Padding(
@@ -317,7 +395,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 ..._currentOrder.items.map((item) {
                   return Material(
                     color: Colors.transparent,
@@ -339,12 +417,24 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 TextField(
                   controller: reasonController,
                   maxLines: 2,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Reason',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
+                    suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: reasonController,
+                      builder: (context, value, child) {
+                        if (value.text.isEmpty) return const SizedBox.shrink();
+                        return IconButton(
+                          icon: Icon(Icons.clear, color: Colors.grey, size: 20),
+                          onPressed: () {
+                            reasonController.clear();
+                          },
+                        );
+                      },
+                    ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 PrimaryGradientButton(
                   onPressed: selectedIds.isEmpty || reasonController.text.trim().isEmpty
                       ? null
@@ -393,6 +483,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _validateFormState();
   }
 
+  /// Drivers that can be picked in the dispatch dropdown (`isActive && !isBusy`).
+  List<Rider> get _selectableDrivers => _availableDrivers
+      .where((r) => r.isActive && !r.isBusy)
+      .toList();
+
+  /// Whether the currently selected driver is still eligible for assignment.
+  bool get _hasValidSelectedDriver =>
+      _selectedDriverId != null &&
+      _selectableDrivers.any((r) => r.id == _selectedDriverId);
+
   /// The driver assigned to this order, resolved from the loaded roster by
   /// `driverId`. The driver is chosen once at the COOKING (dispatch) step, so
   /// later steps display it read-only instead of offering another picker.
@@ -431,14 +531,22 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           Navigator.pop(context);
           if (!mounted) return;
           setState(() {
-            final idx = _availableDrivers.indexWhere((r) => r.id == rider.id);
-            if (idx >= 0) {
-              _availableDrivers[idx] = rider;
+            if (rider.isActive && !rider.isBusy) {
+              final idx = _availableDrivers.indexWhere((r) => r.id == rider.id);
+              if (idx >= 0) {
+                _availableDrivers[idx] = rider;
+              } else {
+                _availableDrivers = [rider, ..._availableDrivers];
+              }
+              _applySelectedDriver(rider);
             } else {
-              _availableDrivers = [rider, ..._availableDrivers];
+              AppDialog.showToast(
+                context,
+                'Driver must be active and not busy to assign to an order.',
+                isError: true,
+              );
             }
           });
-          _applySelectedDriver(rider);
         },
       ),
     );
@@ -447,10 +555,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Future<void> _openDriverPicker() async {
     // Always ensure the list is loaded before opening so the sheet never shows
     // an empty/blank state due to a skipped or in-flight load.
-    if (_availableDrivers.isEmpty) {
+    if (_selectableDrivers.isEmpty) {
       await _loadDrivers();
     }
     if (!mounted) return;
+
+    final drivers = _selectableDrivers;
 
     final selected = await showModalBottomSheet<Rider?>(
       context: context,
@@ -458,8 +568,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       backgroundColor: Colors.transparent,
       builder: (sheetContext) {
         return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           padding: EdgeInsets.only(
@@ -470,7 +580,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 Container(
                   width: 40,
                   height: 4,
@@ -488,7 +598,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         style: GoogleFonts.poppins(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1E293B),
+                          color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                         ),
                       ),
                       const Spacer(),
@@ -512,35 +622,35 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   ),
                 ),
                 if (_isLoadingRiders)
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.symmetric(vertical: 32),
                     child: CustomLoadingIndicator(size: 24),
                   )
-                else if (_availableDrivers.isEmpty)
+                else if (drivers.isEmpty)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
                     child: Column(
                       children: [
-                        const Icon(
+                        Icon(
                           PhosphorIconsRegular.users,
                           size: 48,
                           color: Color(0xFFCBD5E1),
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                         Text(
-                          'No saved drivers yet',
+                          'No available drivers',
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: const Color(0xFF475569),
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         Text(
-                          'Tap "Add new" to save a driver for next time.',
+                          'Only active drivers who are not on another delivery can be assigned. Add a new driver or wait until someone is free.',
                           style: GoogleFonts.poppins(
                             fontSize: 12,
-                            color: const Color(0xFF94A3B8),
+                            color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -552,10 +662,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     child: ListView.separated(
                       shrinkWrap: true,
                       padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-                      itemCount: _availableDrivers.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 8),
+                      itemCount: drivers.length,
+                      separatorBuilder: (_, _) => SizedBox(height: 8),
                       itemBuilder: (_, index) {
-                        final rider = _availableDrivers[index];
+                        final rider = drivers[index];
                         final isSelected = _selectedDriverId == rider.id;
                         return _buildDriverTile(
                           rider,
@@ -590,12 +700,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.primary.withValues(alpha: 0.06)
-              : Colors.white,
+              : (Theme.of(context).brightness == Brightness.dark ? Colors.transparent : Colors.white),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
                 ? AppColors.primary.withValues(alpha: 0.5)
-                : const Color(0xFFE2E8F0),
+                : Theme.of(context).dividerColor,
           ),
         ),
         child: Row(
@@ -611,21 +721,21 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         height: 44,
                         fit: BoxFit.cover,
                         placeholder: (_, _) =>
-                            const Icon(PhosphorIconsRegular.user, size: 20),
-                        errorWidget: (_, _, _) => const Icon(
+                            Icon(PhosphorIconsRegular.user, size: 20),
+                        errorWidget: (_, _, _) => Icon(
                           PhosphorIconsRegular.user,
                           size: 20,
                           color: AppColors.primary,
                         ),
                       ),
                     )
-                  : const Icon(
+                  : Icon(
                       PhosphorIconsRegular.user,
                       size: 20,
                       color: AppColors.primary,
                     ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -635,7 +745,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1E293B),
+                      color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                     ),
                   ),
                   if (rider.phone != null && rider.phone!.isNotEmpty)
@@ -643,7 +753,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       rider.phone!,
                       style: GoogleFonts.poppins(
                         fontSize: 12,
-                        color: const Color(0xFF64748B),
+                        color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                       ),
                     ),
                   if (rider.vehicleNo != null && rider.vehicleNo!.isNotEmpty)
@@ -651,14 +761,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       'Plate: ${rider.vehicleNo}',
                       style: GoogleFonts.poppins(
                         fontSize: 12,
-                        color: const Color(0xFF94A3B8),
+                        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF94A3B8),
                       ),
                     ),
                 ],
               ),
             ),
             if (isSelected)
-              const Icon(
+              Icon(
                 PhosphorIconsRegular.checkCircle,
                 color: AppColors.primary,
                 size: 20,
@@ -670,13 +780,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildDriverPicker({bool required = true}) {
-    final selected = _selectedDriverId == null
-        ? null
-        : _availableDrivers.firstWhere(
-            (r) => r.id == _selectedDriverId,
-            orElse: () => Rider(id: -1, name: '', shopId: 0),
-          );
-    final hasSelection = selected != null && selected.id != -1;
+    final selected = _hasValidSelectedDriver
+        ? _selectableDrivers.firstWhere((r) => r.id == _selectedDriverId)
+        : null;
+    final hasSelection = selected != null;
     final displayName = hasSelection ? selected.name : 'Choose a saved driver';
     final subtitle = hasSelection
         ? [
@@ -693,10 +800,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           style: GoogleFonts.poppins(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF64748B),
+            color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6),
         Row(
           children: [
             Expanded(
@@ -707,12 +814,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: hasSelection
                           ? AppColors.primary.withValues(alpha: 0.4)
-                          : const Color(0xFFE2E8F0),
+                          : Theme.of(context).dividerColor,
                     ),
                   ),
                   child: Row(
@@ -728,7 +835,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           child: Icon(PhosphorIconsFill.moped, size: 18),
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -741,8 +848,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
                                 color: hasSelection
-                                    ? const Color(0xFF1E293B)
-                                    : const Color(0xFF94A3B8),
+                                    ? (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))
+                                    : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
                               ),
                             ),
                             if (subtitle.isNotEmpty)
@@ -752,7 +859,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                 overflow: TextOverflow.ellipsis,
                                 style: GoogleFonts.poppins(
                                   fontSize: 11,
-                                  color: const Color(0xFF94A3B8),
+                                  color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
                                 ),
                               ),
                           ],
@@ -761,33 +868,33 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       if (hasSelection)
                         GestureDetector(
                           onTap: _clearSelectedDriver,
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 4),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
                             child: Icon(
                               PhosphorIconsRegular.x,
                               size: 16,
-                              color: Color(0xFF94A3B8),
+                              color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
                             ),
                           ),
                         )
                       else if (_isLoadingRiders)
-                        const SizedBox(
+                        SizedBox(
                           width: 16,
                           height: 16,
                           child: CustomLoadingIndicator(size: 16),
                         )
                       else
-                        const Icon(
+                        Icon(
                           PhosphorIconsRegular.caretDown,
                           size: 16,
-                          color: Color(0xFF94A3B8),
+                          color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                         ),
                     ],
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             InkWell(
               onTap: _openAddDriverSheet,
               borderRadius: BorderRadius.circular(10),
@@ -801,12 +908,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       PhosphorIconsRegular.plus,
                       size: 16,
                       color: Colors.white,
                     ),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Text(
                       'New',
                       style: GoogleFonts.poppins(
@@ -829,18 +936,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
             Image.asset('assets/images/app_logo.png', width: 24, height: 24),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Text(
               'MyTogether',
               style: GoogleFonts.poppins(
                 fontWeight: FontWeight.w700,
                 fontSize: 16,
-                color: const Color(0xFF1E293B),
+                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
               ),
             ),
           ],
@@ -927,6 +1034,179 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
+  String _formatTimeAgo(DateTime? date) {
+    if (date == null) return '';
+    final diff = DateTime.now().difference(date);
+    if (diff.inMinutes < 60) return '${diff.inMinutes}min ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return '${diff.inDays}d ago';
+  }
+
+  void _showPaymentVerificationModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final overdueMinutes = DateTime.now().difference(_currentOrder.updatedAt).inMinutes;
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.9,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : const Color(0xFFF1F5F9)))),
+                ),
+                child: Center(
+                  child: Icon(PhosphorIconsFill.ticket, color: Color(0xFFE11D48)),
+                ),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Check payment',
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '#${_currentOrder.lastOrderNo} • ${_formatTimeAgo(_currentOrder.createdAt)} • ${_currentOrder.orderType == "DELIVERY" ? "🚚 Delivery" : "📦 Pickup"}',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
+                ),
+              ),
+              SizedBox(height: 24),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (overdueMinutes > 5) ...[
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : const Color(0xFFFFF1F2))),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '!! Verification overdue',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFFE11D48),
+                                    ),
+                                  ),
+                                  Text(
+                                    '$overdueMinutes min',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFFE11D48),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'Customer has completed payment, please verify to continue the order.',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  color: const Color(0xFFE11D48),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 24),
+                      ],
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardColor,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : const Color(0xFFF1F5F9)))),
+                        ),
+                        child: _buildPaymentSlipSection(),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: PrimaryGradientButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _handleRequestSlip();
+                      },
+                      height: 56,
+                      borderRadius: 16,
+                      gradient: LinearGradient(
+                        colors: [Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : const Color(0xFFFFF1F2))), Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : const Color(0xFFFFF1F2)))],
+                      ),
+                      child: Center(
+                        child: GradientText(
+                          'Revise',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600, 
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: PrimaryGradientButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _handleVerifyPayment();
+                      },
+                      text: 'Confirm Payment',
+                      height: 56,
+                      borderRadius: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _handleVerifyPayment() async {
     await _runOrderAction(
       action: () => OrderService().verifyPayment(_currentOrder.id.toString()),
@@ -946,18 +1226,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final reason = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
             Image.asset('assets/images/app_logo.png', width: 24, height: 24),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Text(
               'Revise Payment',
               style: GoogleFonts.poppins(
                 fontWeight: FontWeight.w700,
                 fontSize: 16,
-                color: const Color(0xFF1E293B),
+                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
               ),
             ),
           ],
@@ -973,23 +1253,35 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 color: const Color(0xFF475569),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             TextField(
               controller: reasonController,
               autofocus: true,
               style: GoogleFonts.poppins(fontSize: 14),
               decoration: InputDecoration(
                 hintText: 'Enter reason here...',
-                hintStyle: GoogleFonts.poppins(fontSize: 14, color: const Color(0xFF94A3B8)),
+                hintStyle: GoogleFonts.poppins(fontSize: 14, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B))),
                 filled: true,
-                fillColor: const Color(0xFFF8FAFC),
+                fillColor: Theme.of(context).cardColor,
+                suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: reasonController,
+                  builder: (context, value, child) {
+                    if (value.text.isEmpty) return const SizedBox.shrink();
+                    return IconButton(
+                      icon: Icon(Icons.clear, color: Colors.grey, size: 20),
+                      onPressed: () {
+                        reasonController.clear();
+                      },
+                    );
+                  },
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  borderSide: BorderSide(color: Theme.of(context).dividerColor),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  borderSide: BorderSide(color: Theme.of(context).dividerColor),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -1119,18 +1411,26 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           _currentOrder.status == 'READY_FOR_PICKUP');
 
   Future<void> _handleDispatchOrder() async {
-    if (_selectedDriverId == null) {
-      AppDialog.showToast(context, 'Please select a delivery driver', isError: true);
+    final hasTrackingUrl = _deliveryTrackingUrlController.text.trim().isNotEmpty;
+    if (_selectedDriverId == null && !hasTrackingUrl) {
+      AppDialog.showToast(context, 'Please select a delivery driver or provide a tracking URL', isError: true);
       return;
+    }
+
+    double? finalDeliveryFee;
+    if (_currentOrder.deliveryType == 'NORMAL' && _deliveryFeeController.text.isNotEmpty) {
+      final numStr = _deliveryFeeController.text.replaceAll(',', '');
+      finalDeliveryFee = double.tryParse(numStr);
     }
 
     await _runOrderAction(
       action: () => OrderService().dispatchOrder(
         _currentOrder.id.toString(),
-        driverId: _selectedDriverId!,
-        trackingUrl: _deliveryTrackingUrlController.text.isNotEmpty
-            ? _deliveryTrackingUrlController.text
+        driverId: _selectedDriverId,
+        trackingUrl: hasTrackingUrl
+            ? _deliveryTrackingUrlController.text.trim()
             : null,
+        deliveryFee: finalDeliveryFee,
       ),
       errorMessage: 'Failed to dispatch order. Please try again.',
     );
@@ -1152,6 +1452,82 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
+  Future<void> _handleTrackingUrlChanged(String urlStr) async {
+    try {
+      final uri = Uri.tryParse(urlStr.trim());
+      if (uri == null) return;
+      if (!uri.host.contains('bolt.eu')) return;
+      
+      final sToken = uri.queryParameters['s'];
+      if (sToken == null || sToken.isEmpty) return;
+
+      setState(() => _isUpdating = true);
+      AppDialog.showToast(context, 'Fetching rider details from Bolt...');
+
+      final auth = base64Encode(utf8.encode(':$sToken'));
+      final apiUrl = 'https://node.bolt.eu/route-sharing/routeSharing/getOrder?version=RS.3.13&language=en-US';
+
+      final response = await Dio().get(
+        apiUrl,
+        options: Options(
+          headers: {'Authorization': 'Basic $auth'},
+          validateStatus: (status) => true,
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['code'] == 0 && data['data'] != null) {
+          final resData = data['data'];
+          final driverName = resData['driver_name'] as String?;
+          final carColor = resData['car_color'] as String?;
+          final carModel = resData['car_model'] as String?;
+          final carRegNumber = resData['car_reg_number'] as String?;
+          final driverPicture = resData['driver_picture'] as String?;
+
+          XFile? imageFile;
+          if (driverPicture != null && driverPicture.isNotEmpty) {
+            try {
+              final imgRes = await Dio().get(
+                driverPicture,
+                options: Options(responseType: ResponseType.bytes, validateStatus: (status) => true),
+              );
+              if (imgRes.statusCode == 200) {
+                imageFile = XFile.fromData(imgRes.data, name: 'bolt_rider.jpg');
+              }
+            } catch (_) {}
+          }
+
+          final vehicleNo = [carColor, carModel, carRegNumber]
+              .where((e) => e != null && e.isNotEmpty)
+              .join(' ');
+
+          final riderData = {
+            'name': driverName ?? 'Bolt Rider',
+            'phone': '',
+            'vehicleNo': vehicleNo,
+            'isActive': true,
+          };
+
+          final newRider = await RiderService().createRider(riderData, image: imageFile);
+
+          if (newRider != null && mounted) {
+            setState(() {
+              _availableDrivers.add(newRider);
+              _selectedDriverId = newRider.id;
+            });
+            AppDialog.showToast(context, 'Bolt rider auto-filled successfully');
+          }
+        }
+      }
+    } catch (_) {
+      // Silently ignore errors
+    } finally {
+      if (mounted) setState(() => _isUpdating = false);
+    }
+  }
+
+
 
 
 
@@ -1169,13 +1545,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         _handleBack();
       },
       child: Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).iconTheme.color),
           onPressed: _handleBack,
         ),
         title: Column(
@@ -1186,7 +1562,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF1E293B),
+                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
               ),
             ),
             _currentOrder.status == 'CANCELED' 
@@ -1208,8 +1584,59 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           ],
         ),
         actions: [
+          if (_isScrolled && _currentOrder.status != 'CANCELED')
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: GestureDetector(
+                onTap: _openCustomerChat,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Theme.of(context).cardColor,
+                        image: _currentOrder.customerAvatar != null
+                            ? DecorationImage(
+                                image: NetworkImage(_currentOrder.customerAvatar!),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                      ),
+                      child: _currentOrder.customerAvatar == null
+                          ? Icon(PhosphorIconsRegular.user, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)), size: 20)
+                          : null,
+                    ),
+                    if (_chatUnreadCount > 0)
+                      Positioned(
+                        right: -4,
+                        top: 4,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Color(0xFFEF4444),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            '$_chatUnreadCount',
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              height: 1,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
           if (_showPickupScanAction) const OrderQrScanIcon(),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
         ],
       ),
       body: _isFirstLoading 
@@ -1219,62 +1646,69 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               opacity: _isUpdating ? 0.6 : 1.0,
         child: Column(
           children: [
-            // Fixed Header Section (Info + Status)
-            Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                border: Border(
-                  bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1),
-                ),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+            Expanded(
+              child: CustomScrollView(
+                controller: _scrollController,
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Container(
+                      color: Theme.of(context).cardColor,
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildCustomerSection(),
+                          SizedBox(height: 16),
+                          _buildAddressSection(context),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _StatusHeaderDelegate(
+                      height: _currentOrder.status == 'CANCELED' ? 56.0 : 104.0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardColor,
+                          border: Border(
+                            bottom: BorderSide(color: Theme.of(context).dividerColor, width: 1),
+                          ),
+                        ),
+                        child: _buildStickyProgress(),
+                      ),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildCustomerSection(),
-                        const SizedBox(height: 16),
-                        _buildAddressSection(context),
-                      ],
-                    ),
-                  ),
-                  _buildStickyProgress(),
-                ],
-              ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 16),
+                        SizedBox(height: 16),
                     // Items Ordered (Padded)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Column(
                         children: [
                           _buildItemsSection(),
-                          const SizedBox(height: 24),
-                          const Divider(color: Color(0xFFF1F5F9), thickness: 1.5),
+                          SizedBox(height: 24),
+                          Divider(color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : const Color(0xFFF1F5F9)), thickness: 1.5),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
 
                     // Confirmation Form (Full Width - it has its own internal padding)
                     if (_currentOrder.status == 'PENDING' ||
                         _currentOrder.status == 'COOKING' ||
                         _currentOrder.status == 'READY_FOR_PICKUP') ...[
                       _buildConfirmationForm(),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                     ],
 
-                    // Waiting Time Update (PREPARING state only for Fast Delivery)
-                    if (_currentOrder.status == 'COOKING' && _currentOrder.deliveryType == 'PREPAID') ...[
+                    // Waiting Time Update (PREPARING state only for Delivery)
+                    if (_currentOrder.status == 'COOKING' && _currentOrder.isDeliveryFulfillment) ...[
                       _buildWaitingTimeUpdate(),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                     ],
 
                     // Delivery proof photo — captured while the order is on the
@@ -1283,7 +1717,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     // the food was successfully delivered.
                     if (_currentOrder.status == 'ON_THE_WAY') ...[
                       _buildDeliveryProofSection(),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                     ],
 
                     // Once Delivered, show the captured proof photo (read-only).
@@ -1291,7 +1725,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         _currentOrder.proofPhotoUrl != null &&
                         _currentOrder.proofPhotoUrl!.isNotEmpty) ...[
                       _buildDeliveryProofView(_currentOrder.proofPhotoUrl!),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                     ],
                     
                     Padding(
@@ -1312,40 +1746,38 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                           if (_currentOrder.isScheduled || 
                               _showAssignedRider ||
                               _currentOrder.status == 'CANCELED')
-                            const SizedBox(height: 16),
+                            SizedBox(height: 16),
 
-                          // Payment Slip Section
-                          if (_currentOrder.paymentSlipUrl != null) ...[
-                            _buildPaymentSlipSection(),
-                            const SizedBox(height: 16),
-                          ],
+
                           
                           // Order Modifications
                           if (_currentOrder.modifications.isNotEmpty) ...[
                             _buildModificationsSection(),
-                            const SizedBox(height: 12),
+                            SizedBox(height: 12),
                           ],
                           
                           // Estimated Time
                           if (_currentOrder.estimatedDeliveryTime != null && _currentOrder.estimatedDeliveryTime!.isNotEmpty && _currentOrder.status != 'CANCELED') ...[
                             _buildEstimatedTimeBox(),
-                            const SizedBox(height: 24),
+                            SizedBox(height: 24),
                           ],
 
                           // Payment Summary
                           _buildPaymentSummary(),
-                          const SizedBox(height: 32),
+                          SizedBox(height: 32),
 
                           // Calculate delivery fee box (hidden for DELIVERED & CANCELLED)
                           if (_currentOrder.status != 'CANCELED' && _currentOrder.status != 'DELIVERED') ...[
                             _buildDeliveryCalculator(),
-                            const SizedBox(height: 40),
+                            SizedBox(height: 40),
                           ],
                         ],
                       ),
                     ),
                   ],
-                ),
+                    ),
+                  ),
+                ],
               ),
             ),
             // Bottom Action Buttons
@@ -1363,30 +1795,30 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           Row(
             children: [
               const Skeleton.circle(width: 48, height: 48),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Skeleton(width: 120, height: 16),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   const Skeleton(width: 80, height: 14),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 32),
+          SizedBox(height: 32),
           const Skeleton(width: 100, height: 18),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           const Skeleton(width: double.infinity, height: 60),
-          const SizedBox(height: 32),
+          SizedBox(height: 32),
           const Skeleton(width: double.infinity, height: 40),
-          const SizedBox(height: 32),
+          SizedBox(height: 32),
           const Skeleton(width: 120, height: 18),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           ...List.generate(3, (index) => Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: Row(
@@ -1395,7 +1827,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 Row(
                   children: [
                     const Skeleton(width: 20, height: 16),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     const Skeleton(width: 150, height: 16),
                   ],
                 ),
@@ -1403,9 +1835,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ],
             ),
           )),
-          const SizedBox(height: 32),
+          SizedBox(height: 32),
           const Skeleton(width: double.infinity, height: 100),
-          const SizedBox(height: 40),
+          SizedBox(height: 40),
         ],
       ),
     );
@@ -1417,12 +1849,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF1F2),
+          color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : const Color(0xFFFFF1F2))),
         ),
         child: Row(
           children: [
-            const Icon(PhosphorIconsFill.smileySad, color: Color(0xFFEF4444), size: 24),
-            const SizedBox(width: 12),
+            Icon(PhosphorIconsFill.smileySad, color: Color(0xFFEF4444), size: 24),
+            SizedBox(width: 12),
             Text(
               t?.translate('order_cancelled') ?? 'Order Cancelled',
               style: GoogleFonts.poppins(
@@ -1437,9 +1869,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
       decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
         ),
       child: _buildAnimatedProgress(),
     );
@@ -1472,20 +1904,20 @@ Widget _buildAnimatedProgress() {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0FDF4),
+        color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF78350F) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF78350F) : const Color(0xFFFFFBEB))),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFDCFCE7)),
+        border: Border.all(color: const Color(0xFFFEF3C7)),
       ),
       child: Row(
         children: [
-          const Icon(PhosphorIconsRegular.timer, color: Color(0xFF16A34A), size: 20),
-          const SizedBox(width: 8),
+          Icon(PhosphorIconsRegular.timer, color: Color(0xFFD97706), size: 20),
+          SizedBox(width: 8),
           Text(
             'Est Waiting Time: ',
             style: GoogleFonts.poppins(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF16A34A),
+              color: const Color(0xFFD97706),
             ),
           ),
           Text(
@@ -1493,7 +1925,7 @@ Widget _buildAnimatedProgress() {
             style: GoogleFonts.poppins(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF15803D),
+              color: const Color(0xFFB45309),
             ),
           ),
         ],
@@ -1506,17 +1938,17 @@ Widget _buildAnimatedProgress() {
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.errorContainer,
+        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : AppColors.errorContainer,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.errorLight),
+        border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF881337) : AppColors.errorLight),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(PhosphorIconsFill.smileySad, color: AppColors.error, size: 24),
-              const SizedBox(width: 10),
+              Icon(PhosphorIconsFill.smileySad, color: AppColors.error, size: 24),
+              SizedBox(width: 10),
               GradientText(
                 'Order Cancelled',
                 style: GoogleFonts.poppins(
@@ -1526,12 +1958,12 @@ Widget _buildAnimatedProgress() {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(12),
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.5),
+              color: Theme.of(context).brightness == Brightness.dark ? Colors.black.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.5),
 
               borderRadius: BorderRadius.circular(8),
             ),
@@ -1546,7 +1978,7 @@ Widget _buildAnimatedProgress() {
                     color: AppColors.error,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(
                   (_currentOrder.cancelReason != null && _currentOrder.cancelReason!.isNotEmpty)
                       ? _currentOrder.cancelReason!
@@ -1568,24 +2000,64 @@ Widget _buildAnimatedProgress() {
   Widget _buildCustomerSection() {
     return Row(
       children: [
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppColors.surfaceVariant,
-            image: _currentOrder.customerAvatar != null
-                ? DecorationImage(
-                    image: NetworkImage(_currentOrder.customerAvatar!),
-                    fit: BoxFit.cover,
-                  )
+        GestureDetector(
+          onTap: () {
+            if (_currentOrder.customerAvatar != null) {
+              showDialog(
+                context: context,
+                builder: (context) => Dialog(
+                  backgroundColor: Colors.transparent,
+                  insetPadding: EdgeInsets.zero,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Positioned.fill(
+                        child: GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(color: Colors.black54),
+                        ),
+                      ),
+                      InteractiveViewer(
+                        child: CachedNetworkImage(
+                          imageUrl: _currentOrder.customerAvatar!,
+                          fit: BoxFit.contain,
+                          placeholder: (context, url) => const CustomLoadingIndicator(size: 32),
+                          errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.white),
+                        ),
+                      ),
+                      Positioned(
+                        top: 40,
+                        right: 20,
+                        child: IconButton(
+                          icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+          },
+          child: Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Theme.of(context).cardColor,
+              image: _currentOrder.customerAvatar != null
+                  ? DecorationImage(
+                      image: NetworkImage(_currentOrder.customerAvatar!),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+            ),
+            child: _currentOrder.customerAvatar == null
+                ? Icon(PhosphorIconsRegular.user, color: Theme.of(context).iconTheme.color)
                 : null,
           ),
-          child: _currentOrder.customerAvatar == null
-              ? const Icon(PhosphorIconsRegular.user, color: AppColors.outline)
-              : null,
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1610,10 +2082,12 @@ Widget _buildAnimatedProgress() {
           ),
         ),
         _buildCircularIcon(PhosphorIconsFill.phone, onTap: _callCustomer),
-        const SizedBox(width: 12),
-        _buildCircularIcon(PhosphorIconsFill.chatCircleDots,
-            onTap: _openCustomerChat, badgeCount: _chatUnreadCount),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
+        if (_currentOrder.status != 'CANCELED') ...[
+          _buildCircularIcon(PhosphorIconsFill.chatCircleDots,
+              onTap: _openCustomerChat, badgeCount: _chatUnreadCount),
+          SizedBox(width: 12),
+        ],
         GestureDetector(
           onTap: () {
             Clipboard.setData(ClipboardData(
@@ -1623,12 +2097,12 @@ Widget _buildAnimatedProgress() {
           child: Container(
             width: 44,
             height: 44,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.surfaceVariant,
+              color: Theme.of(context).cardColor,
             ),
-            child: const Icon(PhosphorIconsRegular.copy,
-                color: AppColors.onSurface, size: 20),
+            child: Icon(PhosphorIconsRegular.copy,
+                color: Theme.of(context).iconTheme.color, size: 20),
           ),
         ),
       ],
@@ -1698,11 +2172,11 @@ Widget _buildAnimatedProgress() {
           Container(
             width: 44,
             height: 44,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.surfaceVariant,
+              color: Theme.of(context).cardColor,
             ),
-            child: Icon(icon, color: AppColors.onSurface, size: 20),
+            child: Icon(icon, color: Theme.of(context).iconTheme.color, size: 20),
           ),
           if (badgeCount > 0)
             Positioned(
@@ -1721,7 +2195,7 @@ Widget _buildAnimatedProgress() {
                 ),
                 child: Text(
                   badgeCount > 99 ? '99+' : '$badgeCount',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
@@ -1743,9 +2217,9 @@ Widget _buildAnimatedProgress() {
         width: double.infinity,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(color: Theme.of(context).dividerColor),
         ),
         child: Row(
           children: [
@@ -1756,13 +2230,13 @@ Widget _buildAnimatedProgress() {
                 color: const Color(0xFFFDF2F8),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(
+              child: Icon(
                 PhosphorIconsRegular.shoppingBag,
                 size: 18,
                 color: AppColors.primary,
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1775,7 +2249,7 @@ Widget _buildAnimatedProgress() {
                       color: AppColors.onSurface,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: 2),
                   Text(
                     t?.translate('pickup_at_shop_desc') ??
                         'Customer will pick up this order at your shop.',
@@ -1804,7 +2278,7 @@ Widget _buildAnimatedProgress() {
               style: GoogleFonts.poppins(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: AppColors.onSurface,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
             GestureDetector(
@@ -1815,15 +2289,15 @@ Widget _buildAnimatedProgress() {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.errorContainer,
+                  color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : AppColors.errorContainer,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.errorLight),
+                  border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF881337) : AppColors.errorLight),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    GradientWidget(child: const Icon(PhosphorIconsRegular.copy, size: 14)),
-                    const SizedBox(width: 4),
+                    GradientWidget(child: Icon(PhosphorIconsRegular.copy, size: 14)),
+                    SizedBox(width: 4),
                     GradientText(
                       'Copy',
                       style: GoogleFonts.poppins(
@@ -1837,15 +2311,31 @@ Widget _buildAnimatedProgress() {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Text(
           _currentOrder.deliveryAddressDetail,
           style: GoogleFonts.poppins(
-            fontSize: 12,
-            color: AppColors.onSurfaceVariant,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
             height: 1.5,
           ),
         ),
+        if (_currentOrder.deliveryAddress?.addressMm != null &&
+            _currentOrder.deliveryAddress!.addressMm!.trim().isNotEmpty &&
+            _currentOrder.deliveryAddress!.addressMm!.trim() !=
+                _currentOrder.deliveryAddressDetail)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              _currentOrder.deliveryAddress!.addressMm!.trim(),
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: AppColors.onSurfaceVariant,
+                height: 1.4,
+              ),
+            ),
+          ),
         if (_currentOrder.deliveryAddress?.buildingName != null || _currentOrder.deliveryAddress?.floor != null)
           Padding(
             padding: const EdgeInsets.only(top: 4),
@@ -1868,8 +2358,8 @@ Widget _buildAnimatedProgress() {
             ),
             child: Row(
               children: [
-                const Icon(PhosphorIconsRegular.note, size: 16, color: AppColors.onSurfaceVariant),
-                const SizedBox(width: 8),
+                Icon(PhosphorIconsRegular.note, size: 16, color: AppColors.onSurfaceVariant),
+                SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     _currentOrder.deliveryAddress!.note!,
@@ -1903,13 +2393,13 @@ Widget _buildAnimatedProgress() {
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: AppColors.errorContainer,
               shape: BoxShape.circle,
             ),
             child: const GradientWidget(child: Icon(PhosphorIconsRegular.calendarCheck, size: 20)),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1954,7 +2444,7 @@ Widget _buildAnimatedProgress() {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.5)),
         boxShadow: [
@@ -1981,7 +2471,7 @@ Widget _buildAnimatedProgress() {
               ),
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1991,7 +2481,7 @@ Widget _buildAnimatedProgress() {
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.onSurface,
+                    color: Theme.of(context).textTheme.bodyLarge?.color ?? AppColors.onSurface,
                   ),
                 ),
                 if (phone != null && phone.isNotEmpty)
@@ -1999,7 +2489,7 @@ Widget _buildAnimatedProgress() {
                     phone,
                     style: GoogleFonts.poppins(
                       fontSize: 13,
-                      color: AppColors.onSurfaceVariant,
+                      color: Theme.of(context).textTheme.bodyMedium?.color ?? AppColors.onSurfaceVariant,
                     ),
                   ),
                 if (vehicleNo != null && vehicleNo.isNotEmpty)
@@ -2035,7 +2525,7 @@ Widget _buildAnimatedProgress() {
             color: AppColors.onSurface,
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         ..._currentOrder.modifications.map((mod) => Container(
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(12),
@@ -2078,7 +2568,7 @@ Widget _buildAnimatedProgress() {
                     ),
                   ),
                 ),
-              const SizedBox(height: 4),
+              SizedBox(height: 4),
               Text(
                 'Modified by ${mod.modifiedBy} • ${DateFormat('hh:mm a').format(mod.createdAt)}',
                 style: GoogleFonts.poppins(
@@ -2089,7 +2579,7 @@ Widget _buildAnimatedProgress() {
             ],
           ),
         )),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
       ],
     );
   }
@@ -2106,7 +2596,7 @@ Widget _buildAnimatedProgress() {
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF1E293B),
+                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
               ),
             ),
             if (_currentOrder.status == 'PENDING' ||
@@ -2129,7 +2619,7 @@ Widget _buildAnimatedProgress() {
               ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         for (int i = 0; i < _currentOrder.items.length; i++)
           _buildOrderItem(_currentOrder.items[i], isLast: i == _currentOrder.items.length - 1),
       ],
@@ -2140,21 +2630,21 @@ Widget _buildAnimatedProgress() {
     return Container(
       width: 54,
       height: 54,
-      color: const Color(0xFFF1F5F9),
+      color: Theme.of(context).cardColor,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
+          Icon(
             PhosphorIconsRegular.image,
             size: 18,
             color: Color(0xFFCBD5E1),
           ),
-          const SizedBox(height: 2),
+          SizedBox(height: 2),
           Text(
             'No Image',
             style: GoogleFonts.poppins(
               fontSize: 8,
-              color: const Color(0xFF94A3B8),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -2180,13 +2670,13 @@ Widget _buildAnimatedProgress() {
                     placeholder: (_, __) => Container(
                       width: 54,
                       height: 54,
-                      color: const Color(0xFFF1F5F9),
+                      color: Theme.of(context).cardColor,
                     ),
                     errorWidget: (_, __, ___) => _buildNoImageBox(),
                   )
                 : _buildNoImageBox(),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2203,7 +2693,7 @@ Widget _buildAnimatedProgress() {
                             style: GoogleFonts.poppins(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF1E293B),
+                              color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                             ),
                           ),
                           if (item.secondaryName != null)
@@ -2212,7 +2702,7 @@ Widget _buildAnimatedProgress() {
                               style: GoogleFonts.poppins(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w400,
-                                color: const Color(0xFF64748B),
+                                color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                               ),
                             ),
                         ],
@@ -2225,14 +2715,14 @@ Widget _buildAnimatedProgress() {
                     item.optionsString!,
                     style: GoogleFonts.poppins(
                       fontSize: 13,
-                      color: const Color(0xFF64748B),
+                      color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                     ),
                   ),
                 ...item.options.map((opt) => Text(
                       '+ ${opt.name} (+${opt.displayPrice})',
                       style: GoogleFonts.poppins(
                         fontSize: 13,
-                        color: const Color(0xFF64748B),
+                        color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                       ),
                     )),
                 if (item.specialInstructions != null && item.specialInstructions!.isNotEmpty)
@@ -2250,7 +2740,7 @@ Widget _buildAnimatedProgress() {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -2258,16 +2748,16 @@ Widget _buildAnimatedProgress() {
                 '×${item.quantity}',
                 style: GoogleFonts.poppins(
                   fontSize: 13,
-                  color: const Color(0xFF94A3B8),
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF94A3B8),
                 ),
               ),
-              const SizedBox(height: 2),
+              SizedBox(height: 2),
               Text(
                 item.displayPrice,
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1E293B),
+                  color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                 ),
               ),
             ],
@@ -2286,31 +2776,79 @@ Widget _buildAnimatedProgress() {
           style: GoogleFonts.poppins(
             fontSize: 16,
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF1E293B),
+            color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
           ),
         ),
-        const SizedBox(height: 16),
+        if (_currentOrder.paymentSlipUrl != null) ...[
+          SizedBox(height: 16),
+          Row(
+            children: [
+              if (_currentOrder.paymentMethodIconUrl != null)
+                Image.network(
+                  _currentOrder.paymentMethodIconUrl!,
+                  width: 24,
+                  height: 24,
+                  fit: BoxFit.contain,
+                )
+              else
+                Icon(PhosphorIconsRegular.qrCode, size: 20, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
+              SizedBox(width: 8),
+              Text(
+                _currentOrder.paymentMethodName ?? 'QR Prompt Pay',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: _currentOrder.paymentSlipUrl!.startsWith('data:image') 
+              ? Image.memory(
+                  base64Decode(_currentOrder.paymentSlipUrl!.contains(',') ? _currentOrder.paymentSlipUrl!.split(',').last : _currentOrder.paymentSlipUrl!),
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                )
+              : Image.network(
+                  _currentOrder.paymentSlipUrl!,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      height: 200,
+                      color: Theme.of(context).cardColor,
+                      child: Center(child: CustomLoadingIndicator(size: 24)),
+                    );
+                  },
+                ),
+          ),
+        ],
+        SizedBox(height: 16),
         _buildSummaryRow('Food Price', '฿ ${_currentOrder.foodPrice.toInt()}'),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         _buildSummaryRow(
           'Tax (7%)',
           _currentOrder.displayTaxAmount.isNotEmpty
               ? _currentOrder.displayTaxAmount
               : '฿ ${_currentOrder.resolvedTaxAmount.toInt()}',
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         Row(
           children: [
             const GradientWidget(child: Icon(PhosphorIconsFill.moped, size: 20)),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Text(
               _currentOrder.deliveryFee > 0 ? 'Delivery Fee' : 'Est. Amount',
               style: GoogleFonts.poppins(
                 fontSize: 15,
-                color: const Color(0xFF64748B),
+                color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
@@ -2336,16 +2874,20 @@ Widget _buildAnimatedProgress() {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Total',
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF1E293B),
+            Expanded(
+              child: Text(
+                _currentOrder.deliveryType == 'NORMAL' 
+                    ? 'Est Total' 
+                    : 'Total',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
+                ),
               ),
             ),
             Row(
@@ -2357,7 +2899,7 @@ Widget _buildAnimatedProgress() {
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1E293B),
+                    color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                   ),
                 ),
               ],
@@ -2376,7 +2918,7 @@ Widget _buildAnimatedProgress() {
           label,
           style: GoogleFonts.poppins(
             fontSize: 15,
-            color: const Color(0xFF64748B),
+            color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
           ),
         ),
         Text(
@@ -2384,7 +2926,7 @@ Widget _buildAnimatedProgress() {
           style: GoogleFonts.poppins(
             fontSize: 15,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
+            color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
           ),
         ),
       ],
@@ -2396,9 +2938,9 @@ Widget _buildAnimatedProgress() {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2408,14 +2950,14 @@ Widget _buildAnimatedProgress() {
             style: GoogleFonts.poppins(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF1E293B),
+              color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Row(
             children: [
               _buildLaunchButton('Bolt', 'assets/icons/bolt_logo.png', const Color(0xFF32BB78)),
-              const SizedBox(width: 16),
+              SizedBox(width: 16),
               _buildLaunchButton('Grab', 'assets/icons/grab_logo.png', const Color(0xFF00B14F)),
             ],
           ),
@@ -2426,7 +2968,14 @@ Widget _buildAnimatedProgress() {
 
   Widget _buildLaunchButton(String name, String iconPath, Color color) {
     return InkWell(
-      onTap: _showDemoDialog,
+      onTap: () async {
+        final url = Uri.parse('${name.toLowerCase()}://');
+        try {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+        } catch (e) {
+          _showAppNotInstalledSnackbar(context, name);
+        }
+      },
       borderRadius: BorderRadius.circular(12),
       child: Column(
         children: [
@@ -2439,16 +2988,16 @@ Widget _buildAnimatedProgress() {
             ),
             child: Center(
               child: name == 'Bolt'
-                  ? const Text('Bolt', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18))
-                  : const Text('Grab', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                  ? Text('Bolt', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18))
+                  : Text('Grab', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             'Open $name',
             style: GoogleFonts.poppins(
               fontSize: 12,
-              color: const Color(0xFF64748B),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
             ),
           ),
         ],
@@ -2485,7 +3034,7 @@ Widget _buildAnimatedProgress() {
           onPressed = _isUpdating ? null : _handleMarkReadyForPickup;
         } else {
           mainButtonText = 'Picked Up by Rider';
-          onPressed = (_isUpdating || _selectedDriverId == null)
+          onPressed = (_isUpdating || (_selectedDriverId == null && _deliveryTrackingUrlController.text.trim().isEmpty))
               ? null
               : _handleDispatchOrder;
         }
@@ -2515,7 +3064,7 @@ Widget _buildAnimatedProgress() {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         border: Border(top: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
 
       ),
@@ -2525,67 +3074,72 @@ Widget _buildAnimatedProgress() {
           Row(
             children: [
               if (isCancelable) ...[
-                Expanded(
+                SizedBox(
+                  width: 96,
                   child: PrimaryGradientButton(
                     onPressed: _isUpdating ? null : _handleCancelOrder,
-                    height: 54,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFFFF1F2), Color(0xFFFFF1F2)],
+                    height: 48,
+                    borderRadius: 12,
+                    gradient: LinearGradient(
+                      colors: [Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : const Color(0xFFFFF1F2))), Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : const Color(0xFFFFF1F2)))],
                     ),
-                    child: GradientText(
-                      t?.translate('cancel') ?? 'Cancel',
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w600, 
-                        fontSize: 14,
+                    child: Center(
+                      child: GradientText(
+                        t?.translate('cancel') ?? 'Cancel',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 10),
               ],
-              if (_currentOrder.status == 'PAYMENT_VERIFIED' || _currentOrder.status == 'AWAITING_APPROVAL') ...[
+              if (_currentOrder.status == 'AWAITING_APPROVAL') ...[
                 Expanded(
                   child: PrimaryGradientButton(
                     onPressed: _isUpdating ? null : _handleRequestSlip,
                     height: 54,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFFFF1F2), Color(0xFFFFF1F2)],
+                    gradient: LinearGradient(
+                      colors: [Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : const Color(0xFFFFF1F2))), Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4C0519) : const Color(0xFFFFF1F2)))],
                     ),
-                    child: GradientText(
-                      'Revise',
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w600, 
-                        fontSize: 14,
+                    child: Center(
+                      child: GradientText(
+                        'Revise',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600, 
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
               ],
               Expanded(
-                flex: 2,
                 child: PrimaryGradientButton(
                   onPressed: onPressed,
                   isLoading: _isUpdating,
+                  height: 54,
                   child: (_currentOrder.status == 'PAYMENT_SLIP_REQUESTED')
                       ? AnimatedEllipsisText(
                           text: mainButtonText,
                           style: GoogleFonts.poppins(
                             fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                            color: Colors.white,
+                            fontSize: 13,
+                            color: (onPressed == null || _isUpdating) ? Colors.white.withValues(alpha: 0.6) : Colors.white,
                           ),
                         )
-                      : Flexible(
-                          child: Text(
-                            mainButtonText,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
+                      : Text(
+                          mainButtonText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: (onPressed == null || _isUpdating) ? Colors.white.withValues(alpha: 0.6) : Colors.white,
                           ),
                         ),
                 ),
@@ -2607,8 +3161,8 @@ Widget _buildAnimatedProgress() {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.check_circle_rounded, color: Colors.white, size: 22),
-          const SizedBox(width: 10),
+          Icon(Icons.check_circle_rounded, color: Colors.white, size: 22),
+          SizedBox(width: 10),
           Text(
             'Order successfully delivered',
             style: GoogleFonts.poppins(
@@ -2627,14 +3181,14 @@ Widget _buildAnimatedProgress() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 36),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: AppColors.primaryGradient,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.check_circle_rounded, color: Colors.white, size: 22),
-          const SizedBox(width: 10),
+          Icon(Icons.check_circle_rounded, color: Colors.white, size: 22),
+          SizedBox(width: 10),
           Text(
             AppLocalizations.of(context)?.translate('pickup_success_title') ??
                 'Pickup complete',
@@ -2653,7 +3207,7 @@ Widget _buildAnimatedProgress() {
   Widget _buildWaitingTimeUpdate() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      color: const Color(0xFFF8FAFC),
+      color: Theme.of(context).cardColor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2662,18 +3216,18 @@ Widget _buildAnimatedProgress() {
               const GradientWidget(
                 child: Icon(PhosphorIconsRegular.timer, size: 20),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Text(
                 'Update Estimated Waiting Time',
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1E293B),
+                  color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           TextFormField(
             controller: _waitingTimeMinutesController,
             keyboardType: TextInputType.number,
@@ -2684,24 +3238,37 @@ Widget _buildAnimatedProgress() {
               hintText: 'Enter minutes...',
               hintStyle: GoogleFonts.poppins(
                 fontSize: 14,
-                color: const Color(0xFF94A3B8),
+                color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
               ),
               suffixText: 'mins',
+              suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _waitingTimeMinutesController,
+                builder: (context, value, child) {
+                  if (value.text.isEmpty) return const SizedBox.shrink();
+                  return IconButton(
+                    icon: Icon(Icons.clear, color: Colors.grey, size: 20),
+                    onPressed: () {
+                      _waitingTimeMinutesController.clear();
+                      _validateFormState();
+                    },
+                  );
+                },
+              ),
               suffixStyle: GoogleFonts.poppins(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF64748B),
+                color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
               ),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: Theme.of(context).cardColor,
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                borderSide: BorderSide(color: Theme.of(context).dividerColor),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                borderSide: BorderSide(color: Theme.of(context).dividerColor),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
@@ -2720,7 +3287,7 @@ Widget _buildAnimatedProgress() {
   Widget _buildDeliveryProofSection() {
     return Container(
       padding: const EdgeInsets.all(20),
-      color: const Color(0xFFF8FAFC),
+      color: Theme.of(context).cardColor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2729,27 +3296,28 @@ Widget _buildAnimatedProgress() {
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF1E293B),
+              color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Align(
             alignment: Alignment.center,
             child: ImagePickerWidget(
               shape: ImagePickerShape.rectangle,
               width: 120,
               height: 120,
+              themeGradient: AppColors.primaryGradient,
               pickedFile: _proofImage,
               onImageSelected: (file) => setState(() => _proofImage = file),
               onImageRemoved: () => setState(() => _proofImage = null),
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             'Optional photo proving the food was delivered. Shown to the customer once the order is marked Delivered.',
             style: GoogleFonts.poppins(
               fontSize: 12,
-              color: const Color(0xFF64748B),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
             ),
           ),
         ],
@@ -2761,7 +3329,7 @@ Widget _buildAnimatedProgress() {
   Widget _buildDeliveryProofView(String url) {
     return Container(
       padding: const EdgeInsets.all(20),
-      color: const Color(0xFFF8FAFC),
+      color: Theme.of(context).cardColor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2770,10 +3338,10 @@ Widget _buildAnimatedProgress() {
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF1E293B),
+              color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: Image.network(
@@ -2784,7 +3352,7 @@ Widget _buildAnimatedProgress() {
                 if (loadingProgress == null) return child;
                 return Container(
                   height: 200,
-                  color: const Color(0xFFF1F5F9),
+                  color: Theme.of(context).cardColor,
                   child: Center(child: CustomLoadingIndicator(size: 24)),
                 );
               },
@@ -2801,7 +3369,7 @@ Widget _buildAnimatedProgress() {
 
     return Container(
       padding: const EdgeInsets.all(20),
-      color: const Color(0xFFF8FAFC),
+      color: Theme.of(context).cardColor,
       child: Form(
         key: _formKey,
         autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -2815,20 +3383,20 @@ Widget _buildAnimatedProgress() {
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1E293B),
+                    color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Text(
                   t?.translate('pickup_confirmation_desc') ??
                       'Set how long the customer should wait before pickup.',
                   style: GoogleFonts.poppins(
                     fontSize: 13,
-                    color: const Color(0xFF64748B),
+                    color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                     height: 1.4,
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 _buildInputField(
                   t?.translate('est_prep_time_mins') ?? 'Est Prep Time (mins)',
                   _waitingTimeMinutesController,
@@ -2836,6 +3404,8 @@ Widget _buildAnimatedProgress() {
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   validator: (value) =>
                       (value == null || value.isEmpty) ? 'Required' : null,
+                  description: 'Set the estimated preparation time for the order.',
+                  placeholder: 'e.g. 15',
                 ),
               ] else ...[
               Row(
@@ -2852,7 +3422,7 @@ Widget _buildAnimatedProgress() {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
                           gradient: _deliveryOption == 'PREPAID' ? AppColors.primaryGradient : null,
-                          color: _deliveryOption == 'PREPAID' ? null : const Color(0xFFF1F5F9),
+                          color: _deliveryOption == 'PREPAID' ? null : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : const Color(0xFFF1F5F9))),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         alignment: Alignment.center,
@@ -2861,13 +3431,13 @@ Widget _buildAnimatedProgress() {
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: _deliveryOption == 'PREPAID' ? Colors.white : const Color(0xFF64748B),
+                            color: _deliveryOption == 'PREPAID' ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                           ),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: GestureDetector(
                       onTap: () {
@@ -2880,7 +3450,7 @@ Widget _buildAnimatedProgress() {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
                           gradient: _deliveryOption == 'NORMAL' ? AppColors.primaryGradient : null,
-                          color: _deliveryOption == 'NORMAL' ? null : const Color(0xFFF1F5F9),
+                          color: _deliveryOption == 'NORMAL' ? null : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : const Color(0xFFF1F5F9))),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         alignment: Alignment.center,
@@ -2889,7 +3459,7 @@ Widget _buildAnimatedProgress() {
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: _deliveryOption == 'NORMAL' ? Colors.white : const Color(0xFF64748B),
+                            color: _deliveryOption == 'NORMAL' ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                           ),
                         ),
                       ),
@@ -2897,7 +3467,7 @@ Widget _buildAnimatedProgress() {
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               ],
             ],
             // ── Section header ──────────────────────────────────────────
@@ -2913,10 +3483,10 @@ Widget _buildAnimatedProgress() {
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1E293B),
+                  color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
             ],
 
             // ── Flexible Delivery (PENDING) ─────────────────────────────
@@ -2926,16 +3496,16 @@ Widget _buildAnimatedProgress() {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: Theme.of(context).dividerColor),
                 ),
                 child: Row(
                   children: [
                     const GradientWidget(
                       child: Icon(PhosphorIconsRegular.info, size: 22),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2945,15 +3515,15 @@ Widget _buildAnimatedProgress() {
                             style: GoogleFonts.poppins(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF1E293B),
+                              color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          SizedBox(height: 2),
                           Text(
                             'Shop admin choose delivery service to send food to customer. So user must pay order fee first and delivery fees later separately.',
                             style: GoogleFonts.poppins(
                               fontSize: 13,
-                              color: const Color(0xFF64748B),
+                              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                               height: 1.5,
                             ),
                           ),
@@ -2963,7 +3533,7 @@ Widget _buildAnimatedProgress() {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
@@ -2981,9 +3551,13 @@ Widget _buildAnimatedProgress() {
                         if (double.tryParse(numValue) == null) return 'Invalid number';
                         return null;
                       },
+                      description: 'Enter the estimated delivery fee for this order.',
+                      placeholder: 'e.g. 50',
+                      showDeliveryApps: true,
+                      suffixText: 'THB',
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: _buildInputField(
                       'Est Prep Time (mins)',
@@ -2991,6 +3565,8 @@ Widget _buildAnimatedProgress() {
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
+                      description: 'Set the estimated preparation time for the order.',
+                      placeholder: 'e.g. 15',
                     ),
                   ),
                 ],
@@ -3017,9 +3593,13 @@ Widget _buildAnimatedProgress() {
                         if (double.tryParse(numValue) == null) return 'Invalid number';
                         return null;
                       },
+                      description: 'Enter the delivery fee for this order.',
+                      placeholder: 'e.g. 50',
+                      showDeliveryApps: true,
+                      suffixText: 'THB',
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: _buildInputField(
                       'Est Waiting Time (mins)',
@@ -3027,6 +3607,8 @@ Widget _buildAnimatedProgress() {
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
+                      description: 'Set the estimated waiting time for the order.',
+                      placeholder: 'e.g. 15',
                     ),
                   ),
                 ],
@@ -3035,24 +3617,67 @@ Widget _buildAnimatedProgress() {
             // ── COOKING / dispatch (single driver selection point) ─────
             ] else if (_currentOrder.status == 'COOKING' &&
                 _currentOrder.isDeliveryFulfillment) ...[
-              _buildDriverPicker(),
-              const SizedBox(height: 12),
-              _buildInputField('Tracking URL', _deliveryTrackingUrlController),
+              if (_currentOrder.deliveryType == 'NORMAL') ...[
+                _buildInputField(
+                  'Real Delivery Fee',
+                  _deliveryFeeController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    ThousandsSeparatorInputFormatter()
+                  ],
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Required';
+                    final numValue = value.replaceAll(',', '');
+                    if (double.tryParse(numValue) == null) return 'Invalid number';
+                    return null;
+                  },
+                  description: 'Enter the final real delivery fee for this flexible delivery.',
+                  placeholder: 'e.g. 50',
+                  showDeliveryApps: true,
+                  suffixText: 'THB',
+                ),
+                SizedBox(height: 12),
+              ],
+              if (_deliveryTrackingUrlController.text.trim().isEmpty || _selectedDriverId != null)
+                _buildDriverPicker(),
+              if (_selectedDriverId == null) ...[
+                if (_deliveryTrackingUrlController.text.trim().isEmpty)
+                  SizedBox(height: 12),
+                _buildInputField(
+                  'Tracking URL',
+                  _deliveryTrackingUrlController,
+                  isNumeric: false,
+                  modalTitle: 'Delivery Tracking Link',
+                  description: 'Add a live tracking link so the customer can follow their order in real-time.',
+                  fieldLabel: 'Tracking Link',
+                  placeholder: 'https://tracking-service.com/...',
+                  onChanged: _handleTrackingUrlChanged,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) return null;
+                    final uri = Uri.tryParse(value.trim());
+                    if (uri == null || !uri.hasScheme || !uri.hasAuthority) {
+                      return 'Please enter a valid URL (e.g. https://...)';
+                    }
+                    return null;
+                  },
+                ),
+              ],
             ] else if (_currentOrder.status == 'COOKING' &&
                 _currentOrder.isPickupFulfillment) ...[
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: Theme.of(context).dividerColor),
                 ),
                 child: Text(
                   'Mark this order ready for pickup when the food is prepared. The customer can then show their QR code at the counter.',
                   style: GoogleFonts.poppins(
                     fontSize: 13,
-                    color: const Color(0xFF64748B),
+                    color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                     height: 1.5,
                   ),
                 ),
@@ -3062,16 +3687,16 @@ Widget _buildAnimatedProgress() {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: Theme.of(context).dividerColor),
                 ),
                 child: Text(
                   t?.translate('pickup_ready_hint') ??
                       'Hand the order to the customer and scan their QR code, or tap Verify Pickup when ready.',
                   style: GoogleFonts.poppins(
                     fontSize: 13,
-                    color: const Color(0xFF64748B),
+                    color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                     height: 1.5,
                   ),
                 ),
@@ -3083,7 +3708,21 @@ Widget _buildAnimatedProgress() {
     );
   }
 
-  Widget _buildInputField(String label, TextEditingController controller, {TextInputType? keyboardType, String? Function(String?)? validator, List<TextInputFormatter>? inputFormatters}) {
+  Widget _buildInputField(
+    String label,
+    TextEditingController controller, {
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+    List<TextInputFormatter>? inputFormatters,
+    bool isNumeric = true,
+    String? modalTitle,
+    String? description,
+    String? fieldLabel,
+    String? placeholder,
+    bool showDeliveryApps = false,
+    String? suffixText,
+    Function(String)? onChanged,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -3092,27 +3731,50 @@ Widget _buildAnimatedProgress() {
           style: GoogleFonts.poppins(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF64748B),
+            color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6),
         TextFormField(
           controller: controller,
-          keyboardType: keyboardType,
+          readOnly: true,
+          onTap: () async {
+            final result = await showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => _FullScreenTextInput(
+                label: modalTitle ?? label,
+                initialValue: controller.text,
+                keyboardType: keyboardType,
+                inputFormatters: inputFormatters,
+                isNumeric: isNumeric,
+                description: description,
+                fieldLabel: fieldLabel,
+                placeholder: placeholder,
+                showDeliveryApps: showDeliveryApps,
+                suffixText: suffixText,
+              ),
+            );
+            if (result != null) {
+              controller.text = result as String;
+              if (onChanged != null) onChanged(result as String);
+              _validateFormState();
+            }
+          },
           validator: validator,
-          inputFormatters: inputFormatters,
           style: GoogleFonts.poppins(fontSize: 14),
           decoration: InputDecoration(
             filled: true,
-            fillColor: Colors.white,
+            fillColor: Theme.of(context).cardColor,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderSide: BorderSide(color: Theme.of(context).dividerColor),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderSide: BorderSide(color: Theme.of(context).dividerColor),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
@@ -3120,11 +3782,11 @@ Widget _buildAnimatedProgress() {
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Colors.red, width: 1),
+              borderSide: BorderSide(color: Colors.red, width: 1),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Colors.red, width: 2),
+              borderSide: BorderSide(color: Colors.red, width: 2),
             ),
             errorStyle: GoogleFonts.poppins(fontSize: 11, color: Colors.red),
           ),
@@ -3170,7 +3832,7 @@ Widget _buildAnimatedProgress() {
             if (loadingProgress == null) return child;
             return Container(
               height: 200,
-              color: const Color(0xFFF1F5F9),
+              color: Theme.of(context).cardColor,
               child: Center(child: CustomLoadingIndicator(size: 24)),
             );
           },
@@ -3190,34 +3852,46 @@ Widget _buildAnimatedProgress() {
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF1E293B),
+                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
               ),
             ),
             Row(
               children: [
-                const Icon(PhosphorIconsRegular.qrCode, size: 20, color: Color(0xFF64748B)),
-                const SizedBox(width: 8),
+                if (_currentOrder.paymentMethodIconUrl != null)
+                  Image.network(
+                    _currentOrder.paymentMethodIconUrl!,
+                    width: 20,
+                    height: 20,
+                    fit: BoxFit.contain,
+                  )
+                else
+                  Icon(PhosphorIconsRegular.qrCode, size: 20, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B))),
+                SizedBox(width: 8),
                 Text(
-                  'QR Prompt Pay',
+                  _currentOrder.paymentMethodName ?? 'QR Prompt Pay',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF64748B),
+                    color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                   ),
                 ),
               ],
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Total',
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                color: const Color(0xFF64748B),
+            Expanded(
+              child: Text(
+                _currentOrder.deliveryType == 'NORMAL' 
+                    ? 'Est Total' 
+                    : 'Total',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
+                ),
               ),
             ),
             Text(
@@ -3225,12 +3899,12 @@ Widget _buildAnimatedProgress() {
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF1E293B),
+                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         imageWidget,
       ],
     );
@@ -3240,17 +3914,17 @@ Widget _buildAnimatedProgress() {
     return Container(
       height: 200,
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(PhosphorIconsRegular.warningCircle, color: Color(0xFF94A3B8), size: 32),
-          const SizedBox(height: 8),
+          Icon(PhosphorIconsRegular.warningCircle, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)), size: 32),
+          SizedBox(height: 8),
           Text(
             'Failed to load receipt',
-            style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 13),
+            style: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)), fontSize: 13),
           ),
         ],
       ),
@@ -3289,6 +3963,320 @@ class ThousandsSeparatorInputFormatter extends TextInputFormatter {
       text: newText,
       selection: TextSelection.collapsed(
         offset: newText.length - selectionIndex,
+      ),
+    );
+  }
+}
+
+class _StatusHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  final double height;
+
+  _StatusHeaderDelegate({required this.child, required this.height});
+
+  @override
+  double get minExtent => height;
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return SizedBox.expand(child: child);
+  }
+
+  @override
+  bool shouldRebuild(covariant _StatusHeaderDelegate oldDelegate) {
+    return oldDelegate.height != height || oldDelegate.child != child;
+  }
+}
+
+class _FullScreenTextInput extends StatefulWidget {
+  final String label;
+  final String initialValue;
+  final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
+  final bool isNumeric;
+  final String? description;
+  final String? fieldLabel;
+  final String? placeholder;
+  final bool showDeliveryApps;
+  final String? suffixText;
+
+  const _FullScreenTextInput({
+    required this.label,
+    required this.initialValue,
+    this.keyboardType,
+    this.inputFormatters,
+    this.isNumeric = true,
+    this.description,
+    this.fieldLabel,
+    this.placeholder,
+    this.showDeliveryApps = false,
+    this.suffixText,
+  });
+
+  @override
+  State<_FullScreenTextInput> createState() => _FullScreenTextInputState();
+}
+
+class _FullScreenTextInputState extends State<_FullScreenTextInput> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _increment() {
+    String text = _controller.text.replaceAll(',', '');
+    int? val = int.tryParse(text);
+    if (val != null) {
+      val += 1;
+      _controller.text = val.toString();
+    } else {
+      _controller.text = "1";
+    }
+  }
+
+  void _decrement() {
+    String text = _controller.text.replaceAll(',', '');
+    int? val = int.tryParse(text);
+    if (val != null && val > 0) {
+      val -= 1;
+      _controller.text = val.toString();
+    } else {
+      _controller.text = "0";
+    }
+  }
+
+  Widget _buildCircleButton(IconData icon, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(32),
+      child: Container(
+        width: 64,
+        height: 64,
+        decoration: BoxDecoration(
+          color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : const Color(0xFFF1F5F9)),
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: Icon(icon, color: const Color(0xFF475569), size: 32),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAppIcon({
+    required String name,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              name,
+              style: GoogleFonts.poppins(
+                color: Theme.of(context).cardColor,
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+              ),
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Open $name',
+            style: GoogleFonts.poppins(
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.5,
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.label,
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
+              ),
+            ),
+            if (widget.description != null) ...[
+              SizedBox(height: 8),
+              Text(
+                widget.description!,
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
+                ),
+              ),
+            ],
+            SizedBox(height: 24),
+            if (widget.showDeliveryApps) ...[
+              Text(
+                'Calculate delivery fee',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
+                ),
+              ),
+              SizedBox(height: 12),
+              Row(
+                children: [
+                  _buildAppIcon(
+                    name: 'Bolt',
+                    color: const Color(0xFF32C671),
+                    onTap: () async {
+                      final url = Uri.parse('bolt://');
+                      try {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      } catch (e) {
+                        _showAppNotInstalledSnackbar(context, 'Bolt');
+                      }
+                    },
+                  ),
+                  SizedBox(width: 24),
+                  _buildAppIcon(
+                    name: 'Grab',
+                    color: const Color(0xFF00B14F),
+                    onTap: () async {
+                      final url = Uri.parse('grab://');
+                      try {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      } catch (e) {
+                        _showAppNotInstalledSnackbar(context, 'Grab');
+                      }
+                    },
+                  ),
+                ],
+              ),
+              SizedBox(height: 24),
+            ],
+            if (widget.fieldLabel != null) ...[
+              Text(
+                widget.fieldLabel!,
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
+                ),
+              ),
+              SizedBox(height: 8),
+            ],
+            TextField(
+              controller: _controller,
+              keyboardType: widget.keyboardType,
+              inputFormatters: widget.inputFormatters,
+              autofocus: true,
+              style: GoogleFonts.poppins(fontSize: 14),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Theme.of(context).cardColor,
+                hintText: widget.placeholder ?? 'Enter ${widget.label}',
+                hintStyle: GoogleFonts.poppins(color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
+                suffixText: widget.suffixText,
+                suffixStyle: GoogleFonts.poppins(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)), fontWeight: FontWeight.w500),
+                suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _controller,
+                  builder: (context, value, child) {
+                    if (value.text.isEmpty) return const SizedBox.shrink();
+                    return IconButton(
+                      icon: Icon(Icons.clear, color: Colors.grey, size: 20),
+                      onPressed: () {
+                        _controller.clear();
+                      },
+                    );
+                  },
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.primary),
+                ),
+              ),
+            ),
+            SizedBox(height: 12),
+            if (widget.fieldLabel != null || widget.description != null) // Only show paste for tracking url or similar
+              GestureDetector(
+                onTap: () async {
+                  final data = await Clipboard.getData('text/plain');
+                  if (data?.text != null) {
+                    _controller.text = data!.text!;
+                  }
+                },
+                child: Row(
+                  children: [
+                    Icon(PhosphorIconsRegular.clipboard, color: Color(0xFFE11D48), size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'Paste from Clipboard',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFFE11D48),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const Spacer(),
+            PrimaryGradientButton(
+              onPressed: () {
+                Navigator.pop(context, _controller.text);
+              },
+              text: 'Save',
+              height: 56,
+              borderRadius: 16,
+            ),
+          ],
+        ),
       ),
     );
   }

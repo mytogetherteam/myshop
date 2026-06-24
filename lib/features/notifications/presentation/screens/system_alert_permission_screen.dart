@@ -16,7 +16,7 @@ class SystemAlertPermissionScreen extends StatelessWidget {
     final t = AppLocalizations.of(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
@@ -33,28 +33,28 @@ class SystemAlertPermissionScreen extends StatelessWidget {
                 child: ShaderMask(
                   blendMode: BlendMode.srcIn,
                   shaderCallback: (Rect bounds) => AppColors.primaryGradient.createShader(bounds),
-                  child: const Icon(
+                  child: Icon(
                     PhosphorIconsFill.deviceMobileCamera,
                     size: 80,
                   ),
                 ),
               ),
-              const SizedBox(height: 48),
+              SizedBox(height: 48),
               Text(
                 t?.translate('display_over_apps') ?? "Display Over Apps",
                 style: GoogleFonts.poppins(
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1E293B),
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               Text(
                 t?.translate('display_over_apps_desc') ?? 'Required to wake up the screen and show new orders like a phone call.',
                 style: GoogleFonts.poppins(
                   fontSize: 16,
-                  color: const Color(0xFF64748B),
+                  color: Theme.of(context).textTheme.bodySmall?.color,
                   height: 1.6,
                 ),
                 textAlign: TextAlign.center,
@@ -79,7 +79,7 @@ class SystemAlertPermissionScreen extends StatelessWidget {
                   borderRadius: 16,
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
                 child: TextButton(
@@ -97,7 +97,7 @@ class SystemAlertPermissionScreen extends StatelessWidget {
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF94A3B8),
+                      color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                     ),
                   ),
                 ),

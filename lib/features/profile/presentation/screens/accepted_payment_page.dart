@@ -97,7 +97,7 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(child: CustomLoadingIndicator(size: 40)),
+      builder: (_) => Center(child: CustomLoadingIndicator(size: 40)),
     );
 
     final result = await _paymentService.deletePaymentMethod(pm.id);
@@ -117,7 +117,7 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      
       appBar: BackTitleAppBar(
         title: t?.translate('accepted_payment') ?? 'Accepted payment',
       ),
@@ -148,7 +148,7 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
       children: [
         for (int i = 0; i < _paymentMethods.length; i++) ...[
           _buildPaymentItem(_paymentMethods[i]),
-          if (i < _paymentMethods.length - 1) const SizedBox(height: 16),
+          if (i < _paymentMethods.length - 1) SizedBox(height: 16),
         ],
       ],
     );
@@ -162,13 +162,13 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
         Row(
           children: [
             _buildPaymentIcon(pm),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Text(
               pm.paymentMethodName,
               style: GoogleFonts.poppins(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF1E293B),
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
             const Spacer(),
@@ -192,10 +192,10 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
               ),
             ),
             if (_paymentMethods.length > 1) ...[
-              const SizedBox(width: 16),
+              SizedBox(width: 16),
               GestureDetector(
                 onTap: () => _handleDelete(pm),
-                child: const Icon(
+                child: Icon(
                   PhosphorIconsRegular.trash,
                   size: 20,
                   color: Color(0xFFEF4444),
@@ -204,15 +204,15 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
             ],
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: const Color(0xFFF1F5F9),
+              color: Theme.of(context).dividerColor.withOpacity(0.3),
             ),
           ),
           child: Column(
@@ -231,20 +231,20 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
                       )
                     : _buildQrPlaceholder(),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     PhosphorIconsRegular.user,
                     size: 16,
-                    color: Color(0xFF64748B),
+                    color: Theme.of(context).textTheme.bodySmall?.color,
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Text(
                     t?.translate('name_label') ?? 'Name: ',
                     style: GoogleFonts.poppins(
                       fontSize: 13,
-                      color: const Color(0xFF64748B),
+                      color: Theme.of(context).textTheme.bodySmall?.color,
                     ),
                   ),
                   Text(
@@ -252,25 +252,25 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
                     style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1E293B),
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     PhosphorIconsRegular.hash,
                     size: 16,
-                    color: Color(0xFF64748B),
+                    color: Theme.of(context).textTheme.bodySmall?.color,
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Text(
                     t?.translate('no_label') ?? 'No: ',
                     style: GoogleFonts.poppins(
                       fontSize: 13,
-                      color: const Color(0xFF64748B),
+                      color: Theme.of(context).textTheme.bodySmall?.color,
                     ),
                   ),
                   Text(
@@ -278,12 +278,12 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
                     style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1E293B),
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Row(
                 children: [
                   Icon(
@@ -295,7 +295,7 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
                         ? const Color(0xFF22C55E)
                         : const Color(0xFFEF4444),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Text(
                     pm.isActive ? (t?.translate('active') ?? 'Active') : (t?.translate('inactive') ?? 'Inactive'),
                     style: GoogleFonts.poppins(
@@ -337,7 +337,7 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
       width: 32,
       height: 32,
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: Theme.of(context).dividerColor.withOpacity(0.3),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Icon(iconData, size: 18, color: const Color(0xFF475569)),
@@ -349,7 +349,7 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
       width: double.infinity,
       height: 250,
       color: Colors.grey[50],
-      child: const Icon(Icons.qr_code, size: 48, color: Colors.grey),
+      child: Icon(Icons.qr_code, size: 48, color: Colors.grey),
     );
   }
 
@@ -359,35 +359,35 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(height: 100),
+          SizedBox(height: 100),
           Container(
             padding: const EdgeInsets.all(24),
-            decoration: const BoxDecoration(
-              color: Color(0xFFF1F5F9),
+            decoration: BoxDecoration(
+              color: Theme.of(context).dividerColor.withOpacity(0.3),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.credit_card_off_rounded,
               size: 64,
-              color: Color(0xFF94A3B8),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           Text(
             t?.translate('no_payment_methods') ?? 'No Payment Methods Yet',
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF1E293B),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             t?.translate('add_payment_methods_desc') ?? 'Add your payment methods to start receiving payments.',
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 14,
-              color: const Color(0xFF64748B),
+              color: Theme.of(context).textTheme.bodySmall?.color,
             ),
           ),
         ],
@@ -399,16 +399,16 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
     return Column(
       children: [
         for (int i = 0; i < 2; i++) ...[
-          const Row(
+          Row(
             children: [
               Skeleton(width: 24, height: 24, borderRadius: 6),
               SizedBox(width: 12),
               Skeleton(width: 120, height: 18),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           const Skeleton(width: double.infinity, height: 250, borderRadius: 12),
-          if (i == 0) const SizedBox(height: 32),
+          if (i == 0) SizedBox(height: 32),
         ],
       ],
     );

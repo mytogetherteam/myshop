@@ -41,8 +41,8 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
 
     return KeyboardPaddingWrapper(
       child: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: SingleChildScrollView(
@@ -61,34 +61,34 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               Text(
                 t?.translate('cancel_order') ?? 'Cancel Order',
                 style: GoogleFonts.poppins(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1E293B),
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Text(
                 t?.translate('cancel_order_confirm') ??
                     'Are you sure you want to cancel this order? This action cannot be undone.',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
-                  color: const Color(0xFF64748B),
+                  color: Theme.of(context).textTheme.bodySmall?.color,
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               Text(
                 t?.translate('cancel_reason') ?? 'Reason for Cancellation',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF475569),
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               TextField(
                 controller: _reasonController,
                 maxLines: 3,
@@ -102,10 +102,22 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
+                  suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _reasonController,
+                    builder: (context, value, child) {
+                      if (value.text.isEmpty) return const SizedBox.shrink();
+                      return IconButton(
+                        icon: Icon(Icons.clear, color: Colors.grey, size: 20),
+                        onPressed: () {
+                          _reasonController.clear();
+                        },
+                      );
+                    },
+                  ),
                   contentPadding: const EdgeInsets.all(16),
                 ),
               ),
-              const SizedBox(height: 32),
+              SizedBox(height: 32),
               Row(
                 children: [
                   Expanded(
@@ -123,19 +135,19 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        side: const BorderSide(color: Color(0xFFE2E8F0)),
+                        side: BorderSide(color: Theme.of(context).dividerColor),
                       ),
                       child: Text(
                         t?.translate('no_go_back') ?? 'No, Go Back',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF64748B),
+                          color: Theme.of(context).textTheme.bodySmall?.color,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {

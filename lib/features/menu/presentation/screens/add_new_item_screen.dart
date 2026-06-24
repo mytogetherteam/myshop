@@ -199,7 +199,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     try {
       final results = await Future.wait<dynamic>([
         _menuService.getCategories(forceRefresh: true),
-        _menuService.getMasterCategories(forceRefresh: true),
+        _menuService.getMasterCategories(),
         _menuService.getMenuTags(),
         _menuService.getMenuItems(limit: 1000),
       ]);
@@ -239,6 +239,10 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           }
           _isLoadingData = false;
         });
+
+        if (widget.item != null && (widget.item?.imageUrl == null || widget.item!.imageUrl!.isEmpty)) {
+          Future.microtask(() => _showNoImageAlertBottomSheet());
+        }
       }
     } catch (e) {
       debugPrint('Error fetching data: $e');
@@ -464,13 +468,13 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       canPop: true,
       onPopInvokedWithResult: (didPop, result) {},
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
           elevation: 0,
           scrolledUnderElevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            icon: Icon(Icons.arrow_back, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
             onPressed: () => Navigator.pop(context),
           ),
           title: Text(
@@ -480,7 +484,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF1E293B),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
           centerTitle: false,
@@ -495,7 +499,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
                       if (widget.item?.pendingStatus == 'REJECTED' && widget.item?.rejectReason != null)
                         Container(
                           width: double.infinity,
@@ -511,8 +515,8 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                             children: [
                               Row(
                                 children: [
-                                  const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 20),
-                                  const SizedBox(width: 8),
+                                  Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 20),
+                                  SizedBox(width: 8),
                                   Text(
                                     'Rejected',
                                     style: GoogleFonts.poppins(
@@ -522,7 +526,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 8),
+                              SizedBox(height: 8),
                               Text(
                                 widget.item!.rejectReason!,
                                 style: GoogleFonts.poppins(
@@ -534,21 +538,21 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                           ),
                         ),
                       _buildImageUploadSection(),
-                      const SizedBox(height: 32),
+                      SizedBox(height: 32),
 
                       // Item Information Section
                       _buildSectionTitle(t?.translate('item_information') ?? 'Item Information'),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       _buildLanguagePills(
                         selectedLang: _selectedItemInfoLang,
                         onChanged: (val) =>
                             setState(() => _selectedItemInfoLang = val),
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       SizedBox(key: _nameKey, child: _buildItemInfoFields()),
-                      const SizedBox(height: 16),
-                      const SizedBox(height: 16),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
+                      SizedBox(height: 16),
+                      SizedBox(height: 16),
                       _buildDropdownField<MasterDataModel>(
                         key: _masterCategoryKey,
                         label: t?.translate('master_category') ?? 'Master Category',
@@ -559,7 +563,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                         onChanged: (val) =>
                             setState(() => _selectedMasterCategory = val),
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       _buildDropdownField<MenuCategoryModel>(
                         key: _categoryKey,
                         label: t?.translate('category') ?? 'Category',
@@ -572,19 +576,19 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                         showClearIcon: true,
                         onClear: () => setState(() => _selectedCategory = null),
                       ),
-                      const SizedBox(height: 32),
+                      SizedBox(height: 32),
 
                       // Categorization Section
                       _buildSectionTitle(t?.translate('categorization') ?? 'Categorization'),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       SizedBox(key: _mealTypesKey, child: _buildMealTypesSelection()),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       SizedBox(key: _tagsKey, child: _buildTagsSelection()),
-                      const SizedBox(height: 32),
+                      SizedBox(height: 32),
 
                       // Pricing Section
                       SizedBox(key: _priceKey, child: _buildSectionTitle(t?.translate('pricing') ?? 'Pricing')),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       Row(
                         children: [
                           Expanded(
@@ -600,7 +604,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                               validator: _priceValidator,
                             ),
                           ),
-                          const SizedBox(width: 16),
+                          SizedBox(width: 16),
                           Expanded(
                             child: _buildTextField(
                               t?.translate('discount_price') ?? 'Discount Price',
@@ -616,7 +620,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                         ],
                       ),
                       if (_priceWarning != null) ...[
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         Text(
                           _priceWarning!,
                           style: GoogleFonts.poppins(
@@ -626,26 +630,26 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 32),
+                      SizedBox(height: 32),
 
                       // Properties Section
                       _buildSectionTitle(t?.translate('properties') ?? 'Properties'),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       _buildPropertiesSection(),
-                      const SizedBox(height: 32),
+                      SizedBox(height: 32),
 
                       // Variants Section
                       _buildSectionTitle(t?.translate('variants') ?? 'Variants'),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       ..._variants.asMap().entries.map(
                         (entry) => _buildVariantCard(entry.value, entry.key),
                       ),
                       _buildOutlinedButton(t?.translate('add_variant') ?? '+ Add Variant', _addNewVariant),
-                      const SizedBox(height: 32),
+                      SizedBox(height: 32),
 
                       // Add On Section
                       _buildSectionTitle(t?.translate('addons') ?? 'Add-ons'),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       ..._optionGroups.asMap().entries.map(
                         (entry) =>
                             _buildOptionGroupCard(entry.value, entry.key),
@@ -653,9 +657,9 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                       _buildOutlinedButton(t?.translate('add_addon') ?? '+ Add Add-on', _addNewOptionGroup),
 
                       if (_isCombo) ...[
-                        const SizedBox(height: 32),
+                        SizedBox(height: 32),
                         _buildSectionTitle(t?.translate('combo_components') ?? 'Combo Components'),
-                        const SizedBox(height: 16),
+                        SizedBox(height: 16),
                         ..._comboComponents.asMap().entries.map(
                           (entry) =>
                               _buildComboComponentCard(entry.value, entry.key),
@@ -667,7 +671,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                       ],
 
                       if (widget.item != null) ...[
-                        const SizedBox(height: 24),
+                        SizedBox(height: 24),
                         Center(
                           child: TextButton.icon(
                             onPressed: () {
@@ -691,7 +695,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                                 ),
                               );
                             },
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.delete_outline,
                               color: Color(0xFFEF4444),
                             ),
@@ -707,14 +711,14 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                         ),
                       ],
 
-                      const SizedBox(height: 100), // Padding for bottom button
+                      SizedBox(height: 100), // Padding for bottom button
                     ],
                   ),
                 ),
               ),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             border: Border(
               top: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
             ),
@@ -872,7 +876,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       style: GoogleFonts.poppins(
         fontSize: 11,
         fontWeight: FontWeight.w700,
-        color: const Color(0xFF94A3B8),
+        color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
         letterSpacing: 1.2,
       ),
     );
@@ -882,9 +886,9 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     final t = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
         children: [
@@ -893,31 +897,31 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             _isPopular,
             (v) => setState(() => _isPopular = v),
           ),
-          const Divider(height: 1, color: Color(0xFFE2E8F0)),
+          Divider(height: 1, color: Theme.of(context).dividerColor),
           _buildPropertySwitch(
             t?.translate('property_recommended') ?? 'Recommended',
             _isRecommended,
             (v) => setState(() => _isRecommended = v),
           ),
-          const Divider(height: 1, color: Color(0xFFE2E8F0)),
+          Divider(height: 1, color: Theme.of(context).dividerColor),
           _buildPropertySwitch(
             t?.translate('property_combo_set') ?? 'Combo Set',
             _isCombo,
             (v) => setState(() => _isCombo = v),
           ),
-          const Divider(height: 1, color: Color(0xFFE2E8F0)),
+          Divider(height: 1, color: Theme.of(context).dividerColor),
           _buildPropertySwitch(
             t?.translate('property_vegetarian') ?? 'Vegetarian',
             _isVegetarian,
             (v) => setState(() => _isVegetarian = v),
           ),
-          const Divider(height: 1, color: Color(0xFFE2E8F0)),
+          Divider(height: 1, color: Theme.of(context).dividerColor),
           _buildPropertySwitch(
             t?.translate('property_spicy') ?? 'Spicy',
             _isSpicy,
             (v) => setState(() => _isSpicy = v),
           ),
-          const Divider(height: 1, color: Color(0xFFE2E8F0)),
+          Divider(height: 1, color: Theme.of(context).dividerColor),
           _buildPropertySwitch(
             t?.translate('property_hot_deal') ?? 'Hot Deal',
             _isHotDeal,
@@ -943,7 +947,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             style: GoogleFonts.poppins(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF1E293B),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
           PrimaryGradientSwitch(
@@ -980,7 +984,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           isRequired: _selectedItemInfoLang == 'EN',
           maxLength: 100,
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         _buildTextField(
           '${t?.translate('description') ?? 'Description'} ($_selectedItemInfoLang)',
           descCtrl,
@@ -1014,7 +1018,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                 border: Border.all(
                   color: isSelected
                       ? Colors.transparent
-                      : const Color(0xFFE2E8F0),
+                      : Theme.of(context).dividerColor,
                 ),
               ),
               child: Text(
@@ -1022,7 +1026,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                 style: GoogleFonts.poppins(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: isSelected ? Colors.white : const Color(0xFF64748B),
+                  color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
                 ),
               ),
             ),
@@ -1060,9 +1064,9 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
+        border: Border.all(color: Theme.of(context).dividerColor, width: 1.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1077,11 +1081,11 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1E293B),
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.delete_outline,
                     color: Color(0xFFEF4444),
                     size: 20,
@@ -1101,7 +1105,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   onChanged: (val) =>
                       setState(() => _variantLangs[index] = val),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 _buildTextField(
                   '${t?.translate('variant_name') ?? 'Variant Name'} ($lang)',
                   nameCtrl,
@@ -1119,7 +1123,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                     );
                   },
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 _buildTextField(
                   t?.translate('price') ?? 'Price',
                   priceCtrl,
@@ -1138,8 +1142,8 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                     );
                   },
                 ),
-                const SizedBox(height: 16),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
+                SizedBox(height: 16),
                 Row(
                   children: [
                     Text(
@@ -1147,7 +1151,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                       style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF1E293B),
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
                     const Spacer(),
@@ -1187,9 +1191,9 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
         children: [
@@ -1204,7 +1208,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                 ),
               ),
               IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.delete_outline,
                   color: Color(0xFFEF4444),
                   size: 20,
@@ -1238,7 +1242,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               );
             },
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           _buildDropdownField<MenuItemModel>(
             label: t?.translate('included_item') ?? 'Included Item',
             value: () {
@@ -1288,9 +1292,9 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
+        border: Border.all(color: Theme.of(context).dividerColor, width: 1.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1305,11 +1309,11 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1E293B),
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.delete_outline,
                     color: Color(0xFFEF4444),
                     size: 20,
@@ -1328,7 +1332,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   selectedLang: lang,
                   onChanged: (val) => setState(() => _addonLangs[index] = val),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 _buildTextField(
                   '${t?.translate('addon_name') ?? 'Add-on Name'} ($lang)',
                   groupNameCtrl,
@@ -1358,8 +1362,8 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                     );
                   },
                 ),
-                const SizedBox(height: 16),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
+                SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
@@ -1371,10 +1375,10 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                             style: GoogleFonts.poppins(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF1E293B),
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4),
                           PrimaryGradientSwitch(
                             value: group.isAvailable,
                             onChanged: (v) {
@@ -1392,7 +1396,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                     const Spacer(),
                   ],
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 ...group.options.asMap().entries.map((optEntry) {
                   final opt = optEntry.value;
                   final oIndex = optEntry.key;
@@ -1440,7 +1444,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                             );
                           },
                         ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       _buildTextField(
                         t?.translate('price') ?? 'Price',
                         optPriceCtrl,
@@ -1460,8 +1464,8 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                           );
                         },
                       ),
-                      const SizedBox(height: 16),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
+                      SizedBox(height: 16),
                     ],
                   );
                 }),
@@ -1492,7 +1496,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               style: GoogleFonts.poppins(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF1E293B),
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
             if (isRequired)
@@ -1505,13 +1509,13 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               ),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(color: Theme.of(context).dividerColor),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
@@ -1566,7 +1570,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               style: GoogleFonts.poppins(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF1E293B),
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
             if (isRequired)
@@ -1579,7 +1583,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               ),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Row(
           children: [
             Expanded(
@@ -1593,12 +1597,12 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               ),
             ),
             if (showClearIcon && value != null) ...[
-              const SizedBox(width: 4),
+              SizedBox(width: 4),
               IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.close,
                   size: 18,
-                  color: Color(0xFF94A3B8),
+                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                 ),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
@@ -1634,7 +1638,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               style: GoogleFonts.poppins(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF1E293B),
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
             if (isRequired)
@@ -1647,7 +1651,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
               ),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         TextFormField(
           controller: controller,
           maxLines: isMultiline ? 4 : 1,
@@ -1667,29 +1671,42 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           decoration: InputDecoration(
             prefixText: prefixText,
             prefixStyle: GoogleFonts.poppins(
-              color: const Color(0xFF1E293B),
+              color: Theme.of(context).textTheme.bodyLarge?.color,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
             hintText: hint,
             hintStyle: GoogleFonts.poppins(
-              color: const Color(0xFF94A3B8),
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
               fontSize: 13,
             ),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
             counterText: '', // Hide the counter for a cleaner look
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderSide: BorderSide(color: Theme.of(context).dividerColor),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderSide: BorderSide(color: Theme.of(context).dividerColor),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary),
+              borderSide: BorderSide(color: AppColors.primary),
+            ),
+            suffixIcon: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: controller,
+              builder: (context, value, child) {
+                if (value.text.isEmpty) return const SizedBox.shrink();
+                return IconButton(
+                  icon: Icon(Icons.clear, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)), size: 20),
+                  onPressed: () {
+                    controller.clear();
+                    if (onChanged != null) onChanged!('');
+                  },
+                );
+              },
             ),
             contentPadding: const EdgeInsets.all(16),
           ),
@@ -1714,7 +1731,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         Wrap(
           spacing: 8,
           runSpacing: 10,
@@ -1787,7 +1804,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         Wrap(
           spacing: 8,
           runSpacing: 10,
@@ -1828,23 +1845,23 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           color: selected ? null : Colors.white,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: selected ? Colors.transparent : const Color(0xFFE2E8F0),
+            color: selected ? Colors.transparent : Theme.of(context).dividerColor,
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (selected)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.only(right: 6),
-                child: Icon(Icons.check, color: Colors.white, size: 14),
+                child: Icon(Icons.check, color: Theme.of(context).cardColor, size: 14),
               ),
             Text(
               label,
               style: GoogleFonts.poppins(
                 fontSize: 12,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                color: selected ? Colors.white : const Color(0xFF64748B),
+                color: selected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
               ),
             ),
           ],
@@ -1860,7 +1877,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
           backgroundColor: const Color(0xFFFEF2F2),
-          side: const BorderSide(color: Color(0xFFFEE2E2), width: 1.0),
+          side: BorderSide(color: Color(0xFFFEE2E2), width: 1.0),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -1870,7 +1887,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (label.startsWith('+'))
-              const Padding(padding: EdgeInsets.only(right: 6)),
+              Padding(padding: EdgeInsets.only(right: 6)),
             GradientText(
               label,
               style: GoogleFonts.poppins(
@@ -1897,17 +1914,47 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
 
   Widget _buildImageUploadSection() {
     final existingUrl = widget.item?.imageUrl;
+    final hasNoImage = _pickedImage == null && (existingUrl == null || existingUrl.isEmpty);
 
-    return GestureDetector(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (hasNoImage) ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFEF2F2),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFFECACA)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, color: Color(0xFFEF4444), size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Food items with images attract more customers. Consider uploading a photo.',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: const Color(0xFFEF4444),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 12),
+        ],
+        GestureDetector(
       onTap: _pickImage,
       child: Container(
         width: double.infinity,
         height: 200,
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
+          color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(16),
           border: _pickedImage == null && existingUrl == null
-              ? Border.all(color: const Color(0xFFE2E8F0), width: 1.5)
+              ? Border.all(color: Theme.of(context).dividerColor, width: 1.5)
               : null,
         ),
         child: ClipRRect(
@@ -1921,9 +1968,9 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                       imageUrl: existingUrl,
                       fit: BoxFit.cover,
                       placeholder: (context, url) =>
-                          const Center(child: CustomLoadingIndicator(size: 24)),
+                          Center(child: CustomLoadingIndicator(size: 24)),
                       errorWidget: (context, url, error) =>
-                          const Icon(Icons.error),
+                          Icon(Icons.error),
                     )
                   : Center(
                       child: Column(
@@ -1935,13 +1982,13 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                               size: 32,
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12),
                           Text(
                             'Tap to upload',
                             style: GoogleFonts.poppins(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF1E293B),
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
                             ),
                           ),
                         ],
@@ -1949,8 +1996,10 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                     )),
         ),
       ),
-    );
-  }
+    ),
+    ],
+  );
+}
 
   Future<void> _pickImage() async {
     final result = await ImageUploadService().pickFromGallery();
@@ -1972,7 +2021,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       style: GoogleFonts.poppins(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF1E293B),
+        color: Theme.of(context).textTheme.bodyLarge?.color,
       ),
     );
   }
@@ -1989,6 +2038,104 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           SizedBox(height: 8),
           Skeleton(width: double.infinity, height: 50),
         ],
+      ),
+    );
+  }
+
+  void _showNoImageAlertBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 48,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).dividerColor,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Color(0xFFFEF2F2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.image_not_supported_outlined,
+                color: Color(0xFFEF4444),
+                size: 32,
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Missing Image',
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Food items with images attract more customers. Consider uploading a photo for this item.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: Theme.of(context).textTheme.bodySmall?.color,
+                height: 1.5,
+              ),
+            ),
+            SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: PrimaryGradientButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _pickImage();
+                },
+                text: 'Upload Image',
+                height: 56,
+                borderRadius: 16,
+              ),
+            ),
+            SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Text(
+                  'Maybe Later',
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).textTheme.bodySmall?.color,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }

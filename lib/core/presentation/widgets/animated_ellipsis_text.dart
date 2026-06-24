@@ -44,12 +44,16 @@ class _AnimatedEllipsisTextState extends State<AnimatedEllipsisText> {
     String invisibleDots = '.' * (4 - _dotCount);
 
     return Row(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.start, // Align to start so dots append naturally
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(
-          widget.text,
-          style: widget.style,
+        Flexible(
+          child: Text(
+            widget.text,
+            style: widget.style,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+          ),
         ),
         Text(
           dots,

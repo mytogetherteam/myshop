@@ -7,6 +7,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:my_shop/core/notifications/notification_service.dart';
 import 'package:my_shop/core/utils/app_version.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
+import 'package:my_shop/core/theme/theme_service.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'app.dart';
 
 @pragma('vm:entry-point')
@@ -14,12 +16,25 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   // Initialize NotificationService to create channels
   await NotificationService().initialize();
+  
+  final String? type = message.data['type'];
+  if (type == 'ORDER_ACKNOWLEDGED') {
+    final String? orderIdStr = message.data['orderId']?.toString() ?? message.data['order_id']?.toString();
+    if (orderIdStr != null) {
+      await NotificationService().cancelNotification(orderIdStr.hashCode);
+    }
+    return; // Do not show anything
+  }
+
   // Manually show local notification to ensure sound plays even if data-only
   await NotificationService().showLocalNotification(message);
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Enable Wakelock to keep the screen awake for this merchant app
+  WakelockPlus.enable();
 
   // Firebase & FCM push notifications are not configured for web (no web
   // Firebase options / flutter_local_notifications has no web support), so we
@@ -35,6 +50,7 @@ void main() async {
   await AppVersion.init();
 
   await LocalizationService.instance.init();
+  await ThemeService.instance.initialize();
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

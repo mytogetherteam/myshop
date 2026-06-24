@@ -37,7 +37,7 @@ class PriceOption extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: selected ? Colors.white : const Color(0xFF64748B),
+              color: selected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
             ),
           ),
         ),

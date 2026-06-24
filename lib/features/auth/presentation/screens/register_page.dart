@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/gestures.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/app_logo.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
@@ -8,9 +10,10 @@ import 'package:my_shop/features/auth/data/services/auth_service.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:my_shop/core/presentation/widgets/global_modal.dart';
 import 'package:my_shop/features/profile/presentation/widgets/language_selector_sheet.dart';
+import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+import 'package:webview_flutter/webview_flutter.dart';
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
@@ -101,12 +104,12 @@ class _RegisterPageState extends State<RegisterPage>
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).textTheme.bodyLarge?.color),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
@@ -133,9 +136,9 @@ class _RegisterPageState extends State<RegisterPage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Logo
-                    const Center(child: AppLogo(size: 72)),
+                    Center(child: AppLogo(size: 72)),
 
-                    const SizedBox(height: 32),
+                    SizedBox(height: 32),
 
                     // Welcome text
                     Text(
@@ -143,24 +146,24 @@ class _RegisterPageState extends State<RegisterPage>
                       style: GoogleFonts.poppins(
                         fontSize: 26,
                         fontWeight: FontWeight.w700,
-                        color: Colors.black,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6),
                     Text(
                       t?.translate('register_subtitle') ?? 'Apply now to open your online shop and reach more customers.',
                       style: GoogleFonts.poppins(
                         fontSize: 14,
-                        color: Colors.grey[600],
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
                         height: 1.5,
                       ),
                     ),
 
-                    const SizedBox(height: 32),
+                    SizedBox(height: 32),
 
                     // Shop Name
                     _buildLabel(t?.translate('shop_name') ?? 'Shop Name'),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     _buildTextField(
                       controller: _shopNameController,
                       hint: t?.translate('shop_name_hint') ?? 'e.g., My Awesome Shop',
@@ -173,11 +176,11 @@ class _RegisterPageState extends State<RegisterPage>
                       },
                     ),
 
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20),
 
                     // Owner Name
                     _buildLabel(t?.translate('owner_name') ?? 'Owner Name'),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     _buildTextField(
                       controller: _ownerNameController,
                       hint: t?.translate('owner_name_hint') ?? 'Enter your full name',
@@ -190,11 +193,11 @@ class _RegisterPageState extends State<RegisterPage>
                       },
                     ),
 
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20),
 
                     // Phone Number
                     _buildLabel(t?.translate('phone_number') ?? 'Phone Number'),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     _buildTextField(
                       controller: _phoneController,
                       hint: t?.translate('phone_hint') ?? 'e.g., 09xxxxxxxxx',
@@ -208,11 +211,11 @@ class _RegisterPageState extends State<RegisterPage>
                       },
                     ),
 
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20),
 
                     // Email (Optional)
                     _buildLabel(t?.translate('email_optional') ?? 'Email Address (Optional)'),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     _buildTextField(
                       controller: _emailController,
                       hint: t?.translate('username_email_hint') ?? 'admin@shop.com',
@@ -220,7 +223,7 @@ class _RegisterPageState extends State<RegisterPage>
                       keyboardType: TextInputType.emailAddress,
                     ),
 
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24),
 
                     // Privacy Policy & Terms Checkbox
                     Row(
@@ -239,36 +242,55 @@ class _RegisterPageState extends State<RegisterPage>
                             },
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: 12),
                         Expanded(
-                          child: GestureDetector(
-                            onTap: () async {
-                              final uri = Uri.parse('https://mytogether.org/privacy-policy/shop');
-                              try {
-                                await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
-                              } catch (e) {
-                                debugPrint('Could not launch $uri');
-                              }
-                            },
-                            child: ShaderMask(
-                              shaderCallback: (bounds) => AppColors.primaryGradient.createShader(bounds),
-                              child: Text(
-                                t?.translate('terms_and_privacy') ?? 'I agree to the Terms of Service and Privacy Policy',
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 2.0),
+                            child: Text.rich(
+                              TextSpan(
+                                text: 'I agree to the ',
                                 style: GoogleFonts.poppins(
                                   fontSize: 13,
-                                  color: Colors.white,
-                                  decoration: TextDecoration.underline,
-                                  decorationColor: Colors.white,
+                                  color: Theme.of(context).textTheme.bodyMedium?.color,
                                   height: 1.4,
                                 ),
-                              ),
+                              children: [
+                                TextSpan(
+                                  text: 'Terms of Use',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primary,
+                                  ),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () => _showWebModal(
+                                      'Terms of Use',
+                                      'https://www.mytogether.org/terms-of-use/shop',
+                                    ),
+                                ),
+                                const TextSpan(text: ' and '),
+                                TextSpan(
+                                  text: 'Privacy Policy',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primary,
+                                  ),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () => _showWebModal(
+                                      'Privacy Policy',
+                                      'https://www.mytogether.org/privacy-policy/shop',
+                                    ),
+                                ),
+                              ],
                             ),
                           ),
+                        ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 32),
+                    SizedBox(height: 32),
 
                     // Register Button
                     PrimaryGradientButton(
@@ -277,7 +299,7 @@ class _RegisterPageState extends State<RegisterPage>
                       onPressed: _handleRegister,
                     ),
 
-                    const SizedBox(height: 32),
+                    SizedBox(height: 32),
                   ],
                 ),
               ),
@@ -296,7 +318,7 @@ class _RegisterPageState extends State<RegisterPage>
       style: GoogleFonts.poppins(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: Colors.black87,
+        color: Theme.of(context).textTheme.bodyLarge?.color,
       ),
     );
   }
@@ -312,36 +334,48 @@ class _RegisterPageState extends State<RegisterPage>
       controller: controller,
       validator: validator,
       keyboardType: keyboardType,
-      style: GoogleFonts.poppins(fontSize: 15, color: Colors.black),
+      style: GoogleFonts.poppins(fontSize: 15, color: Theme.of(context).textTheme.bodyLarge?.color),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: GoogleFonts.poppins(color: Colors.grey[400], fontSize: 14),
         prefixIcon: Icon(icon, color: Colors.grey[500], size: 20),
         filled: true,
-        fillColor: Colors.grey[50],
+        fillColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : Colors.grey[50],
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 16,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.grey[200]!, width: 1),
+          borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : Colors.grey[200]!, width: 1),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.grey[200]!, width: 1),
+          borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : Colors.grey[200]!, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          borderSide: BorderSide(color: AppColors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Colors.red, width: 1),
+          borderSide: BorderSide(color: Colors.red, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Colors.red, width: 1.5),
+          borderSide: BorderSide(color: Colors.red, width: 1.5),
+        ),
+        suffixIcon: ValueListenableBuilder<TextEditingValue>(
+          valueListenable: controller,
+          builder: (context, value, child) {
+            if (value.text.isEmpty) return const SizedBox.shrink();
+            return IconButton(
+              icon: Icon(Icons.clear, color: Colors.grey, size: 20),
+              onPressed: () {
+                controller.clear();
+              },
+            );
+          },
         ),
       ),
     );
@@ -364,7 +398,7 @@ class _RegisterPageState extends State<RegisterPage>
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
@@ -373,28 +407,93 @@ class _RegisterPageState extends State<RegisterPage>
                   offset: const Offset(0, 4),
                 ),
               ],
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(color: Theme.of(context).dividerColor),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const PhosphorIcon(PhosphorIconsRegular.globe, color: Colors.black87, size: 20),
-                const SizedBox(width: 8),
+                PhosphorIcon(PhosphorIconsRegular.globe, color: Theme.of(context).textTheme.bodyLarge?.color, size: 20),
+                SizedBox(width: 8),
                 Text(
                   langCode,
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
-                const SizedBox(width: 4),
-                const PhosphorIcon(PhosphorIconsRegular.caretDown, color: Colors.black54, size: 16),
+                SizedBox(width: 4),
+                PhosphorIcon(PhosphorIconsRegular.caretDown, color: Theme.of(context).textTheme.bodySmall?.color, size: 16),
               ],
             ),
           ),
         );
       },
+    );
+  }
+
+  void _showWebModal(String title, String url) {
+    if (kIsWeb) {
+      launchUrl(Uri.parse(url), mode: LaunchMode.platformDefault);
+      return;
+    }
+    
+    final controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..loadRequest(Uri.parse(url));
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      enableDrag: false,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.9,
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, color: Theme.of(context).textTheme.bodyLarge?.color),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+                child: WebViewWidget(
+                  controller: controller,
+                  gestureRecognizers: {
+                    Factory<VerticalDragGestureRecognizer>(
+                      () => VerticalDragGestureRecognizer(),
+                    ),
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

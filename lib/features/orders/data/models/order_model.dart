@@ -53,6 +53,8 @@ class OrderModel {
   final int? driverId;
   final String? trackingUrl;
   final String? proofPhotoUrl;
+  final String? paymentMethodName;
+  final String? paymentMethodIconUrl;
   final List<OrderReviseItemModel> reviseItems;
   final List<OrderDriverModel> shopDeliveryDrivers;
   final int queueNo;
@@ -107,6 +109,8 @@ class OrderModel {
     this.driverId,
     this.trackingUrl,
     this.proofPhotoUrl,
+    this.paymentMethodName,
+    this.paymentMethodIconUrl,
     this.reviseItems = const [],
     this.shopDeliveryDrivers = const [],
     this.queueNo = 0,
@@ -229,6 +233,9 @@ class OrderModel {
 
     final waitingMins = json['waitingTimeMinutes'] as int? ?? 0;
 
+    final shopPaymentMethodMap = json['shopPaymentMethod'] as Map?;
+    final paymentMethodMap = shopPaymentMethodMap?['paymentMethod'] as Map? ?? shopPaymentMethodMap;
+
     return OrderModel(
       id: (json['id'] ?? '').toString(),
       lastOrderNo: json['lastOrderNo']?.toString() ?? json['id']?.toString() ?? '',
@@ -268,6 +275,8 @@ class OrderModel {
       driverId: json['driverId'] as int? ?? driver?['id'] as int?,
       trackingUrl: json['trackingUrl']?.toString() ?? json['deliveryTrackingUrl']?.toString(),
       proofPhotoUrl: _resolveUrl(json['proofPhotoUrl']),
+      paymentMethodName: paymentMethodMap?['name']?.toString(),
+      paymentMethodIconUrl: _resolveUrl(paymentMethodMap?['iconUrl']),
       reviseItems: reviseItemsList,
       shopDeliveryDrivers: driversList,
       queueNo: json['queueNo'] as int? ?? 0,
@@ -332,7 +341,10 @@ class OrderModel {
           deliveryFee: deliveryFee,
         );
 
-  String get deliveryAddressDetail => deliveryAddress?.address ?? '-';
+  String get deliveryAddressDetail {
+    final street = deliveryAddress?.streetLine ?? '';
+    return street.isNotEmpty ? street : '-';
+  }
   String get deliveryAddressTitle =>
       isPickupFulfillment ? 'Pickup' : 'Delivery Address';
   String get statusName => statusLabel ?? status;
@@ -345,6 +357,7 @@ class OrderDriverModel {
   final String? vehicleNo;
   final String? profileUrl;
   final bool isActive;
+  final bool isBusy;
 
   OrderDriverModel({
     required this.id,
@@ -353,6 +366,7 @@ class OrderDriverModel {
     this.vehicleNo,
     this.profileUrl,
     this.isActive = true,
+    this.isBusy = false,
   });
 
   factory OrderDriverModel.fromJson(Map<String, dynamic> json) {
@@ -363,6 +377,7 @@ class OrderDriverModel {
       vehicleNo: json['vehicleNo']?.toString(),
       profileUrl: _resolveUrl(json['profileUrl']),
       isActive: json['isActive'] as bool? ?? true,
+      isBusy: json['isBusy'] as bool? ?? false,
     );
   }
 }
@@ -471,6 +486,14 @@ class DeliveryAddressModel {
     this.floor,
     this.note,
   });
+
+  String get streetLine {
+    final primary = address.trim();
+    if (primary.isNotEmpty) return primary;
+    final mm = addressMm?.trim();
+    if (mm != null && mm.isNotEmpty) return mm;
+    return '';
+  }
 
   factory DeliveryAddressModel.fromJson(Map<String, dynamic> json) {
     return DeliveryAddressModel(

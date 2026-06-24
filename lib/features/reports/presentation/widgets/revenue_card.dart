@@ -77,7 +77,7 @@ class RevenueCard extends StatelessWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Text(
                 "฿ $revenue",
                 style: GoogleFonts.poppins(
@@ -86,15 +86,15 @@ class RevenueCard extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 4),
+              SizedBox(height: 4),
               Row(
                 children: [
-                   const PhosphorIcon(
+                   PhosphorIcon(
                     PhosphorIconsRegular.arrowUp,
                     size: 14,
                     color: Colors.white,
                   ),
-                  const SizedBox(width: 4),
+                  SizedBox(width: 4),
                   Text(
                     trend,
                     style: GoogleFonts.poppins(
@@ -104,12 +104,12 @@ class RevenueCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 32),
+              SizedBox(height: 32),
               Row(
                 children: [
-                  _buildStatItem(t?.translate('orders') ?? "Orders", orders),
-                  const SizedBox(width: 80),
-                  _buildStatItem(t?.translate('cancelled') ?? "Cancelled", cancelled),
+                  _buildStatItem(context, t?.translate('orders') ?? "Orders", orders),
+                  SizedBox(width: 80),
+                  _buildStatItem(context, t?.translate('cancelled') ?? "Cancelled", cancelled),
                 ],
               ),
             ],
@@ -119,7 +119,7 @@ class RevenueCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatItem(String label, String value) {
+  Widget _buildStatItem(BuildContext context, String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -131,7 +131,7 @@ class RevenueCard extends StatelessWidget {
             fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4),
         Text(
           value,
           style: GoogleFonts.poppins(

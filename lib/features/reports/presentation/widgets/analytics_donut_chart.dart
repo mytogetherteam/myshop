@@ -8,7 +8,7 @@ class AnalyticsDonutChart extends StatefulWidget {
   final Gradient? section1Gradient;
   final Gradient? section2Gradient;
   final Color section1Color;
-  final Color section2Color;
+  final Color? section2Color;
   final String section1Label;
   final String section2Label;
   final String centerTitle;
@@ -19,7 +19,7 @@ class AnalyticsDonutChart extends StatefulWidget {
     required this.section1Value,
     required this.section2Value,
     this.section1Color = AppColors.primary,
-    this.section2Color = const Color(0xFFF1F5F9),
+    this.section2Color,
     required this.section1Label,
     required this.section2Label,
     required this.centerTitle,
@@ -67,7 +67,7 @@ class _AnalyticsDonutChartState extends State<AnalyticsDonutChart> {
                   radius: 16,
                 ),
                 PieChartSectionData(
-                  color: widget.section2Gradient != null ? null : widget.section2Color,
+                  color: widget.section2Gradient != null ? null : (widget.section2Color ?? (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : const Color(0xFFF1F5F9))),
                   gradient: widget.section2Gradient,
                   value: s2,
                   title: '',

@@ -53,9 +53,9 @@ class ShopLocationSection extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(color: Theme.of(context).dividerColor),
         ),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<MasterDataModel>(
@@ -63,7 +63,7 @@ class ShopLocationSection extends StatelessWidget {
             isExpanded: true,
             hint: Text(
               hint,
-              style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+              style: TextStyle(color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)), fontSize: 13),
             ),
             items: [
               DropdownMenuItem<MasterDataModel>(
@@ -71,9 +71,9 @@ class ShopLocationSection extends StatelessWidget {
                 enabled: false,
                 child: Text(
                   t?.translate('no_data_found') ?? 'No Data Found',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
-                    color: Color(0xFF94A3B8),
+                    color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                   ),
                 ),
               ),
@@ -117,7 +117,7 @@ class ShopLocationSection extends StatelessWidget {
             onChanged: onMarkChanged,
           ),
         ),
-        const SizedBox(height: 32),
+        SizedBox(height: 32),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
@@ -136,7 +136,7 @@ class ShopLocationSection extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: FormSection(
                   label: t?.translate('district') ?? 'District',

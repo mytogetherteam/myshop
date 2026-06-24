@@ -30,7 +30,7 @@ class FormSection extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF475569),
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
                   ),
                 ),
                 if (required)
@@ -45,7 +45,7 @@ class FormSection extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           child,
         ],
       ),
