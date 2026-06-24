@@ -48,8 +48,10 @@ class CertificatePinningInterceptor extends Interceptor {
           }
           if (cert == null) return false;
 
-          // If the host is not pinned, allow standard validation
-          if (!_hostPins.containsKey(host)) return true;
+          // If the host is not pinned, REJECT the connection to prevent MITM attacks
+          // on misconfigured or hijacked unpinned domains since ApiClient only
+          // targets the backend API.
+          if (!_hostPins.containsKey(host)) return false;
 
           // Calculate the SHA-256 fingerprint of the certificate.
           // cert.der returns List<int> on native.

@@ -43,6 +43,13 @@ class WebSocketService {
   Stream<Map<String, dynamic>> get menuUpdates =>
       _menuUpdateController.stream;
 
+  final StreamController<Map<String, dynamic>> _broadcastUpdateController =
+      StreamController<Map<String, dynamic>>.broadcast();
+
+  /// Realtime broadcast events (system announcements, USERS/ALL, SINGLE_SHOP)
+  Stream<Map<String, dynamic>> get broadcastUpdates =>
+      _broadcastUpdateController.stream;
+
   bool _isConnecting = false;
   bool _shouldReconnect = true;
   int _reconnectAttempts = 0;
@@ -73,7 +80,7 @@ class WebSocketService {
   }
 
   Future<void> connect({bool force = false}) async {
-    if (_isConnecting && !force) return;
+    if (_isConnecting) return; // Already connecting, ignore concurrent requests
     if (isConnected && !force) return;
 
     // We've decided to (re)connect — re-enable auto-reconnect and cancel any
@@ -264,6 +271,49 @@ class WebSocketService {
     );
 
     AppLogger.realtime('[WS] Subscribed to $orderDestination');
+
+    // ──────────────────────────────────────────
+    // Broadcasts Setup
+    // ──────────────────────────────────────────
+
+    _stompClient?.subscribe(
+      destination: '/topic/broadcasts/shop-admins',
+      headers: {...headers, 'receipt': 'rcpt-shop-admins-broadcasts'},
+      callback: (StompFrame frame) {
+        final body = _frameBody(frame);
+        if (body == null) return;
+        try {
+          final Map<String, dynamic> raw = json.decode(body);
+          if (raw['type'] == 'BROADCAST') {
+            AppLogger.realtime('[WS] BROADCAST shop-admins | ${raw['id']}');
+            _broadcastUpdateController.add(raw);
+          }
+        } catch (e) {
+          AppLogger.realtime('[WS] Error parsing broadcast update: $e');
+        }
+      },
+    );
+    AppLogger.realtime('[WS] Subscribed to /topic/broadcasts/shop-admins');
+
+    final broadcastDestination = '/topic/shop/$shopId/broadcasts';
+    _stompClient?.subscribe(
+      destination: broadcastDestination,
+      headers: {...headers, 'receipt': 'rcpt-shop-broadcasts'},
+      callback: (StompFrame frame) {
+        final body = _frameBody(frame);
+        if (body == null) return;
+        try {
+          final Map<String, dynamic> raw = json.decode(body);
+          if (raw['type'] == 'BROADCAST') {
+            AppLogger.realtime('[WS] BROADCAST single-shop | ${raw['id']}');
+            _broadcastUpdateController.add(raw);
+          }
+        } catch (e) {
+          AppLogger.realtime('[WS] Error parsing broadcast update: $e');
+        }
+      },
+    );
+    AppLogger.realtime('[WS] Subscribed to $broadcastDestination');
 
     final chatDestination = '/topic/shop/$shopId/chat';
 

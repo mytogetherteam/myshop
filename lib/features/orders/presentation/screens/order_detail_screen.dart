@@ -310,9 +310,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     } else if (_currentOrder.status == 'AWAITING_APPROVAL') {
       isValid = true;
     } else if (_currentOrder.status == 'COOKING') {
-      isValid = _currentOrder.isPickupFulfillment || 
+      bool baseValid = _currentOrder.isPickupFulfillment || 
                 _selectedDriverId != null || 
                 _deliveryTrackingUrlController.text.trim().isNotEmpty;
+      if (!_currentOrder.isPickupFulfillment && _currentOrder.deliveryType == 'NORMAL') {
+        isValid = baseValid && fee.isNotEmpty && double.tryParse(fee) != null;
+      } else {
+        isValid = baseValid;
+      }
     } else {
       isValid = true;
     }
@@ -1412,6 +1417,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       return;
     }
 
+    double? finalDeliveryFee;
+    if (_currentOrder.deliveryType == 'NORMAL' && _deliveryFeeController.text.isNotEmpty) {
+      final numStr = _deliveryFeeController.text.replaceAll(',', '');
+      finalDeliveryFee = double.tryParse(numStr);
+    }
+
     await _runOrderAction(
       action: () => OrderService().dispatchOrder(
         _currentOrder.id.toString(),
@@ -1419,6 +1430,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         trackingUrl: hasTrackingUrl
             ? _deliveryTrackingUrlController.text.trim()
             : null,
+        deliveryFee: finalDeliveryFee,
       ),
       errorMessage: 'Failed to dispatch order. Please try again.',
     );
@@ -1693,8 +1705,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       SizedBox(height: 8),
                     ],
 
-                    // Waiting Time Update (PREPARING state only for Fast Delivery)
-                    if (_currentOrder.status == 'COOKING' && _currentOrder.deliveryType == 'PREPAID') ...[
+                    // Waiting Time Update (PREPARING state only for Delivery)
+                    if (_currentOrder.status == 'COOKING' && _currentOrder.isDeliveryFulfillment) ...[
                       _buildWaitingTimeUpdate(),
                       SizedBox(height: 8),
                     ],
@@ -2866,12 +2878,16 @@ Widget _buildAnimatedProgress() {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Total',
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
+            Expanded(
+              child: Text(
+                _currentOrder.deliveryType == 'NORMAL' 
+                    ? 'Est Total' 
+                    : 'Total',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B)),
+                ),
               ),
             ),
             Row(
@@ -3601,6 +3617,28 @@ Widget _buildAnimatedProgress() {
             // ── COOKING / dispatch (single driver selection point) ─────
             ] else if (_currentOrder.status == 'COOKING' &&
                 _currentOrder.isDeliveryFulfillment) ...[
+              if (_currentOrder.deliveryType == 'NORMAL') ...[
+                _buildInputField(
+                  'Real Delivery Fee',
+                  _deliveryFeeController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    ThousandsSeparatorInputFormatter()
+                  ],
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Required';
+                    final numValue = value.replaceAll(',', '');
+                    if (double.tryParse(numValue) == null) return 'Invalid number';
+                    return null;
+                  },
+                  description: 'Enter the final real delivery fee for this flexible delivery.',
+                  placeholder: 'e.g. 50',
+                  showDeliveryApps: true,
+                  suffixText: 'THB',
+                ),
+                SizedBox(height: 12),
+              ],
               if (_deliveryTrackingUrlController.text.trim().isEmpty || _selectedDriverId != null)
                 _buildDriverPicker(),
               if (_selectedDriverId == null) ...[
@@ -3845,11 +3883,15 @@ Widget _buildAnimatedProgress() {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Total',
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
+            Expanded(
+              child: Text(
+                _currentOrder.deliveryType == 'NORMAL' 
+                    ? 'Est Total' 
+                    : 'Total',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
+                ),
               ),
             ),
             Text(

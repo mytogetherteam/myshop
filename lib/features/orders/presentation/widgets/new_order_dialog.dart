@@ -5,6 +5,8 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'dart:async';
 import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
+import 'package:my_shop/features/orders/data/services/order_service.dart';
+import 'package:my_shop/core/notifications/notification_service.dart';
 
 class NewOrderDialog extends StatefulWidget {
   final OrderModel order;
@@ -29,10 +31,15 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
     _wsSubscription = WebSocketService().orderUpdates.listen((event) {
       final orderId = event['orderId']?.toString() ?? event['order']?['id']?.toString();
       final status = event['order']?['status']?.toString() ?? event['status']?.toString();
+      final type = event['type']?.toString();
       
-      if (orderId == widget.order.id.toString() && status?.toUpperCase() == 'CANCELED') {
-        if (mounted) {
-          Navigator.of(context).maybePop();
+      if (orderId == widget.order.id.toString()) {
+        if (type == 'ORDER_ACKNOWLEDGED' || status?.toUpperCase() == 'CANCELED') {
+          if (mounted) {
+            NotificationService.stopGlobalAlert();
+            NotificationService().cancelNotification(orderId.hashCode);
+            Navigator.of(context).maybePop();
+          }
         }
       }
     });
@@ -232,12 +239,16 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Total',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                    Expanded(
+                      child: Text(
+                        widget.order.deliveryType == 'NORMAL' 
+                            ? 'Est Total' 
+                            : 'Total',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
+                        ),
                       ),
                     ),
                     Text(
@@ -252,7 +263,10 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
                 ),
                 SizedBox(height: 24),
                 PrimaryGradientButton(
-                  onPressed: widget.onViewOrder,
+                  onPressed: () {
+                    OrderService().acknowledgeOrder(widget.order.id.toString());
+                    widget.onViewOrder();
+                  },
                   text: 'View Order',
                   height: 56,
                   borderRadius: 16,

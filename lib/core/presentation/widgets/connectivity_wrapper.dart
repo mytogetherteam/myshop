@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'dart:async';
 import 'package:my_shop/core/localization/app_localizations.dart';
+import 'package:my_shop/core/network/websocket_service.dart';
 
 class ConnectivityWrapper extends StatefulWidget {
   final Widget child;
@@ -45,6 +46,9 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
       setState(() {
         _hasConnection = hasConn;
       });
+      if (hasConn) {
+        WebSocketService().connect(force: true);
+      }
     }
   }
 

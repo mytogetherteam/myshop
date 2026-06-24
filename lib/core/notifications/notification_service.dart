@@ -90,6 +90,15 @@ class NotificationService {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final String? type = message.data['type'];
       final String? subType = message.data['subType'];
+      
+      if (type == 'ORDER_ACKNOWLEDGED') {
+        final String? orderIdStr = message.data['orderId']?.toString() ?? message.data['order_id']?.toString();
+        if (orderIdStr != null) {
+          cancelNotification(orderIdStr.hashCode);
+        }
+        return;
+      }
+
       final bool isNewOrder = type == 'NEW_ORDER' || subType == 'PENDING_ORDER';
 
       // Skip showing system banner for new orders in the foreground, 
@@ -272,12 +281,20 @@ class NotificationService {
       android: androidPlatformChannelSpecifics,
       iOS: iosPlatformChannelSpecifics,
     );
+    
+    final String? orderIdStr = message.data['orderId']?.toString() ?? message.data['order_id']?.toString();
+    final int notiId = isNewOrder && orderIdStr != null ? orderIdStr.hashCode : message.hashCode;
+
     await _localNotifications.show(
-      message.hashCode,
+      notiId,
       title,
       body,
       platformChannelSpecifics,
     );
+  }
+
+  Future<void> cancelNotification(int id) async {
+    await _localNotifications.cancel(id);
   }
 
   void _handleNotificationClick(RemoteMessage? message) async {

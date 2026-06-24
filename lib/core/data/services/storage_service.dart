@@ -56,21 +56,27 @@ class StorageService {
 
   Future<void> saveUserInfo(UserInfo userInfo) async {
     await _ensureInitialized();
-    await _prefs!.setString(_keyUserInfo, json.encode(userInfo.toJson()));
+    await _secureStorage.write(
+        key: _keyUserInfo, value: json.encode(userInfo.toJson()));
   }
 
   Future<UserInfo?> getUserInfo() async {
     await _ensureInitialized();
-    final data = _prefs!.getString(_keyUserInfo);
+    final data = await _secureStorage.read(key: _keyUserInfo);
     if (data == null) return null;
-    return UserInfo.fromJson(json.decode(data));
+    try {
+      return UserInfo.fromJson(json.decode(data));
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> clearAll() async {
     await _ensureInitialized();
     await _secureStorage.delete(key: _keyToken);
     await _secureStorage.delete(key: _keyRefreshToken);
-    await _prefs!.remove(_keyUserInfo);
+    await _secureStorage.delete(key: _keyUserInfo);
+    await _prefs!.remove(_keyUserInfo); // Clean up legacy plaintext storage if exists
     await _prefs!.remove(_keySelectedShopId);
     await _prefs!.remove(_keyLanguage);
   }

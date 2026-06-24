@@ -373,7 +373,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'ပုံပါရှိသော အစားအသောက်များသည် Customer များကို ပိုမိုဆွဲဆောင်နိုင်ပါသည်။',
+                  AppLocalizations.of(context)?.translate('food_with_pictures_attract_more_customers') ?? 'ပုံပါရှိသော အစားအသောက်များသည် Customer များကို ပိုမိုဆွဲဆောင်နိုင်ပါသည်။',
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFFFDA4AF) : const Color(0xFFE11D48),

@@ -16,6 +16,16 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   // Initialize NotificationService to create channels
   await NotificationService().initialize();
+  
+  final String? type = message.data['type'];
+  if (type == 'ORDER_ACKNOWLEDGED') {
+    final String? orderIdStr = message.data['orderId']?.toString() ?? message.data['order_id']?.toString();
+    if (orderIdStr != null) {
+      await NotificationService().cancelNotification(orderIdStr.hashCode);
+    }
+    return; // Do not show anything
+  }
+
   // Manually show local notification to ensure sound plays even if data-only
   await NotificationService().showLocalNotification(message);
 }

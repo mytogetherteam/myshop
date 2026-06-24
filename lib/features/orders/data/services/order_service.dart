@@ -121,6 +121,22 @@ class OrderService {
     return null;
   }
 
+  Future<bool> acknowledgeOrder(String orderId) async {
+    try {
+      final response = await ApiClient().dio.post('$_ordersPath/$orderId/acknowledge');
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        return true;
+      }
+    } on DioException catch (e) {
+      ApiHelper.handleError(e, context: 'OrderService.acknowledgeOrder');
+    } catch (e) {
+      ApiHelper.handleError(e, context: 'OrderService.acknowledgeOrder');
+    }
+    return false;
+  }
+
   Future<Map<String, dynamic>> updateStatus(
     String orderId, {
     required String status,
@@ -254,12 +270,14 @@ class OrderService {
     String orderId, {
     int? driverId,
     String? trackingUrl,
+    double? deliveryFee,
   }) {
     return updateStatus(
       orderId,
       status: 'ON_THE_WAY',
       driverId: driverId,
       trackingUrl: trackingUrl,
+      deliveryFee: deliveryFee,
     );
   }
 
