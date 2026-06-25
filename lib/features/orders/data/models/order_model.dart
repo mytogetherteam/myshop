@@ -40,6 +40,7 @@ class OrderModel {
   final double itemPrice;
   final double taxAmount;
   final String displayTaxAmount;
+  final bool taxEnable;
   final double totalAmount;
   final String displayTotalAmount;
   final double previousTotalAmount;
@@ -96,6 +97,7 @@ class OrderModel {
     this.itemPrice = 0.0,
     this.taxAmount = 0.0,
     this.displayTaxAmount = '',
+    this.taxEnable = true,
     this.totalAmount = 0.0,
     this.displayTotalAmount = '',
     this.previousTotalAmount = 0.0,
@@ -192,8 +194,9 @@ class OrderModel {
                         ((item['quantity'] as num?)?.toInt() ?? 0),
               )
             : 0.0);
+    final taxEnable = _resolveTaxEnable(json, itemPrice);
     final taxAmount = (json['taxAmount'] as num?)?.toDouble() ??
-        OrderTax.calculateTax(itemPrice);
+        OrderTax.resolveTaxAmount(itemPrice, taxEnable);
     final totalAmount = (json['totalAmount'] as num?)?.toDouble() ?? 0.0;
 
     List<OrderReviseItemModel> reviseItemsList = [];
@@ -253,6 +256,7 @@ class OrderModel {
           (deliveryFee > 0 ? '฿${deliveryFee.toInt()}' : '฿ 0'),
       itemPrice: itemPrice,
       taxAmount: taxAmount,
+      taxEnable: taxEnable,
       displayTaxAmount: json['displayTaxAmount']?.toString() ??
           (taxAmount > 0 ? '฿${taxAmount.toInt()}' : '฿ 0'),
       totalAmount: totalAmount,
@@ -309,6 +313,21 @@ class OrderModel {
     );
   }
 
+  /// Resolves whether tax applies to this order. The backend order payload
+  /// does not include the flag directly, so we prefer an explicit `taxEnable`
+  /// (on the order or nested shop) and otherwise infer it from the persisted
+  /// `taxAmount`: a tax-disabled shop stores 0.
+  static bool _resolveTaxEnable(Map<String, dynamic> json, double itemPrice) {
+    if (json['taxEnable'] is bool) return json['taxEnable'] as bool;
+    final shop = json['shop'];
+    if (shop is Map && shop['taxEnable'] is bool) {
+      return shop['taxEnable'] as bool;
+    }
+    final rawTax = (json['taxAmount'] as num?)?.toDouble();
+    if (rawTax != null && itemPrice > 0) return rawTax > 0;
+    return true;
+  }
+
   static String _statusLabelFor(String status) {
     const labels = {
       'PENDING': 'Pending',
@@ -332,13 +351,14 @@ class OrderModel {
           : items.fold(0.0, (sum, item) => sum + (item.price * item.quantity));
 
   double get resolvedTaxAmount =>
-      taxAmount > 0 ? taxAmount : OrderTax.calculateTax(foodPrice);
+      taxAmount > 0 ? taxAmount : OrderTax.resolveTaxAmount(foodPrice, taxEnable);
 
   double get checkoutTotal => totalAmount > 0
       ? totalAmount
       : OrderTax.calculateTotal(
           itemSubtotal: foodPrice,
           deliveryFee: deliveryFee,
+          taxEnable: taxEnable,
         );
 
   String get deliveryAddressDetail {
