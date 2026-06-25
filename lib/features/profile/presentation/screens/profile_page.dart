@@ -32,6 +32,7 @@ import 'package:my_shop/core/localization/app_localizations.dart';
 import '../widgets/language_selector_sheet.dart';
 import '../widgets/theme_selector_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:in_app_review/in_app_review.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -152,6 +153,22 @@ class ProfilePageState extends State<ProfilePage>
       if (mounted) {
         final t = AppLocalizations.of(context);
         AppDialog.showToast(context, t?.translate('could_not_open_link') ?? 'Could Not Open This Link', isError: true);
+      }
+    }
+  }
+
+  Future<void> _handleRateApp() async {
+    try {
+      final InAppReview inAppReview = InAppReview.instance;
+      if (await inAppReview.isAvailable()) {
+        await inAppReview.requestReview();
+      } else {
+        await inAppReview.openStoreListing();
+      }
+    } catch (e) {
+      if (mounted) {
+        final t = AppLocalizations.of(context);
+        AppDialog.showToast(context, t?.translate('could_not_open_link') ?? 'Could not open store', isError: true);
       }
     }
   }
@@ -497,6 +514,11 @@ class ProfilePageState extends State<ProfilePage>
             context,
             CupertinoPageRoute(builder: (_) => const FeedbackPage()),
           ),
+        ),
+        _buildMenuOption(
+          icon: PhosphorIconsRegular.starHalf,
+          title: t?.translate('rate_app') ?? 'Rate App',
+          onTap: _handleRateApp,
         ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.shield,

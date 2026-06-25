@@ -8,6 +8,7 @@ import 'core/localization/app_localizations.dart';
 import 'core/presentation/widgets/connectivity_wrapper.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_service.dart';
+import 'package:upgrader/upgrader.dart';
 
 class App extends StatelessWidget {
   static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -42,12 +43,20 @@ class App extends StatelessWidget {
             GlobalCupertinoLocalizations.delegate,
           ],
           builder: (context, child) {
-            return ConnectivityWrapper(
-              child: GestureDetector(
-                onTap: () {
-                  FocusManager.instance.primaryFocus?.unfocus();
-                },
-                child: child,
+            return UpgradeAlert(
+              navigatorKey: navigatorKey,
+              showIgnore: false,
+              showLater: false,
+              upgrader: Upgrader(
+                // debugDisplayAlways: true, // Uncomment to test UI locally
+              ),
+              child: ConnectivityWrapper(
+                child: GestureDetector(
+                  onTap: () {
+                    FocusManager.instance.primaryFocus?.unfocus();
+                  },
+                  child: child,
+                ),
               ),
             );
           },

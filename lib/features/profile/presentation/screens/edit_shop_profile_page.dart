@@ -16,6 +16,7 @@ import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import 'package:my_shop/core/data/models/master_data_model.dart';
 import 'package:my_shop/core/data/services/master_data_service.dart';
+import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import '../widgets/image_action_sheet.dart';
 import '../widgets/logo_picker_sheet.dart';
@@ -253,9 +254,21 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     _initializeFields(_currentProfile);
 
     _fetchMasterData();
+    _loadUserEmail();
 
     if (_currentProfile == null) {
       _loadProfile();
+    }
+  }
+
+  Future<void> _loadUserEmail() async {
+    if (_emailCtrl.text.isEmpty) {
+      final userInfo = await StorageService.instance.getUserInfo();
+      if (mounted && userInfo != null && userInfo.email != null) {
+        setState(() {
+          _emailCtrl.text = userInfo.email!;
+        });
+      }
     }
   }
 
@@ -393,6 +406,8 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
     } else {
       _priceRange = 1;
     }
+
+    _loadUserEmail();
   }
 
   @override
