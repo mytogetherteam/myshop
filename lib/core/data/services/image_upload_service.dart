@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:flutter/foundation.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
@@ -54,10 +55,14 @@ class ImageUploadService {
   // ── Public API ────────────────────────────────────────────────────────────
 
   /// Pick a single image from the device gallery.
+  ///
+  /// When [crop] is true (default) the user is shown a lightweight, native
+  /// crop screen after picking so they can frame the image before upload.
   Future<ImagePickResult> pickFromGallery({
     double? maxWidth = 1920,
     double? maxHeight = 1920,
     int imageQuality = 85,
+    bool crop = true,
   }) async {
     final granted = await _requestGalleryPermission();
     if (!granted.isGranted) {
@@ -72,14 +77,19 @@ class ImageUploadService {
       maxWidth: maxWidth,
       maxHeight: maxHeight,
       imageQuality: imageQuality,
+      crop: crop,
     );
   }
 
   /// Capture a new image using the device camera.
+  ///
+  /// When [crop] is true (default) the user is shown a lightweight, native
+  /// crop screen after capture so they can frame the image before upload.
   Future<ImagePickResult> pickFromCamera({
     double? maxWidth = 1920,
     double? maxHeight = 1920,
     int imageQuality = 85,
+    bool crop = true,
   }) async {
     final granted = await _requestCameraPermission();
     if (!granted.isGranted) {
@@ -94,6 +104,7 @@ class ImageUploadService {
       maxWidth: maxWidth,
       maxHeight: maxHeight,
       imageQuality: imageQuality,
+      crop: crop,
     );
   }
 
@@ -155,6 +166,7 @@ class ImageUploadService {
     double? maxWidth,
     double? maxHeight,
     int imageQuality = 85,
+    bool crop = true,
   }) async {
     try {
       final xFile = await _picker.pickImage(
@@ -163,17 +175,61 @@ class ImageUploadService {
         maxHeight: maxHeight,
         imageQuality: imageQuality,
       );
-      
-      if (xFile != null) {
-        final isValid = await isSizeValid(xFile);
-        if (!isValid) {
-          return const ImagePickResult(isTooLarge: true);
-        }
+
+      // User cancelled the picker.
+      if (xFile == null) return const ImagePickResult();
+
+      XFile resultFile = xFile;
+      if (crop && !kIsWeb) {
+        final cropped = await _cropImage(xFile);
+        // Backing out of the crop screen cancels the whole selection.
+        if (cropped == null) return const ImagePickResult();
+        resultFile = cropped;
       }
-      return ImagePickResult(file: xFile);
+
+      final isValid = await isSizeValid(resultFile);
+      if (!isValid) {
+        return const ImagePickResult(isTooLarge: true);
+      }
+      return ImagePickResult(file: resultFile);
     } catch (e) {
       debugPrint('ImageUploadService._pick error: $e');
       return const ImagePickResult();
+    }
+  }
+
+  /// Opens a native crop screen for the picked [file]. Returns the cropped
+  /// file, or null if the user backed out. Free-form aspect ratio so it works
+  /// for avatars, banners, menu photos and payment slips alike.
+  Future<XFile?> _cropImage(XFile file) async {
+    try {
+      final cropped = await ImageCropper().cropImage(
+        sourcePath: file.path,
+        compressFormat: ImageCompressFormat.jpg,
+        compressQuality: 90,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Crop Image',
+            toolbarColor: Colors.black,
+            toolbarWidgetColor: Colors.white,
+            backgroundColor: Colors.black,
+            activeControlsWidgetColor: const Color(0xFF6C63FF),
+            lockAspectRatio: false,
+            hideBottomControls: false,
+          ),
+          IOSUiSettings(
+            title: 'Crop Image',
+            aspectRatioLockEnabled: false,
+            resetAspectRatioEnabled: true,
+          ),
+        ],
+      );
+      return cropped == null ? null : XFile(cropped.path);
+    } catch (e) {
+      debugPrint('ImageUploadService._cropImage error: $e');
+      // If cropping fails for any reason, fall back to the original file so
+      // the upload flow is never blocked by the optional crop step.
+      return file;
     }
   }
 }

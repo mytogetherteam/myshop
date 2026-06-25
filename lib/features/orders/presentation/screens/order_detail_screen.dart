@@ -1387,8 +1387,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Future<void> _handleMarkReadyForPickup() async {
     await _runOrderAction(
-      action: () =>
-          OrderService().markReadyForPickup(_currentOrder.id.toString()),
+      action: () => OrderService().markReadyForPickup(
+        _currentOrder.id.toString(),
+        waitingTimeMinutes: int.tryParse(_waitingTimeMinutesController.text),
+      ),
       errorMessage: 'Failed to mark order ready for pickup.',
     );
   }
@@ -1417,8 +1419,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       return;
     }
 
+    // Send the delivery fee on dispatch regardless of delivery type so a FAST
+    // order's fee can update too — not just FLEXIBLE. The backend bills it into
+    // the total only for non-flexible orders, so this stays correct for both.
     double? finalDeliveryFee;
-    if (_currentOrder.deliveryType == 'NORMAL' && _deliveryFeeController.text.isNotEmpty) {
+    if (_deliveryFeeController.text.isNotEmpty) {
       final numStr = _deliveryFeeController.text.replaceAll(',', '');
       finalDeliveryFee = double.tryParse(numStr);
     }
@@ -1431,6 +1436,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ? _deliveryTrackingUrlController.text.trim()
             : null,
         deliveryFee: finalDeliveryFee,
+        waitingTimeMinutes: int.tryParse(_waitingTimeMinutesController.text),
       ),
       errorMessage: 'Failed to dispatch order. Please try again.',
     );
