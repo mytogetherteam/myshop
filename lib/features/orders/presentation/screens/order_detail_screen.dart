@@ -2829,13 +2829,15 @@ Widget _buildAnimatedProgress() {
         ],
         SizedBox(height: 16),
         _buildSummaryRow('Food Price', '฿ ${_currentOrder.foodPrice.toInt()}'),
-        SizedBox(height: 12),
-        _buildSummaryRow(
-          'Tax (7%)',
-          _currentOrder.displayTaxAmount.isNotEmpty
-              ? _currentOrder.displayTaxAmount
-              : '฿ ${_currentOrder.resolvedTaxAmount.toInt()}',
-        ),
+        if (_currentOrder.taxEnable) ...[
+          SizedBox(height: 12),
+          _buildSummaryRow(
+            'Tax (7%)',
+            _currentOrder.displayTaxAmount.isNotEmpty
+                ? _currentOrder.displayTaxAmount
+                : '฿ ${_currentOrder.resolvedTaxAmount.toInt()}',
+          ),
+        ],
         SizedBox(height: 12),
         Row(
           children: [
