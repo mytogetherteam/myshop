@@ -32,6 +32,11 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
   bool _hasMore = true;
   bool _isLoadingMoreItems = false;
   final ScrollController _scrollController = ScrollController();
+  final ScrollController _tabsScrollController = ScrollController();
+
+  int _activeCategoryIndex = 0;
+  bool _isManualScrolling = false;
+  final Map<int, GlobalKey> _categoryKeys = {};
 
   @override
   bool get wantKeepAlive => true;
@@ -46,6 +51,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
   @override
   void dispose() {
     _scrollController.dispose();
+    _tabsScrollController.dispose();
     super.dispose();
   }
 
@@ -54,6 +60,33 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
         _scrollController.position.maxScrollExtent - 200) {
       if (!_isLoadingMoreItems && _hasMore) {
         _fetchMoreItems();
+      }
+    }
+
+    if (_isManualScrolling || _categoryKeys.isEmpty) return;
+
+    int newActiveIndex = _activeCategoryIndex;
+    for (final entry in _categoryKeys.entries) {
+      final key = entry.value;
+      if (key.currentContext != null) {
+        final RenderBox box = key.currentContext!.findRenderObject() as RenderBox;
+        final position = box.localToGlobal(Offset.zero);
+        if (position.dy <= 250) {
+          newActiveIndex = entry.key;
+        }
+      }
+    }
+
+    if (newActiveIndex != _activeCategoryIndex && newActiveIndex >= 0 && newActiveIndex < _categories.length) {
+      setState(() => _activeCategoryIndex = newActiveIndex);
+      if (_tabsScrollController.hasClients) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final targetOffset = (newActiveIndex * 100.0) - (screenWidth / 2) + 50.0;
+        _tabsScrollController.animateTo(
+          targetOffset.clamp(0.0, _tabsScrollController.position.maxScrollExtent),
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+        );
       }
     }
   }
@@ -109,7 +142,7 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
     final items = await _menuService.getMenuItems(
       categoryId: filterId,
       page: _currentPage,
-      limit: 20,
+      limit: 500, // Load all items to support continuous scrolling
       forceRefresh: refresh,
     );
 
@@ -145,11 +178,42 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
 
   void _onCategoryChanged(MenuCategoryModel? category) {
     if (category == null || category.id == _selectedCategory?.id) return;
+    
+    final index = _categories.indexOf(category);
+    if (index != -1) {
+      if (category.id == 0) {
+        // Scroll to top
+        _scrollController.animateTo(
+          0.0,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      } else {
+        _scrollToCategory(index);
+      }
+    }
+  }
+
+  void _scrollToCategory(int index) async {
+    if (!mounted) return;
     setState(() {
-      _selectedCategory = category;
-      _items = []; // Clear current items while loading
+      _activeCategoryIndex = index;
+      _isManualScrolling = true;
     });
-    _fetchItems(refresh: true);
+
+    final key = _categoryKeys[index];
+    if (key != null && key.currentContext != null) {
+      await Scrollable.ensureVisible(
+        key.currentContext!,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+        alignment: 0.05,
+      );
+    }
+    
+    if (mounted) {
+      setState(() => _isManualScrolling = false);
+    }
   }
 
   Future<void> _toggleItemAvailability(
@@ -198,26 +262,24 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
       body: SafeArea(
         child: Column(
           children: [
-            // Header removed, handled by global AppBar
+            // Sticky Header / Dropdown
+            if (_categories.isNotEmpty && _items.isNotEmpty)
+              Container(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                child: _buildCategoryDropdown(),
+              ),
+            // Main scrollable area
             Expanded(
               child: RefreshIndicator(
                 onRefresh: refresh,
                 color: AppColors.primary,
-
                 child: SingleChildScrollView(
                   controller: _scrollController,
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(height: 10),
-                      // Dropdown / Selection Section
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
-                          children: [Expanded(child: _buildCategoryDropdown())],
-                        ),
-                      ),
                       SizedBox(height: 20),
                       _buildWarningAlert(),
                       SizedBox(height: 24),
@@ -262,8 +324,9 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
     );
   }
 
-  Widget _buildCategorySection(String title, List<MenuItemModel> items) {
+  Widget _buildCategorySection(String title, List<MenuItemModel> items, {Key? key}) {
     return Column(
+      key: key,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
@@ -333,14 +396,17 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
 
     final List<Widget> sections = [];
 
-    // Iterate through categories in their exact custom-sorted order
-    for (var category in _categories) {
+    _categoryKeys.clear();
+    for (var i = 0; i < _categories.length; i++) {
+      var category = _categories[i];
       if (category.id == 0) continue; // Skip 'All Categories' virtual category
 
       final categoryItems = itemsByCategoryId[category.id];
       if (categoryItems != null && categoryItems.isNotEmpty) {
+        final key = GlobalKey();
+        _categoryKeys[i] = key;
         sections.add(
-          _buildCategorySection(category.displayName, categoryItems),
+          _buildCategorySection(category.displayName, categoryItems, key: key),
         );
       }
     }
@@ -391,7 +457,9 @@ class MenuPageState extends State<MenuPage> with AutomaticKeepAliveClientMixin {
   Widget _buildCategoryDropdown() {
     return CustomSearchDropdown<MenuCategoryModel>(
       items: _categories,
-      value: _selectedCategory,
+      value: _categories.isNotEmpty && _activeCategoryIndex >= 0 && _activeCategoryIndex < _categories.length
+          ? _categories[_activeCategoryIndex]
+          : _selectedCategory,
       itemLabelBuilder: (category) => category.displayName,
       onChanged: _onCategoryChanged,
       hintText: AppLocalizations.of(context)?.translate('select_category') ?? 'Select Category',

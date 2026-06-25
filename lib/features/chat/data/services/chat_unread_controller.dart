@@ -16,6 +16,10 @@ class ChatUnreadController {
   /// Total unread messages for the current shop.
   final ValueNotifier<int> unread = ValueNotifier<int>(0);
 
+  /// The ID of the conversation currently being viewed in ChatDetailScreen.
+  /// Used to suppress local push notifications when the user is already reading the chat.
+  int? activeConversationId;
+
   /// Emits a conversation id whenever the shop reads (opens) that conversation.
   ///
   /// Unlike new-message events, a shop-side read produces no realtime WebSocket

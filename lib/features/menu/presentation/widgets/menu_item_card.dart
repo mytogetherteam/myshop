@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_switch.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../data/models/menu_item_model.dart';
@@ -73,7 +74,10 @@ class _MenuItemCardState extends State<MenuItemCard> {
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(20),
         child: InkWell(
-          onTap: widget.onTap,
+          onTap: () {
+            HapticFeedback.lightImpact();
+            widget.onTap?.call();
+          },
           borderRadius: BorderRadius.circular(20),
           child: Padding(
             padding: const EdgeInsets.all(12),
@@ -227,6 +231,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
           value: _isPublished,
           label: _isPublished ? (t?.translate('published') ?? 'Published') : (t?.translate('draft') ?? 'Draft'),
           onChanged: (value) {
+            HapticFeedback.lightImpact();
             GlobalModal.show(
               context: context,
               child: ConfirmationSheet(
@@ -252,6 +257,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
           value: _inStock,
           label: _inStock ? (t?.translate('available') ?? 'Available') : (t?.translate('unavailable') ?? 'Unavailable'),
           onChanged: (value) {
+            HapticFeedback.lightImpact();
             GlobalModal.show(
               context: context,
               child: ConfirmationSheet(

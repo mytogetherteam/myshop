@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
@@ -84,6 +85,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
   }
 
   Future<void> _updateCategory() async {
+    HapticFeedback.lightImpact();
     if (_nameEnController.text.isEmpty &&
         _nameMmController.text.isEmpty &&
         _nameThController.text.isEmpty) {
@@ -134,6 +136,7 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
   }
 
   Future<void> _deleteCategory() async {
+    HapticFeedback.lightImpact();
     GlobalModal.show(
       context: context,
       child: ConfirmationSheet(
@@ -310,7 +313,10 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
         itemBuilder: (context, index) {
           final isSelected = _selectedGalleryIndex == index;
           return GestureDetector(
-            onTap: () => setState(() => _selectedGalleryIndex = index),
+            onTap: () {
+              HapticFeedback.lightImpact();
+              setState(() => _selectedGalleryIndex = index);
+            },
             child: Container(
               width: 60,
               padding: const EdgeInsets.all(12),
@@ -354,7 +360,10 @@ class _EditCategoryScreenState extends State<EditCategoryScreen> {
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: GestureDetector(
-                onTap: () => onLangChanged(lang),
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  onLangChanged(lang);
+                },
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 
@@ -38,7 +39,12 @@ class PrimaryGradientButton extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: isDisabled ? null : onPressed,
+          onTap: isDisabled
+              ? null
+              : () {
+                  HapticFeedback.lightImpact();
+                  onPressed?.call();
+                },
           borderRadius: BorderRadius.circular(borderRadius),
           splashColor: Colors.white.withValues(alpha: 0.2),
           highlightColor: Colors.white.withValues(alpha: 0.1),

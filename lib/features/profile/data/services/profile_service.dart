@@ -63,7 +63,7 @@ class ProfileService {
     return null;
   }
 
-  Future<bool> updateShopProfile(Map<String, dynamic> payload) async {
+  Future<Map<String, dynamic>> updateShopProfile(Map<String, dynamic> payload) async {
     try {
       AppLogger.network('PUT $_profilePath, Data: $payload');
       final formData = FormData();
@@ -90,21 +90,24 @@ class ProfileService {
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
         final Map<String, dynamic> data = response.data;
-        return data['success'] == true;
+        return {'success': data['success'] == true, 'message': data['message'] ?? 'Profile saved successfully!'};
       }
+      return {'success': false, 'message': 'Unknown error: ${response.statusCode}'};
     } on DioException catch (e) {
-      ApiHelper.handleError(e, context: 'ProfileService.updateShopProfile');
+      final error = ApiHelper.handleError(e, context: 'ProfileService.updateShopProfile');
+      return {'success': false, 'message': error.details ?? error.message};
     } catch (e) {
-      ApiHelper.handleError(e, context: 'ProfileService.updateShopProfile');
+      final error = ApiHelper.handleError(e, context: 'ProfileService.updateShopProfile');
+      return {'success': false, 'message': error.message};
     }
-    return false;
   }
 
   /// Toggling delivery now goes through the shared shop-profile endpoint
   /// (PUT /api/shop/shop-profile) so the toggle and the Edit Shop Profile
   /// page write to the same source of truth.
   Future<bool> toggleDeliveryStatus(bool enabled) async {
-    return updateShopProfile({'deliveryEnabled': enabled});
+    final res = await updateShopProfile({'deliveryEnabled': enabled});
+    return res['success'] == true;
   }
 
   Future<Map<String, dynamic>> updateOperatingHours(

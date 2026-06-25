@@ -156,55 +156,51 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
 
   Widget _buildPaymentItem(PaymentMethod pm) {
     final t = AppLocalizations.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+    return GestureDetector(
+      onTap: () async {
+        final result = await Navigator.push(
+          context,
+          CupertinoPageRoute(
+            builder: (_) => EditPaymentPage(paymentMethod: pm),
+          ),
+        );
+        if (result == true) _loadPaymentMethods(forceRefresh: true);
+      },
+      child: Container(
+        color: Colors.transparent,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildPaymentIcon(pm),
-            SizedBox(width: 12),
-            Text(
-              pm.paymentMethodName,
-              style: GoogleFonts.poppins(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).textTheme.bodyLarge?.color,
-              ),
-            ),
-            const Spacer(),
-            GestureDetector(
-              onTap: () async {
-                final result = await Navigator.push(
-                  context,
-                  CupertinoPageRoute(
-                    builder: (_) => EditPaymentPage(paymentMethod: pm),
+            Row(
+              children: [
+                _buildPaymentIcon(pm),
+                SizedBox(width: 12),
+                Text(
+                  pm.paymentMethodName,
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
-                );
-                if (result == true) _loadPaymentMethods(forceRefresh: true);
-              },
-              child: Text(
-                t?.translate('edit') ?? 'Edit',
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFFED3973),
                 ),
-              ),
+                const Spacer(),
+                if (_paymentMethods.length > 1) ...[
+                  SizedBox(width: 16),
+                  GestureDetector(
+                    onTap: () => _handleDelete(pm),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: Icon(
+                        PhosphorIconsRegular.trash,
+                        size: 20,
+                        color: Color(0xFFEF4444),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
-            if (_paymentMethods.length > 1) ...[
-              SizedBox(width: 16),
-              GestureDetector(
-                onTap: () => _handleDelete(pm),
-                child: Icon(
-                  PhosphorIconsRegular.trash,
-                  size: 20,
-                  color: Color(0xFFEF4444),
-                ),
-              ),
-            ],
-          ],
-        ),
-        SizedBox(height: 16),
+            SizedBox(height: 16),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
@@ -310,12 +306,33 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
               ),
             ],
           ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
   Widget _buildPaymentIcon(PaymentMethod pm) {
+    if (pm.fullPaymentMethodIconUrl.isNotEmpty) {
+      return Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Image.network(
+          pm.fullPaymentMethodIconUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stack) => _buildFallbackIcon(pm),
+        ),
+      );
+    }
+    return _buildFallbackIcon(pm);
+  }
+
+  Widget _buildFallbackIcon(PaymentMethod pm) {
     // Use payment method code to show an appropriate icon
     final code = pm.paymentMethodCode.toUpperCase();
     IconData iconData;

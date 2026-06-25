@@ -6,6 +6,7 @@ class PaymentMethod {
   final int paymentMethodId;
   final String paymentMethodCode;
   final String paymentMethodName;
+  final String paymentMethodIconUrl;
   final String qrImageUrl;
   final String accountNumber;
   final String accountName;
@@ -20,12 +21,19 @@ class PaymentMethod {
     return '${EnvConfig.apiBaseUrl}/$qrImageUrl';
   }
 
+  String get fullPaymentMethodIconUrl {
+    if (paymentMethodIconUrl.isEmpty) return '';
+    if (paymentMethodIconUrl.startsWith('http')) return paymentMethodIconUrl;
+    return '${EnvConfig.apiBaseUrl}/$paymentMethodIconUrl';
+  }
+
   PaymentMethod({
     required this.id,
     this.shopId,
     required this.paymentMethodId,
     required this.paymentMethodCode,
     required this.paymentMethodName,
+    this.paymentMethodIconUrl = '',
     required this.qrImageUrl,
     required this.accountNumber,
     required this.accountName,
@@ -43,6 +51,7 @@ class PaymentMethod {
       paymentMethodId: json['paymentMethodId'] ?? 0,
       paymentMethodCode: paymentMethod?['code'] ?? '',
       paymentMethodName: paymentMethod?['name'] ?? '',
+      paymentMethodIconUrl: paymentMethod?['iconUrl'] ?? '',
       qrImageUrl: json['qr'] ?? '',
       accountNumber: json['accountNumber'] ?? '',
       accountName: json['accountName'] ?? '',
@@ -59,6 +68,7 @@ class PaymentMethod {
     'paymentMethodId': paymentMethodId,
     'paymentMethodCode': paymentMethodCode,
     'paymentMethodName': paymentMethodName,
+    'paymentMethodIconUrl': paymentMethodIconUrl,
     'qrImageUrl': qrImageUrl,
     'accountNumber': accountNumber,
     'accountName': accountName,

@@ -229,7 +229,7 @@ class _OtpVerificationSheetState extends State<OtpVerificationSheet> {
       width: 48,
       height: 56,
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: _errorMessage != null 

@@ -97,10 +97,10 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
                   hintText: t?.translate('cancel_reason_hint') ?? 'Enter reason here...',
                   hintStyle: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[400]),
                   filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
+                  fillColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+                    borderSide: BorderSide(color: Theme.of(context).dividerColor),
                   ),
                   suffixIcon: ValueListenableBuilder<TextEditingValue>(
                     valueListenable: _reasonController,

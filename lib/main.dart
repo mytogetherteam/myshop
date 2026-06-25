@@ -21,7 +21,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (type == 'ORDER_ACKNOWLEDGED') {
     final String? orderIdStr = message.data['orderId']?.toString() ?? message.data['order_id']?.toString();
     if (orderIdStr != null) {
-      await NotificationService().cancelNotification(orderIdStr.hashCode);
+      await NotificationService().cancelNotification(99999);
     }
     return; // Do not show anything
   }

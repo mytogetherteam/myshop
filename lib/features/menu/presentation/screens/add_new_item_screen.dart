@@ -303,6 +303,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   }
 
   Future<void> _handleSave() async {
+    HapticFeedback.lightImpact();
     if (!_formKey.currentState!.validate()) return;
 
     // Additional validations — scroll to first error
@@ -675,6 +676,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                         Center(
                           child: TextButton.icon(
                             onPressed: () {
+                              HapticFeedback.lightImpact();
                               GlobalModal.show(
                                 context: context,
                                 child: ConfirmationSheet(
@@ -779,6 +781,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   }
 
   void _removeComboComponent(int index) {
+    HapticFeedback.lightImpact();
     setState(() {
       _comboComponents.removeAt(index);
       _comboQtyCtrls[index]?.dispose();
@@ -810,6 +813,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   */
 
   void _removeVariant(int index) {
+    HapticFeedback.lightImpact();
     setState(() {
       _variants.removeAt(index);
       _variantNameCtrls[index]?.dispose();
@@ -833,6 +837,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   }
 
   void _removeOptionGroup(int index) {
+    HapticFeedback.lightImpact();
     setState(() {
       final group = _optionGroups.removeAt(index);
       _addonGroupNameCtrls[index]?.dispose();
@@ -1837,7 +1842,10 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     required VoidCallback onTap,
   }) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
@@ -1874,7 +1882,10 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton(
-        onPressed: onPressed,
+        onPressed: () {
+          HapticFeedback.lightImpact();
+          onPressed();
+        },
         style: OutlinedButton.styleFrom(
           backgroundColor: const Color(0xFFFEF2F2),
           side: BorderSide(color: Color(0xFFFEE2E2), width: 1.0),

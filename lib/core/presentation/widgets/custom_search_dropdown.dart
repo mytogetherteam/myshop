@@ -111,17 +111,37 @@ class _SearchBottomSheet<T> extends StatefulWidget {
 class _SearchBottomSheetState<T> extends State<_SearchBottomSheet<T>> {
   late List<T> _filteredItems;
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _listScrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _filteredItems = widget.items;
     _searchController.addListener(_filterItems);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.initialValue != null) {
+        final index = _filteredItems.indexOf(widget.initialValue as T);
+        if (index > 0 && _listScrollController.hasClients) {
+          // Estimate item height including separator
+          final offset = index * 57.0;
+          final maxOffset = _listScrollController.position.maxScrollExtent;
+          if (offset > 0) {
+            _listScrollController.animateTo(
+              offset.clamp(0.0, maxOffset),
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          }
+        }
+      }
+    });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _listScrollController.dispose();
     super.dispose();
   }
 
@@ -191,6 +211,7 @@ class _SearchBottomSheetState<T> extends State<_SearchBottomSheet<T>> {
           // List
           Flexible(
             child: ListView.separated(
+              controller: _listScrollController,
               shrinkWrap: true,
               itemCount: _filteredItems.length,
               separatorBuilder: (context, index) => Divider(

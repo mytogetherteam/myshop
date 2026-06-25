@@ -101,6 +101,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   void initState() {
     super.initState();
     _currentOrder = widget.order;
+    
+    // Auto-acknowledge if the order is still PENDING and opened directly
+    if (_currentOrder.status == 'PENDING') {
+      OrderService().acknowledgeOrder(_currentOrder.id.toString());
+    }
+
     _setupWebSocketListener();
     _setupChatListener();
     _fetchOrderDetails();
@@ -1387,8 +1393,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Future<void> _handleMarkReadyForPickup() async {
     await _runOrderAction(
-      action: () =>
-          OrderService().markReadyForPickup(_currentOrder.id.toString()),
+      action: () => OrderService().markReadyForPickup(
+        _currentOrder.id.toString(),
+        waitingTimeMinutes: int.tryParse(_waitingTimeMinutesController.text),
+      ),
       errorMessage: 'Failed to mark order ready for pickup.',
     );
   }
@@ -1417,8 +1425,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       return;
     }
 
+    // Send the delivery fee on dispatch regardless of delivery type so a FAST
+    // order's fee can update too — not just FLEXIBLE. The backend bills it into
+    // the total only for non-flexible orders, so this stays correct for both.
     double? finalDeliveryFee;
-    if (_currentOrder.deliveryType == 'NORMAL' && _deliveryFeeController.text.isNotEmpty) {
+    if (_deliveryFeeController.text.isNotEmpty) {
       final numStr = _deliveryFeeController.text.replaceAll(',', '');
       finalDeliveryFee = double.tryParse(numStr);
     }
@@ -1431,6 +1442,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ? _deliveryTrackingUrlController.text.trim()
             : null,
         deliveryFee: finalDeliveryFee,
+        waitingTimeMinutes: int.tryParse(_waitingTimeMinutesController.text),
       ),
       errorMessage: 'Failed to dispatch order. Please try again.',
     );
@@ -2829,13 +2841,15 @@ Widget _buildAnimatedProgress() {
         ],
         SizedBox(height: 16),
         _buildSummaryRow('Food Price', '฿ ${_currentOrder.foodPrice.toInt()}'),
-        SizedBox(height: 12),
-        _buildSummaryRow(
-          'Tax (7%)',
-          _currentOrder.displayTaxAmount.isNotEmpty
-              ? _currentOrder.displayTaxAmount
-              : '฿ ${_currentOrder.resolvedTaxAmount.toInt()}',
-        ),
+        if (_currentOrder.taxEnable) ...[
+          SizedBox(height: 12),
+          _buildSummaryRow(
+            'Tax (7%)',
+            _currentOrder.displayTaxAmount.isNotEmpty
+                ? _currentOrder.displayTaxAmount
+                : '฿ ${_currentOrder.resolvedTaxAmount.toInt()}',
+          ),
+        ],
         SizedBox(height: 12),
         Row(
           children: [

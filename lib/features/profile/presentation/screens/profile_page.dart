@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
@@ -31,6 +32,7 @@ import 'package:my_shop/core/localization/app_localizations.dart';
 import '../widgets/language_selector_sheet.dart';
 import '../widgets/theme_selector_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:in_app_review/in_app_review.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -155,6 +157,22 @@ class ProfilePageState extends State<ProfilePage>
     }
   }
 
+  Future<void> _handleRateApp() async {
+    try {
+      final InAppReview inAppReview = InAppReview.instance;
+      if (await inAppReview.isAvailable()) {
+        await inAppReview.requestReview();
+      } else {
+        await inAppReview.openStoreListing();
+      }
+    } catch (e) {
+      if (mounted) {
+        final t = AppLocalizations.of(context);
+        AppDialog.showToast(context, t?.translate('could_not_open_link') ?? 'Could not open store', isError: true);
+      }
+    }
+  }
+
   void _showLanguageSelector() {
     GlobalModal.show(
       context: context,
@@ -262,10 +280,13 @@ class ProfilePageState extends State<ProfilePage>
   Widget _buildProfileHeader() {
     final t = AppLocalizations.of(context);
     return InkWell(
-      onTap: () => Navigator.push(
-        context,
-        CupertinoPageRoute(builder: (_) => const EditShopProfilePage()),
-      ).then((_) => _loadUserInfo()),
+      onTap: () {
+        HapticFeedback.lightImpact();
+        Navigator.push(
+          context,
+          CupertinoPageRoute(builder: (_) => const EditShopProfilePage()),
+        ).then((_) => _loadUserInfo());
+      },
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(24),
@@ -495,6 +516,11 @@ class ProfilePageState extends State<ProfilePage>
           ),
         ),
         _buildMenuOption(
+          icon: PhosphorIconsRegular.starHalf,
+          title: t?.translate('rate_app') ?? 'Rate App',
+          onTap: _handleRateApp,
+        ),
+        _buildMenuOption(
           icon: PhosphorIconsRegular.shield,
           title: t?.translate('privacy_policy') ?? 'Privacy Policy',
           onTap: _handlePrivacyPolicy,
@@ -532,7 +558,10 @@ class ProfilePageState extends State<ProfilePage>
     bool isDestructive = false,
   }) {
     return InkWell(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         decoration: BoxDecoration(

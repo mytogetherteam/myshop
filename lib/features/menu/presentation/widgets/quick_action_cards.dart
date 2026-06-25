@@ -78,17 +78,19 @@ class _ActionCard extends StatelessWidget {
 
     return Container(
       height: 90,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(20),
       ),
+      clipBehavior: Clip.hardEdge,
       child: Stack(
         children: [
           Align(
             alignment: Alignment.centerLeft,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -112,14 +114,15 @@ class _ActionCard extends StatelessWidget {
                 ),
               ],
             ),
+            ),
           ),
           Positioned(
             right: 0,
-            bottom: 5,
+            bottom: 0,
             child: Image.asset(
               imagePath,
-              width: 53,
-              height: 53,
+              width: 75,
+              height: 75,
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) => SizedBox(),
             ),

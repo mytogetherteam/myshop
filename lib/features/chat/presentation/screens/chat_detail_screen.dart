@@ -52,6 +52,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   @override
   void initState() {
     super.initState();
+    ChatUnreadController.instance.activeConversationId = widget.conversation.id;
     _scrollController.addListener(_onScroll);
     _chatSub = WebSocketService().chatUpdates.listen(_onChatEvent);
     _orderSub = WebSocketService().orderUpdates.listen(_onOrderEvent);
@@ -61,6 +62,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   @override
   void dispose() {
+    ChatUnreadController.instance.activeConversationId = null;
     _messageController.dispose();
     _scrollController.dispose();
     _chatSub?.cancel();
