@@ -271,6 +271,7 @@ class OrderService {
     int? driverId,
     String? trackingUrl,
     double? deliveryFee,
+    int? waitingTimeMinutes,
   }) {
     return updateStatus(
       orderId,
@@ -278,6 +279,7 @@ class OrderService {
       driverId: driverId,
       trackingUrl: trackingUrl,
       deliveryFee: deliveryFee,
+      waitingTimeMinutes: waitingTimeMinutes,
     );
   }
 
@@ -300,8 +302,15 @@ class OrderService {
     );
   }
 
-  Future<Map<String, dynamic>> markReadyForPickup(String orderId) {
-    return updateStatus(orderId, status: 'READY_FOR_PICKUP');
+  Future<Map<String, dynamic>> markReadyForPickup(
+    String orderId, {
+    int? waitingTimeMinutes,
+  }) {
+    return updateStatus(
+      orderId,
+      status: 'READY_FOR_PICKUP',
+      waitingTimeMinutes: waitingTimeMinutes,
+    );
   }
 
   Future<Map<String, dynamic>> confirmPickup(String orderId) {
