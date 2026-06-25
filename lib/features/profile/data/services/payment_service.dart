@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
 import '../models/payment_method.dart';
@@ -88,10 +89,25 @@ class PaymentService {
       );
 
       if (qrPhoto != null) {
-        formDataMap['paymentQrImage'] = MultipartFile.fromBytes(
-          await qrPhoto.readAsBytes(),
-          filename: qrPhoto.name,
-        );
+        String ext = 'jpeg';
+        if (qrPhoto.name.contains('.')) {
+          ext = qrPhoto.name.split('.').last.toLowerCase();
+          if (ext == 'jpg') ext = 'jpeg';
+        }
+        
+        if (kIsWeb) {
+          formDataMap['paymentQrImage'] = MultipartFile.fromBytes(
+            await qrPhoto.readAsBytes(),
+            filename: qrPhoto.name,
+            contentType: MediaType('image', ext),
+          );
+        } else {
+          formDataMap['paymentQrImage'] = await MultipartFile.fromFile(
+            qrPhoto.path,
+            filename: qrPhoto.name,
+            contentType: MediaType('image', ext),
+          );
+        }
       }
 
       final formData = FormData.fromMap(formDataMap);

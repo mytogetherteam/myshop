@@ -151,27 +151,12 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
   }
 
   Future<void> _performUpdate() async {
-    int? shopId = _currentPayment?.shopId;
-    if (shopId == null || shopId == 0) {
-      shopId = await StorageService.instance.getSelectedShopId();
-    }
 
     final requestData = {
-      "paymentMethodId":
-          _currentPayment?.paymentMethodId ??
-          widget.paymentMethod.paymentMethodId,
       "displayOrder": 1,
       "isActive": _isActive,
-      "shopId": shopId,
-      "paymentMethodName":
-          _currentPayment?.paymentMethodName ??
-          widget.paymentMethod.paymentMethodName,
-      "paymentMethodCode":
-          _currentPayment?.paymentMethodCode ??
-          widget.paymentMethod.paymentMethodCode,
       "accountNumber": _accountNumberCtrl.text.trim(),
       "accountName": _accountNameCtrl.text.trim(),
-      "id": _currentPayment?.id ?? widget.paymentMethod.id,
     };
 
     if (kDebugMode) {
@@ -314,7 +299,7 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: Colors.black,
+            color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
           ),
         ),
         centerTitle: false,
@@ -369,10 +354,11 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                 borderRadius: 18,
                 child: Text(
                   AppLocalizations.of(context)?.translate('update_payment_method') ?? 'Update Payment Method',
+                  textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: Theme.of(context).cardColor,
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -419,24 +405,28 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
   }
 
   Widget _buildPaymentIconAndName() {
+    final pm = _currentPayment ?? widget.paymentMethod;
     return Row(
       children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : const Color(0xFFF1F5F9)))),
-          ),
-          child: Icon(
-            _getPaymentIcon(_currentPayment?.paymentMethodCode ?? ''),
-            size: 24,
-            color: Theme.of(context).textTheme.bodyMedium?.color,
-          ),
-        ),
+        if (pm.fullPaymentMethodIconUrl.isNotEmpty)
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Image.network(
+              pm.fullPaymentMethodIconUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stack) => _buildFallbackIconContainer(pm),
+            ),
+          )
+        else
+          _buildFallbackIconContainer(pm),
         SizedBox(width: 12),
         Text(
-          _currentPayment?.paymentMethodName ?? '',
+          pm.paymentMethodName,
           style: GoogleFonts.poppins(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -444,6 +434,22 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildFallbackIconContainer(PaymentMethod pm) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: (Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : const Color(0xFFF1F5F9))),
+      ),
+      child: Icon(
+        _getPaymentIcon(pm.paymentMethodCode),
+        size: 24,
+        color: Theme.of(context).textTheme.bodyMedium?.color,
+      ),
     );
   }
 

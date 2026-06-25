@@ -26,7 +26,7 @@ class AppDialog {
             children: [
               Icon(
                 isError ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded,
-                color: Theme.of(context).cardColor,
+                color: Colors.white,
                 size: 20,
               ),
               const SizedBox(width: 12),
@@ -34,7 +34,7 @@ class AppDialog {
                 child: Text(
                   message,
                   style: GoogleFonts.poppins(
-                    color: Theme.of(context).cardColor,
+                    color: Colors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),

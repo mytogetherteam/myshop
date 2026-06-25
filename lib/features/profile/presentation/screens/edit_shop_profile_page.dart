@@ -565,21 +565,10 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       'addressMm': _addressMmCtrl.text,
       'addressTh': _addressThCtrl.text,
       'districtId': _selectedDistrict?.id,
-      'districtEn': _selectedDistrict?.nameEn ?? _districtCtrl.text,
-      'districtMm': _selectedDistrict?.nameMm ?? _districtCtrl.text,
-      'districtTh': _selectedDistrict?.nameTh ?? _districtCtrl.text,
       'shopCategoryId': _selectedCategory?.id,
-      'categoryEn': _selectedCategory?.nameEn ?? _catEnCtrl.text,
-      'categoryMm': _selectedCategory?.nameMm ?? _catMmCtrl.text,
-      'categoryTh': _selectedCategory?.nameTh ?? _catThCtrl.text,
       'shopSubCategoryId': _selectedSubcategory?.id,
-      'subCategoryEn': _selectedSubcategory?.nameEn ?? _subCatEnCtrl.text,
-      'subCategoryMm': _selectedSubcategory?.nameMm ?? _subCatMmCtrl.text,
-      'subCategoryTh': _selectedSubcategory?.nameTh ?? _subCatThCtrl.text,
       'cuisineTypeIds': _selectedCuisineTypes.map((c) => c.id).toList(),
-      'cityEn': _selectedCity?.nameEn ?? _cityCtrl.text,
-      'cityMm': _selectedCity?.nameMm ?? _cityCtrl.text,
-      'cityTh': _selectedCity?.nameTh ?? _cityCtrl.text,
+      'cityId': _selectedCity?.id,
       'latitude': _latitude ?? 16.8409,
       'longitude': _longitude ?? 96.1735,
       'hasParking': _hasParking,
@@ -590,13 +579,6 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       'pricePreference': _priceRange == 0
           ? 'LOW'
           : (_priceRange == 1 ? 'MEDIUM' : 'HIGH'),
-      'maxItemQuantityPerOrder': int.tryParse(_maxQtyCtrl.text) ?? 10,
-      'minOrderAmount': double.tryParse(_minAmountCtrl.text) ?? 0.0,
-      'baseDeliveryFee': _currentProfile?.baseDeliveryFee ?? 0.0,
-      'googleMapsLink': _mapsLinkCtrl.text,
-      'cityId': _selectedCity?.id,
-      'logoUrl': _currentProfile?.logoUrl,
-      'coverUrl': _currentProfile?.coverUrl,
     };
 
     if (_pickedCover != null) {
@@ -623,11 +605,11 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             );
     }
 
-    final success = await ProfileService().updateShopProfile(payload);
+    final result = await ProfileService().updateShopProfile(payload);
 
     if (!context.mounted) return;
 
-    if (success) {
+    if (result['success'] == true) {
       setState(() {
         _hasChanges = false;
         _isSaving = false;
@@ -639,10 +621,9 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
       Navigator.pop(context, true);
     } else {
       setState(() => _isSaving = false);
-      final t = AppLocalizations.of(context);
       AppDialog.showToast(
         context,
-        t?.translate('profile_saved_failed') ?? 'Failed to save profile. Please try again.',
+        result['message'] ?? 'Failed to save profile. Please try again.',
         isError: true,
       );
     }

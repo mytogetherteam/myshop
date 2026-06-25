@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
@@ -99,6 +100,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
             padding: const EdgeInsets.only(right: 8),
             child: TextButton(
               onPressed: () async {
+                HapticFeedback.lightImpact();
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -141,20 +143,28 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
       padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 20),
       itemCount: _categories.length,
       onReorder: _onReorderItem,
+      onReorderStart: (index) {
+        HapticFeedback.lightImpact(); // vibrate on drag start
+      },
       buildDefaultDragHandles: false,
       proxyDecorator: (child, index, animation) {
         return AnimatedBuilder(
           animation: animation,
           builder: (context, child) {
-            final double scale = lerpDouble(1, 1.02, animation.value)!;
-            final double elevation = lerpDouble(0, 6, animation.value)!;
-            return Transform.scale(
-              scale: scale,
-              child: Material(
-                elevation: elevation,
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(16),
-                child: child,
+            final double scale = lerpDouble(1, 1.05, animation.value)!;
+            final double angle = lerpDouble(0, 0.03, animation.value)!; // Slight rotation
+            final double elevation = lerpDouble(0, 12, animation.value)!;
+            return Transform.rotate(
+              angle: angle,
+              child: Transform.scale(
+                scale: scale,
+                child: Material(
+                  elevation: elevation,
+                  shadowColor: Colors.black45,
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(16),
+                  child: child,
+                ),
               ),
             );
           },
@@ -170,6 +180,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
             category: category,
             index: index,
             onEdit: () async {
+              HapticFeedback.lightImpact();
               final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -251,8 +262,10 @@ class _CategoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
-    return InkWell(
-      onTap: onEdit,
+    return ReorderableDelayedDragStartListener(
+      index: index,
+      child: InkWell(
+        onTap: onEdit,
       borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -272,21 +285,18 @@ class _CategoryCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            ReorderableDragStartListener(
-              index: index,
-              child: Container(
-                color: Colors.transparent,
-                padding: const EdgeInsets.only(
-                  top: 8,
-                  bottom: 8,
-                  right: 8,
-                  left: 0,
-                ),
-                child: Icon(
-                  Icons.drag_indicator,
-                  color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
-                  size: 24,
-                ),
+            Container(
+              color: Colors.transparent,
+              padding: const EdgeInsets.only(
+                top: 8,
+                bottom: 8,
+                right: 8,
+                left: 0,
+              ),
+              child: Icon(
+                Icons.drag_indicator,
+                color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                size: 24,
               ),
             ),
             SizedBox(width: 4),
@@ -362,6 +372,7 @@ class _CategoryCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
         ),
       ),
     );

@@ -13,10 +13,11 @@ import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
 import 'package:my_shop/features/notifications/data/repositories/notification_repository.dart';
 import 'package:my_shop/features/orders/data/services/order_service.dart';
-import 'package:my_shop/features/orders/presentation/widgets/new_order_dialog.dart';
 import 'package:my_shop/features/main_navigation/presentation/screens/main_navigation_screen.dart';
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
+import 'package:vibration/vibration.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -61,13 +62,16 @@ class NotificationService {
     );
 
     // Create high importance channel for Android (New Orders)
-    const AndroidNotificationChannel orderChannel = AndroidNotificationChannel(
-      'shop_order_alerts_channel_v2',
+    final AndroidNotificationChannel orderChannel = AndroidNotificationChannel(
+      'shop_order_alerts_channel_v4',
       'Shop Important Notifications',
       description: 'This channel is used for shop orders and alerts.',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('alert'),
       playSound: true,
+      enableVibration: true,
+      vibrationPattern: Int64List.fromList(<int>[0, 1000, 500, 1000, 500, 1000]),
+      audioAttributesUsage: AudioAttributesUsage.alarm,
     );
     await _localNotifications
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
@@ -90,12 +94,9 @@ class NotificationService {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final String? type = message.data['type'];
       final String? subType = message.data['subType'];
-      
+      // Background silent data pushes
       if (type == 'ORDER_ACKNOWLEDGED') {
-        final String? orderIdStr = message.data['orderId']?.toString() ?? message.data['order_id']?.toString();
-        if (orderIdStr != null) {
-          cancelNotification(orderIdStr.hashCode);
-        }
+        cancelNotification(99999);
         return;
       }
 
@@ -106,7 +107,19 @@ class NotificationService {
       // and play the alert sound. This prevents overlapping looping sounds.
       if (isNewOrder) {
         NotificationRepository().incrementCount();
+        _triggerVibration();
         return;
+      }
+
+      if (type == 'CHAT_MESSAGE') {
+        final conversationIdStr = message.data['conversationId']?.toString() ?? message.data['conversation_id']?.toString();
+        if (conversationIdStr != null) {
+          final int convId = int.tryParse(conversationIdStr) ?? -1;
+          if (ChatUnreadController.instance.activeConversationId == convId) {
+            // User is actively looking at this conversation! Do NOT show push notification!
+            return;
+          }
+        }
       }
 
       if (message.notification != null) {
@@ -262,16 +275,20 @@ class NotificationService {
 
     // Int32List.fromList([4]) sets FLAG_INSISTENT, which loops the sound until dismissed
     final AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      isNewOrder ? 'shop_order_alerts_channel_v2' : 'shop_normal_alerts_channel_v1',
+      isNewOrder ? 'shop_order_alerts_channel_v4' : 'shop_normal_alerts_channel_v1',
       isNewOrder ? 'Shop Important Notifications' : 'Shop Normal Notifications',
       channelDescription: isNewOrder ? 'This channel is used for shop orders and alerts.' : 'This channel is used for normal shop updates.',
       importance: Importance.max,
       priority: Priority.high,
       sound: RawResourceAndroidNotificationSound(isNewOrder ? 'alert' : 'normal_noti'),
       playSound: true,
+      onlyAlertOnce: isNewOrder, // Prevent overlapping duplicate sounds if already ringing
       additionalFlags: isNewOrder ? Int32List.fromList([4]) : null,
       fullScreenIntent: true,
       category: AndroidNotificationCategory.call,
+      enableVibration: true,
+      vibrationPattern: isNewOrder ? Int64List.fromList(<int>[0, 1000, 500, 1000, 500, 1000]) : null,
+      audioAttributesUsage: isNewOrder ? AudioAttributesUsage.alarm : AudioAttributesUsage.notification,
     );
     final DarwinNotificationDetails iosPlatformChannelSpecifics = DarwinNotificationDetails(
       sound: isNewOrder ? 'alert.mp3' : 'normal_noti.mp3',
@@ -282,8 +299,8 @@ class NotificationService {
       iOS: iosPlatformChannelSpecifics,
     );
     
-    final String? orderIdStr = message.data['orderId']?.toString() ?? message.data['order_id']?.toString();
-    final int notiId = isNewOrder && orderIdStr != null ? orderIdStr.hashCode : message.hashCode;
+    // Group all new orders under a single ID so they update instead of spawning multiple ringing notifications
+    final int notiId = isNewOrder ? 99999 : message.hashCode;
 
     await _localNotifications.show(
       notiId,
@@ -335,45 +352,45 @@ class NotificationService {
         App.navigatorKey.currentState?.popUntil((route) => route.isFirst);
         OrdersTabNavigation.returnToOrdersTab?.call('NEW');
 
-        // Play loop alert if needed since the notification sound might only play once
-        NotificationService.globalAlertAudioPlayer = AudioPlayer();
-        NotificationService.globalAlertAudioPlayer!.setReleaseMode(ReleaseMode.loop);
-        NotificationService.globalAlertAudioPlayer!.play(AssetSource('alert/alert.mp3'));
+        // Acknowledge immediately since the user tapped the notification
+        OrderService().acknowledgeOrder(orderIdStr);
 
-        // Get the latest valid context after popping routes
-        final dialogContext = App.navigatorKey.currentContext ?? context;
-
-        showDialog(
-          context: dialogContext,
-          barrierDismissible: true,
-          builder: (context) => NewOrderDialog(
-            order: orderData,
-            onViewOrder: () {
-              NotificationService.stopGlobalAlert();
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  settings: RouteSettings(name: 'order_detail_$orderIdStr'),
-                  pageBuilder: (context, animation, secondaryAnimation) =>
-                      OrderDetailScreen(order: orderData),
-                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                    const begin = Offset(1.0, 0.0);
-                    const end = Offset.zero;
-                    const curve = Curves.easeOut;
-                    var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                    return SlideTransition(position: animation.drive(tween), child: child);
-                  },
-                ),
-              );
+        Navigator.push(
+          App.navigatorKey.currentContext ?? context,
+          PageRouteBuilder(
+            settings: RouteSettings(name: 'order_detail_$orderIdStr'),
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                OrderDetailScreen(order: orderData),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              const begin = Offset(1.0, 0.0);
+              const end = Offset.zero;
+              const curve = Curves.easeOut;
+              var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+              return SlideTransition(position: animation.drive(tween), child: child);
             },
           ),
-        ).then((_) {
-          NotificationService.stopGlobalAlert();
-        });
+        );
       }
     } catch (e) {
       debugPrint('Failed to load order from notification: $e');
+    }
+  }
+
+  static Future<void> _triggerVibration() async {
+    try {
+      if (await Vibration.hasVibrator() == true) {
+        if (await Vibration.hasCustomVibrationsSupport() == true) {
+          Vibration.vibrate(pattern: [500, 1000, 500, 1000, 500, 1000]);
+        } else {
+          Vibration.vibrate();
+          await Future.delayed(const Duration(milliseconds: 1500));
+          Vibration.vibrate();
+          await Future.delayed(const Duration(milliseconds: 1500));
+          Vibration.vibrate();
+        }
+      }
+    } catch (e) {
+      debugPrint('Vibration error: $e');
     }
   }
 }

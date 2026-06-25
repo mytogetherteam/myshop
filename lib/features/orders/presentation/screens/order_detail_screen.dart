@@ -101,6 +101,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   void initState() {
     super.initState();
     _currentOrder = widget.order;
+    
+    // Auto-acknowledge if the order is still PENDING and opened directly
+    if (_currentOrder.status == 'PENDING') {
+      OrderService().acknowledgeOrder(_currentOrder.id.toString());
+    }
+
     _setupWebSocketListener();
     _setupChatListener();
     _fetchOrderDetails();

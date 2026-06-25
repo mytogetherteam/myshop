@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 
 class PrimaryGradientSwitch extends StatelessWidget {
@@ -14,7 +15,10 @@ class PrimaryGradientSwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => onChanged(!value),
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onChanged(!value);
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         width: 48,

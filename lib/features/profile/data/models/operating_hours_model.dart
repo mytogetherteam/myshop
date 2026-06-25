@@ -126,12 +126,8 @@ class OperatingHoursModel {
   Map<String, dynamic> toJson() {
     return {
       'dayOfWeek': dayOfWeek,
-      'openTime': openingTime.toJson(),
-      'closeTime': closingTime.toJson(),
-      'openTimeHour': openingTime.hour,
-      'openTimeMin': openingTime.minute,
-      'closeTimeHour': closingTime.hour,
-      'closeTimeMin': closingTime.minute,
+      'openTime': openingTime.toTimeString(),
+      'closeTime': closingTime.toTimeString(),
       'isClosed': isClosed,
     };
   }

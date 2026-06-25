@@ -117,14 +117,17 @@ class _PasswordConfirmationSheetState extends State<PasswordConfirmationSheet> {
         TextField(
           controller: _passwordController,
           obscureText: _obscurePassword,
+          style: GoogleFonts.poppins(
+            color: Theme.of(context).textTheme.bodyLarge?.color,
+          ),
           onChanged: (_) {
             if (_errorMessage != null) setState(() => _errorMessage = null);
           },
           decoration: InputDecoration(
             hintText: '••••••••••••',
-            hintStyle: TextStyle(color: Colors.grey[400]),
+            hintStyle: TextStyle(color: Colors.grey[500]),
             filled: true,
-            fillColor: const Color(0xFFF8FAFC),
+            fillColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: _errorMessage != null 

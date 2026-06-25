@@ -7,6 +7,7 @@ import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/utils/app_logger.dart';
 import '../../data/services/menu_service.dart';
 import '../../data/models/menu_item_model.dart';
+import '../../data/models/menu_category_model.dart';
 import 'add_new_item_screen.dart';
 import 'dart:async';
 import 'package:my_shop/core/localization/app_localizations.dart';
@@ -31,8 +32,15 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
 
   final TextEditingController _searchCtrl = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final ScrollController _tabsScrollController = ScrollController();
   Timer? _debounce;
   bool _isSearching = false;
+
+  List<MenuCategoryModel> _categories = [];
+  Map<int, GlobalKey> _categoryKeys = {};
+  int _activeCategoryIndex = 0;
+  bool _isManualScrolling = false;
+  List<dynamic> _listItems = [];
 
   @override
   void initState() {
@@ -50,6 +58,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
   void dispose() {
     _searchCtrl.dispose();
     _scrollController.dispose();
+    _tabsScrollController.dispose();
     _debounce?.cancel();
     super.dispose();
   }
@@ -61,6 +70,33 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
         _fetchItems();
       }
     }
+
+    if (_isManualScrolling || _categoryKeys.isEmpty) return;
+
+    int newActiveIndex = _activeCategoryIndex;
+    for (final entry in _categoryKeys.entries) {
+      final key = entry.value;
+      if (key.currentContext != null) {
+        final RenderBox box = key.currentContext!.findRenderObject() as RenderBox;
+        final position = box.localToGlobal(Offset.zero);
+        if (position.dy <= 250) {
+          newActiveIndex = entry.key;
+        }
+      }
+    }
+
+    if (newActiveIndex != _activeCategoryIndex && newActiveIndex >= 0 && newActiveIndex < _categories.length) {
+      setState(() => _activeCategoryIndex = newActiveIndex);
+      if (_tabsScrollController.hasClients) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final targetOffset = (newActiveIndex * 100.0) - (screenWidth / 2) + 50.0;
+        _tabsScrollController.animateTo(
+          targetOffset.clamp(0.0, _tabsScrollController.position.maxScrollExtent),
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+        );
+      }
+    }
   }
 
   Future<void> refresh() async {
@@ -70,11 +106,17 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
 
   Future<void> _prefetchMasterData() async {
     try {
-      await Future.wait([
+      final results = await Future.wait([
         _menuService.getCategories(forceRefresh: false),
         _menuService.getMasterCategories(),
         _menuService.getMenuTags(),
       ]);
+      if (mounted) {
+        setState(() {
+          _categories = (results[0] as List<MenuCategoryModel>?) ?? [];
+          _buildListItems();
+        });
+      }
       AppLogger.lifecycle('ManageShopMenuPage: master data pre-fetched');
     } catch (e) {
       AppLogger.error('ManageShopMenuPage: failed to pre-fetch master data', e);
@@ -144,6 +186,60 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
         return item.displayName.toLowerCase().contains(query) ||
             (item.displayDescription.toLowerCase().contains(query));
       }).toList();
+    }
+    _buildListItems();
+  }
+
+  void _buildListItems() {
+    _listItems.clear();
+    _categoryKeys.clear();
+
+    if (_categories.isEmpty || _filteredItems.isEmpty) {
+      _listItems.addAll(_filteredItems);
+      return;
+    }
+
+    for (int i = 0; i < _categories.length; i++) {
+      final category = _categories[i];
+      final itemsInCategory = _filteredItems
+          .where((item) => item.menuCategoryId == category.id)
+          .toList();
+
+      if (itemsInCategory.isNotEmpty) {
+        _categoryKeys[i] = GlobalKey();
+        _listItems.add(category);
+        _listItems.addAll(itemsInCategory);
+      }
+    }
+
+    final knownCategoryIds = _categories.map((c) => c.id).toSet();
+    final uncategorized = _filteredItems
+        .where((item) => !knownCategoryIds.contains(item.menuCategoryId))
+        .toList();
+    if (uncategorized.isNotEmpty) {
+       _listItems.addAll(uncategorized);
+    }
+  }
+
+  void _scrollToCategory(int index) async {
+    if (!mounted) return;
+    setState(() {
+      _activeCategoryIndex = index;
+      _isManualScrolling = true;
+    });
+
+    final key = _categoryKeys[index];
+    if (key != null && key.currentContext != null) {
+      await Scrollable.ensureVisible(
+        key.currentContext!,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+        alignment: 0.05,
+      );
+    }
+    
+    if (mounted) {
+      setState(() => _isManualScrolling = false);
     }
   }
 
@@ -310,7 +406,8 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: 10),
+          if (_categories.isNotEmpty && _filteredItems.isNotEmpty)
+            _buildCategoryTabs(),
           // Menu List
           Expanded(
             child: AnimatedSwitcher(
@@ -327,23 +424,9 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                         controller: _scrollController,
                         padding: const EdgeInsets.only(bottom: 20),
                         itemCount:
-                            _filteredItems.length + (_isLoadingMore ? 2 : 1),
+                            _listItems.length + (_isLoadingMore ? 1 : 0),
                         itemBuilder: (context, index) {
-                          if (index == 0) {
-                            return Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                              child: Text(
-                                '${t?.translate('total_menu_items') ?? 'Total Menu Items'}: ${_filteredItems.length}',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: Theme.of(context).textTheme.bodySmall?.color,
-                                ),
-                              ),
-                            );
-                          }
-                          final itemIndex = index - 1;
-                          if (itemIndex == _filteredItems.length) {
+                          if (index == _listItems.length) {
                             return Padding(
                               padding: EdgeInsets.all(16.0),
                               child: Center(
@@ -353,26 +436,46 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                               ),
                             );
                           }
-                          final item = _filteredItems[itemIndex];
-                          return MenuItemCard(
-                            item: item,
-                            onTap: () async {
-                              final result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      AddNewItemScreen(item: item),
+                          
+                          final item = _listItems[index];
+                          
+                          if (item is MenuCategoryModel) {
+                            final catIndex = _categories.indexOf(item);
+                            return Container(
+                              key: _categoryKeys[catIndex],
+                              padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                              color: Theme.of(context).scaffoldBackgroundColor,
+                              child: Text(
+                                item.displayName,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: Theme.of(context).textTheme.bodyLarge?.color,
                                 ),
-                              );
-                              if (result == true) _fetchItems(isRefresh: true);
-                            },
-                            onAvailabilityChanged: (available) {
-                              _toggleItemAvailability(item, available);
-                            },
-                            onPublishStatusChanged: (isPublished) {
-                              _toggleItemPublishStatus(item, isPublished);
-                            },
-                          );
+                              ),
+                            );
+                          } else if (item is MenuItemModel) {
+                            return MenuItemCard(
+                              item: item,
+                              onTap: () async {
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        AddNewItemScreen(item: item),
+                                  ),
+                                );
+                                if (result == true) _fetchItems(isRefresh: true);
+                              },
+                              onAvailabilityChanged: (available) {
+                                _toggleItemAvailability(item, available);
+                              },
+                              onPublishStatusChanged: (isPublished) {
+                                _toggleItemPublishStatus(item, isPublished);
+                              },
+                            );
+                          }
+                          return const SizedBox.shrink();
                         },
                       ),
                     ),
@@ -447,6 +550,60 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildCategoryTabs() {
+    return Container(
+      height: 60,
+      decoration: BoxDecoration(
+        color: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).dividerColor.withOpacity(0.1),
+            width: 1,
+          ),
+        ),
+      ),
+      child: ListView.builder(
+        controller: _tabsScrollController,
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        itemCount: _categories.length,
+        itemBuilder: (context, index) {
+          final category = _categories[index];
+          
+          // Only show categories that have items in the current filtered view
+          if (!_categoryKeys.containsKey(index)) {
+            return const SizedBox.shrink();
+          }
+
+          final isActive = index == _activeCategoryIndex;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: InkWell(
+              onTap: () => _scrollToCategory(index),
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: isActive ? AppColors.primary : Theme.of(context).dividerColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  category.displayName,
+                  style: GoogleFonts.poppins(
+                    color: isActive ? Colors.white : Theme.of(context).textTheme.bodyLarge?.color,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
