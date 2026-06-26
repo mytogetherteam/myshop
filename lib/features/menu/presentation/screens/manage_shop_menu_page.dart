@@ -32,7 +32,6 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
 
   final TextEditingController _searchCtrl = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final ScrollController _tabsScrollController = ScrollController();
   Timer? _debounce;
   bool _isSearching = false;
 
@@ -58,7 +57,6 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
   void dispose() {
     _searchCtrl.dispose();
     _scrollController.dispose();
-    _tabsScrollController.dispose();
     _debounce?.cancel();
     super.dispose();
   }
@@ -68,33 +66,6 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
         _scrollController.position.maxScrollExtent - 200) {
       if (!_isLoadingMore && _hasMore) {
         _fetchItems();
-      }
-    }
-
-    if (_isManualScrolling || _categoryKeys.isEmpty) return;
-
-    int newActiveIndex = _activeCategoryIndex;
-    for (final entry in _categoryKeys.entries) {
-      final key = entry.value;
-      if (key.currentContext != null) {
-        final RenderBox box = key.currentContext!.findRenderObject() as RenderBox;
-        final position = box.localToGlobal(Offset.zero);
-        if (position.dy <= 250) {
-          newActiveIndex = entry.key;
-        }
-      }
-    }
-
-    if (newActiveIndex != _activeCategoryIndex && newActiveIndex >= 0 && newActiveIndex < _categories.length) {
-      setState(() => _activeCategoryIndex = newActiveIndex);
-      if (_tabsScrollController.hasClients) {
-        final screenWidth = MediaQuery.of(context).size.width;
-        final targetOffset = (newActiveIndex * 100.0) - (screenWidth / 2) + 50.0;
-        _tabsScrollController.animateTo(
-          targetOffset.clamp(0.0, _tabsScrollController.position.maxScrollExtent),
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInOut,
-        );
       }
     }
   }
@@ -218,28 +189,6 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
         .toList();
     if (uncategorized.isNotEmpty) {
        _listItems.addAll(uncategorized);
-    }
-  }
-
-  void _scrollToCategory(int index) async {
-    if (!mounted) return;
-    setState(() {
-      _activeCategoryIndex = index;
-      _isManualScrolling = true;
-    });
-
-    final key = _categoryKeys[index];
-    if (key != null && key.currentContext != null) {
-      await Scrollable.ensureVisible(
-        key.currentContext!,
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOut,
-        alignment: 0.05,
-      );
-    }
-    
-    if (mounted) {
-      setState(() => _isManualScrolling = false);
     }
   }
 
@@ -406,8 +355,6 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (_categories.isNotEmpty && _filteredItems.isNotEmpty)
-            _buildCategoryTabs(),
           // Menu List
           Expanded(
             child: AnimatedSwitcher(
@@ -550,60 +497,6 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildCategoryTabs() {
-    return Container(
-      height: 60,
-      decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
-        border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).dividerColor.withOpacity(0.1),
-            width: 1,
-          ),
-        ),
-      ),
-      child: ListView.builder(
-        controller: _tabsScrollController,
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        itemCount: _categories.length,
-        itemBuilder: (context, index) {
-          final category = _categories[index];
-          
-          // Only show categories that have items in the current filtered view
-          if (!_categoryKeys.containsKey(index)) {
-            return const SizedBox.shrink();
-          }
-
-          final isActive = index == _activeCategoryIndex;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: InkWell(
-              onTap: () => _scrollToCategory(index),
-              borderRadius: BorderRadius.circular(20),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: isActive ? AppColors.primary : Theme.of(context).dividerColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  category.displayName,
-                  style: GoogleFonts.poppins(
-                    color: isActive ? Colors.white : Theme.of(context).textTheme.bodyLarge?.color,
-                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
     );
   }
 }

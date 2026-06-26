@@ -27,7 +27,9 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   }
 
   // Manually show local notification to ensure sound plays even if data-only
-  await NotificationService().showLocalNotification(message);
+  if (message.notification == null) {
+    await NotificationService().showLocalNotification(message);
+  }
 }
 
 void main() async {

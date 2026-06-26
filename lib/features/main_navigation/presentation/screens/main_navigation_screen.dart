@@ -23,6 +23,8 @@ import 'package:my_shop/core/utils/app_logger.dart';
 import 'dart:async';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:vibration/vibration.dart';
+import 'package:my_shop/core/notifications/notification_service.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
 
@@ -44,6 +46,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   late List<Widget> _pages;
   StreamSubscription? _socketSubscription;
   AudioPlayer? _alertAudioPlayer;
+  Timer? _vibrationTimer;
   late final AppLifecycleListener _lifecycleListener;
 
   final GlobalKey<OrdersScreenState> _ordersKey =
@@ -188,6 +191,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     _lifecycleListener.dispose();
     _socketSubscription?.cancel();
     _alertAudioPlayer?.dispose();
+    _vibrationTimer?.cancel();
+    Vibration.cancel();
     super.dispose();
   }
 
@@ -202,22 +207,43 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     });
 
     if (!isAlreadyOnThisOrder) {
+      if (NotificationService.justClickedNotification) {
+        return; // User just clicked notification, skip duplicate sound
+      }
+
       try {
         _alertAudioPlayer?.stop();
         _alertAudioPlayer?.dispose();
         _alertAudioPlayer = AudioPlayer();
         _alertAudioPlayer?.setReleaseMode(ReleaseMode.loop);
         _alertAudioPlayer?.play(AssetSource('alert/alert.mp3'));
+        _startVibrationLoop();
       } catch (e) {
         AppLogger.realtime('Audio play error: $e');
       }
     }
   }
 
+  void _startVibrationLoop() {
+    _stopVibrationLoop();
+    _vibrationTimer = Timer.periodic(const Duration(seconds: 2), (timer) async {
+      if (await Vibration.hasVibrator() == true) {
+        Vibration.vibrate(duration: 1000);
+      }
+    });
+  }
+
+  void _stopVibrationLoop() {
+    _vibrationTimer?.cancel();
+    _vibrationTimer = null;
+    Vibration.cancel();
+  }
+
   void _stopAlertSound() {
     _alertAudioPlayer?.stop();
     _alertAudioPlayer?.dispose();
     _alertAudioPlayer = null;
+    _stopVibrationLoop();
   }
 
   void _setupWebSocketListener() {
@@ -507,6 +533,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
         onTap: (index) {
+          HapticFeedback.lightImpact();
           if (_currentIndex == index) {
             switch (index) {
               case 0:

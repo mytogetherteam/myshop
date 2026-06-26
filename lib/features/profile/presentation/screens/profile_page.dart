@@ -91,25 +91,43 @@ class ProfilePageState extends State<ProfilePage>
 
   Future<void> _toggleDelivery(bool value) async {
     final t = AppLocalizations.of(context);
-    setState(() => _isTogglingDelivery = true);
+    
+    GlobalModal.show(
+      context: context,
+      child: ConfirmationSheet(
+        title: value 
+            ? (t?.translate('enable_delivery') ?? 'Enable Delivery / Pick up?') 
+            : (t?.translate('disable_delivery') ?? 'Disable Delivery / Pick up?'),
+        message: value 
+            ? (t?.translate('enable_delivery_desc') ?? 'Your shop will be open for delivery and pick up orders.') 
+            : (t?.translate('disable_delivery_desc') ?? 'Your shop will stop receiving delivery and pick up orders.'),
+        confirmLabel: value 
+            ? (t?.translate('enable') ?? 'Enable') 
+            : (t?.translate('disable') ?? 'Disable'),
+        confirmColor: value ? AppColors.primary : AppColors.onSurfaceVariant,
+        onConfirm: () async {
+          setState(() => _isTogglingDelivery = true);
 
-    try {
-      final success = await _profileService.toggleDeliveryStatus(value);
+          try {
+            final success = await _profileService.toggleDeliveryStatus(value);
 
-      if (mounted && success) {
-        setState(() {
-          _deliveryEnabled = value;
-          _isTogglingDelivery = false;
-        });
-      } else if (mounted) {
-        setState(() => _isTogglingDelivery = false);
-        AppDialog.showToast(context, t?.translate('failed_update_delivery') ?? 'Failed to Update Delivery Status', isError: true);
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isTogglingDelivery = false);
-      }
-    }
+            if (mounted && success) {
+              setState(() {
+                _deliveryEnabled = value;
+                _isTogglingDelivery = false;
+              });
+            } else if (mounted) {
+              setState(() => _isTogglingDelivery = false);
+              AppDialog.showToast(context, t?.translate('failed_update_delivery') ?? 'Failed to Update Delivery Status', isError: true);
+            }
+          } catch (e) {
+            if (mounted) {
+              setState(() => _isTogglingDelivery = false);
+            }
+          }
+        },
+      ),
+    );
   }
 
   Future<void> _handleLogout() async {
@@ -409,7 +427,7 @@ class ProfilePageState extends State<ProfilePage>
           ),
         ),
         _buildToggleOption(
-          icon: PhosphorIconsRegular.truck,
+          icon: PhosphorIconsRegular.shoppingBag,
           title: t?.translate('delivery_enabled') ?? 'Delivery / Pick up Enabled',
           value: _deliveryEnabled,
           isLoading: _isTogglingDelivery,
@@ -467,7 +485,7 @@ class ProfilePageState extends State<ProfilePage>
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
           child: Text(
-            t?.translate('account') ?? 'Account',
+            t?.translate('setting') ?? 'Setting',
             style: GoogleFonts.poppins(
               fontSize: 11,
               fontWeight: FontWeight.w600,

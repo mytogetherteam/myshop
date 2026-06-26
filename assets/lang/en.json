@@ -9,6 +9,13 @@
   "account": "Account",
   "app_permissions": "App Permissions",
   "change_password": "Change Password",
+  "system_language": "System Language",
+  "enable_delivery": "Enable Delivery / Pick up?",
+  "disable_delivery": "Disable Delivery / Pick up?",
+  "enable_delivery_desc": "Your shop will be open for delivery and pick up orders.",
+  "disable_delivery_desc": "Your shop will stop receiving delivery and pick up orders.",
+  "enable": "Enable",
+  "disable": "Disable",
   "language": "Language",
   "help_support": "Help & Support",
   "privacy_policy": "Privacy Policy",
@@ -528,5 +535,10 @@
   "system_default": "System Default",
   "light_mode": "Light Mode",
   "dark_mode": "Dark Mode",
-  "food_with_pictures_attract_more_customers": "Foods with pictures can attract more customers."
+  "food_with_pictures_attract_more_customers": "Foods with pictures can attract more customers.",
+  "setting": "Setting",
+  "chat_history_warning": "Chat messages are only appear for today.",
+  "no_internet_title": "No Internet Connection",
+  "no_internet_desc": "Please check your network settings and try again. The app will automatically reconnect.",
+  "waiting_connection": "Waiting for connection..."
 }

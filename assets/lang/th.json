@@ -521,5 +521,16 @@
   "registration_failed": "การลงทะเบียนล้มเหลว",
   "terms_and_privacy": "ฉันยอมรับข้อกำหนดในการให้บริการและนโยบายความเป็นส่วนตัว",
   "please_agree_terms": "โปรดยอมรับข้อกำหนดในการให้บริการและนโยบายความเป็นส่วนตัว",
-  "food_with_pictures_attract_more_customers": "อาหารที่มีรูปภาพสามารถดึงดูดลูกค้าได้มากขึ้น"
+  "food_with_pictures_attract_more_customers": "อาหารที่มีรูปภาพสามารถดึงดูดลูกค้าได้มากขึ้น",
+  "enable_delivery": "เปิดใช้ Delivery / Pick up?",
+  "disable_delivery": "ปิดใช้ Delivery / Pick up?",
+  "enable_delivery_desc": "ร้านของคุณจะเปิดรับออเดอร์ Delivery และ Pick up",
+  "disable_delivery_desc": "ร้านของคุณจะหยุดรับออเดอร์ Delivery และ Pick up",
+  "enable": "เปิดใช้งาน",
+  "disable": "ปิดใช้งาน",
+  "setting": "การตั้งค่า",
+  "chat_history_warning": "ข้อความแชทสามารถดูได้เฉพาะวันนี้เท่านั้น",
+  "no_internet_title": "ไม่มีการเชื่อมต่ออินเทอร์เน็ต",
+  "no_internet_desc": "โปรดตรวจสอบการตั้งค่าเครือข่ายของคุณแล้วลองอีกครั้ง แอปจะเชื่อมต่อใหม่โดยอัตโนมัติ",
+  "waiting_connection": "กำลังรอการเชื่อมต่อ..."
 }
