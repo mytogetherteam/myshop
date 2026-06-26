@@ -5,6 +5,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'dart:async';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/core/network/websocket_service.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 
 class ConnectivityWrapper extends StatefulWidget {
   final Widget child;
@@ -86,14 +87,18 @@ class _NoConnectionPage extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
-                color: Color(0xFFFFF1F2),
+              decoration: BoxDecoration(
+                color: AppColors.getFadedColor(AppColors.primary, 0.08),
                 shape: BoxShape.circle,
               ),
-              child: PhosphorIcon(
-                PhosphorIconsFill.wifiX,
-                size: 80,
-                color: Color(0xFFED3973),
+              child: ShaderMask(
+                shaderCallback: (bounds) => AppColors.primaryGradient.createShader(bounds),
+                blendMode: BlendMode.srcIn,
+                child: PhosphorIcon(
+                  PhosphorIconsFill.wifiX,
+                  size: 80,
+                  color: Colors.white,
+                ),
               ),
             ),
             const SizedBox(height: 32),
@@ -125,7 +130,7 @@ class _NoConnectionPage extends StatelessWidget {
               width: 24,
               child: CircularProgressIndicator(
                 strokeWidth: 2.5,
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFED3973)),
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
             ),
             const SizedBox(height: 16),

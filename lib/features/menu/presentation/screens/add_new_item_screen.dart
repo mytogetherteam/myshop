@@ -1850,7 +1850,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           gradient: selected ? AppColors.primaryGradient : null,
-          color: selected ? null : Colors.white,
+          color: selected ? null : (Theme.of(context).brightness == Brightness.dark ? Colors.transparent : Colors.white),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: selected ? Colors.transparent : Theme.of(context).dividerColor,

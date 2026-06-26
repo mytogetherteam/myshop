@@ -25,6 +25,7 @@ class NotificationService {
   NotificationService._internal();
 
   static AudioPlayer? globalAlertAudioPlayer;
+  static bool justClickedNotification = false;
 
   static void stopGlobalAlert() {
     globalAlertAudioPlayer?.stop();
@@ -63,15 +64,15 @@ class NotificationService {
 
     // Create high importance channel for Android (New Orders)
     final AndroidNotificationChannel orderChannel = AndroidNotificationChannel(
-      'shop_order_alerts_channel_v4',
+      'shop_order_alerts_channel_v8',
       'Shop Important Notifications',
       description: 'This channel is used for shop orders and alerts.',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('alert'),
       playSound: true,
       enableVibration: true,
-      vibrationPattern: Int64List.fromList(<int>[0, 1000, 500, 1000, 500, 1000]),
-      audioAttributesUsage: AudioAttributesUsage.alarm,
+      vibrationPattern: Int64List.fromList(<int>[0, 1000, 1000]),
+      audioAttributesUsage: AudioAttributesUsage.notification,
     );
     await _localNotifications
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
@@ -107,7 +108,6 @@ class NotificationService {
       // and play the alert sound. This prevents overlapping looping sounds.
       if (isNewOrder) {
         NotificationRepository().incrementCount();
-        _triggerVibration();
         return;
       }
 
@@ -275,7 +275,7 @@ class NotificationService {
 
     // Int32List.fromList([4]) sets FLAG_INSISTENT, which loops the sound until dismissed
     final AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      isNewOrder ? 'shop_order_alerts_channel_v4' : 'shop_normal_alerts_channel_v1',
+      isNewOrder ? 'shop_order_alerts_channel_v8' : 'shop_normal_alerts_channel_v1',
       isNewOrder ? 'Shop Important Notifications' : 'Shop Normal Notifications',
       channelDescription: isNewOrder ? 'This channel is used for shop orders and alerts.' : 'This channel is used for normal shop updates.',
       importance: Importance.max,
@@ -287,8 +287,8 @@ class NotificationService {
       fullScreenIntent: true,
       category: AndroidNotificationCategory.call,
       enableVibration: true,
-      vibrationPattern: isNewOrder ? Int64List.fromList(<int>[0, 1000, 500, 1000, 500, 1000]) : null,
-      audioAttributesUsage: isNewOrder ? AudioAttributesUsage.alarm : AudioAttributesUsage.notification,
+      vibrationPattern: isNewOrder ? Int64List.fromList(<int>[0, 1000, 1000]) : null,
+      audioAttributesUsage: AudioAttributesUsage.notification,
     );
     final DarwinNotificationDetails iosPlatformChannelSpecifics = DarwinNotificationDetails(
       sound: isNewOrder ? 'alert.mp3' : 'normal_noti.mp3',
@@ -322,6 +322,11 @@ class NotificationService {
     final bool isNewOrder = type == 'NEW_ORDER' || subType == 'PENDING_ORDER';
 
     if (isNewOrder) {
+      justClickedNotification = true;
+      Future.delayed(const Duration(seconds: 4), () {
+        justClickedNotification = false;
+      });
+
       final String? orderIdStr = message.data['orderId']?.toString() ?? message.data['order_id']?.toString();
       if (orderIdStr != null) {
         // Wait until navigator context is available using post-frame callback
@@ -373,24 +378,6 @@ class NotificationService {
       }
     } catch (e) {
       debugPrint('Failed to load order from notification: $e');
-    }
-  }
-
-  static Future<void> _triggerVibration() async {
-    try {
-      if (await Vibration.hasVibrator() == true) {
-        if (await Vibration.hasCustomVibrationsSupport() == true) {
-          Vibration.vibrate(pattern: [500, 1000, 500, 1000, 500, 1000]);
-        } else {
-          Vibration.vibrate();
-          await Future.delayed(const Duration(milliseconds: 1500));
-          Vibration.vibrate();
-          await Future.delayed(const Duration(milliseconds: 1500));
-          Vibration.vibrate();
-        }
-      }
-    } catch (e) {
-      debugPrint('Vibration error: $e');
     }
   }
 }

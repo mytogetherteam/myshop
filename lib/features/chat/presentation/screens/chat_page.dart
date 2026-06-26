@@ -214,6 +214,32 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
     return '${timestamp.day}/${timestamp.month}';
   }
 
+  Widget _buildWarningBanner(AppLocalizations? t) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      color: isDark ? const Color(0xFF451A03) : const Color(0xFFFFF7ED),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(Icons.info_outline_rounded, color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFF59E0B), size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              t?.translate('chat_history_warning') ?? 'Chat messages are only appear for today.',
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: isDark ? const Color(0xFFFDE68A) : const Color(0xFFD97706),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -248,6 +274,18 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
                     color: const Color(0xFF94A3B8),
                     size: 20,
                   ),
+                  suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _searchController,
+                    builder: (context, value, child) {
+                      if (value.text.isEmpty) return const SizedBox.shrink();
+                      return IconButton(
+                        icon: Icon(Icons.clear_rounded, color: const Color(0xFF94A3B8), size: 18),
+                        onPressed: () {
+                          _searchController.clear();
+                        },
+                      );
+                    },
+                  ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -256,6 +294,7 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
           ),
 
           Expanded(child: _buildBody(t)),
+          _buildWarningBanner(t),
         ],
       ),
     );

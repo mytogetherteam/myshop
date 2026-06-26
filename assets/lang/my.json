@@ -528,5 +528,16 @@
   "system_default": "စက်၏ မူလအတိုင်း",
   "light_mode": "အလင်း (Light Mode)",
   "dark_mode": "အမှောင် (Dark Mode)",
-  "food_with_pictures_attract_more_customers": "ပုံပါရှိသော အစားအသောက်များသည် Customer များကို ပိုမိုဆွဲဆောင်နိုင်ပါသည်။"
+  "food_with_pictures_attract_more_customers": "ပုံပါရှိသော အစားအသောက်များသည် Customer များကို ပိုမိုဆွဲဆောင်နိုင်ပါသည်။",
+  "enable_delivery": "Delivery / Pick up ဖွင့်မည်လား?",
+  "disable_delivery": "Delivery / Pick up ပိတ်မည်လား?",
+  "enable_delivery_desc": "သင့်ဆိုင်မှာ Delivery နှင့် Pick up အော်ဒါများကို လက်ခံရရှိပါမည်။",
+  "disable_delivery_desc": "သင့်ဆိုင်မှာ Delivery နှင့် Pick up အော်ဒါများ လက်ခံခြင်းကို ခေတ္တရပ်နားပါမည်။",
+  "enable": "ဖွင့်မည်",
+  "disable": "ပိတ်မည်",
+  "setting": "ဆက်တင်",
+  "chat_history_warning": "ချက် (Chat) စာတိုများကို ယနေ့အတွက်သာ ကြည့်ရှုနိုင်ပါသည်။",
+  "no_internet_title": "အင်တာနက် ချိတ်ဆက်မှု မရှိပါ",
+  "no_internet_desc": "သင့်ဖုန်း၏ အင်တာနက် ချိတ်ဆက်မှုကို စစ်ဆေးပြီး ပြန်လည်ကြိုးစားပါ။ အင်တာနက်ရရှိပါက အလိုအလျောက် ပြန်ချိတ်ဆက်ပေးပါမည်။",
+  "waiting_connection": "အင်တာနက် ချိတ်ဆက်ရန် စောင့်နေပါသည်..."
 }
