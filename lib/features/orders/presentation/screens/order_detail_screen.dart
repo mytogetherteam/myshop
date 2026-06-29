@@ -2840,7 +2840,11 @@ Widget _buildAnimatedProgress() {
           ),
         ],
         SizedBox(height: 16),
-        _buildSummaryRow('Food Price', '฿ ${_currentOrder.foodPrice.toInt()}'),
+        _buildSummaryRow(
+          'Food Price',
+          '฿ ${_currentOrder.foodPrice.toInt()}',
+          icon: PhosphorIconsFill.forkKnife,
+        ),
         if (_currentOrder.taxEnable) ...[
           SizedBox(height: 12),
           _buildSummaryRow(
@@ -2848,6 +2852,7 @@ Widget _buildAnimatedProgress() {
             _currentOrder.displayTaxAmount.isNotEmpty
                 ? _currentOrder.displayTaxAmount
                 : '฿ ${_currentOrder.resolvedTaxAmount.toInt()}',
+            icon: PhosphorIconsFill.receipt,
           ),
         ],
         if (_currentOrder.discountAmount > 0) ...[
@@ -2887,7 +2892,7 @@ Widget _buildAnimatedProgress() {
         SizedBox(height: 12),
         Row(
           children: [
-            const GradientWidget(child: Icon(PhosphorIconsFill.moped, size: 20)),
+            const GradientWidget(child: Icon(PhosphorIconsFill.moped, size: 18)),
             SizedBox(width: 8),
             Text(
               _currentOrder.deliveryFee > 0 ? 'Delivery Fee' : 'Est. Amount',
@@ -2924,8 +2929,9 @@ Widget _buildAnimatedProgress() {
         ),
         SizedBox(height: 16),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            const GradientWidget(child: Icon(PhosphorIconsFill.wallet, size: 18)),
+            SizedBox(width: 8),
             Expanded(
               child: Text(
                 _currentOrder.deliveryType == 'NORMAL' 
@@ -2958,15 +2964,18 @@ Widget _buildAnimatedProgress() {
     );
   }
 
-  Widget _buildSummaryRow(String label, String value) {
+  Widget _buildSummaryRow(String label, String value, {IconData? icon}) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 15,
-            color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
+        GradientWidget(child: Icon(icon, size: 18)),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 15,
+              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
+            ),
           ),
         ),
         Text(

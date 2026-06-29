@@ -376,11 +376,14 @@ class OrderModel {
 
   double get checkoutTotal => totalAmount > 0
       ? totalAmount
-      : OrderTax.calculateTotal(
-          itemSubtotal: foodPrice,
-          deliveryFee: deliveryFee,
-          taxEnable: taxEnable,
-        );
+      : (OrderTax.calculateTotal(
+                itemSubtotal: foodPrice,
+                deliveryFee: deliveryFee,
+                taxEnable: taxEnable,
+              ) -
+              discountAmount)
+          .clamp(0, double.infinity)
+          .toDouble();
 
   String get deliveryAddressDetail {
     final street = deliveryAddress?.streetLine ?? '';
