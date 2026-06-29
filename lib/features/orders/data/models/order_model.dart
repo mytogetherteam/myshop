@@ -43,6 +43,11 @@ class OrderModel {
   final bool taxEnable;
   final double totalAmount;
   final String displayTotalAmount;
+  // Applied shop coupon (read-only on the shop side).
+  final double discountAmount;
+  final String displayDiscountAmount;
+  final String? couponName;
+  final String? couponCode;
   final double previousTotalAmount;
   final String displayPreviousTotalAmount;
   final List<OrderItemModel> items;
@@ -100,6 +105,10 @@ class OrderModel {
     this.taxEnable = true,
     this.totalAmount = 0.0,
     this.displayTotalAmount = '',
+    this.discountAmount = 0.0,
+    this.displayDiscountAmount = '',
+    this.couponName,
+    this.couponCode,
     this.previousTotalAmount = 0.0,
     this.displayPreviousTotalAmount = '',
     required this.items,
@@ -236,6 +245,13 @@ class OrderModel {
 
     final waitingMins = json['waitingTimeMinutes'] as int? ?? 0;
 
+    final shopCoupon = json['shopCoupon'] is Map
+        ? Map<String, dynamic>.from(json['shopCoupon'] as Map)
+        : null;
+    final discountAmount = (json['discountAmount'] as num?)?.toDouble() ??
+        (shopCoupon?['discountAmount'] as num?)?.toDouble() ??
+        0.0;
+
     final shopPaymentMethodMap = json['shopPaymentMethod'] as Map?;
     final paymentMethodMap = shopPaymentMethodMap?['paymentMethod'] as Map? ?? shopPaymentMethodMap;
 
@@ -262,6 +278,11 @@ class OrderModel {
       totalAmount: totalAmount,
       displayTotalAmount: json['displayTotalAmount']?.toString() ??
           '฿${totalAmount.toInt()}',
+      discountAmount: discountAmount,
+      displayDiscountAmount: json['displayDiscountAmount']?.toString() ??
+          (discountAmount > 0 ? '฿${discountAmount.toInt()}' : ''),
+      couponName: shopCoupon?['name']?.toString(),
+      couponCode: shopCoupon?['code']?.toString(),
       previousTotalAmount: (json['previousTotalAmount'] as num?)?.toDouble() ?? 0.0,
       displayPreviousTotalAmount:
           json['displayPreviousTotalAmount']?.toString() ?? '',

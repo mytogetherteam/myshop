@@ -2850,6 +2850,40 @@ Widget _buildAnimatedProgress() {
                 : '฿ ${_currentOrder.resolvedTaxAmount.toInt()}',
           ),
         ],
+        if (_currentOrder.discountAmount > 0) ...[
+          SizedBox(height: 12),
+          Row(
+            children: [
+              const GradientWidget(
+                child: Icon(PhosphorIconsFill.ticket, size: 18),
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _currentOrder.couponName?.isNotEmpty == true
+                      ? _currentOrder.couponName!
+                      : 'Coupon Discount',
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    color: (Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFFCBD5E1)
+                        : const Color(0xFF64748B)),
+                  ),
+                ),
+              ),
+              SizedBox(width: 8),
+              Text(
+                '- ${_currentOrder.displayDiscountAmount.isNotEmpty ? _currentOrder.displayDiscountAmount : '฿ ${_currentOrder.discountAmount.toInt()}'}',
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFFED3973),
+                ),
+              ),
+            ],
+          ),
+        ],
         SizedBox(height: 12),
         Row(
           children: [
