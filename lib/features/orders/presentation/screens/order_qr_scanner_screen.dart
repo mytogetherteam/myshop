@@ -7,6 +7,9 @@ import 'package:my_shop/core/presentation/widgets/back_title_app_bar.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/utils/order_qr_parser.dart';
+import 'package:my_shop/core/utils/coupon_qr_parser.dart';
+import 'package:my_shop/features/coupons/data/coupon_redeem_service.dart';
+import 'package:my_shop/features/coupons/presentation/widgets/coupon_redeem_sheet.dart';
 import 'package:my_shop/features/orders/data/services/order_service.dart';
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:my_shop/features/orders/presentation/screens/pickup_complete_screen.dart';
@@ -65,6 +68,14 @@ class _OrderQrScannerScreenState extends State<OrderQrScannerScreen> {
         .firstWhere((value) => value.isNotEmpty, orElse: () => '');
 
     if (rawValue.isEmpty) return;
+
+    // A customer's coupon redeem QR carries {userId, token}; route it to the
+    // in-store coupon flow. Anything else falls back to order-pickup parsing.
+    final couponQr = CouponQrParser.parse(rawValue);
+    if (couponQr != null) {
+      await _handleCouponQr(couponQr);
+      return;
+    }
 
     final orderId = OrderQrParser.parseOrderId(rawValue);
     final t = AppLocalizations.of(context);
@@ -167,6 +178,64 @@ class _OrderQrScannerScreenState extends State<OrderQrScannerScreen> {
         reverseTransitionDuration: Duration.zero,
       ),
     );
+  }
+
+  /// In-store coupon redemption: verify the customer's QR, show the coupons
+  /// they can claim, and let the admin redeem one.
+  Future<void> _handleCouponQr(CouponQrPayload payload) async {
+    setState(() => _isProcessing = true);
+    await _controller.stop();
+    if (!mounted) return;
+
+    final t = AppLocalizations.of(context);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(
+        child: CustomLoadingIndicator(size: 40, color: Colors.white),
+      ),
+    );
+
+    ScanResult? result;
+    String? error;
+    try {
+      result = await CouponRedeemService.instance.scan(
+        userId: payload.userId,
+        token: payload.token,
+      );
+    } catch (e) {
+      error = e.toString();
+    }
+
+    if (!mounted) return;
+    Navigator.pop(context); // Close loading
+
+    Future<void> resumeScanning() async {
+      if (!mounted) return;
+      setState(() => _isProcessing = false);
+      await _controller.start();
+    }
+
+    if (error != null || result == null) {
+      AppDialog.showToast(
+        context,
+        error ??
+            (t?.translate('invalid_coupon_qr') ?? 'Invalid coupon QR code.'),
+        isError: true,
+      );
+      await resumeScanning();
+      return;
+    }
+
+    final redeemed = await CouponRedeemSheet.show(context, result);
+    if (!mounted) return;
+
+    if (redeemed == true) {
+      Navigator.of(context).pop(); // Close scanner
+      return;
+    }
+    await resumeScanning();
   }
 
   Future<void> _toggleTorch() async {
