@@ -36,10 +36,10 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
   bool _isSearching = false;
 
   List<MenuCategoryModel> _categories = [];
-  Map<int, GlobalKey> _categoryKeys = {};
-  int _activeCategoryIndex = 0;
-  bool _isManualScrolling = false;
-  List<dynamic> _listItems = [];
+  final Map<int, GlobalKey> _categoryKeys = {};
+  final int _activeCategoryIndex = 0;
+  final bool _isManualScrolling = false;
+  final List<dynamic> _listItems = [];
 
   @override
   void initState() {
@@ -188,7 +188,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
         .where((item) => !knownCategoryIds.contains(item.menuCategoryId))
         .toList();
     if (uncategorized.isNotEmpty) {
-       _listItems.addAll(uncategorized);
+      _listItems.addAll(uncategorized);
     }
   }
 
@@ -217,7 +217,12 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
         _items[globalIndex] = revertedItem;
       });
       final t = AppLocalizations.of(context);
-      AppDialog.showToast(context, t?.translate('failed_update_availability') ?? 'Failed to Update Availability', isError: true);
+      AppDialog.showToast(
+        context,
+        t?.translate('failed_update_availability') ??
+            'Failed to Update Availability',
+        isError: true,
+      );
     }
   }
 
@@ -238,8 +243,10 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
       _items[globalIndex] = updatedItem;
     });
 
-    final success =
-        await _menuService.toggleMenuItemPublishStatus(item.id, newStatus);
+    final success = await _menuService.toggleMenuItemPublishStatus(
+      item.id,
+      newStatus,
+    );
 
     if (!success && mounted) {
       // Revert on failure
@@ -249,22 +256,25 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
         _items[globalIndex] = revertedItem;
       });
       final t = AppLocalizations.of(context);
-      AppDialog.showToast(context, t?.translate('failed_update_publish') ?? 'Failed to Update Publish Status', isError: true);
+      AppDialog.showToast(
+        context,
+        t?.translate('failed_update_publish') ??
+            'Failed to Update Publish Status',
+        isError: true,
+      );
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).cardColor
+          : Colors.white,
       appBar: AppBar(
         flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: AppColors.primaryGradient,
-          ),
+          decoration: BoxDecoration(gradient: AppColors.primaryGradient),
         ),
         elevation: 0,
         leading: IconButton(
@@ -289,8 +299,13 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                   autofocus: true,
                   style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),
                   decoration: InputDecoration(
-                    hintText: t?.translate('search_menu_items') ?? 'Search menu items...',
-                    hintStyle: GoogleFonts.poppins(color: Colors.white70, fontSize: 14),
+                    hintText:
+                        t?.translate('search_menu_items') ??
+                        'Search menu items...',
+                    hintStyle: GoogleFonts.poppins(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
                     border: InputBorder.none,
                   ),
                 )
@@ -325,7 +340,8 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                   final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => const AddNewItemScreen()),
+                      builder: (context) => const AddNewItemScreen(),
+                    ),
                   );
                   if (result == true) _fetchItems(isRefresh: true);
                 },
@@ -370,8 +386,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                       child: ListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.only(bottom: 20),
-                        itemCount:
-                            _listItems.length + (_isLoadingMore ? 1 : 0),
+                        itemCount: _listItems.length + (_isLoadingMore ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (index == _listItems.length) {
                             return Padding(
@@ -383,21 +398,28 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                               ),
                             );
                           }
-                          
+
                           final item = _listItems[index];
-                          
+
                           if (item is MenuCategoryModel) {
                             final catIndex = _categories.indexOf(item);
                             return Container(
                               key: _categoryKeys[catIndex],
-                              padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                              padding: const EdgeInsets.fromLTRB(
+                                20,
+                                24,
+                                20,
+                                12,
+                              ),
                               color: Theme.of(context).scaffoldBackgroundColor,
                               child: Text(
                                 item.displayName,
                                 style: GoogleFonts.poppins(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,
-                                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                                  color: Theme.of(
+                                    context,
+                                  ).textTheme.bodyLarge?.color,
                                 ),
                               ),
                             );
@@ -412,7 +434,8 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                                         AddNewItemScreen(item: item),
                                   ),
                                 );
-                                if (result == true) _fetchItems(isRefresh: true);
+                                if (result == true)
+                                  _fetchItems(isRefresh: true);
                               },
                               onAvailabilityChanged: (available) {
                                 _toggleItemAvailability(item, available);
@@ -440,11 +463,7 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.fastfood_outlined,
-            size: 64,
-            color: Color(0xFFCBD5E1),
-          ),
+          Icon(Icons.fastfood_outlined, size: 64, color: Color(0xFFCBD5E1)),
           SizedBox(height: 16),
           Text(
             t?.translate('no_items_found') ?? 'No menu items found',
@@ -457,11 +476,15 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
           SizedBox(height: 8),
           Text(
             _searchCtrl.text.isNotEmpty
-                ? (t?.translate('try_different_search') ?? 'Try a Different Search Query')
-                : (t?.translate('start_adding_items') ?? 'Start Adding Items to Your Shop Menu'),
+                ? (t?.translate('try_different_search') ??
+                      'Try a Different Search Query')
+                : (t?.translate('start_adding_items') ??
+                      'Start Adding Items to Your Shop Menu'),
             style: GoogleFonts.poppins(
               fontSize: 14,
-              color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+              color: (Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFF94A3B8)
+                  : const Color(0xFF64748B)),
             ),
           ),
         ],

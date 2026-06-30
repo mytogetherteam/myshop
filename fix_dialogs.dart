@@ -18,7 +18,7 @@ void main() {
       }
     }
     
-    file.writeAsStringSync(lines.join('\n') + '\n');
+    file.writeAsStringSync('${lines.join('\n')}\n');
     print('Fixed modal colors in \$path');
   }
 }

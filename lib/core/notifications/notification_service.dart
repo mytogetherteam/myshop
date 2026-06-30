@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 
-import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -17,7 +16,6 @@ import 'package:my_shop/features/main_navigation/presentation/screens/main_navig
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
-import 'package:vibration/vibration.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
