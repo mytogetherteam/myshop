@@ -1,5 +1,6 @@
 import 'package:my_shop/core/utils/file_url_util.dart';
 import 'package:my_shop/core/utils/order_tax.dart';
+import 'package:my_shop/core/utils/price_formatter.dart';
 
 String? _resolveUrl(dynamic value) => FileUrlUtil.resolve(value);
 
@@ -268,19 +269,16 @@ class OrderModel {
           ? DateTime.tryParse(json['scheduledDeliveryTime'].toString())
           : null,
       deliveryFee: deliveryFee,
-      displayDeliveryFee: json['displayDeliveryFee']?.toString() ??
-          (deliveryFee > 0 ? '฿${deliveryFee.toInt()}' : '฿ 0'),
+      displayDeliveryFee: deliveryFee.toFormattedPrice(),
       itemPrice: itemPrice,
       taxAmount: taxAmount,
       taxEnable: taxEnable,
-      displayTaxAmount: json['displayTaxAmount']?.toString() ??
-          (taxAmount > 0 ? '฿${taxAmount.toInt()}' : '฿ 0'),
+      displayTaxAmount: taxAmount.toFormattedPrice(),
       totalAmount: totalAmount,
-      displayTotalAmount: json['displayTotalAmount']?.toString() ??
-          '฿${totalAmount.toInt()}',
+      displayTotalAmount: totalAmount.toFormattedPrice(),
       discountAmount: discountAmount,
-      displayDiscountAmount: json['displayDiscountAmount']?.toString() ??
-          (discountAmount > 0 ? '฿${discountAmount.toInt()}' : ''),
+      displayDiscountAmount:
+          discountAmount > 0 ? discountAmount.toFormattedPrice() : '',
       couponName: shopCoupon?['name']?.toString(),
       couponCode: shopCoupon?['code']?.toString(),
       previousTotalAmount: (json['previousTotalAmount'] as num?)?.toDouble() ?? 0.0,
@@ -467,7 +465,7 @@ class OrderItemModel {
             : null;
         return OrderItemOptionModel(
           name: menuOpt?['nameEn']?.toString() ?? '',
-          displayPrice: '฿${(o['price'] as num?)?.toString() ?? '0'}',
+          displayPrice: ((o['price'] as num?)?.toDouble() ?? 0).toFormattedPrice(),
         );
       }).toList();
     }
@@ -482,7 +480,7 @@ class OrderItemModel {
       menuItemImageUrl: _resolveUrl(json['imageUrl'] ?? json['menuItemImageUrl'] ?? menuItem?['imageUrl']),
       quantity: json['quantity'] as int? ?? 0,
       price: price,
-      displayPrice: json['displayPrice']?.toString() ?? '฿${price.toInt()}',
+      displayPrice: price.toFormattedPrice(),
       specialInstructions: json['specialInstructions']?.toString(),
       optionsString: json['options']?.toString(),
       options: optionsList,
@@ -507,7 +505,7 @@ class OrderItemOptionModel {
   factory OrderItemOptionModel.fromJson(Map<String, dynamic> json) {
     return OrderItemOptionModel(
       name: json['name'] ?? json['optionName'] ?? '',
-      displayPrice: json['displayPrice'] ?? '',
+      displayPrice: (json['displayPrice']?.toString() ?? '').toFormattedPrice(),
     );
   }
 }
