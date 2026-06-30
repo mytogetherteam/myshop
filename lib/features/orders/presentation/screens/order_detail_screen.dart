@@ -16,6 +16,7 @@ import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart'
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
+import 'package:my_shop/core/utils/price_formatter.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/presentation/widgets/global_modal.dart';
@@ -3150,14 +3151,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           ),
         ],
         SizedBox(height: 16),
-        _buildSummaryRow('Food Price', '฿ ${_currentOrder.foodPrice.toInt()}'),
+        _buildSummaryRow('Food Price', _currentOrder.foodPrice.toFormattedPrice()),
         if (_currentOrder.taxEnable) ...[
           SizedBox(height: 12),
           _buildSummaryRow(
             'Tax (7%)',
             _currentOrder.displayTaxAmount.isNotEmpty
                 ? _currentOrder.displayTaxAmount
-                : '฿ ${_currentOrder.resolvedTaxAmount.toInt()}',
+                : _currentOrder.resolvedTaxAmount.toFormattedPrice(),
           ),
         ],
         if (_currentOrder.discountAmount > 0) ...[
@@ -3184,7 +3185,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
               SizedBox(width: 8),
               Text(
-                '- ${_currentOrder.displayDiscountAmount.isNotEmpty ? _currentOrder.displayDiscountAmount : '฿ ${_currentOrder.discountAmount.toInt()}'}',
+                '- ${_currentOrder.displayDiscountAmount.isNotEmpty ? _currentOrder.displayDiscountAmount : _currentOrder.discountAmount.toFormattedPrice()}',
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -3261,7 +3262,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 Text(
                   _currentOrder.displayTotalAmount.isNotEmpty
                       ? _currentOrder.displayTotalAmount
-                      : '฿ ${_currentOrder.checkoutTotal.toInt()}',
+                      : _currentOrder.checkoutTotal.toFormattedPrice(),
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
