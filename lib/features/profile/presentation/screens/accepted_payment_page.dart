@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/cupertino.dart';
@@ -217,13 +218,13 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: pm.qrImageUrl.isNotEmpty
-                    ? Image.network(
-                        pm.fullQrImageUrl,
+                    ? CachedNetworkImage(
+                        imageUrl: pm.fullQrImageUrl,
                         width: double.infinity,
                         height: 250,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stack) =>
-                            _buildQrPlaceholder(),
+                        placeholder: (context, url) => _buildQrPlaceholder(),
+                        errorWidget: (context, url, error) => _buildQrPlaceholder(),
                       )
                     : _buildQrPlaceholder(),
               ),
@@ -322,10 +323,11 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
           borderRadius: BorderRadius.circular(8),
         ),
         clipBehavior: Clip.antiAlias,
-        child: Image.network(
-          pm.fullPaymentMethodIconUrl,
+        child: CachedNetworkImage(
+          imageUrl: pm.fullPaymentMethodIconUrl,
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stack) => _buildFallbackIcon(pm),
+          placeholder: (context, url) => _buildFallbackIcon(pm),
+          errorWidget: (context, url, error) => _buildFallbackIcon(pm),
         ),
       );
     }

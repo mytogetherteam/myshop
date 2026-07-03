@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_switch.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../data/models/menu_item_model.dart';
 import '../../../../core/presentation/widgets/global_modal.dart';
 import '../../../../core/presentation/widgets/confirmation_sheet.dart';
@@ -98,14 +99,14 @@ class _MenuItemCardState extends State<MenuItemCard> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(16),
-                    child: widget.item.imageUrl != null
-                        ? Image.network(
-                            widget.item.imageUrl!,
+                    child: widget.item.imageUrl != null && widget.item.imageUrl!.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: widget.item.imageUrl!,
                             width: 76,
                             height: 76,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                _buildPlaceholderImage(),
+                            placeholder: (context, url) => _buildPlaceholderImage(),
+                            errorWidget: (context, url, error) => _buildPlaceholderImage(),
                           )
                         : _buildPlaceholderImage(),
                   ),

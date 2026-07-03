@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/services.dart';
 
 import 'package:google_fonts/google_fonts.dart';
@@ -248,9 +249,11 @@ class _CreateCategoryScreenState extends State<CreateCategoryScreen> {
                   width: 2,
                 ),
               ),
-              child: Image.network(
-                _gallery[index]['imageUrl'],
-                errorBuilder: (context, error, stackTrace) => Icon(
+              child: CachedNetworkImage(
+                imageUrl: _gallery[index]['imageUrl'],
+                fit: BoxFit.cover,
+                placeholder: (context, url) => const SizedBox(),
+                errorWidget: (context, url, error) => Icon(
                   Icons.restaurant,
                   size: 24,
                   color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),

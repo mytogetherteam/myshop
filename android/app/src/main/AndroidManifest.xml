@@ -3,16 +3,15 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <!-- Image Picker: Camera access -->
     <uses-permission android:name="android.permission.CAMERA" />
 
-    <!-- Image Picker: Gallery access (Android 13+) -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
-    <!-- Image Picker: Gallery access (Android 12 and below) -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
     <application
         android:label="My Shop"
         android:name="${applicationName}"
@@ -52,7 +51,7 @@
         <!-- FCM default notification channel -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="shop_order_alerts_channel_v4" />
+            android:value="shop_order_alerts_channel_v9" />
         
         <!-- FCM default notification icon -->
         <meta-data
@@ -62,8 +61,11 @@
         <!-- image_cropper (uCrop) -->
         <activity
             android:name="com.yalantis.ucrop.UCropActivity"
-            android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <service
+            android:name="id.flutter.flutter_background_service.BackgroundService"
+            android:foregroundServiceType="dataSync" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
@@ -74,6 +76,18 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="grab" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="bolt" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="grabsuperapp" />
         </intent>
     </queries>
 </manifest>

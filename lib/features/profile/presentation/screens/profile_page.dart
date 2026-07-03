@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
@@ -332,10 +333,11 @@ class ProfilePageState extends State<ProfilePage>
             ),
             child: ClipOval(
               child: (_shopProfile?.logoUrl != null && _shopProfile!.logoUrl!.isNotEmpty)
-                  ? Image.network(
-                      _shopProfile!.logoUrl!,
+                  ? CachedNetworkImage(
+                      imageUrl: _shopProfile!.logoUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => _buildInitialPlaceholder(),
+                      placeholder: (context, url) => const SizedBox(),
+                      errorWidget: (context, url, error) => _buildInitialPlaceholder(),
                     )
                   : _buildInitialPlaceholder(),
             ),

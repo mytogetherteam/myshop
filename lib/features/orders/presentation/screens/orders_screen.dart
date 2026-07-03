@@ -622,7 +622,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
                     Icon(Icons.error_outline, size: 64, color: Color(0xFFCBD5E1)),
                     SizedBox(height: 16),
                     Text(
-                      t?.translate('failed_load_orders') ?? 'Failed to Load Orders',
+                      t?.translate('failed_load_orders') == 'failed_load_orders' ? 'Failed to Load Orders' : (t?.translate('failed_load_orders') ?? 'Failed to Load Orders'),
                       style: GoogleFonts.poppins(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -631,7 +631,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
                     ),
                     SizedBox(height: 8),
                     Text(
-                      t?.translate('pull_to_retry') ?? 'Pull down to retry',
+                      t?.translate('pull_to_retry') == 'pull_to_retry' ? 'Pull down to retry' : (t?.translate('pull_to_retry') ?? 'Pull down to retry'),
                       style: GoogleFonts.poppins(
                         fontSize: 13,
                         color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF94A3B8),
@@ -640,8 +640,9 @@ class _OrderListTabViewState extends State<OrderListTabView>
                     SizedBox(height: 16),
                     PrimaryGradientButton(
                       onPressed: () => _fetchOrders(isRefresh: true),
-                      text: t?.translate('retry') ?? 'Retry',
+                      text: t?.translate('retry') == 'retry' ? 'Retry' : (t?.translate('retry') ?? 'Retry'),
                       height: 48,
+                      width: 120, // Set to a normal width instead of full width
                       borderRadius: 12,
                     ),
                   ],

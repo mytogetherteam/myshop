@@ -6,6 +6,7 @@ import 'package:my_shop/core/network/api_helper.dart';
 import 'package:my_shop/features/auth/data/models/auth_models.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/notifications/notification_service.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 
 class AuthService {
   static const String _authPath = '/api/shop/auth';
@@ -42,6 +43,7 @@ class AuthService {
         if (authResponse.userInfo != null) {
           await StorageService.instance.saveUserInfo(authResponse.userInfo!);
         }
+        FlutterBackgroundService().startService();
       }
 
       return authResponse;
@@ -93,6 +95,7 @@ class AuthService {
   Future<void> logout() async {
     try {
       await NotificationService().unregisterDevice();
+      FlutterBackgroundService().invoke('stopService');
       final refreshToken = await StorageService.instance.getRefreshToken();
       if (refreshToken != null && refreshToken.isNotEmpty) {
         await ApiClient().dio.post(

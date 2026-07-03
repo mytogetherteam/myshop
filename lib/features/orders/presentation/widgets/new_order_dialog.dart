@@ -37,7 +37,7 @@ class _NewOrderDialogState extends State<NewOrderDialog> {
         if (type == 'ORDER_ACKNOWLEDGED' || status?.toUpperCase() == 'CANCELED') {
           if (mounted) {
             NotificationService.stopGlobalAlert();
-            NotificationService().cancelNotification(orderId.hashCode);
+            NotificationService().cancelNotification(99999);
             Navigator.of(context).maybePop();
           }
         }

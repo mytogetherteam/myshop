@@ -123,11 +123,8 @@ class ImageUploadService {
   Future<PermissionStatus> _requestGalleryPermission() async {
     if (kIsWeb) return PermissionStatus.granted;
     if (Platform.isAndroid) {
-      // Android 13+ uses READ_MEDIA_IMAGES
-      if (await _isAndroid13OrAbove()) {
-        return Permission.photos.request();
-      }
-      return Permission.storage.request();
+      // Android uses the system Photo Picker which does not require permissions.
+      return PermissionStatus.granted;
     }
     // iOS
     return Permission.photos.request();
@@ -138,28 +135,7 @@ class ImageUploadService {
     return Permission.camera.request();
   }
 
-  Future<bool> _isAndroid13OrAbove() async {
-    if (kIsWeb) return false;
-    if (!Platform.isAndroid) return false;
-    try {
-      // AndroidSdkVersion 33 == Android 13
-      final info = await _getAndroidSdkVersion();
-      return info >= 33;
-    } catch (_) {
-      // Fallback: use READ_MEDIA_IMAGES (safe default)
-      return true;
-    }
-  }
 
-  Future<int> _getAndroidSdkVersion() async {
-    if (kIsWeb) return 0;
-    try {
-      final result = await Process.run('getprop', ['ro.build.version.sdk']);
-      return int.tryParse(result.stdout.toString().trim()) ?? 33;
-    } catch (_) {
-      return 33;
-    }
-  }
 
   Future<ImagePickResult> _pick(
     ImageSource source, {

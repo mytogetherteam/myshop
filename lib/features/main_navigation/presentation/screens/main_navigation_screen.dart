@@ -45,6 +45,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   late int _currentIndex;
   late List<Widget> _pages;
   StreamSubscription? _socketSubscription;
+  StreamSubscription? _notificationSubscription;
   AudioPlayer? _alertAudioPlayer;
   Timer? _vibrationTimer;
   late final AppLifecycleListener _lifecycleListener;
@@ -56,6 +57,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final GlobalKey<ChatPageState> _chatKey = GlobalKey<ChatPageState>();
   final GlobalKey<ProfilePageState> _profileKey = GlobalKey<ProfilePageState>();
   final List<bool> _visited = [false, false, false, false, false];
+  bool _isIncomingOrderDialogOpen = false;
 
 
   @override
@@ -190,6 +192,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     }
     _lifecycleListener.dispose();
     _socketSubscription?.cancel();
+    _notificationSubscription?.cancel();
     _alertAudioPlayer?.dispose();
     _vibrationTimer?.cancel();
     Vibration.cancel();
@@ -244,10 +247,20 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     _alertAudioPlayer?.dispose();
     _alertAudioPlayer = null;
     _stopVibrationLoop();
+    NotificationService().cancelNotification(99999);
   }
 
   void _setupWebSocketListener() {
     AppLogger.realtime('MainNavigation: setting up listener');
+    
+    _notificationSubscription = NotificationService.orderAcknowledgedStream.stream.listen((_) {
+      AppLogger.realtime('MainNavigation: Order acknowledged via FCM push. Stopping alerts.');
+      _stopAlertSound();
+      if (_isIncomingOrderDialogOpen && Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+    });
+
     _socketSubscription = WebSocketService().orderUpdates.listen((event) async {
       AppLogger.realtime(
         'MainNavigation event: ${event['type']}, msg: ${event['message']}',
@@ -256,6 +269,17 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       final dynamic rawOrder = event['order'];
       final dynamic rawMsg = event['message'];
       final String? msg = rawMsg?.toString();
+
+      final String? type = event['type']?.toString();
+
+      if (type == 'ORDER_ACKNOWLEDGED') {
+        AppLogger.realtime('MainNavigation: Order acknowledged by another admin. Stopping alerts.');
+        _stopAlertSound();
+        if (_isIncomingOrderDialogOpen && Navigator.canPop(context)) {
+          Navigator.pop(context); // Close NewOrderDialog if open
+        }
+        return;
+      }
 
       if (rawOrder != null) {
         final orderData = OrderModel.fromJson(rawOrder);
@@ -294,6 +318,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             AppLogger.realtime('MainNavigation: triggering NewOrderDialog');
             HapticFeedback.heavyImpact();
             _playAlertSoundIfNotViewing(orderData.id.toString());
+            _isIncomingOrderDialogOpen = true;
             await showDialog(
               context: context,
               barrierDismissible: true,
@@ -305,13 +330,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 },
               ),
             );
+            _isIncomingOrderDialogOpen = false;
             _stopAlertSound();
           } else if (status == 'CANCELED') {
             AppLogger.realtime('MainNavigation: triggering OrderCancelledDialog');
             _stopAlertSound();
             HapticFeedback.vibrate();
             // Close any currently open dialog (e.g. NewOrderDialog)
-            if (Navigator.canPop(context)) {
+            if (_isIncomingOrderDialogOpen && Navigator.canPop(context)) {
               Navigator.pop(context);
             }
             await showDialog(

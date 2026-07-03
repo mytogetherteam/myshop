@@ -18,6 +18,7 @@ class AppPermissionsPage extends StatefulWidget {
 
 class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBindingObserver {
   PermissionStatus _notificationStatus = PermissionStatus.denied;
+  PermissionStatus _batteryStatus = PermissionStatus.denied;
   bool _isLoading = true;
 
   @override
@@ -44,10 +45,14 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
   Future<void> _checkPermissions({bool silent = false}) async {
     if (!silent) setState(() => _isLoading = true);
     final status = await Permission.notification.status;
+    final batteryStatus = Platform.isAndroid 
+        ? await Permission.ignoreBatteryOptimizations.status 
+        : PermissionStatus.granted;
     
     if (mounted) {
       setState(() {
         _notificationStatus = status;
+        _batteryStatus = batteryStatus;
         _isLoading = false;
       });
     }
@@ -64,6 +69,18 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
       }
       if (mounted) {
         setState(() => _notificationStatus = status);
+      }
+    }
+  }
+
+  Future<void> _requestBatteryPermission() async {
+    if (Platform.isIOS) return;
+    if (_batteryStatus.isGranted) {
+      await openAppSettings();
+    } else {
+      final status = await Permission.ignoreBatteryOptimizations.request();
+      if (mounted) {
+        setState(() => _batteryStatus = status);
       }
     }
   }
@@ -113,6 +130,18 @@ class _AppPermissionsPageState extends State<AppPermissionsPage> with WidgetsBin
                 
                 SizedBox(height: 16),
                 
+                // Battery Optimization Permission Card (Android Only)
+                if (Platform.isAndroid)
+                  _buildPermissionCard(
+                    icon: PhosphorIconsRegular.batteryCharging,
+                    title: t?.translate('battery_optimization') ?? 'Background Execution',
+                    description: t?.translate('battery_optimization_desc') ?? 'Allow the app to run in the background to ensure you never miss incoming orders or notifications.',
+                    status: _batteryStatus,
+                    onActionPressed: _requestBatteryPermission,
+                  ),
+                  
+                if (Platform.isAndroid)
+                  SizedBox(height: 16),
               ],
             ),
         ),

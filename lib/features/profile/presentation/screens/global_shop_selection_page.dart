@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
@@ -221,10 +222,11 @@ class _GlobalShopSelectionPageState extends State<GlobalShopSelectionPage> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: shop.logoUrl != null
-                        ? Image.network(
-                            shop.logoUrl!,
+                        ? CachedNetworkImage(
+                            imageUrl: shop.logoUrl!,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stack) => Icon(
+                            placeholder: (context, url) => const SizedBox(),
+                            errorWidget: (context, url, error) => Icon(
                               PhosphorIconsRegular.storefront,
                               color: Theme.of(context).textTheme.bodySmall?.color,
                             ),

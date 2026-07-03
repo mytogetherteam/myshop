@@ -10,6 +10,7 @@ class PrimaryGradientButton extends StatelessWidget {
   final Widget? child;
   final double height;
   final double borderRadius;
+  final double? width;
   final LinearGradient? gradient;
 
   const PrimaryGradientButton({
@@ -19,6 +20,7 @@ class PrimaryGradientButton extends StatelessWidget {
     this.isLoading = false,
     this.child,
     this.height = 54,
+    this.width = double.infinity,
     this.borderRadius = 14,
     this.gradient,
   });
@@ -28,7 +30,7 @@ class PrimaryGradientButton extends StatelessWidget {
     final isDisabled = onPressed == null || isLoading;
 
     return Container(
-      width: double.infinity,
+      width: width,
       height: height,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(borderRadius),

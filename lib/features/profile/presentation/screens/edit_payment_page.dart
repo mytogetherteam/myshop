@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_switch.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
@@ -416,10 +417,11 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
               borderRadius: BorderRadius.circular(8),
             ),
             clipBehavior: Clip.antiAlias,
-            child: Image.network(
-              pm.fullPaymentMethodIconUrl,
+            child: CachedNetworkImage(
+              imageUrl: pm.fullPaymentMethodIconUrl,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stack) => _buildFallbackIconContainer(pm),
+              placeholder: (context, url) => _buildFallbackIconContainer(pm),
+              errorWidget: (context, url, error) => _buildFallbackIconContainer(pm),
             ),
           )
         else
@@ -504,13 +506,13 @@ class _EditPaymentPageState extends State<EditPaymentPage> {
                             fit: BoxFit.cover,
                           ))
                   : (_currentPayment?.qrImageUrl.isNotEmpty ?? false
-                        ? Image.network(
-                            _currentPayment!.fullQrImageUrl,
+                        ? CachedNetworkImage(
+                            imageUrl: _currentPayment!.fullQrImageUrl,
                             width: double.infinity,
                             height: 250,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stack) =>
-                                _buildPlaceholder(),
+                            placeholder: (context, url) => _buildPlaceholder(),
+                            errorWidget: (context, url, error) => _buildPlaceholder(),
                           )
                         : _buildPlaceholder()),
             ),

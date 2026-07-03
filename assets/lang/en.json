@@ -547,5 +547,8 @@
   "chat_history_warning": "Chat messages are only appear for today.",
   "no_internet_title": "No Internet Connection",
   "no_internet_desc": "Please check your network settings and try again. The app will automatically reconnect.",
-  "waiting_connection": "Waiting for connection..."
+  "waiting_connection": "Waiting for connection...",
+  "battery_optimization": "Background Execution",
+  "battery_optimization_desc": "Allow the app to run in the background to ensure you never miss incoming orders or notifications.",
+  "view_order": "View Order"
 }

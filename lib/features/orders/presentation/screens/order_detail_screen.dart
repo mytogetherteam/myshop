@@ -98,6 +98,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   int? _userId;
   bool _isLoadingRiders = false;
   bool _isScrolled = false;
+  bool _hasShownCouponModal = false;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -281,6 +282,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           _currentOrder.status == 'AWAITING_APPROVAL' &&
           _currentOrder.paymentSlipUrl != null) {
         _showPaymentVerificationModal();
+      }
+
+      if (_currentOrder.discountAmount > 0 && !_hasShownCouponModal) {
+        _hasShownCouponModal = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _showCouponModal();
+        });
       }
     } else if (mounted) {
       setState(() => _isFirstLoading = false);
@@ -1112,6 +1120,94 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     return '${diff.inDays}d ago';
   }
 
+  void _showCouponModal() {
+    if (!mounted || _currentOrder.discountAmount <= 0) return;
+
+    String discountText = _currentOrder.couponName?.isNotEmpty == true
+        ? _currentOrder.couponName!
+        : 'Coupon Discount';
+        
+    if (!discountText.toLowerCase().contains('off')) {
+      discountText = '$discountText off';
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFED3973).withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  PhosphorIconsFill.ticket,
+                  color: Color(0xFFED3973),
+                  size: 28,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Coupon Applied!',
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'This user is using a coupon, so they get $discountText.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFED3973),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Got it',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _showPaymentVerificationModal() {
     showModalBottomSheet(
       context: context,
@@ -1480,7 +1576,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       context,
     ).copyWith(viewInsets: EdgeInsets.zero);
 
-    await showModalBottomSheet<void>(
+    final String? reason = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
       isDismissible: true,
@@ -1488,31 +1584,28 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => MediaQuery(
         data: staticMediaQuery,
-        child: CancelOrderDialog(
-          onConfirm: (reason) async {
-            bool success = false;
-            await _runOrderAction(
-              action: () => OrderService().cancelOrder(
-                _currentOrder.id.toString(),
-                reason.isEmpty ? null : reason,
-              ),
-              errorMessage:
-                  t?.translate('order_cancelled_fail') ??
-                  'Failed to cancel order. Please try again.',
-              onSuccess: () {
-                if (!mounted) return;
-                success = true;
-                AppDialog.showToast(
-                  context,
-                  t?.translate('order_cancelled_success') ?? 'Order Cancelled',
-                );
-              },
-            );
-            return success;
-          },
-        ),
+        child: const CancelOrderDialog(),
       ),
     );
+
+    if (reason != null && mounted) {
+      await _runOrderAction(
+        action: () => OrderService().cancelOrder(
+          _currentOrder.id.toString(),
+          reason.isEmpty ? null : reason,
+        ),
+        errorMessage:
+            t?.translate('order_cancelled_fail') ??
+            'Failed to cancel order. Please try again.',
+        onSuccess: () {
+          if (!mounted) return;
+          AppDialog.showToast(
+            context,
+            t?.translate('order_cancelled_success') ?? 'Order Cancelled',
+          );
+        },
+      );
+    }
   }
 
   Future<void> _handleMarkReadyForPickup() async {
@@ -1751,7 +1844,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Theme.of(context).cardColor,
-                          image: _currentOrder.customerAvatar != null
+                          image: _currentOrder.customerAvatar != null && _currentOrder.customerAvatar!.isNotEmpty
                               ? DecorationImage(
                                   image: NetworkImage(
                                     _currentOrder.customerAvatar!,
@@ -2241,14 +2334,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         ),
                       ),
                       InteractiveViewer(
-                        child: CachedNetworkImage(
-                          imageUrl: _currentOrder.customerAvatar!,
-                          fit: BoxFit.contain,
-                          placeholder: (context, url) =>
-                              const CustomLoadingIndicator(size: 32),
-                          errorWidget: (context, url, error) =>
-                              const Icon(Icons.error, color: Colors.white),
-                        ),
+                        child: _currentOrder.customerAvatar != null && _currentOrder.customerAvatar!.isNotEmpty
+                            ? CachedNetworkImage(
+                                imageUrl: _currentOrder.customerAvatar!,
+                                fit: BoxFit.contain,
+                                placeholder: (context, url) =>
+                                    const CustomLoadingIndicator(size: 32),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(Icons.error, color: Colors.white),
+                              )
+                            : const Icon(Icons.person, color: Colors.white, size: 64),
                       ),
                       Positioned(
                         top: 40,
@@ -2274,7 +2369,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: Theme.of(context).cardColor,
-              image: _currentOrder.customerAvatar != null
+              image: _currentOrder.customerAvatar != null && _currentOrder.customerAvatar!.isNotEmpty
                   ? DecorationImage(
                       image: NetworkImage(_currentOrder.customerAvatar!),
                       fit: BoxFit.cover,
@@ -2946,24 +3041,96 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child:
-                item.menuItemImageUrl != null &&
-                    item.menuItemImageUrl!.isNotEmpty
-                ? CachedNetworkImage(
-                    imageUrl: item.menuItemImageUrl!,
-                    width: 54,
-                    height: 54,
-                    fit: BoxFit.cover,
-                    placeholder: (_, _) => Container(
+          GestureDetector(
+            onTap: () {
+              if (item.menuItemImageUrl != null && item.menuItemImageUrl!.isNotEmpty) {
+                showDialog(
+                  context: context,
+                  builder: (context) => Dialog(
+                    backgroundColor: Colors.transparent,
+                    insetPadding: EdgeInsets.zero,
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(color: Colors.black54),
+                          ),
+                        ),
+                        Center(
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              InteractiveViewer(
+                                child: Container(
+                                  width: 300,
+                                  height: 300,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16),
+                                    color: Theme.of(context).cardColor,
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: CachedNetworkImage(
+                                      imageUrl: item.menuItemImageUrl!,
+                                      fit: BoxFit.cover,
+                                      placeholder: (context, url) =>
+                                          const Center(child: CustomLoadingIndicator(size: 32)),
+                                      errorWidget: (context, url, error) =>
+                                          const Center(child: Icon(Icons.error, color: Colors.grey)),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                top: -15,
+                                right: -15,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.7),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white, width: 2),
+                                  ),
+                                  child: IconButton(
+                                    padding: const EdgeInsets.all(4),
+                                    constraints: const BoxConstraints(),
+                                    icon: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                    onPressed: () => Navigator.pop(context),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child:
+                  item.menuItemImageUrl != null &&
+                      item.menuItemImageUrl!.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: item.menuItemImageUrl!,
                       width: 54,
                       height: 54,
-                      color: Theme.of(context).cardColor,
-                    ),
-                    errorWidget: (_, _, _) => _buildNoImageBox(),
-                  )
-                : _buildNoImageBox(),
+                      fit: BoxFit.cover,
+                      placeholder: (_, _) => Container(
+                        width: 54,
+                        height: 54,
+                        color: Theme.of(context).cardColor,
+                      ),
+                      errorWidget: (_, _, _) => _buildNoImageBox(),
+                    )
+                  : _buildNoImageBox(),
+            ),
           ),
           SizedBox(width: 12),
           Expanded(
@@ -3090,13 +3257,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 : const Color(0xFF1E293B)),
           ),
         ),
-        if (_currentOrder.paymentSlipUrl != null) ...[
+        if (_currentOrder.paymentSlipUrl != null && _currentOrder.paymentSlipUrl!.isNotEmpty) ...[
           SizedBox(height: 16),
           Row(
             children: [
-              if (_currentOrder.paymentMethodIconUrl != null)
-                Image.network(
-                  _currentOrder.paymentMethodIconUrl!,
+              if (_currentOrder.paymentMethodIconUrl != null && _currentOrder.paymentMethodIconUrl!.isNotEmpty)
+                CachedNetworkImage(
+                  imageUrl: _currentOrder.paymentMethodIconUrl!,
                   width: 24,
                   height: 24,
                   fit: BoxFit.contain,
@@ -3135,18 +3302,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     width: double.infinity,
                     fit: BoxFit.cover,
                   )
-                : Image.network(
-                    _currentOrder.paymentSlipUrl!,
+                : CachedNetworkImage(
+                    imageUrl: _currentOrder.paymentSlipUrl!,
                     width: double.infinity,
                     fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Container(
-                        height: 200,
-                        color: Theme.of(context).cardColor,
-                        child: Center(child: CustomLoadingIndicator(size: 24)),
-                      );
-                    },
+                    placeholder: (context, url) => Container(
+                      height: 200,
+                      color: Theme.of(context).cardColor,
+                      child: Center(child: CustomLoadingIndicator(size: 24)),
+                    ),
+                    errorWidget: (_, url, error) => _buildReceiptError(),
                   ),
           ),
         ],
@@ -3796,19 +3961,27 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           SizedBox(height: 16),
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: Image.network(
-              url,
+            child: CachedNetworkImage(
+              imageUrl: url,
               width: double.infinity,
               fit: BoxFit.cover,
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return Container(
-                  height: 200,
-                  color: Theme.of(context).cardColor,
-                  child: Center(child: CustomLoadingIndicator(size: 24)),
-                );
-              },
-              errorBuilder: (_, _, _) => _buildReceiptError(),
+              placeholder: (context, url) => Container(
+                height: 200,
+                color: Theme.of(context).cardColor,
+                child: Center(child: CustomLoadingIndicator(size: 24)),
+              ),
+              errorWidget: (_, url, error) => Container(
+                width: double.infinity,
+                height: 200,
+                color: Theme.of(context).cardColor,
+                child: Center(
+                  child: Icon(
+                    PhosphorIconsRegular.imageBroken,
+                    size: 32,
+                    color: Theme.of(context).dividerColor,
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -4346,19 +4519,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     } else {
       imageWidget = ClipRRect(
         borderRadius: BorderRadius.circular(20),
-        child: Image.network(
-          slipUrl,
+        child: CachedNetworkImage(
+          imageUrl: slipUrl,
           width: double.infinity,
           fit: BoxFit.cover,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Container(
-              height: 200,
-              color: Theme.of(context).cardColor,
-              child: Center(child: CustomLoadingIndicator(size: 24)),
-            );
-          },
-          errorBuilder: (_, _, _) => _buildReceiptError(),
+          placeholder: (context, url) => Container(
+            height: 200,
+            color: Theme.of(context).cardColor,
+            child: Center(child: CustomLoadingIndicator(size: 24)),
+          ),
+          errorWidget: (_, url, error) => _buildReceiptError(),
         ),
       );
     }
@@ -4381,9 +4551,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ),
             Row(
               children: [
-                if (_currentOrder.paymentMethodIconUrl != null)
-                  Image.network(
-                    _currentOrder.paymentMethodIconUrl!,
+                if (_currentOrder.paymentMethodIconUrl != null && _currentOrder.paymentMethodIconUrl!.isNotEmpty)
+                  CachedNetworkImage(
+                    imageUrl: _currentOrder.paymentMethodIconUrl!,
                     width: 20,
                     height: 20,
                     fit: BoxFit.contain,
@@ -4743,7 +4913,7 @@ class _FullScreenTextInputState extends State<_FullScreenTextInput> {
                     name: 'Grab',
                     color: const Color(0xFF00B14F),
                     onTap: () async {
-                      final url = Uri.parse('grab://');
+                      final url = Uri.parse('grab://open');
                       try {
                         await launchUrl(
                           url,

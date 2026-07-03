@@ -9,6 +9,9 @@ import 'package:my_shop/core/utils/app_version.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/core/theme/theme_service.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:my_shop/core/services/background_service.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:my_shop/features/auth/data/services/auth_service.dart';
 import 'app.dart';
 
 @pragma('vm:entry-point')
@@ -47,6 +50,12 @@ void main() async {
     // Initialize notification service
     NotificationService().initialize();
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    
+    // Initialize Foreground background service
+    await initializeBackgroundService();
+    if (await AuthService.instance.isLoggedIn) {
+      FlutterBackgroundService().startService();
+    }
   }
 
   await AppVersion.init();

@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 
 import 'package:dio/dio.dart';
@@ -42,8 +44,21 @@ class NotificationService {
   bool _isInitialized = false;
   String? _registeredToken;
 
+  static final StreamController<String> orderAcknowledgedStream = StreamController<String>.broadcast();
+
   Future<void> initialize() async {
     if (_isInitialized || kIsWeb) return;
+
+    if (!kIsWeb && Platform.isAndroid) {
+      try {
+        bool isGranted = await Permission.ignoreBatteryOptimizations.isGranted;
+        if (!isGranted) {
+          await Permission.ignoreBatteryOptimizations.request();
+        }
+      } catch (e) {
+        debugPrint('Failed to request battery optimization ignore: $e');
+      }
+    }
 
     // Initialize local notifications
     const AndroidInitializationSettings initializationSettingsAndroid =
@@ -62,7 +77,7 @@ class NotificationService {
 
     // Create high importance channel for Android (New Orders)
     final AndroidNotificationChannel orderChannel = AndroidNotificationChannel(
-      'shop_order_alerts_channel_v8',
+      'shop_order_alerts_channel_v9',
       'Shop Important Notifications',
       description: 'This channel is used for shop orders and alerts.',
       importance: Importance.max,
@@ -96,6 +111,7 @@ class NotificationService {
       // Background silent data pushes
       if (type == 'ORDER_ACKNOWLEDGED') {
         cancelNotification(99999);
+        orderAcknowledgedStream.add('ACK');
         return;
       }
 
@@ -273,7 +289,7 @@ class NotificationService {
 
     // Int32List.fromList([4]) sets FLAG_INSISTENT, which loops the sound until dismissed
     final AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      isNewOrder ? 'shop_order_alerts_channel_v8' : 'shop_normal_alerts_channel_v1',
+      isNewOrder ? 'shop_order_alerts_channel_v9' : 'shop_normal_alerts_channel_v1',
       isNewOrder ? 'Shop Important Notifications' : 'Shop Normal Notifications',
       channelDescription: isNewOrder ? 'This channel is used for shop orders and alerts.' : 'This channel is used for normal shop updates.',
       importance: Importance.max,
@@ -291,6 +307,7 @@ class NotificationService {
     final DarwinNotificationDetails iosPlatformChannelSpecifics = DarwinNotificationDetails(
       sound: isNewOrder ? 'alert.mp3' : 'normal_noti.mp3',
       presentSound: true,
+      interruptionLevel: isNewOrder ? InterruptionLevel.timeSensitive : InterruptionLevel.active,
     );
     final NotificationDetails platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
@@ -320,6 +337,7 @@ class NotificationService {
     final bool isNewOrder = type == 'NEW_ORDER' || subType == 'PENDING_ORDER';
 
     if (isNewOrder) {
+      cancelNotification(99999);
       justClickedNotification = true;
       Future.delayed(const Duration(seconds: 4), () {
         justClickedNotification = false;

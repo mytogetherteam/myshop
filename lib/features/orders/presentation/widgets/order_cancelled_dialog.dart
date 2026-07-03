@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/features/orders/data/models/order_model.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
-
+import 'package:my_shop/core/localization/app_localizations.dart';
 class OrderCancelledDialog extends StatelessWidget {
   final OrderModel order;
   final VoidCallback onViewOrder;
@@ -16,6 +16,7 @@ class OrderCancelledDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       clipBehavior: Clip.antiAlias,
@@ -88,7 +89,7 @@ class OrderCancelledDialog extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  'Order Cancelled',
+                  t?.translate('order_cancelled') ?? 'Order Cancelled',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
                     fontSize: 22,
@@ -111,7 +112,7 @@ class OrderCancelledDialog extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Just now',
+                      t?.translate('just_now') ?? 'Just now',
                       style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -137,7 +138,9 @@ class OrderCancelledDialog extends StatelessWidget {
                     ),
                     SizedBox(width: 4),
                     Text(
-                      order.isDeliveryFulfillment ? 'Delivery' : 'Pickup',
+                      order.isDeliveryFulfillment 
+                          ? (t?.translate('delivery') ?? 'Delivery') 
+                          : (t?.translate('pickup') ?? 'Pickup'),
                       style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -209,8 +212,8 @@ class OrderCancelledDialog extends StatelessWidget {
                     Expanded(
                       child: Text(
                         order.deliveryType == 'NORMAL' 
-                            ? 'Est Total' 
-                            : 'Total',
+                            ? (t?.translate('est_total') ?? 'Est Total') 
+                            : (t?.translate('total') ?? 'Total'),
                         style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -232,20 +235,24 @@ class OrderCancelledDialog extends StatelessWidget {
                 PrimaryGradientButton(
                   onPressed: onViewOrder,
                   height: 56,
+                  width: null, // Let it size to its children
                   borderRadius: 16,
                   gradient: const LinearGradient(
                     colors: [Color(0xFFEF4444), Color(0xFFF87171)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  child: Center(
-                    child: Text(
-                      'View Order',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.3,
-                        color: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Center(
+                      child: Text(
+                        t?.translate('view_order') ?? 'View Order',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.3,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),

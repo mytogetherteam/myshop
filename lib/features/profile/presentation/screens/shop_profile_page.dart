@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
@@ -384,7 +385,12 @@ class _ShopProfilePageState extends State<ShopProfilePage>
           if (_shopProfile?.coverUrl != null &&
               _shopProfile!.coverUrl!.isNotEmpty)
             Positioned.fill(
-              child: Image.network(_shopProfile!.coverUrl!, fit: BoxFit.cover),
+              child: CachedNetworkImage(
+                imageUrl: _shopProfile!.coverUrl!,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => const SizedBox.expand(),
+                errorWidget: (context, url, error) => const SizedBox.expand(),
+              ),
             ),
           // Dark gradient overlay for contrast
           Positioned.fill(
@@ -919,12 +925,17 @@ class _ShopProfilePageState extends State<ShopProfilePage>
             borderRadius: const BorderRadius.horizontal(
               left: Radius.circular(12),
             ),
-            child: Image.network(
-              item.imageUrl,
+            child: CachedNetworkImage(
+              imageUrl: item.imageUrl,
               width: 90,
               height: 80,
               fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => Container(
+              placeholder: (context, url) => Container(
+                width: 90,
+                height: 80,
+                color: Theme.of(context).dividerColor,
+              ),
+              errorWidget: (context, url, error) => Container(
                 width: 90,
                 height: 80,
                 color: Theme.of(context).dividerColor,

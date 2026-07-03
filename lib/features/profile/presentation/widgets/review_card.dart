@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
@@ -203,27 +204,22 @@ class _ReviewCardState extends State<ReviewCard>
                   widget.review.userProfileUrl!.isNotEmpty)
               ? ClipRRect(
                   borderRadius: BorderRadius.circular(24),
-                  child: Image.network(
-                    widget.review.userProfileUrl!,
+                  child: CachedNetworkImage(
+                    imageUrl: widget.review.userProfileUrl!,
                     fit: BoxFit.cover,
                     width: 48,
                     height: 48,
-                    loadingBuilder: (context, child, progress) {
-                      if (progress == null) return child;
-                      return Center(
-                        child: SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                AppColors.primary),
-                          ),
+                    placeholder: (context, url) => Center(
+                      child: SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                         ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) =>
-                        _buildAvatarFallback(),
+                      ),
+                    ),
+                    errorWidget: (context, url, error) => _buildAvatarFallback(),
                   ),
                 )
               : _buildAvatarFallback(),

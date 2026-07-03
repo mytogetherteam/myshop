@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
@@ -56,6 +57,36 @@ class _OrderQrScannerScreenState extends State<OrderQrScannerScreen> {
       _cameraGranted = status.isGranted;
       _permissionChecked = true;
     });
+  }
+
+  Future<void> _pickImageAndScan() async {
+    if (_isProcessing) return;
+
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image == null) return;
+
+    setState(() => _isProcessing = true);
+    await _controller.stop();
+
+    final BarcodeCapture? capture = await _controller.analyzeImage(image.path);
+
+    setState(() => _isProcessing = false);
+
+    if (capture == null || capture.barcodes.isEmpty) {
+      await _controller.start();
+      if (!mounted) return;
+      final t = AppLocalizations.of(context);
+      AppDialog.showToast(
+        context,
+        t?.translate('no_qr_found_in_image') ?? 'No QR code found in image.',
+        isError: true,
+      );
+      return;
+    }
+
+    _handleBarcode(capture);
   }
 
   Future<void> _handleBarcode(BarcodeCapture capture) async {
@@ -252,6 +283,13 @@ class _OrderQrScannerScreenState extends State<OrderQrScannerScreen> {
       appBar: BackTitleAppBar(
         title: t?.translate('scan_order_qr') ?? 'Scan Order QR',
         actions: [
+          IconButton(
+            onPressed: _pickImageAndScan,
+            icon: Icon(
+              PhosphorIconsRegular.image,
+              color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+            ),
+          ),
           if (_cameraGranted)
             IconButton(
               onPressed: _toggleTorch,
@@ -333,7 +371,7 @@ class _OrderQrScannerScreenState extends State<OrderQrScannerScreen> {
                 'Point your camera at the order QR code',
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
-              color: Theme.of(context).cardColor,
+              color: Colors.white,
               fontSize: 15,
               fontWeight: FontWeight.w500,
             ),

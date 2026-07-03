@@ -4,12 +4,7 @@ import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/core/presentation/widgets/keyboard_padding_wrapper.dart';
 
 class CancelOrderDialog extends StatefulWidget {
-  final Future<bool> Function(String reason) onConfirm;
-
-  const CancelOrderDialog({
-    super.key,
-    required this.onConfirm,
-  });
+  const CancelOrderDialog({super.key});
 
   @override
   State<CancelOrderDialog> createState() => _CancelOrderDialogState();
@@ -26,8 +21,6 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
 
   @override
   void dispose() {
-    // Delay disposal to ensure TextField has fully unmounted and 
-    // won't attempt to access a disposed controller during exit animation.
     final controllerToDispose = _reasonController;
     Future.delayed(const Duration(milliseconds: 500), () {
       controllerToDispose.dispose();
@@ -150,17 +143,15 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
                   SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () async {
+                      onPressed: () {
                         FocusScope.of(context).unfocus();
                         final reason = _reasonController.text.trim();
-                        final success = await widget.onConfirm(reason);
-                        if (success && mounted) {
-                          // Wait for keyboard to close before popping to avoid unmount crashes
-                          await Future.delayed(const Duration(milliseconds: 300));
+                        // Delay pop slightly to allow keyboard dismissal animation to start
+                        Future.delayed(const Duration(milliseconds: 100), () {
                           if (mounted) {
-                            Navigator.pop(context);
+                            Navigator.pop(context, reason);
                           }
-                        }
+                        });
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFEF4444),

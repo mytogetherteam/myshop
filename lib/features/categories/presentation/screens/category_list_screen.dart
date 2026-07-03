@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
@@ -315,16 +316,24 @@ class _CategoryCard extends StatelessWidget {
                       height: 32,
                       fit: BoxFit.contain,
                     )
-                  : Image.network(
-                      (category.imageUrl ?? ''),
-                      width: 32,
-                      height: 32,
-                      errorBuilder: (context, error, stackTrace) => Icon(
+                  : (category.imageUrl != null && category.imageUrl!.isNotEmpty)
+                      ? CachedNetworkImage(
+                          imageUrl: category.imageUrl!,
+                          width: 32,
+                          height: 32,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const SizedBox(width: 32, height: 32),
+                      errorWidget: (context, url, error) => Icon(
+                        Icons.restaurant,
+                        size: 20,
+                          color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                        ),
+                      )
+                    : Icon(
                         Icons.restaurant,
                         size: 20,
                         color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
                       ),
-                    ),
             ),
             SizedBox(width: 16),
             Expanded(

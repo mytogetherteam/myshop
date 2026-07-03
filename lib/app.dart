@@ -9,11 +9,43 @@ import 'core/presentation/widgets/connectivity_wrapper.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_service.dart';
 import 'package:upgrader/upgrader.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:my_shop/features/auth/data/services/auth_service.dart';
 
-class App extends StatelessWidget {
+class App extends StatefulWidget {
   static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   const App({super.key});
+
+  @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // If the app comes to foreground, ensure the background service notification is brought back if swiped away
+      AuthService.instance.isLoggedIn.then((isLoggedIn) {
+        if (isLoggedIn) {
+          FlutterBackgroundService().startService();
+          FlutterBackgroundService().invoke('setAsForeground');
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +56,7 @@ class App extends StatelessWidget {
           valueListenable: LocalizationService.instance.localeNotifier,
           builder: (context, locale, child) {
             return MaterialApp(
-              navigatorKey: navigatorKey,
+              navigatorKey: App.navigatorKey,
               title: 'My Shop',
               theme: AppTheme.lightTheme,
               darkTheme: AppTheme.darkTheme,
@@ -44,7 +76,7 @@ class App extends StatelessWidget {
           ],
           builder: (context, child) {
             return UpgradeAlert(
-              navigatorKey: navigatorKey,
+              navigatorKey: App.navigatorKey,
               showIgnore: false,
               showLater: false,
               upgrader: Upgrader(
