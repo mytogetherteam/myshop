@@ -12,6 +12,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:my_shop/core/services/background_service.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:my_shop/features/auth/data/services/auth_service.dart';
+import 'package:flutter_jailbreak_detection/flutter_jailbreak_detection.dart';
 import 'app.dart';
 
 @pragma('vm:entry-point')
@@ -69,6 +70,34 @@ void main() async {
       statusBarIconBrightness: Brightness.dark,
     ),
   );
+
+  bool isJailbroken = false;
+  if (!kIsWeb) {
+    try {
+      isJailbroken = await FlutterJailbreakDetection.jailbroken;
+    } catch (_) {}
+  }
+
+  if (isJailbroken) {
+    runApp(
+      const MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          body: Center(
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Text(
+                'Security Violation: This app cannot run on jailbroken or rooted devices for your security.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18, color: Colors.red, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    return;
+  }
 
   // Disable Google Fonts CDN — use locally bundled Poppins from assets/fonts/
   GoogleFonts.config.allowRuntimeFetching = false;
