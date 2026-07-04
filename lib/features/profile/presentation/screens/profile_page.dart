@@ -298,8 +298,10 @@ class ProfilePageState extends State<ProfilePage>
 
   Widget _buildProfileHeader() {
     final t = AppLocalizations.of(context);
+    final isOpAdmin = _userInfo?.role == 'OperationAdmin';
+    
     return InkWell(
-      onTap: () {
+      onTap: isOpAdmin ? null : () {
         HapticFeedback.lightImpact();
         Navigator.push(
           context,
@@ -413,6 +415,8 @@ class ProfilePageState extends State<ProfilePage>
 
   Widget _buildShopSection() {
     final t = AppLocalizations.of(context);
+    final isOpAdmin = _userInfo?.role == 'OperationAdmin';
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -435,14 +439,15 @@ class ProfilePageState extends State<ProfilePage>
           isLoading: _isTogglingDelivery,
           onChanged: _toggleDelivery,
         ),
-        _buildMenuOption(
-          icon: PhosphorIconsRegular.storefront,
-          title: t?.translate('edit_shop_profile') ?? 'Edit Shop Profile',
-          onTap: () => Navigator.push(
-            context,
-            CupertinoPageRoute(builder: (_) => const EditShopProfilePage()),
-          ).then((_) => _loadUserInfo()),
-        ),
+        if (!isOpAdmin)
+          _buildMenuOption(
+            icon: PhosphorIconsRegular.storefront,
+            title: t?.translate('edit_shop_profile') ?? 'Edit Shop Profile',
+            onTap: () => Navigator.push(
+              context,
+              CupertinoPageRoute(builder: (_) => const EditShopProfilePage()),
+            ).then((_) => _loadUserInfo()),
+          ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.clock,
           title: t?.translate('operating_hours') ?? 'Operating Hours',
@@ -451,14 +456,15 @@ class ProfilePageState extends State<ProfilePage>
             CupertinoPageRoute(builder: (_) => const OperatingHoursPage()),
           ),
         ),
-        _buildMenuOption(
-          icon: PhosphorIconsRegular.creditCard,
-          title: t?.translate('accepted_payment') ?? 'Accepted Payment',
-          onTap: () => Navigator.push(
-            context,
-            CupertinoPageRoute(builder: (_) => const AcceptedPaymentPage()),
-          ).then((_) => refresh()),
-        ),
+        if (!isOpAdmin)
+          _buildMenuOption(
+            icon: PhosphorIconsRegular.creditCard,
+            title: t?.translate('accepted_payment') ?? 'Accepted Payment',
+            onTap: () => Navigator.push(
+              context,
+              CupertinoPageRoute(builder: (_) => const AcceptedPaymentPage()),
+            ).then((_) => refresh()),
+          ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.star,
           title: t?.translate('reviews') ?? 'Reviews',

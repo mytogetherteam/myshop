@@ -28,6 +28,8 @@ import 'package:my_shop/core/notifications/notification_service.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
 
+enum MainTab { order, menu, report, chat, profile }
+
 /// Lets deep order/pickup flows return to the Orders tab after completion.
 class OrdersTabNavigation {
   static void Function(String status)? returnToOrdersTab;
@@ -43,7 +45,18 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   late int _currentIndex;
-  late List<Widget> _pages;
+  late final Map<MainTab, Widget> _pageInstances;
+  bool _isOperationAdmin = false;
+  
+  List<MainTab> get _activeTabs {
+    return [
+      MainTab.order,
+      MainTab.menu,
+      if (!_isOperationAdmin) MainTab.report,
+      MainTab.chat,
+      MainTab.profile,
+    ];
+  }
   StreamSubscription? _socketSubscription;
   StreamSubscription? _notificationSubscription;
   AudioPlayer? _alertAudioPlayer;
@@ -65,13 +78,15 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     super.initState();
     _currentIndex = widget.initialIndex;
     _visited[_currentIndex] = true;
-    _pages = [
-      OrdersScreen(key: _ordersKey),
-      MenuPage(key: _menuKey),
-      ReportPage(key: _reportKey),
-      ChatPage(key: _chatKey),
-      ProfilePage(key: _profileKey),
-    ];
+    _pageInstances = {
+      MainTab.order: OrdersScreen(key: _ordersKey),
+      MainTab.menu: MenuPage(key: _menuKey),
+      MainTab.report: ReportPage(key: _reportKey),
+      MainTab.chat: ChatPage(key: _chatKey),
+      MainTab.profile: ProfilePage(key: _profileKey),
+    };
+    
+    _loadUserInfo();
 
     // IMPORTANT: Register listener FIRST so we never miss events fired during
     // the very first WebSocket connection/subscription handshake.
@@ -90,6 +105,22 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     _lifecycleListener = AppLifecycleListener(
       onResume: _onAppResumed,
     );
+  }
+
+  Future<void> _loadUserInfo() async {
+    final userInfo = await StorageService.instance.getUserInfo();
+    if (mounted && userInfo != null) {
+      if (userInfo.role == 'OperationAdmin') {
+        setState(() {
+          _isOperationAdmin = true;
+          // If we somehow were on an out-of-bounds index, reset to 0
+          if (_currentIndex >= _activeTabs.length) {
+            _currentIndex = 0;
+            _visited[_currentIndex] = true;
+          }
+        });
+      }
+    }
   }
 
   /// Called when the app returns from background (minimize, screen-off, etc.).
@@ -518,16 +549,57 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     );
   }
 
+  String _getTabTitle(MainTab tab, AppLocalizations? t) {
+    switch (tab) {
+      case MainTab.order: return t?.translate('order') ?? 'Order';
+      case MainTab.menu: return t?.translate('menu') ?? 'Menu';
+      case MainTab.report: return t?.translate('report') ?? 'Report';
+      case MainTab.chat: return t?.translate('chat') ?? 'Chat';
+      case MainTab.profile: return t?.translate('profile') ?? 'Profile';
+    }
+  }
+
+  BottomNavigationBarItem _buildNavItem(MainTab tab, AppLocalizations? t) {
+    final title = _getTabTitle(tab, t);
+    switch (tab) {
+      case MainTab.order:
+        return BottomNavigationBarItem(
+          icon: _buildInactiveItem(PhosphorIconsRegular.cookingPot, title),
+          activeIcon: _buildGradientItem(PhosphorIconsFill.cookingPot, title),
+          label: title,
+        );
+      case MainTab.menu:
+        return BottomNavigationBarItem(
+          icon: _buildInactiveItem(PhosphorIconsRegular.forkKnife, title),
+          activeIcon: _buildGradientItem(PhosphorIconsFill.forkKnife, title),
+          label: title,
+        );
+      case MainTab.report:
+        return BottomNavigationBarItem(
+          icon: _buildInactiveItem(PhosphorIconsRegular.listHeart, title),
+          activeIcon: _buildGradientItem(PhosphorIconsFill.listHeart, title),
+          label: title,
+        );
+      case MainTab.chat:
+        return BottomNavigationBarItem(
+          icon: _withChatBadge(_buildInactiveItem(PhosphorIconsRegular.chatCircle, title)),
+          activeIcon: _withChatBadge(_buildGradientItem(PhosphorIconsFill.chatCircle, title)),
+          label: title,
+        );
+      case MainTab.profile:
+        return BottomNavigationBarItem(
+          icon: _buildInactiveItem(PhosphorIconsRegular.storefront, title),
+          activeIcon: _buildGradientItem(PhosphorIconsFill.storefront, title),
+          label: title,
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
-    final localizedTitles = [
-      t?.translate('order') ?? 'Order',
-      t?.translate('menu') ?? 'Menu',
-      t?.translate('report') ?? 'Report',
-      t?.translate('chat') ?? 'Chat',
-      t?.translate('profile') ?? 'Profile',
-    ];
+    final activeTabs = _activeTabs;
+    
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
@@ -535,7 +607,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        title: AppBarTitleWithLogo(title: localizedTitles[_currentIndex]),
+        title: AppBarTitleWithLogo(title: _getTabTitle(activeTabs[_currentIndex], t)),
         actions: const [
           OrderQrScanIcon(),
           NotificationBadgeIcon(),
@@ -544,10 +616,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ),
       body: IndexedStack(
         index: _currentIndex,
-        children: _pages.asMap().entries.map((entry) {
+        children: activeTabs.asMap().entries.map((entry) {
           final int idx = entry.key;
-          final Widget page = entry.value;
-          return _visited[idx] ? page : const SizedBox.shrink();
+          final MainTab tab = entry.value;
+          return _visited[idx] ? _pageInstances[tab]! : const SizedBox.shrink();
         }).toList(),
       ),
 
@@ -561,20 +633,21 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         onTap: (index) {
           HapticFeedback.lightImpact();
           if (_currentIndex == index) {
-            switch (index) {
-              case 0:
+            final tab = activeTabs[index];
+            switch (tab) {
+              case MainTab.order:
                 _ordersKey.currentState?.refresh();
                 break;
-              case 1:
+              case MainTab.menu:
                 _menuKey.currentState?.refresh();
                 break;
-              case 2:
+              case MainTab.report:
                 _reportKey.currentState?.refresh();
                 break;
-              case 3:
+              case MainTab.chat:
                 _chatKey.currentState?.refresh();
                 break;
-              case 4:
+              case MainTab.profile:
                 _profileKey.currentState?.refresh();
                 break;
             }
@@ -593,33 +666,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         unselectedFontSize: 0,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
-        items: [
-          BottomNavigationBarItem(
-            icon: _buildInactiveItem(PhosphorIconsRegular.cookingPot, t?.translate('order') ?? 'Order'),
-            activeIcon: _buildGradientItem(PhosphorIconsFill.cookingPot, t?.translate('order') ?? 'Order'),
-            label: t?.translate('order') ?? 'Order',
-          ),
-          BottomNavigationBarItem(
-            icon: _buildInactiveItem(PhosphorIconsRegular.forkKnife, t?.translate('menu') ?? 'Menu'),
-            activeIcon: _buildGradientItem(PhosphorIconsFill.forkKnife, t?.translate('menu') ?? 'Menu'),
-            label: t?.translate('menu') ?? 'Menu',
-          ),
-          BottomNavigationBarItem(
-            icon: _buildInactiveItem(PhosphorIconsRegular.listHeart, t?.translate('report') ?? 'Report'),
-            activeIcon: _buildGradientItem(PhosphorIconsFill.listHeart, t?.translate('report') ?? 'Report'),
-            label: t?.translate('report') ?? 'Report',
-          ),
-          BottomNavigationBarItem(
-            icon: _withChatBadge(_buildInactiveItem(PhosphorIconsRegular.chatCircle, t?.translate('chat') ?? 'Chat')),
-            activeIcon: _withChatBadge(_buildGradientItem(PhosphorIconsFill.chatCircle, t?.translate('chat') ?? 'Chat')),
-            label: t?.translate('chat') ?? 'Chat',
-          ),
-          BottomNavigationBarItem(
-            icon: _buildInactiveItem(PhosphorIconsRegular.storefront, t?.translate('profile') ?? 'Profile'),
-            activeIcon: _buildGradientItem(PhosphorIconsFill.storefront, t?.translate('profile') ?? 'Profile'),
-            label: t?.translate('profile') ?? 'Profile',
-          ),
-        ],
+        items: activeTabs.map((tab) => _buildNavItem(tab, t)).toList(),
       ),
       ),
     );

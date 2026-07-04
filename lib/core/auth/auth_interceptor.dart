@@ -65,19 +65,24 @@ class AuthInterceptor extends Interceptor {
 
     // Token 60 second မပြည့်ခင် Proactively refresh လုပ်
     if (JwtUtils.isExpired(token, offsetSeconds: 60)) {
-      final newToken = await _refreshToken();
-      if (newToken != null) {
-        options.headers['Authorization'] = 'Bearer $newToken';
-      } else {
-        // Refresh ဆိုင်ရာ fail ဖြစ်ရင် logoutWithRedirect ကို auth_service ကပဲ handle လုပ်ပြီးသား
-        handler.reject(
-          DioException(
-            requestOptions: options,
-            error: 'Token refresh failed',
-            type: DioExceptionType.cancel,
-          ),
-        );
-        return;
+      try {
+        final newToken = await _refreshToken();
+        if (newToken != null) {
+          options.headers['Authorization'] = 'Bearer $newToken';
+        } else {
+          // Refresh ဆိုင်ရာ fail ဖြစ်ရင် (401/403) logoutWithRedirect ကို auth_service ကပဲ handle လုပ်ပြီးသား
+          handler.reject(
+            DioException(
+              requestOptions: options,
+              error: 'Session expired or invalid',
+              type: DioExceptionType.cancel,
+            ),
+          );
+          return;
+        }
+      } catch (e) {
+        // Network error during proactive refresh, proceed with old token for now
+        options.headers['Authorization'] = 'Bearer $token';
       }
     } else {
       options.headers['Authorization'] = 'Bearer $token';
@@ -107,9 +112,9 @@ class AuthInterceptor extends Interceptor {
       }
       return newToken;
     } catch (e) {
-      _refreshCompleter!.complete(null);
-      await AuthService.instance.logoutWithRedirect();
-      return null;
+      _refreshCompleter!.completeError(e);
+      // DO NOT logout here, just pass the error (Network issue etc.)
+      rethrow;
     } finally {
       _isRefreshing = false;
       _refreshCompleter = null;
@@ -120,14 +125,16 @@ class AuthInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     final statusCode = err.response?.statusCode;
     final path = err.requestOptions.path;
+    final isRetried = err.requestOptions.extra['is_retried'] == true;
 
-    // 401 / 403 ဆိုရင် refresh ကြိုးစားပါ
-    if ((statusCode == 401 || statusCode == 403) && !_isPublicAuthPath(path)) {
+    // 401 / 403 ဆိုရင် refresh ကြိုးစားပါ (တစ်ခါပဲ retry ပါ)
+    if ((statusCode == 401 || statusCode == 403) && !_isPublicAuthPath(path) && !isRetried) {
       try {
         final newToken = await _refreshToken();
         if (newToken != null && newToken.isNotEmpty) {
           // Token အသစ်ရပြီ - Request ကို retry လုပ်ပါ
           final retryOptions = err.requestOptions;
+          retryOptions.extra['is_retried'] = true;
           retryOptions.headers['Authorization'] = 'Bearer $newToken';
           final retryResponse = await dio.fetch(retryOptions);
           handler.resolve(retryResponse);
