@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
+import 'package:my_shop/features/coupons/coupon_display_helper.dart';
 import 'package:my_shop/features/coupons/data/coupon_redeem_service.dart';
 
 /// Bottom sheet shown after a customer's redeem QR is scanned. Lists the
@@ -33,12 +34,18 @@ class _CouponRedeemSheetState extends State<CouponRedeemSheet> {
   String _t(BuildContext context, String key, String fallback) =>
       AppLocalizations.of(context)?.translate(key) ?? fallback;
 
-  String _discountLabel(ShopEligibleCoupon c) {
-    if (c.isFreeItem) return _t(context, 'coupon_free', 'FREE');
-    final v = c.discountValue == c.discountValue.roundToDouble()
-        ? c.discountValue.toInt().toString()
-        : c.discountValue.toString();
-    return c.isPercentage ? '$v%' : '฿$v';
+  String _discountLabel(ShopEligibleCoupon c) =>
+      CouponDisplayHelper.discountBadgeForCoupon(context, c);
+
+  String _couponSubtitle(ShopEligibleCoupon c) {
+    if (!c.isFreeItem) return '';
+    return CouponDisplayHelper.bogoGiftSummary(
+      context,
+      isFreeItem: true,
+      isBogoAllItems: c.isBogoAllItems,
+      buyItems: c.buyItems,
+      freeItems: c.freeItems,
+    );
   }
 
   Future<void> _redeem() async {
@@ -261,11 +268,10 @@ class _CouponRedeemSheetState extends State<CouponRedeemSheet> {
                       color: Colors.grey.shade500,
                     ),
                   ),
-                  if (c.freeItems.isNotEmpty) ...[
+                  if (_couponSubtitle(c).isNotEmpty) ...[
                     const SizedBox(height: 6),
                     Text(
-                      '${_t(context, 'coupon_free_items', 'Free')}: '
-                      '${c.freeItems.map((i) => '${i.name} x${i.quantity}').join(', ')}',
+                      _couponSubtitle(c),
                       style: GoogleFonts.poppins(
                         fontSize: 11.5,
                         color: Colors.grey.shade600,

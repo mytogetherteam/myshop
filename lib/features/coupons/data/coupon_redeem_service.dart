@@ -19,11 +19,66 @@ class ShopCouponItem {
   factory ShopCouponItem.fromJson(Map<String, dynamic> json) => ShopCouponItem(
         type: json['type']?.toString() ?? 'GET',
         menuItemId: (json['menuItemId'] as num?)?.toInt() ?? 0,
-        name: json['name']?.toString() ?? '',
+        name: json['name']?.toString() ??
+            json['nameEn']?.toString() ??
+            json['nameMm']?.toString() ??
+            json['nameTh']?.toString() ??
+            '',
         quantity: (json['quantity'] as num?)?.toInt() ?? 1,
       );
 
+  String get displayName =>
+      name.trim().isNotEmpty ? name.trim() : 'Item #$menuItemId';
+
   bool get isGet => type.toUpperCase() == 'GET';
+  bool get isBuy => type.toUpperCase() == 'BUY';
+}
+
+/// Applied coupon on an online order (read-only, from `shopCoupon` on the API).
+class OrderShopCouponInfo {
+  final String name;
+  final String? code;
+  final String promotionType;
+  final String? discountType;
+  final double discountValue;
+  final bool bogoAllItems;
+  final List<ShopCouponItem> items;
+
+  const OrderShopCouponInfo({
+    required this.name,
+    this.code,
+    this.promotionType = 'BUY_X_GET_DISCOUNT',
+    this.discountType,
+    this.discountValue = 0,
+    this.bogoAllItems = false,
+    this.items = const [],
+  });
+
+  factory OrderShopCouponInfo.fromJson(Map<String, dynamic> json) =>
+      OrderShopCouponInfo(
+        name: json['name']?.toString() ?? '',
+        code: json['code']?.toString(),
+        promotionType:
+            json['promotionType']?.toString() ?? 'BUY_X_GET_DISCOUNT',
+        discountType: json['discountType']?.toString(),
+        discountValue: (json['discountValue'] as num?)?.toDouble() ?? 0,
+        bogoAllItems: json['bogoAllItems'] == true,
+        items: (json['items'] as List?)
+                ?.whereType<Map>()
+                .map((e) =>
+                    ShopCouponItem.fromJson(Map<String, dynamic>.from(e)))
+                .toList() ??
+            const [],
+      );
+
+  bool get isFreeItem => promotionType.toUpperCase() == 'BUY_X_GET_FREE';
+  bool get isPercentage => (discountType ?? '').toUpperCase() == 'PERCENTAGE';
+  bool get isBogoAllItems =>
+      bogoAllItems || (isFreeItem && items.isEmpty);
+  List<ShopCouponItem> get buyItems =>
+      items.where((i) => i.isBuy).toList();
+  List<ShopCouponItem> get freeItems =>
+      items.where((i) => i.isGet).toList();
 }
 
 /// A coupon the scanned customer can still claim in-store.
@@ -36,6 +91,7 @@ class ShopEligibleCoupon {
   final String? discountType; // PERCENTAGE | FIXED_AMOUNT
   final double discountValue;
   final String target; // ALL | EARLY_BIRD
+  final bool bogoAllItems;
   final List<ShopCouponItem> items;
 
   const ShopEligibleCoupon({
@@ -47,6 +103,7 @@ class ShopEligibleCoupon {
     this.discountType,
     this.discountValue = 0,
     this.target = 'ALL',
+    this.bogoAllItems = false,
     this.items = const [],
   });
 
@@ -61,6 +118,7 @@ class ShopEligibleCoupon {
         discountType: json['discountType']?.toString(),
         discountValue: (json['discountValue'] as num?)?.toDouble() ?? 0,
         target: json['target']?.toString() ?? 'ALL',
+        bogoAllItems: json['bogoAllItems'] == true,
         items: (json['items'] as List?)
                 ?.whereType<Map>()
                 .map((e) =>
@@ -72,6 +130,10 @@ class ShopEligibleCoupon {
   bool get isFreeItem => promotionType.toUpperCase() == 'BUY_X_GET_FREE';
   bool get isPercentage => (discountType ?? '').toUpperCase() == 'PERCENTAGE';
   bool get isEarlyBird => target.toUpperCase() == 'EARLY_BIRD';
+  bool get isBogoAllItems =>
+      bogoAllItems || (isFreeItem && items.isEmpty);
+  List<ShopCouponItem> get buyItems =>
+      items.where((i) => i.isBuy).toList();
   List<ShopCouponItem> get freeItems => items.where((i) => i.isGet).toList();
 }
 

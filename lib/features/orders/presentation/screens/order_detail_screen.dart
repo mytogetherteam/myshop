@@ -23,6 +23,7 @@ import 'package:my_shop/core/presentation/widgets/global_modal.dart';
 import 'package:my_shop/core/presentation/widgets/keyboard_padding_wrapper.dart';
 import 'package:my_shop/features/orders/presentation/widgets/cancel_order_dialog.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
+import 'package:my_shop/features/coupons/coupon_display_helper.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/features/profile/data/models/rider_model.dart';
 import 'package:my_shop/features/profile/data/services/rider_service.dart';
@@ -284,7 +285,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         _showPaymentVerificationModal();
       }
 
-      if (_currentOrder.discountAmount > 0 && !_hasShownCouponModal) {
+      if (_currentOrder.hasAppliedCoupon && !_hasShownCouponModal) {
         _hasShownCouponModal = true;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _showCouponModal();
@@ -1120,16 +1121,33 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     return '${diff.inDays}d ago';
   }
 
-  void _showCouponModal() {
-    if (!mounted || _currentOrder.discountAmount <= 0) return;
+  String _couponDetailHint() {
+    final sc = _currentOrder.shopCoupon;
+    if (sc == null || !sc.isFreeItem) return '';
+    return CouponDisplayHelper.bogoGiftSummary(
+      context,
+      isFreeItem: true,
+      isBogoAllItems: sc.isBogoAllItems,
+      buyItems: sc.buyItems,
+      freeItems: sc.freeItems,
+    );
+  }
 
-    String discountText = _currentOrder.couponName?.isNotEmpty == true
-        ? _currentOrder.couponName!
-        : 'Coupon Discount';
-        
-    if (!discountText.toLowerCase().contains('off')) {
-      discountText = '$discountText off';
-    }
+  void _showCouponModal() {
+    if (!mounted || !_currentOrder.hasAppliedCoupon) return;
+
+    final sc = _currentOrder.shopCoupon;
+    final message = CouponDisplayHelper.orderModalMessage(
+      context,
+      couponName: _currentOrder.couponName ?? sc?.name,
+      discountAmount: _currentOrder.discountAmount,
+      isFreeItem: sc?.isFreeItem ?? false,
+      isBogoAllItems: sc?.isBogoAllItems ?? false,
+      isPercentage: sc?.isPercentage ?? false,
+      discountValue: sc?.discountValue ?? 0,
+      buyItems: sc?.buyItems ?? const [],
+      freeItems: sc?.freeItems ?? const [],
+    );
 
     showModalBottomSheet(
       context: context,
@@ -1170,7 +1188,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                'This user is using a coupon, so they get $discountText.',
+                message,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                   fontSize: 15,
@@ -3326,7 +3344,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 : _currentOrder.resolvedTaxAmount.toFormattedPrice(),
           ),
         ],
-        if (_currentOrder.discountAmount > 0) ...[
+        if (_currentOrder.discountAmount > 0 ||
+            _currentOrder.shopCoupon?.isFreeItem == true) ...[
           SizedBox(height: 12),
           Row(
             children: [
@@ -3335,22 +3354,42 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
               SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  _currentOrder.couponName?.isNotEmpty == true
-                      ? _currentOrder.couponName!
-                      : 'Coupon Discount',
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.poppins(
-                    fontSize: 15,
-                    color: (Theme.of(context).brightness == Brightness.dark
-                        ? const Color(0xFFCBD5E1)
-                        : const Color(0xFF64748B)),
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _currentOrder.couponName?.isNotEmpty == true
+                          ? _currentOrder.couponName!
+                          : 'Coupon Discount',
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        color: (Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFFCBD5E1)
+                            : const Color(0xFF64748B)),
+                      ),
+                    ),
+                    if (_couponDetailHint().isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        _couponDetailHint(),
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: (Theme.of(context).brightness == Brightness.dark
+                              ? const Color(0xFF94A3B8)
+                              : const Color(0xFF94A3B8)),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
               SizedBox(width: 8),
               Text(
-                '- ${_currentOrder.displayDiscountAmount.isNotEmpty ? _currentOrder.displayDiscountAmount : _currentOrder.discountAmount.toFormattedPrice()}',
+                _currentOrder.discountAmount > 0
+                    ? '- ${_currentOrder.displayDiscountAmount.isNotEmpty ? _currentOrder.displayDiscountAmount : _currentOrder.discountAmount.toFormattedPrice()}'
+                    : (AppLocalizations.of(context)?.translate('coupon_free') ??
+                        'FREE'),
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,

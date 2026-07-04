@@ -1,6 +1,7 @@
 import 'package:my_shop/core/utils/file_url_util.dart';
 import 'package:my_shop/core/utils/order_tax.dart';
 import 'package:my_shop/core/utils/price_formatter.dart';
+import 'package:my_shop/features/coupons/data/coupon_redeem_service.dart';
 
 String? _resolveUrl(dynamic value) => FileUrlUtil.resolve(value);
 
@@ -49,6 +50,7 @@ class OrderModel {
   final String displayDiscountAmount;
   final String? couponName;
   final String? couponCode;
+  final OrderShopCouponInfo? shopCoupon;
   final double previousTotalAmount;
   final String displayPreviousTotalAmount;
   final List<OrderItemModel> items;
@@ -110,6 +112,7 @@ class OrderModel {
     this.displayDiscountAmount = '',
     this.couponName,
     this.couponCode,
+    this.shopCoupon,
     this.previousTotalAmount = 0.0,
     this.displayPreviousTotalAmount = '',
     required this.items,
@@ -148,6 +151,12 @@ class OrderModel {
     this.shopPaymentQrUrl,
     this.waitingTimeMinutes = 0,
   });
+
+  /// Whether the customer applied a coupon (discount, BOGO, or gift menu).
+  bool get hasAppliedCoupon =>
+      shopCoupon != null ||
+      (couponName?.trim().isNotEmpty ?? false) ||
+      discountAmount > 0;
 
   /// Legacy alias for delivery tier UI (FAST = prepaid, FLEXIBLE = flexible).
   String get deliveryType {
@@ -281,6 +290,9 @@ class OrderModel {
           discountAmount > 0 ? discountAmount.toFormattedPrice() : '',
       couponName: shopCoupon?['name']?.toString(),
       couponCode: shopCoupon?['code']?.toString(),
+      shopCoupon: shopCoupon != null
+          ? OrderShopCouponInfo.fromJson(shopCoupon)
+          : null,
       previousTotalAmount: (json['previousTotalAmount'] as num?)?.toDouble() ?? 0.0,
       displayPreviousTotalAmount:
           json['displayPreviousTotalAmount']?.toString() ?? '',
