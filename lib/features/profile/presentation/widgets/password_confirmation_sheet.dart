@@ -39,14 +39,14 @@ class _PasswordConfirmationSheetState extends State<PasswordConfirmationSheet> {
     final userInfo = await StorageService.instance.getUserInfo();
     if (userInfo != null) {
       final usernameOrEmail = userInfo.email.isNotEmpty ? userInfo.email : userInfo.username;
-      final authResponse = await AuthService.instance.login(
+      final isPasswordValid = await AuthService.instance.confirmPassword(
         usernameOrEmail: usernameOrEmail,
         password: _passwordController.text,
       );
 
       if (!mounted) return;
 
-      if (!authResponse.success) {
+      if (!isPasswordValid) {
         setState(() {
           _isLoading = false;
           _errorMessage = t?.translate('incorrect_password') ?? 'Incorrect Password';

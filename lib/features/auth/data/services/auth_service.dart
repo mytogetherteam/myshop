@@ -61,6 +61,29 @@ class AuthService {
     }
   }
 
+  Future<bool> confirmPassword({
+    required String usernameOrEmail,
+    required String password,
+  }) async {
+    try {
+      final response = await ApiClient().dio.post(
+        '$_authPath/confirm-password',
+        data: {'emailOrUsername': usernameOrEmail, 'password': password},
+      );
+
+      if (response.data is bool) {
+        return response.data;
+      }
+      if (response.data is Map && response.data.containsKey('data')) {
+        return response.data['data'] == true;
+      }
+      return response.data?.toString() == 'true';
+    } catch (e) {
+      debugPrint('[AuthService.confirmPassword] Error: $e');
+      return false;
+    }
+  }
+
   Future<AuthResponse> registerShop({
     required String shopName,
     required String ownerName,
@@ -172,13 +195,17 @@ class AuthService {
       debugPrint('[AuthService.performRefresh] API error (status=$statusCode): ${ApiHelper.handleError(e).message}');
 
       // Refresh token ကုန်သွားတာ သို့မဟုတ် invalid ဖြစ်နေတာ - storage ကို clear လုပ်ပါ
-      if (statusCode == 401 || statusCode == 403) {
+      if (statusCode == 401 || statusCode == 403 || statusCode == 422) {
         debugPrint('[AuthService.performRefresh] Refresh token expired/invalid - clearing storage');
         await StorageService.instance.clearAll();
+        return null;
       }
+      
+      // For network errors or 500 errors, throw so we don't log the user out
+      rethrow;
     } catch (e) {
       debugPrint('[AuthService.performRefresh] Unexpected error: $e');
+      rethrow;
     }
-    return null;
   }
 }
