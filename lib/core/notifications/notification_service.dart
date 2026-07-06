@@ -26,6 +26,9 @@ class NotificationService {
 
   static AudioPlayer? globalAlertAudioPlayer;
   static bool justClickedNotification = false;
+  /// Set to true when user taps a CANCELED_ORDER notification.
+  /// MainNavigationScreen reads and clears this flag to show the missed-orders modal.
+  static bool pendingMissedOrderCheck = false;
 
   static void stopGlobalAlert() {
     globalAlertAudioPlayer?.stop();
@@ -45,6 +48,7 @@ class NotificationService {
   String? _registeredToken;
 
   static final StreamController<String> orderAcknowledgedStream = StreamController<String>.broadcast();
+  static final StreamController<String> shopAutoPausedStream = StreamController<String>.broadcast();
 
   Future<void> initialize() async {
     if (_isInitialized || kIsWeb) return;
@@ -332,12 +336,25 @@ class NotificationService {
   void _handleNotificationClick(RemoteMessage? message) async {
     if (message == null) return;
 
+    final String? mainType = message.data['mainType'];
     final String? type = message.data['type'];
     final String? subType = message.data['subType'];
+    
+    final bool isCancelledOrder = subType == 'CANCELED_ORDER' || type == 'CANCELED_ORDER';
     final bool isNewOrder = type == 'NEW_ORDER' || subType == 'PENDING_ORDER';
+    final bool isOrderAction = mainType == 'ORDER' || isNewOrder || isCancelledOrder;
 
-    if (isNewOrder) {
-      cancelNotification(99999);
+    if (isCancelledOrder) {
+      // For canceled orders: just flag that we need to show the missed-orders modal.
+      // MainNavigationScreen will pick this up in initState / onResume.
+      pendingMissedOrderCheck = true;
+      return;
+    }
+
+    if (isOrderAction) {
+      if (isNewOrder) {
+        cancelNotification(99999);
+      }
       justClickedNotification = true;
       Future.delayed(const Duration(seconds: 4), () {
         justClickedNotification = false;

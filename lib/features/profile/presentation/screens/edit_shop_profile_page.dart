@@ -264,9 +264,9 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   Future<void> _loadUserEmail() async {
     if (_emailCtrl.text.isEmpty) {
       final userInfo = await StorageService.instance.getUserInfo();
-      if (mounted && userInfo != null && userInfo.email != null) {
+      if (mounted && userInfo != null && userInfo.email.isNotEmpty) {
         setState(() {
-          _emailCtrl.text = userInfo.email!;
+          _emailCtrl.text = userInfo.email;
         });
       }
     }

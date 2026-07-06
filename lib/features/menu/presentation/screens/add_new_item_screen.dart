@@ -1708,7 +1708,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   icon: Icon(Icons.clear, color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)), size: 20),
                   onPressed: () {
                     controller.clear();
-                    if (onChanged != null) onChanged!('');
+                    if (onChanged != null) onChanged('');
                   },
                 );
               },

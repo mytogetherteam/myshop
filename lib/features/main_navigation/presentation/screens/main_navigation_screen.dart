@@ -27,6 +27,8 @@ import 'package:vibration/vibration.dart';
 import 'package:my_shop/core/notifications/notification_service.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
+import 'package:my_shop/features/orders/data/services/order_service.dart';
+import 'package:my_shop/core/presentation/widgets/phone_setup_guide_sheet.dart';
 
 enum MainTab { order, menu, report, chat, profile }
 
@@ -59,6 +61,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
   StreamSubscription? _socketSubscription;
   StreamSubscription? _notificationSubscription;
+  StreamSubscription? _shopAutoPausedSubscription;
   AudioPlayer? _alertAudioPlayer;
   Timer? _vibrationTimer;
   late final AppLifecycleListener _lifecycleListener;
@@ -94,17 +97,25 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     ChatUnreadController.instance.start();
     OrdersTabNavigation.returnToOrdersTab = _returnToOrdersTab;
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      PhoneSetupGuideSheet.showIfNeeded(context);
+    });
+
     // Connect AFTER listener is ready (post-frame ensures widget is mounted
     // and the stream listener is active before any events can arrive).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       WebSocketService().connect();
-      _maybeShowMenuWarningModal();
+      _checkMissedOrders();
     });
 
     // Reconnect WS + refresh orders whenever app comes back from background.
     _lifecycleListener = AppLifecycleListener(
       onResume: _onAppResumed,
     );
+
+    _shopAutoPausedSubscription = NotificationService.shopAutoPausedStream.stream.listen((_) {
+      _showAutoPausedDialog();
+    });
   }
 
   Future<void> _loadUserInfo() async {
@@ -130,10 +141,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     AppLogger.realtime('[Lifecycle] App resumed — reconnecting WS & syncing orders');
     await WebSocketService().connect(force: true);
     if (mounted) {
-      // Refresh all tab lists from API (catches any missed WS events)
       _ordersKey.currentState?.refresh();
-      // Also re-sync badge counts from server totals
       _ordersKey.currentState?.syncCounts();
+      // Check for any missed/auto-cancelled orders since last session
+      _checkMissedOrders();
     }
   }
 
@@ -147,72 +158,226 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     });
   }
 
-  Future<void> _maybeShowMenuWarningModal() async {
-    final alreadySeen = await StorageService.instance.isMenuWarningSeen();
-    if (alreadySeen || !mounted) return;
-    _showMenuWarningModal();
+  Future<void> _checkMissedOrders() async {
+    if (!mounted) return;
+    final data = await OrderService().getMissedRevenueToday();
+    if (!mounted || data == null) return;
+
+    final missedCount = data['missedCount'] as int? ?? 0;
+    if (missedCount == 0) return;
+
+    final rawOrders = data['orders'] as List<dynamic>? ?? [];
+    List<dynamic> newMissedOrders = [];
+
+    if (NotificationService.pendingMissedOrderCheck) {
+      // User tapped the canceled order notification. Show all missed orders today.
+      newMissedOrders = rawOrders;
+      NotificationService.pendingMissedOrderCheck = false; // Reset the flag
+    } else {
+      // Only show warning for orders canceled AFTER the last time the user saw this dialog
+      final lastCheckMs = await StorageService.instance.getLastMissedOrderCheckMs();
+      newMissedOrders = rawOrders.where((o) {
+        final canceledAt = DateTime.tryParse(o['canceledAt']?.toString() ?? o['updatedAt']?.toString() ?? '');
+        if (canceledAt == null) return false;
+        return canceledAt.millisecondsSinceEpoch > lastCheckMs;
+      }).toList();
+    }
+
+    if (!mounted || newMissedOrders.isEmpty) return;
+
+    final lostRevenue = newMissedOrders.fold<num>(
+      0, (sum, o) => sum + ((o['totalAmount'] as num?) ?? 0),
+    );
+
+    _showMissedOrderWarningModal(newMissedOrders.length, lostRevenue.toInt());
   }
 
-  void _showMenuWarningModal() {
+  void _showMissedOrderWarningModal(int count, int lostRevenue) {
+    if (!mounted) return;
     showDialog(
       context: context,
-      barrierDismissible: true,
-      builder: (context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+      barrierDismissible: false,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.transparent,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 32,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.asset(
-                  'assets/images/app_logo2.png',
-                  height: 60,
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'အရေးကြီးသတိပေးချက် - Partner ဆိုင်ရှင်များ အားလုံး သိရှိရန်',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFFE11D48),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Red warning header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFFE11D48), Color(0xFFFF4D6D)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
                   ),
                 ),
-                SizedBox(height: 16),
-                Text(
-                  'Partner ဆိုင်ရှင်များခင်ဗျာ - မိမိတို့ဆိုင်၏ စာမျက်နှာတွင် Menu Image နှင့် အချက်အလက် (Data) များ ဖြည့်စွက်ထားခြင်း ရှိ၊ မရှိကို ယခုပဲ အမြန်ဆုံး စစ်ဆေးပေးကြပါရန်။\n\nနောင်တွင် ကျွန်တော်တို့ App အနေဖြင့် အချက်အလက်စုံလင်သော ဆိုင်များကိုသာ ဦးစားပေး (Priority) စနစ်ဖြင့် အပေါ်ဆုံးတွင် ချပြတော့မည် ဖြစ်သည်။ ပုံနှင့် Data မပြည့်စုံသော ဆိုင်များသည် Customer များ ရှာဖွေရခက်ခဲသည့် နောက်တန်းနေရာများသို့ အလိုအလျောက် ရောက်ရှိသွားမည် ဖြစ်သဖြင့် ရောင်းအား ထိခိုက်မှုများ ရှိလာနိုင်ပါသည်။\n\nမိမိတို့ဆိုင်၏ မြင်သာမှုနှုန်း ကျဆင်းမသွားစေရန်အတွက် ဆိုင်စာမျက်နှာကို အချက်အလက်အပြည့်အစုံဖြင့် အခုပဲ ချက်ချင်း ဝင်ရောက် Update ပြုလုပ်ပေးကြပါရန် အသိပေးအပ်ပါသည်။',
-                  textAlign: TextAlign.justify,
-                  style: GoogleFonts.poppins(
-                    fontSize: 13,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                    height: 1.6,
-                  ),
+                child: Column(
+                  children: [
+                    const Text('⚠️', style: TextStyle(fontSize: 40)),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Order လွတ်သွားပြီ!',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'App ကို ကြည့်မနေတဲ့အချိန် Order $count ခု Cancel ဖြစ်သွားပါသည်',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontSize: 13,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: PrimaryGradientButton(
-                    onPressed: () async {
-                      await StorageService.instance.setMenuWarningSeen();
-                      if (context.mounted) Navigator.pop(context);
-                    },
-                    text: 'သိရှိပါသည်',
-                    height: 52,
-                    borderRadius: 12,
-                  ),
+              ),
+              // Body
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    // Revenue lost chip
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF1F2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFFFCDD2)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('💸', style: TextStyle(fontSize: 20)),
+                          const SizedBox(width: 8),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'ဆုံးရှုံးသွားသော ငွေ',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11,
+                                  color: const Color(0xFF9F1239),
+                                ),
+                              ),
+                              Text(
+                                '${lostRevenue.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (m) => ',')} MMK',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFFE11D48),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      '📱 App ကို အမြဲဖွင့်ထားပြီး Notification Sound ကြည့်ပါ။ Order ဝင်လာတာနဲ့ ချက်ချင်း Response ပေးပါ!',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          await StorageService.instance.setLastMissedOrderCheckMs(
+                            DateTime.now().millisecondsSinceEpoch,
+                          );
+                          if (ctx.mounted) Navigator.pop(ctx);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFE11D48),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          'သိပါပြီ — ဆက်လက် ကြိုးစားမည်',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
+    );
+  }
+
+  void _showAutoPausedDialog() {
+    if (!mounted) return;
+    Vibration.vibrate(duration: 1000);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Text('🚨', style: TextStyle(fontSize: 28)),
+            const SizedBox(width: 8),
+            Text(
+              'Shop Auto-Paused',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 18),
+            ),
+          ],
+        ),
+        content: Text(
+          'You missed 3 orders today and your shop was automatically taken offline to protect users.\n\nPlease turn your shop back online if you are ready to receive orders.',
+          style: GoogleFonts.poppins(fontSize: 14, height: 1.5),
+        ),
+        actions: [
+          PrimaryGradientButton(
+            text: 'I am ready',
+            onPressed: () {
+              Navigator.pop(context);
+              // Jump to Profile to toggle status, or handle directly here
+              setState(() => _currentIndex = _activeTabs.indexOf(MainTab.profile));
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -221,16 +386,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     if (OrdersTabNavigation.returnToOrdersTab == _returnToOrdersTab) {
       OrdersTabNavigation.returnToOrdersTab = null;
     }
-    _lifecycleListener.dispose();
     _socketSubscription?.cancel();
     _notificationSubscription?.cancel();
+    _shopAutoPausedSubscription?.cancel();
     _alertAudioPlayer?.dispose();
     _vibrationTimer?.cancel();
-    Vibration.cancel();
+    _lifecycleListener.dispose();
     super.dispose();
   }
 
-  void _playAlertSoundIfNotViewing(String orderId) {
+  Future<void> _playAlertSoundIfNotViewing(String orderId) async {
     final routeName = 'order_detail_$orderId';
     bool isAlreadyOnThisOrder = false;
     Navigator.popUntil(context, (route) {
@@ -249,8 +414,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         _alertAudioPlayer?.stop();
         _alertAudioPlayer?.dispose();
         _alertAudioPlayer = AudioPlayer();
-        _alertAudioPlayer?.setReleaseMode(ReleaseMode.loop);
-        _alertAudioPlayer?.play(AssetSource('alert/alert.mp3'));
+        await _alertAudioPlayer?.setReleaseMode(ReleaseMode.loop);
+        await _alertAudioPlayer?.play(AssetSource('alert/alert.mp3'));
         _startVibrationLoop();
       } catch (e) {
         AppLogger.realtime('Audio play error: $e');
@@ -287,6 +452,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     _notificationSubscription = NotificationService.orderAcknowledgedStream.stream.listen((_) {
       AppLogger.realtime('MainNavigation: Order acknowledged via FCM push. Stopping alerts.');
       _stopAlertSound();
+      if (!mounted) return;
       if (_isIncomingOrderDialogOpen && Navigator.canPop(context)) {
         Navigator.pop(context);
       }
@@ -306,6 +472,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       if (type == 'ORDER_ACKNOWLEDGED') {
         AppLogger.realtime('MainNavigation: Order acknowledged by another admin. Stopping alerts.');
         _stopAlertSound();
+        if (!mounted) return;
         if (_isIncomingOrderDialogOpen && Navigator.canPop(context)) {
           Navigator.pop(context); // Close NewOrderDialog if open
         }
@@ -332,7 +499,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             _playAlertSoundIfNotViewing(orderData.id.toString());
             await showDialog(
               context: context,
-              barrierDismissible: true,
+              barrierDismissible: false,
               builder: (context) => OrderWarningDialog(
                 message: msg!,
                 order: orderData,
@@ -352,7 +519,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             _isIncomingOrderDialogOpen = true;
             await showDialog(
               context: context,
-              barrierDismissible: true,
+              barrierDismissible: false,
               builder: (context) => NewOrderDialog(
                 order: orderData,
                 onViewOrder: () {
@@ -373,7 +540,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             }
             await showDialog(
               context: context,
-              barrierDismissible: true,
+              barrierDismissible: false,
               builder: (context) => OrderCancelledDialog(
                 order: orderData,
                 onViewOrder: () {
@@ -389,7 +556,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             _playAlertSoundIfNotViewing(orderData.id.toString());
             await showDialog(
               context: context,
-              barrierDismissible: true,
+              barrierDismissible: false,
               builder: (context) => OrderWarningDialog(
                 message: msg,
                 order: orderData,

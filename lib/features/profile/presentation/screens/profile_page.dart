@@ -12,6 +12,8 @@ import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_switch.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:vibration/vibration.dart';
 import 'edit_shop_profile_page.dart';
 import 'operating_hours_page.dart';
 import 'app_permissions_page.dart';
@@ -29,6 +31,7 @@ import 'package:my_shop/features/profile/data/services/shop_service.dart';
 import 'package:my_shop/features/profile/data/models/shop_model.dart';
 import 'global_shop_selection_page.dart';
 import 'package:my_shop/core/utils/app_version.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import '../widgets/language_selector_sheet.dart';
 import '../widgets/theme_selector_sheet.dart';
@@ -117,6 +120,11 @@ class ProfilePageState extends State<ProfilePage>
                 _deliveryEnabled = value;
                 _isTogglingDelivery = false;
               });
+              if (value) {
+                FlutterBackgroundService().startService();
+              } else {
+                FlutterBackgroundService().invoke('stopService');
+              }
             } else if (mounted) {
               setState(() => _isTogglingDelivery = false);
               AppDialog.showToast(context, t?.translate('failed_update_delivery') ?? 'Failed to Update Delivery Status', isError: true);
@@ -192,6 +200,56 @@ class ProfilePageState extends State<ProfilePage>
     }
   }
 
+  Future<void> _testAlertSound() async {
+    final t = AppLocalizations.of(context);
+    final audioPlayer = AudioPlayer();
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Text('🔔', style: TextStyle(fontSize: 28)),
+            const SizedBox(width: 8),
+            Text(
+              'Testing Sound...',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 18),
+            ),
+          ],
+        ),
+        content: Text(
+          'This is what it sounds like when a new order arrives. Make sure your volume is up!',
+          style: GoogleFonts.poppins(fontSize: 14, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              audioPlayer.stop();
+              audioPlayer.dispose();
+              Vibration.cancel();
+              Navigator.pop(context);
+            },
+            child: Text(
+              t?.translate('stop') ?? 'Stop',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: AppColors.primary),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    // Play looping sound and vibrate
+    await audioPlayer.setReleaseMode(ReleaseMode.loop);
+    await audioPlayer.play(AssetSource('alert/alert.mp3'));
+    if ((await Vibration.hasVibrator()) == true) {
+      Vibration.vibrate(pattern: [500, 1000, 500, 1000], repeat: 1);
+    }
+  }
+
   void _showLanguageSelector() {
     GlobalModal.show(
       context: context,
@@ -256,7 +314,7 @@ class ProfilePageState extends State<ProfilePage>
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         border: Border(
-          bottom: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.3), width: 1),
+          bottom: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.3), width: 1),
         ),
       ),
       child: Row(
@@ -373,7 +431,7 @@ class ProfilePageState extends State<ProfilePage>
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).dividerColor.withOpacity(0.3),
+                    color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -480,6 +538,11 @@ class ProfilePageState extends State<ProfilePage>
             context,
             CupertinoPageRoute(builder: (_) => const RiderManagementPage()),
           ),
+        ),
+        _buildMenuOption(
+          icon: PhosphorIconsRegular.bellRinging,
+          title: 'Test Alert Sound',
+          onTap: _testAlertSound,
         ),
       ],
     );
@@ -593,7 +656,7 @@ class ProfilePageState extends State<ProfilePage>
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           border: Border(
-            bottom: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.3), width: 1),
+            bottom: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.3), width: 1),
           ),
         ),
         child: Row(

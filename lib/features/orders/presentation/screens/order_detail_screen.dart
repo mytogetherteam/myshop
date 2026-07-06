@@ -20,7 +20,6 @@ import 'package:my_shop/core/utils/price_formatter.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/presentation/widgets/global_modal.dart';
-import 'package:my_shop/core/presentation/widgets/keyboard_padding_wrapper.dart';
 import 'package:my_shop/features/orders/presentation/widgets/cancel_order_dialog.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/features/coupons/coupon_display_helper.dart';
@@ -4795,47 +4794,6 @@ class _FullScreenTextInputState extends State<_FullScreenTextInput> {
     super.dispose();
   }
 
-  void _increment() {
-    String text = _controller.text.replaceAll(',', '');
-    int? val = int.tryParse(text);
-    if (val != null) {
-      val += 1;
-      _controller.text = val.toString();
-    } else {
-      _controller.text = "1";
-    }
-  }
-
-  void _decrement() {
-    String text = _controller.text.replaceAll(',', '');
-    int? val = int.tryParse(text);
-    if (val != null && val > 0) {
-      val -= 1;
-      _controller.text = val.toString();
-    } else {
-      _controller.text = "0";
-    }
-  }
-
-  Widget _buildCircleButton(IconData icon, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(32),
-      child: Container(
-        width: 64,
-        height: 64,
-        decoration: BoxDecoration(
-          color: (Theme.of(context).brightness == Brightness.dark
-              ? Theme.of(context).cardColor
-              : const Color(0xFFF1F5F9)),
-          shape: BoxShape.circle,
-        ),
-        child: Center(
-          child: Icon(icon, color: const Color(0xFF475569), size: 32),
-        ),
-      ),
-    );
-  }
 
   Widget _buildAppIcon({
     required String name,

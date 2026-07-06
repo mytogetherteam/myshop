@@ -209,7 +209,7 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
             color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Theme.of(context).dividerColor.withOpacity(0.3),
+              color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
             ),
           ),
           child: Column(
@@ -356,7 +356,7 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
       width: 32,
       height: 32,
       decoration: BoxDecoration(
-        color: Theme.of(context).dividerColor.withOpacity(0.3),
+        color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Icon(iconData, size: 18, color: const Color(0xFF475569)),
@@ -382,7 +382,7 @@ class AcceptedPaymentPageState extends State<AcceptedPaymentPage> {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Theme.of(context).dividerColor.withOpacity(0.3),
+              color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
               shape: BoxShape.circle,
             ),
             child: Icon(

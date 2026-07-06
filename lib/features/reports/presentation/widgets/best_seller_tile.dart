@@ -67,7 +67,7 @@ class _BestSellerTileState extends State<BestSellerTile>
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).dividerColor.withOpacity(0.3),
+                  color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -106,7 +106,7 @@ class _BestSellerTileState extends State<BestSellerTile>
             height: 6,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Theme.of(context).dividerColor.withOpacity(0.3),
+              color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(3),
             ),
             child: AnimatedBuilder(

@@ -106,7 +106,10 @@ class ProfileService {
   /// (PUT /api/shop/shop-profile) so the toggle and the Edit Shop Profile
   /// page write to the same source of truth.
   Future<bool> toggleDeliveryStatus(bool enabled) async {
-    final res = await updateShopProfile({'deliveryEnabled': enabled});
+    final res = await updateShopProfile({
+      'deliveryEnabled': enabled,
+      'isOpen': enabled,
+    });
     return res['success'] == true;
   }
 

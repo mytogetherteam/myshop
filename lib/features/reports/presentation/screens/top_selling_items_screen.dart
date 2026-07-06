@@ -356,7 +356,7 @@ class _TopSellingItemsScreenState extends State<TopSellingItemsScreen> {
               }),
             ),
           ),
-          Divider(color: Theme.of(context).dividerColor.withOpacity(0.3), height: 32, thickness: 1),
+          Divider(color: Theme.of(context).dividerColor.withValues(alpha: 0.3), height: 32, thickness: 1),
           if (_selectedFilterIndex == 3 && _selectedDateRange != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 16, left: 20, right: 20),

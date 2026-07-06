@@ -1,7 +1,6 @@
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:my_shop/core/network/api_client.dart';

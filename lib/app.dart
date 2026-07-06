@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'core/utils/app_colors.dart';
 import 'features/auth/presentation/screens/login_page.dart';
 import 'features/auth/presentation/widgets/auth_wrapper.dart';
 import 'features/notifications/presentation/screens/notification_permission_screen.dart';

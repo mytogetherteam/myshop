@@ -7,6 +7,8 @@ import 'package:my_shop/features/auth/data/models/auth_models.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/notifications/notification_service.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   static const String _authPath = '/api/shop/auth';
@@ -33,13 +35,26 @@ class AuthService {
         data: {'emailOrUsername': usernameOrEmail, 'password': password},
       );
 
-      final authResponse = AuthResponse.fromJson(response.data);
+      final body = response.data;
+      final authResponse = AuthResponse.fromJson(body);
 
       if (authResponse.success && authResponse.token != null) {
         await StorageService.instance.saveTokens(
           token: authResponse.token!,
-          refreshToken: authResponse.refreshToken ?? '',
+          refreshToken: authResponse.refreshToken ?? authResponse.token!,
         );
+
+        // Mirror token to SharedPreferences so the background service isolate can read it
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('auth_token', authResponse.token!);
+        // Mirror the base URL too (emulator uses 10.0.2.2, devices use the real domain)
+        await prefs.setString('base_url', ApiClient().dio.options.baseUrl);
+
+        // Remove from the logged-out topic so they don't get the reminder
+        try {
+          await FirebaseMessaging.instance.unsubscribeFromTopic('shop_logged_out');
+        } catch (_) {}
+
         if (authResponse.userInfo != null) {
           await StorageService.instance.saveUserInfo(authResponse.userInfo!);
         }
@@ -119,6 +134,17 @@ class AuthService {
     try {
       await NotificationService().unregisterDevice();
       FlutterBackgroundService().invoke('stopService');
+
+      // Clear the token mirror from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('auth_token');
+      await prefs.remove('bg_shop_id');
+      
+      // Subscribe to the logged-out topic to receive the daily reminder
+      try {
+        await FirebaseMessaging.instance.subscribeToTopic('shop_logged_out');
+      } catch (_) {}
+
       final refreshToken = await StorageService.instance.getRefreshToken();
       if (refreshToken != null && refreshToken.isNotEmpty) {
         await ApiClient().dio.post(
@@ -186,6 +212,9 @@ class AuthService {
             token: newToken,
             refreshToken: newRefreshToken ?? refreshToken,
           );
+          // Keep SharedPreferences mirror in sync for background service
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('auth_token', newToken);
           debugPrint('[AuthService.performRefresh] Token refreshed successfully');
           return newToken;
         }
@@ -207,5 +236,6 @@ class AuthService {
       debugPrint('[AuthService.performRefresh] Unexpected error: $e');
       rethrow;
     }
+    return null;
   }
 }

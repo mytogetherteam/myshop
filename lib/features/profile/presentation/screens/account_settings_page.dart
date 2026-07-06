@@ -105,7 +105,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).dividerColor.withOpacity(0.3),
+                            color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -165,7 +165,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           border: Border(
-            bottom: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.3), width: 1),
+            bottom: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.3), width: 1),
           ),
         ),
         child: Row(
@@ -206,7 +206,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           border: Border.symmetric(
-            horizontal: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.3), width: 1),
+            horizontal: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.3), width: 1),
           ),
         ),
         child: Row(

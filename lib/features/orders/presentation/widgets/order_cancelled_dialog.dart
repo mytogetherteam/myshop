@@ -204,7 +204,7 @@ class OrderCancelledDialog extends StatelessWidget {
                 ),
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Divider(color: Theme.of(context).dividerColor.withOpacity(0.3), thickness: 1.5),
+                  child: Divider(color: Theme.of(context).dividerColor.withValues(alpha: 0.3), thickness: 1.5),
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

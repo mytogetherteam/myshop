@@ -1,8 +1,7 @@
 import 'dart:convert';
-import 'dart:typed_data';
+
 
 class JwtUtils {
-  static const String _defaultSecret = 'your-server-public-key-or-jwks-uri';
 
   static Map<String, dynamic>? decode(String token) {
     try {
@@ -64,32 +63,7 @@ class JwtUtils {
     }
   }
 
-  static bool _verifyWithAlgorithm(
-    String encodedHeader,
-    String encodedPayload,
-    String signature,
-    String algorithm,
-  ) {
-    try {
-      if (algorithm.startsWith('HS')) {
-        final keyLength = int.tryParse(algorithm.substring(2)) ?? 256;
-        final minLength = keyLength ~/ 8;
-        if (_defaultSecret.length < minLength &&
-            _defaultSecret != 'your-server-public-key-or-jwks-uri') {
-          return false;
-        }
-      }
 
-      final decodedSig = _decodeBase64Url(signature);
-      if (decodedSig == null || decodedSig.isEmpty) {
-        return false;
-      }
-
-      return decodedSig.isNotEmpty;
-    } catch (e) {
-      return false;
-    }
-  }
 
   static bool validateTokenIntegrity(String token) {
     if (token.isEmpty) return false;
@@ -127,23 +101,5 @@ class JwtUtils {
 
     return utf8.decode(base64Url.decode(output));
   }
-
-  static Uint8List? _decodeBase64Url(String str) {
-    var output = str.replaceAll('-', '+').replaceAll('_', '/');
-
-    switch (output.length % 4) {
-      case 0:
-        break;
-      case 2:
-        output += '==';
-        break;
-      case 3:
-        output += '=';
-        break;
-      default:
-        return null;
-    }
-
-    return base64Url.decode(output);
-  }
 }
+

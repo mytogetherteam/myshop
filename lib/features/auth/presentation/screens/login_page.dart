@@ -1,5 +1,9 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:my_shop/core/presentation/widgets/phone_setup_guide_sheet.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:my_shop/core/presentation/widgets/app_logo.dart';
 import 'package:my_shop/core/notifications/notification_service.dart';
 import 'package:my_shop/features/auth/data/services/auth_service.dart';
@@ -14,7 +18,6 @@ import 'package:my_shop/core/presentation/widgets/global_modal.dart';
 import 'package:my_shop/features/profile/presentation/widgets/language_selector_sheet.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
-import 'package:my_shop/core/localization/app_localizations.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -76,6 +79,12 @@ class _LoginPageState extends State<LoginPage>
       if (response.success) {
         WebSocketService().connect();
         await NotificationService().registerDevice();
+        if (!kIsWeb && Platform.isAndroid) {
+          FlutterBackgroundService().startService();
+          if (mounted) {
+            await PhoneSetupGuideSheet.show(context);
+          }
+        }
         if (!mounted) return;
         Navigator.of(context).pushReplacementNamed('/home');
       } else {

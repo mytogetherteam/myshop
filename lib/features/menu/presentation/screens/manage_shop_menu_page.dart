@@ -37,8 +37,6 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
 
   List<MenuCategoryModel> _categories = [];
   final Map<int, GlobalKey> _categoryKeys = {};
-  final int _activeCategoryIndex = 0;
-  final bool _isManualScrolling = false;
   final List<dynamic> _listItems = [];
 
   @override

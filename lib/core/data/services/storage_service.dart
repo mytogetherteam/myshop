@@ -13,6 +13,7 @@ class StorageService {
   static const String _keyLanguage = 'app_language';
   static const String _keyMenuWarningSeen = 'menu_warning_seen';
   static const String _keyThemeMode = 'app_theme_mode';
+  static const String _keyLastMissedOrderCheck = 'last_missed_order_check_ms';
 
   static final StorageService instance = StorageService._();
 
@@ -108,9 +109,23 @@ class StorageService {
     return _prefs!.getBool(_keySystemAlertHandled) ?? false;
   }
 
+  static const String _keyPhoneSetupGuideSeen = 'phone_setup_guide_seen';
+
+  Future<void> setPhoneSetupGuideSeen() async {
+    await _ensureInitialized();
+    await _prefs!.setBool(_keyPhoneSetupGuideSeen, true);
+  }
+
+  Future<bool> isPhoneSetupGuideSeen() async {
+    await _ensureInitialized();
+    return _prefs!.getBool(_keyPhoneSetupGuideSeen) ?? false;
+  }
+
   Future<void> saveSelectedShopId(int shopId) async {
     await _ensureInitialized();
     await _prefs!.setInt(_keySelectedShopId, shopId);
+    // Also mirror as 'bg_shop_id' for the background service isolate
+    await _prefs!.setInt('bg_shop_id', shopId);
   }
 
   Future<int?> getSelectedShopId() async {
@@ -151,5 +166,16 @@ class StorageService {
   Future<String?> getThemeMode() async {
     await _ensureInitialized();
     return _prefs!.getString(_keyThemeMode);
+  }
+
+  /// Timestamp (ms since epoch) of when user last saw the missed-order warning.
+  Future<int> getLastMissedOrderCheckMs() async {
+    await _ensureInitialized();
+    return _prefs!.getInt(_keyLastMissedOrderCheck) ?? 0;
+  }
+
+  Future<void> setLastMissedOrderCheckMs(int ms) async {
+    await _ensureInitialized();
+    await _prefs!.setInt(_keyLastMissedOrderCheck, ms);
   }
 }

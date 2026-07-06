@@ -160,7 +160,7 @@ class ShopProfileImageHeader extends StatelessWidget {
                           width: 64,
                           height: 64,
                           decoration: BoxDecoration(
-                            color: Theme.of(context).dividerColor.withOpacity(0.3),
+                            color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: ClipRRect(

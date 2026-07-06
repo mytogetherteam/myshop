@@ -110,32 +110,6 @@ class OrdersScreenState extends State<OrdersScreen>
   /// The source tab loses 1 and the destination tab gains 1.
   void _updateTabCountFromOrder(OrderModel order) {
     if (!mounted) return;
-    final upperStatus = order.status.toUpperCase();
-
-    // Map the new order status → destination tab key
-    String? destTab;
-    if (['PENDING', 'REVISED'].contains(upperStatus)) {
-      destTab = 'NEW';
-    } else if ([
-      'PAYMENT_SLIP_REQUESTED',
-      'AWAITING_APPROVAL',
-      'PAYMENT_VERIFIED',
-    ].contains(upperStatus)) {
-      destTab = 'PAYMENT';
-    } else if (upperStatus == 'COOKING') {
-      destTab = 'PREPARING';
-    } else if (upperStatus == 'READY_FOR_PICKUP') {
-      destTab = 'READY_FOR_PICKUP';
-    } else if (upperStatus == 'ON_THE_WAY') {
-      destTab = 'DELIVERING';
-    } else if (upperStatus == 'DELIVERED') {
-      destTab = 'DELIVERED';
-    } else if (upperStatus == 'PICKED_UP') {
-      destTab = 'PICKED_UP';
-    } else if (upperStatus == 'CANCELED') {
-      destTab = 'CANCELED';
-    }
-
     // Refresh counts from server in the background (non-blocking, no list reload)
     _fetchInitialData();
   }
@@ -774,7 +748,7 @@ class _OrderListTabViewState extends State<OrderListTabView>
               SizedBox(height: 8),
               const Skeleton(width: 200, height: 16),
               SizedBox(height: 24),
-              Divider(color: Theme.of(context).dividerColor.withOpacity(0.3), height: 1),
+              Divider(color: Theme.of(context).dividerColor.withValues(alpha: 0.3), height: 1),
               SizedBox(height: 16),
               Row(
                 children: const [

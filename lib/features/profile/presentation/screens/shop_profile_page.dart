@@ -9,7 +9,6 @@ import 'package:my_shop/features/profile/presentation/screens/operating_hours_pa
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/features/categories/data/services/category_service.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
@@ -755,7 +754,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: Theme.of(context).dividerColor.withOpacity(0.3),
+        color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -1207,7 +1206,7 @@ class _ShopProfilePageState extends State<ShopProfilePage>
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).dividerColor.withOpacity(0.3),
+                        color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(

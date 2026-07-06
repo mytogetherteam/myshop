@@ -40,7 +40,7 @@ class LanguageSelectorSheet extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).dividerColor.withOpacity(0.3),
+                      color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
                       shape: BoxShape.circle,
                     ),
                     child: PhosphorIcon(
@@ -97,7 +97,7 @@ class LanguageSelectorSheet extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary.withValues(alpha: 0.05) : Theme.of(context).cardColor,
           border: Border(
-            bottom: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.3), width: 1),
+            bottom: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.3), width: 1),
           ),
         ),
         child: Row(

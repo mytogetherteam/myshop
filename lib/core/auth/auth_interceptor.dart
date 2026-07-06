@@ -21,7 +21,6 @@ class AuthInterceptor extends Interceptor {
 
   final Dio dio;
   bool _isRefreshing = false;
-  final List<QueuedRequest> _pendingRequests = [];
   Completer<String?>? _refreshCompleter;
 
   AuthInterceptor(this.dio);

@@ -90,6 +90,23 @@ class OrderService {
     return null;
   }
 
+  Future<Map<String, dynamic>?> getMissedRevenueToday() async {
+    try {
+      final response = await ApiClient().dio.get('$_ordersPath/missed-revenue');
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        final body = Map<String, dynamic>.from(response.data as Map);
+        if (body['success'] == true && body['data'] != null) {
+          return Map<String, dynamic>.from(body['data'] as Map);
+        }
+      }
+    } catch (e) {
+      ApiHelper.handleError(e, context: 'OrderService.getMissedRevenueToday');
+    }
+    return null;
+  }
+
   Future<OrderModel?> getOrderDetail(String orderId) async {
     try {
       final response = await ApiClient().dio.post(

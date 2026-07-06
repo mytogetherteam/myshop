@@ -169,7 +169,7 @@ class _ShopSelectionPageState extends State<ShopSelectionPage> {
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: Theme.of(context).dividerColor.withOpacity(0.3),
+                color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: ClipRRect(

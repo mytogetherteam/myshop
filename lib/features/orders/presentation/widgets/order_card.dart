@@ -3,16 +3,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../data/models/order_model.dart';
-import '../../data/services/order_service.dart';
 import '../screens/orders_screen.dart';
 import '../screens/order_detail_screen.dart';
 import 'status_progress_indicator.dart';
 import 'package:my_shop/core/presentation/widgets/animated_ellipsis_text.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/presentation/widgets/gradient_widgets.dart';
-import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
-import 'package:my_shop/core/presentation/widgets/keyboard_padding_wrapper.dart';
 
 class OrderCard extends StatelessWidget {
   final OrderModel order;
@@ -146,7 +143,7 @@ class OrderCard extends StatelessWidget {
                       ),
                     )),
                 SizedBox(height: 16),
-                Divider(color: Theme.of(context).dividerColor.withOpacity(0.3), height: 1),
+                Divider(color: Theme.of(context).dividerColor.withValues(alpha: 0.3), height: 1),
                 SizedBox(height: 16),
                 _buildActionButtons(context),
               ],
