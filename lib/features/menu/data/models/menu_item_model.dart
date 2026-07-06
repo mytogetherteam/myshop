@@ -32,6 +32,7 @@ class MenuItemModel {
   final String? descriptionEn;
   final List<MenuItemOptionGroupModel> optionGroups;
   final List<MenuItemVariantModel> variants;
+  final List<MenuItemVariantGroupModel> variantGroups;
   final bool hasVariants;
   final int? masterItemId;
   final int? masterCategoryId;
@@ -80,6 +81,7 @@ class MenuItemModel {
     this.descriptionEn,
     this.optionGroups = const [],
     this.variants = const [],
+    this.variantGroups = const [],
     this.hasVariants = false,
     this.masterItemId,
     this.masterCategoryId,
@@ -132,10 +134,11 @@ class MenuItemModel {
               ?.map((o) => MenuItemOptionGroupModel.fromJson(o))
               .toList() ??
           [],
-      variants: (json['variants'] as List?)
-              ?.map((v) => MenuItemVariantModel.fromJson(v))
+      variantGroups: (json['variantGroups'] as List?)
+              ?.map((g) => MenuItemVariantGroupModel.fromJson(g))
               .toList() ??
           [],
+      variants: _variantsFromJson(json),
       hasVariants: json['hasVariants'] ?? false,
       masterItemId: json['masterItemId'],
       masterCategoryId: json['masterCategoryId'],
@@ -148,7 +151,8 @@ class MenuItemModel {
       mealTypes: (json['mealTypes'] as List?)?.cast<String>() ?? [],
       discountAmount: (json['discountAmount'] as num?)?.toDouble(),
       discountPercentage: (json['discountPercentage'] as num?)?.toDouble(),
-      components: (json['components'] as List?)
+      components: ((json['components'] as List?) ??
+              (json['comboComponents'] as List?))
               ?.map((c) => MenuComboComponentModel.fromJson(c))
               .toList() ??
           [],
@@ -184,6 +188,7 @@ class MenuItemModel {
       'descriptionMm': descriptionMm,
       'descriptionTh': descriptionTh,
       'optionGroups': optionGroups.map((o) => o.toJson()).toList(),
+      'variantGroups': variantGroups.map((g) => g.toJson()).toList(),
       'variants': variants.map((v) => v.toJson()).toList(),
       'masterItemId': masterItemId,
       'masterCategoryId': masterCategoryId,
@@ -234,6 +239,7 @@ class MenuItemModel {
     String? descriptionEn,
     List<MenuItemOptionGroupModel>? optionGroups,
     List<MenuItemVariantModel>? variants,
+    List<MenuItemVariantGroupModel>? variantGroups,
     bool? hasVariants,
     int? masterItemId,
     int? masterCategoryId,
@@ -282,6 +288,7 @@ class MenuItemModel {
       descriptionEn: descriptionEn ?? this.descriptionEn,
       optionGroups: optionGroups ?? this.optionGroups,
       variants: variants ?? this.variants,
+      variantGroups: variantGroups ?? this.variantGroups,
       hasVariants: hasVariants ?? this.hasVariants,
       masterItemId: masterItemId ?? this.masterItemId,
       masterCategoryId: masterCategoryId ?? this.masterCategoryId,
@@ -309,6 +316,91 @@ class MenuItemModel {
       );
 }
 
+List<MenuItemVariantModel> _variantsFromJson(Map<String, dynamic> json) {
+  final apiGroups = (json['variantGroups'] as List?)
+          ?.map((g) => MenuItemVariantGroupModel.fromJson(g))
+          .toList() ??
+      const <MenuItemVariantGroupModel>[];
+
+  final variants = (json['variants'] as List?)
+          ?.map((v) => MenuItemVariantModel.fromJson(v))
+          .toList() ??
+      const <MenuItemVariantModel>[];
+
+  if (variants.isEmpty) return variants;
+
+  final groupMetaById = {
+    for (final group in apiGroups)
+      if (group.id > 0) group.id: group,
+  };
+
+  final enriched = variants
+      .where((variant) => variant.isAvailable)
+      .map((variant) {
+    final embeddedGroup = variant.variantGroup;
+    final groupId = variant.variantGroupId ?? embeddedGroup?.id;
+    final group = groupId != null ? groupMetaById[groupId] ?? embeddedGroup : embeddedGroup;
+    if (group == null) return variant;
+    return variant.copyWith(
+      variantGroupId: groupId,
+      variantGroupNameEn: variant.variantGroupNameEn ?? group.nameEn,
+      variantGroupNameMm: variant.variantGroupNameMm ?? group.nameMm,
+      variantGroupNameTh: variant.variantGroupNameTh ?? group.nameTh,
+      variantGroupDisplayOrder:
+          variant.variantGroupDisplayOrder ?? group.displayOrder,
+      variantGroup: group,
+    );
+  }).toList();
+
+  enriched.sort((a, b) {
+    final groupOrder = (a.variantGroupDisplayOrder ?? 0)
+        .compareTo(b.variantGroupDisplayOrder ?? 0);
+    if (groupOrder != 0) return groupOrder;
+    return (a.displayOrder ?? 0).compareTo(b.displayOrder ?? 0);
+  });
+
+  return enriched;
+}
+
+class MenuItemVariantGroupModel {
+  final int id;
+  final String? nameEn;
+  final String? nameMm;
+  final String? nameTh;
+  final int? displayOrder;
+
+  MenuItemVariantGroupModel({
+    required this.id,
+    this.nameEn,
+    this.nameMm,
+    this.nameTh,
+    this.displayOrder,
+  });
+
+  factory MenuItemVariantGroupModel.fromJson(Map<String, dynamic> json) {
+    return MenuItemVariantGroupModel(
+      id: json['id'] ?? 0,
+      nameEn: json['nameEn'],
+      nameMm: json['nameMm'],
+      nameTh: json['nameTh'],
+      displayOrder: json['displayOrder'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'nameEn': nameEn,
+      'nameMm': nameMm,
+      'nameTh': nameTh,
+      'displayOrder': displayOrder,
+    };
+  }
+
+  String get displayName =>
+      localizedDisplayName(nameEn: nameEn, nameMm: nameMm, nameTh: nameTh);
+}
+
 class MenuItemVariantModel {
   final int id;
   final String? nameEn;
@@ -318,6 +410,13 @@ class MenuItemVariantModel {
   final String? displayPrice;
   final bool isAvailable;
   final int? displayOrder;
+  final int? variantGroupId;
+  final String? variantGroupNameEn;
+  final String? variantGroupNameMm;
+  final String? variantGroupNameTh;
+  final int? variantGroupDisplayOrder;
+  final MenuItemVariantGroupModel? variantGroup;
+  final bool isDeleted;
 
   MenuItemVariantModel({
     required this.id,
@@ -328,9 +427,59 @@ class MenuItemVariantModel {
     this.displayPrice,
     this.isAvailable = true,
     this.displayOrder,
+    this.variantGroupId,
+    this.variantGroupNameEn,
+    this.variantGroupNameMm,
+    this.variantGroupNameTh,
+    this.variantGroupDisplayOrder,
+    this.variantGroup,
+    this.isDeleted = false,
   });
 
+  MenuItemVariantModel copyWith({
+    int? id,
+    String? nameEn,
+    String? nameMm,
+    String? nameTh,
+    double? price,
+    String? displayPrice,
+    bool? isAvailable,
+    int? displayOrder,
+    int? variantGroupId,
+    String? variantGroupNameEn,
+    String? variantGroupNameMm,
+    String? variantGroupNameTh,
+    int? variantGroupDisplayOrder,
+    MenuItemVariantGroupModel? variantGroup,
+    bool? isDeleted,
+  }) {
+    return MenuItemVariantModel(
+      id: id ?? this.id,
+      nameEn: nameEn ?? this.nameEn,
+      nameMm: nameMm ?? this.nameMm,
+      nameTh: nameTh ?? this.nameTh,
+      price: price ?? this.price,
+      displayPrice: displayPrice ?? this.displayPrice,
+      isAvailable: isAvailable ?? this.isAvailable,
+      displayOrder: displayOrder ?? this.displayOrder,
+      variantGroupId: variantGroupId ?? this.variantGroupId,
+      variantGroupNameEn: variantGroupNameEn ?? this.variantGroupNameEn,
+      variantGroupNameMm: variantGroupNameMm ?? this.variantGroupNameMm,
+      variantGroupNameTh: variantGroupNameTh ?? this.variantGroupNameTh,
+      variantGroupDisplayOrder:
+          variantGroupDisplayOrder ?? this.variantGroupDisplayOrder,
+      variantGroup: variantGroup ?? this.variantGroup,
+      isDeleted: isDeleted ?? this.isDeleted,
+    );
+  }
+
   factory MenuItemVariantModel.fromJson(Map<String, dynamic> json) {
+    final embeddedGroup = json['variantGroup'] is Map
+        ? MenuItemVariantGroupModel.fromJson(
+            Map<String, dynamic>.from(json['variantGroup'] as Map),
+          )
+        : null;
+
     return MenuItemVariantModel(
       id: json['id'] ?? 0,
       nameEn: json['nameEn'],
@@ -340,6 +489,17 @@ class MenuItemVariantModel {
       displayPrice: json['displayPrice'],
       isAvailable: json['isAvailable'] ?? true,
       displayOrder: json['displayOrder'],
+      variantGroupId: json['variantGroupId'],
+      variantGroupNameEn:
+          json['variantGroupNameEn'] ?? embeddedGroup?.nameEn,
+      variantGroupNameMm:
+          json['variantGroupNameMm'] ?? embeddedGroup?.nameMm,
+      variantGroupNameTh:
+          json['variantGroupNameTh'] ?? embeddedGroup?.nameTh,
+      variantGroupDisplayOrder: json['variantGroupDisplayOrder'] ??
+          embeddedGroup?.displayOrder,
+      variantGroup: embeddedGroup,
+      isDeleted: json['deleted'] == true || json['isDeleted'] == true,
     );
   }
 
@@ -353,6 +513,14 @@ class MenuItemVariantModel {
       'displayPrice': displayPrice,
       'isAvailable': isAvailable,
       'displayOrder': displayOrder,
+      if (variantGroupId != null) 'variantGroupId': variantGroupId,
+      if (variantGroupNameEn != null) 'variantGroupNameEn': variantGroupNameEn,
+      if (variantGroupNameMm != null) 'variantGroupNameMm': variantGroupNameMm,
+      if (variantGroupNameTh != null) 'variantGroupNameTh': variantGroupNameTh,
+      if (variantGroupDisplayOrder != null)
+        'variantGroupDisplayOrder': variantGroupDisplayOrder,
+      if (variantGroup != null) 'variantGroup': variantGroup!.toJson(),
+      if (isDeleted) 'deleted': true,
     };
   }
 
@@ -366,12 +534,10 @@ class MenuItemOptionGroupModel {
   final String? nameMm;
   final String? nameTh;
   final bool isAvailable;
-  final int? minSelection;
-  final int? maxSelection;
   final int? displayOrder;
-  final String? groupType;
   final double price;
   final List<MenuItemOptionModel> options;
+  final bool isDeleted;
 
   MenuItemOptionGroupModel({
     required this.id,
@@ -379,12 +545,10 @@ class MenuItemOptionGroupModel {
     this.nameMm,
     this.nameTh,
     this.isAvailable = true,
-    this.minSelection,
-    this.maxSelection,
     this.displayOrder,
-    this.groupType,
     this.price = 0.0,
     this.options = const [],
+    this.isDeleted = false,
   });
 
   MenuItemOptionGroupModel copyWith({
@@ -393,12 +557,10 @@ class MenuItemOptionGroupModel {
     String? nameMm,
     String? nameTh,
     bool? isAvailable,
-    int? minSelection,
-    int? maxSelection,
     int? displayOrder,
-    String? groupType,
     double? price,
     List<MenuItemOptionModel>? options,
+    bool? isDeleted,
   }) {
     return MenuItemOptionGroupModel(
       id: id ?? this.id,
@@ -406,12 +568,10 @@ class MenuItemOptionGroupModel {
       nameMm: nameMm ?? this.nameMm,
       nameTh: nameTh ?? this.nameTh,
       isAvailable: isAvailable ?? this.isAvailable,
-      minSelection: minSelection ?? this.minSelection,
-      maxSelection: maxSelection ?? this.maxSelection,
       displayOrder: displayOrder ?? this.displayOrder,
-      groupType: groupType ?? this.groupType,
       price: price ?? this.price,
       options: options ?? this.options,
+      isDeleted: isDeleted ?? this.isDeleted,
     );
   }
 
@@ -422,15 +582,15 @@ class MenuItemOptionGroupModel {
       nameMm: json['nameMm'],
       nameTh: json['nameTh'],
       isAvailable: json['isAvailable'] ?? json['isRequired'] ?? true,
-      minSelection: json['minSelection'],
-      maxSelection: json['maxSelection'],
       displayOrder: json['displayOrder'],
-      groupType: json['groupType'],
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
       options: (json['options'] as List?)
               ?.map((o) => MenuItemOptionModel.fromJson(o))
+              .toList()
+              .where((o) => !o.isDeleted)
               .toList() ??
           [],
+      isDeleted: json['deleted'] == true || json['isDeleted'] == true,
     );
   }
 
@@ -441,12 +601,10 @@ class MenuItemOptionGroupModel {
       'nameMm': nameMm,
       'nameTh': nameTh,
       'isAvailable': isAvailable,
-      'minSelection': minSelection,
-      'maxSelection': maxSelection,
       'displayOrder': displayOrder,
-      'groupType': groupType,
       'price': price,
       'options': options.map((o) => o.toJson()).toList(),
+      if (isDeleted) 'deleted': true,
     };
   }
 
@@ -463,6 +621,7 @@ class MenuItemOptionModel {
   final String? displayPrice;
   final int? displayOrder;
   final int? linkedMenuItemId;
+  final bool isDeleted;
 
   MenuItemOptionModel({
     required this.id,
@@ -473,6 +632,7 @@ class MenuItemOptionModel {
     this.displayPrice,
     this.displayOrder,
     this.linkedMenuItemId,
+    this.isDeleted = false,
   });
 
   MenuItemOptionModel copyWith({
@@ -484,6 +644,7 @@ class MenuItemOptionModel {
     String? displayPrice,
     int? displayOrder,
     int? linkedMenuItemId,
+    bool? isDeleted,
   }) {
     return MenuItemOptionModel(
       id: id ?? this.id,
@@ -494,6 +655,7 @@ class MenuItemOptionModel {
       displayPrice: displayPrice ?? this.displayPrice,
       displayOrder: displayOrder ?? this.displayOrder,
       linkedMenuItemId: linkedMenuItemId ?? this.linkedMenuItemId,
+      isDeleted: isDeleted ?? this.isDeleted,
     );
   }
 
@@ -507,6 +669,7 @@ class MenuItemOptionModel {
       displayPrice: json['displayPrice'],
       displayOrder: json['displayOrder'],
       linkedMenuItemId: json['linkedMenuItemId'],
+      isDeleted: json['deleted'] == true || json['isDeleted'] == true,
     );
   }
 
@@ -520,6 +683,7 @@ class MenuItemOptionModel {
       'displayPrice': displayPrice,
       'displayOrder': displayOrder,
       'linkedMenuItemId': linkedMenuItemId,
+      if (isDeleted) 'deleted': true,
     };
   }
 

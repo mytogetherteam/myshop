@@ -15,6 +15,8 @@ import 'package:my_shop/core/data/services/image_upload_service.dart';
 import 'package:my_shop/core/presentation/widgets/custom_search_dropdown.dart';
 import 'package:my_shop/core/presentation/widgets/global_modal.dart';
 import '../../data/models/menu_item_model.dart';
+import '../../data/models/menu_item_payload.dart';
+import '../../data/models/variant_group_mapper.dart';
 import '../../data/models/menu_category_model.dart';
 import '../../data/services/menu_service.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
@@ -92,17 +94,18 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   XFile? _pickedImage;
 
   // Real state for dynamic variants and add-ons
-  List<MenuItemVariantModel> _variants = [];
+  List<MenuItemVariantGroupEditModel> _variantGroups = [];
   List<MenuItemOptionGroupModel> _optionGroups = [];
 
   // UI States
   String _selectedItemInfoLang = 'EN';
-  final Map<int, String> _variantLangs = {};
+  final Map<int, String> _variantGroupLangs = {};
   final Map<int, String> _addonLangs = {};
 
   // Persistent controllers for dynamic forms
-  final Map<int, TextEditingController> _variantNameCtrls = {};
-  final Map<int, TextEditingController> _variantPriceCtrls = {};
+  final Map<int, TextEditingController> _variantGroupNameCtrls = {};
+  final Map<String, TextEditingController> _variantNameCtrls = {};
+  final Map<String, TextEditingController> _variantPriceCtrls = {};
   final Map<int, TextEditingController> _addonGroupNameCtrls = {};
   final Map<String, TextEditingController> _addonOptionNameCtrls = {};
   final Map<String, TextEditingController> _addonOptionPriceCtrls = {};
@@ -169,12 +172,25 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
 
       _selectedTagIds = List.from(item.tagIds);
       _selectedMealTypes = List.from(item.mealTypes);
-      _variants = List.from(item.variants);
+      _variantGroups = VariantGroupMapper.fromMenuItem(item);
       _optionGroups = List.from(item.optionGroups);
       _comboComponents = List.from(item.components);
     }
 
+    if (widget.item != null) {
+      _loadItemDetail(widget.item!.id);
+    }
+
     _fetchAllData();
+  }
+
+  Future<void> _loadItemDetail(int itemId) async {
+    final detail = await _menuService.getMenuItemDetail(itemId);
+    if (!mounted || detail == null) return;
+    setState(() {
+      _variantGroups = VariantGroupMapper.fromMenuItem(detail);
+      _optionGroups = List.from(detail.optionGroups);
+    });
   }
 
   @override
@@ -281,6 +297,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     _displayOrderController.dispose();
     _discountAmountController.dispose();
     _discountPercentController.dispose();
+    for (final c in _variantGroupNameCtrls.values) { c.dispose(); }
     for (final c in _variantNameCtrls.values) { c.dispose(); }
     for (final c in _variantPriceCtrls.values) { c.dispose(); }
     for (final c in _addonGroupNameCtrls.values) { c.dispose(); }
@@ -372,6 +389,12 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
         ? originalPriceVal - priceVal
         : 0.0;
 
+    final relationPayload = MenuItemPayloadBuilder.build(
+      variantGroups: _variantGroups,
+      optionGroups: _optionGroups,
+      editingExistingItem: widget.item != null,
+    );
+
     final payload = {
       'nameEn': _nameController.text,
       'nameMm': _nameMmController.text,
@@ -404,8 +427,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       'isCombo': _isCombo,
 
       'imageUrl': widget.item?.imageUrl, // Keep existing URL if no new image
-      'optionGroups': _optionGroups.map((o) => o.toJson()).toList(),
-      'variants': _variants.map((v) => v.toJson()).toList(),
+      ...relationPayload.toJson(),
       'components': _isCombo
           ? _comboComponents.map((c) => c.toJson()).toList()
           : [],
@@ -642,20 +664,31 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                       // Variants Section
                       _buildSectionTitle(t?.translate('variants') ?? 'Variants'),
                       SizedBox(height: 16),
-                      ..._variants.asMap().entries.map(
-                        (entry) => _buildVariantCard(entry.value, entry.key),
+                      ..._variantGroups.asMap().entries.where(
+                        (entry) => !entry.value.isDeleted,
+                      ).map(
+                        (entry) =>
+                            _buildVariantGroupCard(entry.value, entry.key),
                       ),
-                      _buildOutlinedButton(t?.translate('add_variant') ?? '+ Add Variant', _addNewVariant),
+                      _buildOutlinedButton(
+                        t?.translate('add_variant_group') ?? '+ Add Group',
+                        _addNewVariantGroup,
+                      ),
                       SizedBox(height: 32),
 
                       // Add On Section
                       _buildSectionTitle(t?.translate('addons') ?? 'Add-ons'),
                       SizedBox(height: 16),
-                      ..._optionGroups.asMap().entries.map(
+                      ..._optionGroups.asMap().entries.where(
+                        (entry) => !entry.value.isDeleted,
+                      ).map(
                         (entry) =>
                             _buildOptionGroupCard(entry.value, entry.key),
                       ),
-                      _buildOutlinedButton(t?.translate('add_addon') ?? '+ Add Add-on', _addNewOptionGroup),
+                      _buildOutlinedButton(
+                        t?.translate('add_addon') ?? '+ Add Group',
+                        _addNewOptionGroup,
+                      ),
 
                       if (_isCombo) ...[
                         SizedBox(height: 32),
@@ -736,17 +769,89 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     );
   }
 
-  void _addNewVariant() {
+  void _addNewVariantGroup() {
     setState(() {
-      _variants.add(
-        MenuItemVariantModel(
-          id: 0,
-          nameEn: '',
-          price: 0.0,
-          isAvailable: true,
-          displayOrder: 0,
+      _variantGroups.add(
+        MenuItemVariantGroupEditModel(
+          displayOrder: _variantGroups.length + 1,
+          variants: [
+            MenuItemVariantModel(
+              id: 0,
+              nameEn: '',
+              price: 0.0,
+              isAvailable: true,
+              displayOrder: 1,
+            ),
+          ],
         ),
       );
+    });
+  }
+
+  void _addVariantToGroup(int groupIndex) {
+    setState(() {
+      final group = _variantGroups[groupIndex];
+      final activeCount = group.variants.where((v) => !v.isDeleted).length;
+      _variantGroups[groupIndex] = group.copyWith(
+        variants: [
+          ...group.variants,
+          MenuItemVariantModel(
+            id: 0,
+            nameEn: '',
+            price: 0.0,
+            isAvailable: true,
+            displayOrder: activeCount + 1,
+          ),
+        ],
+      );
+    });
+  }
+
+  void _removeVariantGroup(int index) {
+    HapticFeedback.lightImpact();
+    setState(() {
+      final group = _variantGroups[index];
+      if (widget.item != null && group.id > 0) {
+        _variantGroups[index] = group.copyWith(
+          isDeleted: true,
+          variants: group.variants
+              .map(
+                (variant) => variant.id > 0
+                    ? variant.copyWith(isDeleted: true)
+                    : variant,
+              )
+              .toList(),
+        );
+      } else {
+        _variantGroups.removeAt(index);
+        _variantGroupNameCtrls[index]?.dispose();
+        _variantGroupNameCtrls.remove(index);
+        for (final key in _variantNameCtrls.keys.toList()) {
+          if (key.startsWith('$index-')) {
+            _variantNameCtrls.remove(key)?.dispose();
+            _variantPriceCtrls.remove(key)?.dispose();
+          }
+        }
+        _variantGroupLangs.remove(index);
+      }
+    });
+  }
+
+  void _removeVariantFromGroup(int groupIndex, int variantIndex) {
+    HapticFeedback.lightImpact();
+    setState(() {
+      final group = _variantGroups[groupIndex];
+      final variant = group.variants[variantIndex];
+      final nextVariants = List<MenuItemVariantModel>.from(group.variants);
+      if (widget.item != null && variant.id > 0) {
+        nextVariants[variantIndex] = variant.copyWith(isDeleted: true);
+      } else {
+        nextVariants.removeAt(variantIndex);
+        final key = '$groupIndex-$variantIndex';
+        _variantNameCtrls.remove(key)?.dispose();
+        _variantPriceCtrls.remove(key)?.dispose();
+      }
+      _variantGroups[groupIndex] = group.copyWith(variants: nextVariants);
     });
   }
 
@@ -757,8 +862,6 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
           id: 0,
           nameEn: '',
           isAvailable: true,
-          minSelection: 0,
-          maxSelection: 0,
           displayOrder: 0,
           options: [
             MenuItemOptionModel(id: 0, nameEn: '', price: 0.0, displayOrder: 0),
@@ -812,34 +915,60 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
   }
   */
 
-  void _removeVariant(int index) {
+  void _addNewOptionToGroup(int groupIndex) {
+    setState(() {
+      final group = _optionGroups[groupIndex];
+      final visibleCount = group.options.where((o) => !o.isDeleted).length;
+      _optionGroups[groupIndex] = group.copyWith(
+        options: [
+          ...group.options,
+          MenuItemOptionModel(
+            id: 0,
+            nameEn: '',
+            price: 0.0,
+            displayOrder: visibleCount + 1,
+          ),
+        ],
+      );
+    });
+  }
+
+  void _removeOptionFromGroup(int groupIndex, int optionIndex) {
     HapticFeedback.lightImpact();
     setState(() {
-      _variants.removeAt(index);
-      _variantNameCtrls[index]?.dispose();
-      _variantPriceCtrls[index]?.dispose();
-      _variantNameCtrls.remove(index);
-      _variantPriceCtrls.remove(index);
-      
-      // Shift subsequent controllers up by 1
-      for (int i = index + 1; i <= _variants.length; i++) {
-        if (_variantNameCtrls.containsKey(i)) {
-          _variantNameCtrls[i - 1] = _variantNameCtrls.remove(i)!;
-        }
-        if (_variantPriceCtrls.containsKey(i)) {
-          _variantPriceCtrls[i - 1] = _variantPriceCtrls.remove(i)!;
-        }
-        if (_variantLangs.containsKey(i)) {
-          _variantLangs[i - 1] = _variantLangs.remove(i)!;
-        }
+      final group = _optionGroups[groupIndex];
+      final option = group.options[optionIndex];
+      final nextOptions = List<MenuItemOptionModel>.from(group.options);
+      if (widget.item != null && option.id > 0) {
+        nextOptions[optionIndex] = option.copyWith(isDeleted: true);
+      } else {
+        nextOptions.removeAt(optionIndex);
+        _addonOptionNameCtrls.remove('$groupIndex-$optionIndex')?.dispose();
+        _addonOptionPriceCtrls.remove('$groupIndex-$optionIndex')?.dispose();
       }
+      _optionGroups[groupIndex] = group.copyWith(options: nextOptions);
     });
   }
 
   void _removeOptionGroup(int index) {
     HapticFeedback.lightImpact();
     setState(() {
-      final group = _optionGroups.removeAt(index);
+      final group = _optionGroups[index];
+      if (widget.item != null && group.id > 0) {
+        _optionGroups[index] = group.copyWith(
+          isDeleted: true,
+          options: group.options
+              .map(
+                (option) => option.id > 0
+                    ? option.copyWith(isDeleted: true)
+                    : option,
+              )
+              .toList(),
+        );
+        return;
+      }
+
+      _optionGroups.removeAt(index);
       _addonGroupNameCtrls[index]?.dispose();
       _addonGroupNameCtrls.remove(index);
       
@@ -1041,35 +1170,39 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     );
   }
 
-  Widget _buildVariantCard(MenuItemVariantModel variant, int index) {
+  Widget _buildVariantGroupCard(
+    MenuItemVariantGroupEditModel group,
+    int groupIndex,
+  ) {
     final t = AppLocalizations.of(context);
-    final lang = _variantLangs[index] ?? _selectedItemInfoLang;
+    final lang = _variantGroupLangs[groupIndex] ?? _selectedItemInfoLang;
+    final visibleVariants = group.variants
+        .asMap()
+        .entries
+        .where((entry) => !entry.value.isDeleted)
+        .toList();
 
-    final nameText = lang == 'MM'
-        ? variant.nameMm
-        : (lang == 'TH' ? variant.nameTh : variant.nameEn);
-    final nameCtrl = _variantNameCtrls.putIfAbsent(
-      index,
-      () => TextEditingController(text: nameText),
+    final groupNameText = lang == 'MM'
+        ? group.nameMm
+        : (lang == 'TH' ? group.nameTh : group.nameEn);
+    final groupNameCtrl = _variantGroupNameCtrls.putIfAbsent(
+      groupIndex,
+      () => TextEditingController(text: groupNameText),
     );
-    // Always sync from model — fixes stale text after deletion+index shift
-    if (nameCtrl.text != (nameText ?? '')) {
-      nameCtrl.text = nameText ?? '';
+    if (groupNameCtrl.text != (groupNameText ?? '')) {
+      groupNameCtrl.text = groupNameText ?? '';
     }
 
-    final priceText = variant.price == 0.0 ? '' : variant.price.toString();
-    final priceCtrl = _variantPriceCtrls.putIfAbsent(
-      index,
-      () => TextEditingController(text: priceText),
-    );
-    if (priceCtrl.text != priceText) {
-      priceCtrl.text = priceText;
-    }
+    final groupTitle = group.hasGroupName
+        ? group.displayName
+        : (t?.translate('new_variant_group') ?? 'New group');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        color: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF0F172A)
+            : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Theme.of(context).dividerColor, width: 1.0),
       ),
@@ -1081,21 +1214,23 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '${t?.translate('variant') ?? 'Variant'} #${index + 1}',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                Expanded(
+                  child: Text(
+                    '${t?.translate('variants') ?? 'Variants'}: $groupTitle',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                    ),
                   ),
                 ),
                 IconButton(
-                  icon: Icon(
+                  icon: const Icon(
                     Icons.delete_outline,
                     color: Color(0xFFEF4444),
                     size: 20,
                   ),
-                  onPressed: () => _removeVariant(index),
+                  onPressed: () => _removeVariantGroup(groupIndex),
                 ),
               ],
             ),
@@ -1108,77 +1243,193 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                 _buildLanguagePills(
                   selectedLang: lang,
                   onChanged: (val) =>
-                      setState(() => _variantLangs[index] = val),
+                      setState(() => _variantGroupLangs[groupIndex] = val),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 _buildTextField(
-                  '${t?.translate('variant_name') ?? 'Variant Name'} ($lang)',
-                  nameCtrl,
+                  '${t?.translate('variant_group_name') ?? 'Group name'} ($lang)',
+                  groupNameCtrl,
                   maxLength: 100,
                   onChanged: (v) {
-                    final currentVariant = _variants[index];
-                    _variants[index] = MenuItemVariantModel(
-                      id: currentVariant.id,
-                      price: currentVariant.price,
-                      nameEn: lang == 'EN' ? v : currentVariant.nameEn,
-                      nameMm: lang == 'MM' ? v : currentVariant.nameMm,
-                      nameTh: lang == 'TH' ? v : currentVariant.nameTh,
-                      isAvailable: currentVariant.isAvailable,
-                      displayOrder: currentVariant.displayOrder,
+                    final currentGroup = _variantGroups[groupIndex];
+                    _variantGroups[groupIndex] = currentGroup.copyWith(
+                      nameEn: lang == 'EN' ? v : currentGroup.nameEn,
+                      nameMm: lang == 'MM' ? v : currentGroup.nameMm,
+                      nameTh: lang == 'TH' ? v : currentGroup.nameTh,
                     );
                   },
                 ),
-                SizedBox(height: 16),
-                _buildTextField(
-                  t?.translate('price') ?? 'Price',
-                  priceCtrl,
-                  keyboardType: TextInputType.number,
-                  validator: _priceValidator,
-                  onChanged: (v) {
-                    final currentVariant = _variants[index];
-                    _variants[index] = MenuItemVariantModel(
-                      id: currentVariant.id,
-                      price: double.tryParse(v) ?? 0.0,
-                      nameEn: currentVariant.nameEn,
-                      nameMm: currentVariant.nameMm,
-                      nameTh: currentVariant.nameTh,
-                      isAvailable: currentVariant.isAvailable,
-                      displayOrder: currentVariant.displayOrder,
-                    );
-                  },
-                ),
-                SizedBox(height: 16),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      t?.translate('available') ?? 'Available',
+                      t?.translate('choices_in_group') ?? 'Choices in this group',
                       style: GoogleFonts.poppins(
                         fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[600],
                       ),
                     ),
-                    const Spacer(),
-                    PrimaryGradientSwitch(
-                      value: variant.isAvailable,
-                      onChanged: (v) {
-                        setState(() {
-                          final currentVariant = _variants[index];
-                          _variants[index] = MenuItemVariantModel(
-                            id: currentVariant.id,
-                            price: currentVariant.price,
-                            nameEn: currentVariant.nameEn,
-                            nameMm: currentVariant.nameMm,
-                            nameTh: currentVariant.nameTh,
-                            isAvailable: v,
-                            displayOrder: currentVariant.displayOrder,
-                          );
-                        });
-                      },
+                    TextButton.icon(
+                      onPressed: () => _addVariantToGroup(groupIndex),
+                      icon: const Icon(Icons.add, size: 16),
+                      label: Text(
+                        t?.translate('add_variant') ?? 'Add Variant',
+                        style: GoogleFonts.poppins(fontSize: 13),
+                      ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 8),
+                ...visibleVariants.asMap().entries.map((visibleEntry) {
+                  final displayIndex = visibleEntry.key;
+                  final variantIndex = visibleEntry.value.key;
+                  final variant = visibleEntry.value.value;
+                  final ctrlKey = '$groupIndex-$variantIndex';
+                  final variantLang = lang;
+
+                  final nameText = variantLang == 'MM'
+                      ? variant.nameMm
+                      : (variantLang == 'TH'
+                          ? variant.nameTh
+                          : variant.nameEn);
+                  final nameCtrl = _variantNameCtrls.putIfAbsent(
+                    ctrlKey,
+                    () => TextEditingController(text: nameText),
+                  );
+                  if (nameCtrl.text != (nameText ?? '')) {
+                    nameCtrl.text = nameText ?? '';
+                  }
+
+                  final priceText =
+                      variant.price == 0.0 ? '' : variant.price.toString();
+                  final priceCtrl = _variantPriceCtrls.putIfAbsent(
+                    ctrlKey,
+                    () => TextEditingController(text: priceText),
+                  );
+                  if (priceCtrl.text != priceText) {
+                    priceCtrl.text = priceText;
+                  }
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (visibleVariants.length > 1)
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '${t?.translate('variant') ?? 'Variant'} #${displayIndex + 1}',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                color: Color(0xFFEF4444),
+                                size: 18,
+                              ),
+                              onPressed: () => _removeVariantFromGroup(
+                                groupIndex,
+                                variantIndex,
+                              ),
+                            ),
+                          ],
+                        ),
+                      if (visibleVariants.length > 1)
+                        const SizedBox(height: 8),
+                      _buildTextField(
+                          '${t?.translate('variant_name') ?? 'Variant Name'} ($variantLang)',
+                          nameCtrl,
+                          maxLength: 100,
+                          onChanged: (v) {
+                            final currentGroup = _variantGroups[groupIndex];
+                            final currentVariant =
+                                currentGroup.variants[variantIndex];
+                            final nextVariants = List<MenuItemVariantModel>.from(
+                              currentGroup.variants,
+                            );
+                            nextVariants[variantIndex] = currentVariant.copyWith(
+                              nameEn: variantLang == 'EN'
+                                  ? v
+                                  : currentVariant.nameEn,
+                              nameMm: variantLang == 'MM'
+                                  ? v
+                                  : currentVariant.nameMm,
+                              nameTh: variantLang == 'TH'
+                                  ? v
+                                  : currentVariant.nameTh,
+                            );
+                            _variantGroups[groupIndex] = currentGroup.copyWith(
+                              variants: nextVariants,
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          t?.translate('price') ?? 'Price',
+                          priceCtrl,
+                          keyboardType: TextInputType.number,
+                          validator: _priceValidator,
+                          onChanged: (v) {
+                            final currentGroup = _variantGroups[groupIndex];
+                            final currentVariant =
+                                currentGroup.variants[variantIndex];
+                            final nextVariants = List<MenuItemVariantModel>.from(
+                              currentGroup.variants,
+                            );
+                            nextVariants[variantIndex] = currentVariant.copyWith(
+                              price: double.tryParse(v) ?? 0.0,
+                            );
+                            _variantGroups[groupIndex] = currentGroup.copyWith(
+                              variants: nextVariants,
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Text(
+                              t?.translate('available') ?? 'Available',
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const Spacer(),
+                            PrimaryGradientSwitch(
+                              value: variant.isAvailable,
+                              onChanged: (v) {
+                                setState(() {
+                                  final currentGroup =
+                                      _variantGroups[groupIndex];
+                                  final currentVariant =
+                                      currentGroup.variants[variantIndex];
+                                  final nextVariants =
+                                      List<MenuItemVariantModel>.from(
+                                    currentGroup.variants,
+                                  );
+                                  nextVariants[variantIndex] =
+                                      currentVariant.copyWith(
+                                    isAvailable: v,
+                                  );
+                                  _variantGroups[groupIndex] =
+                                      currentGroup.copyWith(
+                                    variants: nextVariants,
+                                  );
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      const SizedBox(height: 16),
+                    ],
+                  );
+                }),
               ],
             ),
           ),
@@ -1401,10 +1652,37 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                     const Spacer(),
                   ],
                 ),
-                SizedBox(height: 16),
-                ...group.options.asMap().entries.map((optEntry) {
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      t?.translate('choices_in_group') ?? 'Choices in this group',
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => _addNewOptionToGroup(index),
+                      icon: const Icon(Icons.add, size: 16),
+                      label: Text(
+                        t?.translate('add_addon') ?? 'Add add-on',
+                        style: GoogleFonts.poppins(fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ...group.options.asMap().entries.where(
+                  (entry) => !entry.value.isDeleted,
+                ).map((optEntry) {
                   final opt = optEntry.value;
                   final oIndex = optEntry.key;
+                  final visibleOptions =
+                      group.options.where((o) => !o.isDeleted).toList();
+                  final displayIndex = visibleOptions.indexOf(opt);
 
                   final optNameText = lang == 'MM'
                       ? opt.nameMm
@@ -1428,7 +1706,32 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                   }
                   return Column(
                     children: [
-                      if (group.options.length > 1)
+                      if (visibleOptions.length > 1)
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '${t?.translate('addon_name') ?? 'Add-on'} #${displayIndex + 1}',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                color: Color(0xFFEF4444),
+                                size: 18,
+                              ),
+                              onPressed: () =>
+                                  _removeOptionFromGroup(index, oIndex),
+                            ),
+                          ],
+                        ),
+                      if (visibleOptions.length > 1)
+                        const SizedBox(height: 8),
+                      if (visibleOptions.length > 1)
                         _buildTextField(
                           '${t?.translate('addon_name') ?? 'Add-on Name'} ($lang)',
                           optNameCtrl,
