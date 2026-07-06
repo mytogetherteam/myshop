@@ -10,7 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 // ─── Channel IDs (must match NotificationService) ───────────────────────────
-const String _kOrderChannelId = 'shop_order_alerts_channel_v9';
+const String _kOrderChannelId = 'shop_order_alerts_channel_v10';
 const String _kFgChannelId    = 'shop_foreground_service';
 const int    _kOrderNotiId    = 99999;
 const int    _kFgNotiId       = 888;

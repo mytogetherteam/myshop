@@ -81,7 +81,7 @@ class NotificationService {
 
     // Create high importance channel for Android (New Orders)
     final AndroidNotificationChannel orderChannel = AndroidNotificationChannel(
-      'shop_order_alerts_channel_v9',
+      'shop_order_alerts_channel_v10',
       'Shop Important Notifications',
       description: 'This channel is used for shop orders and alerts.',
       importance: Importance.max,
@@ -293,14 +293,14 @@ class NotificationService {
 
     // Int32List.fromList([4]) sets FLAG_INSISTENT, which loops the sound until dismissed
     final AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      isNewOrder ? 'shop_order_alerts_channel_v9' : 'shop_normal_alerts_channel_v1',
+      isNewOrder ? 'shop_order_alerts_channel_v10' : 'shop_normal_alerts_channel_v1',
       isNewOrder ? 'Shop Important Notifications' : 'Shop Normal Notifications',
       channelDescription: isNewOrder ? 'This channel is used for shop orders and alerts.' : 'This channel is used for normal shop updates.',
       importance: Importance.max,
       priority: Priority.high,
       sound: RawResourceAndroidNotificationSound(isNewOrder ? 'alert' : 'normal_noti'),
       playSound: true,
-      onlyAlertOnce: isNewOrder, // Prevent overlapping duplicate sounds if already ringing
+      onlyAlertOnce: false, // Ensure that if the notification is updated, the ringing restarts and doesn't get suppressed
       additionalFlags: isNewOrder ? Int32List.fromList([4]) : null,
       fullScreenIntent: true,
       category: AndroidNotificationCategory.call,
