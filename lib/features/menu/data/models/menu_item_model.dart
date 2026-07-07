@@ -1,5 +1,7 @@
 import 'package:my_shop/core/utils/localized_display_name.dart';
 
+import 'option_group_mapper.dart';
+
 class MenuItemModel {
   final int id;
   final int? menuCategoryId;
@@ -31,6 +33,7 @@ class MenuItemModel {
   final String? descriptionTh;
   final String? descriptionEn;
   final List<MenuItemOptionGroupModel> optionGroups;
+  final List<MenuItemOptionModel> options;
   final List<MenuItemVariantModel> variants;
   final List<MenuItemVariantGroupModel> variantGroups;
   final bool hasVariants;
@@ -80,6 +83,7 @@ class MenuItemModel {
     this.descriptionTh,
     this.descriptionEn,
     this.optionGroups = const [],
+    this.options = const [],
     this.variants = const [],
     this.variantGroups = const [],
     this.hasVariants = false,
@@ -130,8 +134,13 @@ class MenuItemModel {
       descriptionMm: json['descriptionMm'],
       descriptionTh: json['descriptionTh'],
       descriptionEn: json['descriptionEn'],
-      optionGroups: (json['optionGroups'] as List?)
-              ?.map((o) => MenuItemOptionGroupModel.fromJson(o))
+      optionGroups: OptionGroupMapper.fromJson(json),
+      options: (json['options'] as List?)
+              ?.map(
+                (o) => MenuItemOptionModel.fromJson(
+                  Map<String, dynamic>.from(o as Map),
+                ),
+              )
               .toList() ??
           [],
       variantGroups: (json['variantGroups'] as List?)
@@ -238,6 +247,7 @@ class MenuItemModel {
     String? descriptionTh,
     String? descriptionEn,
     List<MenuItemOptionGroupModel>? optionGroups,
+    List<MenuItemOptionModel>? options,
     List<MenuItemVariantModel>? variants,
     List<MenuItemVariantGroupModel>? variantGroups,
     bool? hasVariants,
@@ -287,6 +297,7 @@ class MenuItemModel {
       descriptionTh: descriptionTh ?? this.descriptionTh,
       descriptionEn: descriptionEn ?? this.descriptionEn,
       optionGroups: optionGroups ?? this.optionGroups,
+      options: options ?? this.options,
       variants: variants ?? this.variants,
       variantGroups: variantGroups ?? this.variantGroups,
       hasVariants: hasVariants ?? this.hasVariants,
@@ -499,7 +510,9 @@ class MenuItemVariantModel {
       variantGroupDisplayOrder: json['variantGroupDisplayOrder'] ??
           embeddedGroup?.displayOrder,
       variantGroup: embeddedGroup,
-      isDeleted: json['deleted'] == true || json['isDeleted'] == true,
+      isDeleted: json['deleted'] == true ||
+          json['isDeleted'] == true ||
+          json['deletedAt'] != null,
     );
   }
 
@@ -590,7 +603,9 @@ class MenuItemOptionGroupModel {
               .where((o) => !o.isDeleted)
               .toList() ??
           [],
-      isDeleted: json['deleted'] == true || json['isDeleted'] == true,
+      isDeleted: json['deleted'] == true ||
+          json['isDeleted'] == true ||
+          json['deletedAt'] != null,
     );
   }
 
@@ -621,6 +636,8 @@ class MenuItemOptionModel {
   final String? displayPrice;
   final int? displayOrder;
   final int? linkedMenuItemId;
+  final int? optionGroupId;
+  final MenuItemOptionGroupModel? optionGroup;
   final bool isDeleted;
 
   MenuItemOptionModel({
@@ -632,6 +649,8 @@ class MenuItemOptionModel {
     this.displayPrice,
     this.displayOrder,
     this.linkedMenuItemId,
+    this.optionGroupId,
+    this.optionGroup,
     this.isDeleted = false,
   });
 
@@ -644,6 +663,8 @@ class MenuItemOptionModel {
     String? displayPrice,
     int? displayOrder,
     int? linkedMenuItemId,
+    int? optionGroupId,
+    MenuItemOptionGroupModel? optionGroup,
     bool? isDeleted,
   }) {
     return MenuItemOptionModel(
@@ -655,11 +676,20 @@ class MenuItemOptionModel {
       displayPrice: displayPrice ?? this.displayPrice,
       displayOrder: displayOrder ?? this.displayOrder,
       linkedMenuItemId: linkedMenuItemId ?? this.linkedMenuItemId,
+      optionGroupId: optionGroupId ?? this.optionGroupId,
+      optionGroup: optionGroup ?? this.optionGroup,
       isDeleted: isDeleted ?? this.isDeleted,
     );
   }
 
   factory MenuItemOptionModel.fromJson(Map<String, dynamic> json) {
+    final embeddedGroupRaw = json['optionGroup'] ?? json['group'];
+    final embeddedGroup = embeddedGroupRaw is Map
+        ? MenuItemOptionGroupModel.fromJson(
+            Map<String, dynamic>.from(embeddedGroupRaw),
+          )
+        : null;
+
     return MenuItemOptionModel(
       id: json['id'] ?? 0,
       nameEn: json['nameEn'],
@@ -669,7 +699,11 @@ class MenuItemOptionModel {
       displayPrice: json['displayPrice'],
       displayOrder: json['displayOrder'],
       linkedMenuItemId: json['linkedMenuItemId'],
-      isDeleted: json['deleted'] == true || json['isDeleted'] == true,
+      optionGroupId: json['optionGroupId'] ?? embeddedGroup?.id,
+      optionGroup: embeddedGroup,
+      isDeleted: json['deleted'] == true ||
+          json['isDeleted'] == true ||
+          json['deletedAt'] != null,
     );
   }
 
@@ -683,6 +717,8 @@ class MenuItemOptionModel {
       'displayPrice': displayPrice,
       'displayOrder': displayOrder,
       'linkedMenuItemId': linkedMenuItemId,
+      if (optionGroupId != null) 'optionGroupId': optionGroupId,
+      if (optionGroup != null) 'optionGroup': optionGroup!.toJson(),
       if (isDeleted) 'deleted': true,
     };
   }

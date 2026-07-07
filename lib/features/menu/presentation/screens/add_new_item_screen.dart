@@ -17,6 +17,7 @@ import 'package:my_shop/core/presentation/widgets/global_modal.dart';
 import '../../data/models/menu_item_model.dart';
 import '../../data/models/menu_item_payload.dart';
 import '../../data/models/variant_group_mapper.dart';
+import '../../data/models/option_group_mapper.dart';
 import '../../data/models/menu_category_model.dart';
 import '../../data/services/menu_service.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
@@ -173,7 +174,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       _selectedTagIds = List.from(item.tagIds);
       _selectedMealTypes = List.from(item.mealTypes);
       _variantGroups = VariantGroupMapper.fromMenuItem(item);
-      _optionGroups = List.from(item.optionGroups);
+      _optionGroups = OptionGroupMapper.fromMenuItem(item);
       _comboComponents = List.from(item.components);
     }
 
@@ -189,7 +190,7 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
     if (!mounted || detail == null) return;
     setState(() {
       _variantGroups = VariantGroupMapper.fromMenuItem(detail);
-      _optionGroups = List.from(detail.optionGroups);
+      _optionGroups = OptionGroupMapper.fromMenuItem(detail);
     });
   }
 
