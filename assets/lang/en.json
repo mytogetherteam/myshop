@@ -49,6 +49,7 @@
   "mins_ago": " min(s) ago",
   "hours_ago": " hr(s) ago",
   "order_cancelled": "Order Cancelled",
+  "order_far_delivery": "Delivery is {distance} km away — outside preferred range",
   "view_details": "View Details",
   "check_payment": "Check Payment",
   "accept_order_to_cook": "Accept order to cook",

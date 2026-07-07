@@ -37,6 +37,8 @@ import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart'
 import 'package:my_shop/features/chat/presentation/chat_navigation.dart';
 import 'package:my_shop/features/orders/presentation/screens/pickup_complete_screen.dart';
 import 'package:my_shop/features/orders/presentation/widgets/order_qr_scan_icon.dart';
+import 'package:my_shop/features/orders/presentation/widgets/far_order_delivery_banner.dart';
+import 'package:my_shop/features/profile/data/services/profile_service.dart';
 
 void _showAppNotInstalledSnackbar(BuildContext context, String name) {
   ScaffoldMessenger.of(context).showSnackBar(
@@ -96,6 +98,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   // Shop / user info needed to open the RiderFormSheet (add new driver)
   int? _shopId;
   int? _userId;
+  double? _shopLatitude;
+  double? _shopLongitude;
   bool _isLoadingRiders = false;
   bool _isScrolled = false;
   bool _hasShownCouponModal = false;
@@ -174,6 +178,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _shopId = await StorageService.instance.getSelectedShopId();
     final userInfo = await StorageService.instance.getUserInfo();
     _userId = userInfo?.id;
+    final profile = await ProfileService().getShopProfile();
+    if (!mounted || profile == null) return;
+    setState(() {
+      _shopLatitude = profile.latitude;
+      _shopLongitude = profile.longitude;
+    });
   }
 
   Future<void> _loadDrivers() async {
@@ -2690,6 +2700,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
             ),
           ],
+        ),
+        FarOrderDeliveryBanner(
+          order: _currentOrder,
+          shopLatitude: _shopLatitude,
+          shopLongitude: _shopLongitude,
         ),
         SizedBox(height: 8),
         Text(

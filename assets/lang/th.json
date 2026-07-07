@@ -42,6 +42,7 @@
   "mins_ago": "นาทีที่แล้ว",
   "hours_ago": "ชั่วโมงที่แล้ว",
   "order_cancelled": "คำสั่งซื้อถูกยกเลิก",
+  "order_far_delivery": "จัดส่งห่าง {distance} กม. — เกินระยะที่แนะนำ",
   "view_details": "ดูรายละเอียด",
   "check_payment": "ตรวจสอบการชำระเงิน",
   "accept_order_to_cook": "รับออเดอร์เพื่อทำอาหาร",
