@@ -18,6 +18,7 @@ import 'package:my_shop/features/main_navigation/presentation/screens/main_navig
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
+import 'package:my_shop/core/network/websocket_service.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -121,11 +122,17 @@ class NotificationService {
 
       final bool isNewOrder = type == 'NEW_ORDER' || subType == 'PENDING_ORDER';
 
-      // Skip showing system banner for new orders in the foreground, 
-      // because MainNavigationScreen's WebSocket listener will show the NewOrderDialog
-      // and play the alert sound. This prevents overlapping looping sounds.
       if (isNewOrder) {
         NotificationRepository().incrementCount();
+        // Only skip the local system banner if WebSocket is connected and will
+        // handle the alert via NewOrderDialog. If WS is down (e.g. bad network,
+        // battery kill), fall through and show the loud local notification so
+        // the shop NEVER misses a new order ring regardless of WS state.
+        if (WebSocketService().isConnected) {
+          return;
+        }
+        // WebSocket is offline — show the loud local notification as fallback.
+        showLocalNotification(message);
         return;
       }
 
