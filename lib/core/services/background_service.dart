@@ -142,7 +142,7 @@ Future<void> _pollPendingOrders(FlutterLocalNotificationsPlugin plugin, ServiceI
       }
     }
 
-    final uri  = Uri.parse('$base/api/orders?status=PENDING&size=5');
+    final uri  = Uri.parse('$base/api/shop/orders?status=PENDING&size=5&page=1');
 
     final res = await http.get(uri, headers: {
       'Authorization': 'Bearer $token',
