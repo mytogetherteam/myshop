@@ -189,6 +189,7 @@ class MenuItemPayloadBuilder {
       'nameMm': option.nameMm ?? '',
       'nameTh': option.nameTh ?? '',
       'price': option.price,
+      'isAvailable': option.isAvailable,
       'displayOrder': option.displayOrder ?? optionIndex + 1,
       if (option.linkedMenuItemId != null)
         'linkedMenuItemId': option.linkedMenuItemId,

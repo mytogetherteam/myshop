@@ -1,9 +1,11 @@
 import 'menu_item_model.dart';
 import 'package:my_shop/core/utils/localized_display_name.dart';
+import 'menu_item_client_key.dart';
 
 /// Editable variant group used on the add/edit item screen.
 class MenuItemVariantGroupEditModel {
   final int id;
+  final String clientKey;
   final String? nameEn;
   final String? nameMm;
   final String? nameTh;
@@ -11,18 +13,23 @@ class MenuItemVariantGroupEditModel {
   final bool isDeleted;
   final List<MenuItemVariantModel> variants;
 
-  const MenuItemVariantGroupEditModel({
+  MenuItemVariantGroupEditModel({
     this.id = 0,
+    String? clientKey,
     this.nameEn,
     this.nameMm,
     this.nameTh,
     this.displayOrder,
     this.isDeleted = false,
     this.variants = const [],
-  });
+  }) : clientKey = clientKey ??
+            (id > 0
+                ? MenuItemClientKey.forId('vg', id)
+                : MenuItemClientKey.next('vg'));
 
   MenuItemVariantGroupEditModel copyWith({
     int? id,
+    String? clientKey,
     String? nameEn,
     String? nameMm,
     String? nameTh,
@@ -32,6 +39,7 @@ class MenuItemVariantGroupEditModel {
   }) {
     return MenuItemVariantGroupEditModel(
       id: id ?? this.id,
+      clientKey: clientKey ?? this.clientKey,
       nameEn: nameEn ?? this.nameEn,
       nameMm: nameMm ?? this.nameMm,
       nameTh: nameTh ?? this.nameTh,
