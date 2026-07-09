@@ -103,6 +103,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   bool _isLoadingRiders = false;
   bool _isScrolled = false;
   bool _hasShownCouponModal = false;
+  bool _hasShownPaymentModal = false;
+  bool _isInitialOrderFetch = true;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -133,12 +135,25 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         setState(() => _isScrolled = false);
       }
     });
+  }
 
+  void _maybeShowPaymentVerificationModal({String? previousStatus}) {
+    if (_hasShownPaymentModal || !mounted) return;
+    if (_currentOrder.status != 'AWAITING_APPROVAL') return;
+
+    final slipUrl = _currentOrder.paymentSlipUrl;
+    if (slipUrl == null || slipUrl.isEmpty) return;
+
+    // After the first detail fetch, only pop the existing modal when the order
+    // newly enters AWAITING_APPROVAL (e.g. customer just uploaded a slip).
+    if (previousStatus != null &&
+        previousStatus.toUpperCase() == 'AWAITING_APPROVAL') {
+      return;
+    }
+
+    _hasShownPaymentModal = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_currentOrder.status == 'AWAITING_APPROVAL' &&
-          _currentOrder.paymentSlipUrl != null) {
-        _showPaymentVerificationModal();
-      }
+      if (mounted) _showPaymentVerificationModal();
     });
   }
 
@@ -275,7 +290,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     String? previousStatus,
   }) async {
     if (showLoading) setState(() => _isFirstLoading = true);
-    final oldStatus = previousStatus ?? _currentOrder.status;
+    final statusBeforeFetch = previousStatus ?? _currentOrder.status;
     final updatedOrder = await OrderService().getOrderDetail(_currentOrder.id);
     if (updatedOrder != null && mounted) {
       setState(() {
@@ -288,11 +303,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       // saved rider, regardless of what the order payload carried.
       _loadDrivers();
 
-      if (oldStatus != 'AWAITING_APPROVAL' &&
-          _currentOrder.status == 'AWAITING_APPROVAL' &&
-          _currentOrder.paymentSlipUrl != null) {
-        _showPaymentVerificationModal();
-      }
+      _maybeShowPaymentVerificationModal(
+        previousStatus: _isInitialOrderFetch ? null : statusBeforeFetch,
+      );
+      _isInitialOrderFetch = false;
 
       if (_currentOrder.hasAppliedCoupon && !_hasShownCouponModal) {
         _hasShownCouponModal = true;
