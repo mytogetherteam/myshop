@@ -1,5 +1,8 @@
 import 'package:my_shop/core/utils/localized_display_name.dart';
 
+import 'menu_item_client_key.dart';
+import 'option_group_mapper.dart';
+
 class MenuItemModel {
   final int id;
   final int? menuCategoryId;
@@ -31,6 +34,7 @@ class MenuItemModel {
   final String? descriptionTh;
   final String? descriptionEn;
   final List<MenuItemOptionGroupModel> optionGroups;
+  final List<MenuItemOptionModel> options;
   final List<MenuItemVariantModel> variants;
   final List<MenuItemVariantGroupModel> variantGroups;
   final bool hasVariants;
@@ -80,6 +84,7 @@ class MenuItemModel {
     this.descriptionTh,
     this.descriptionEn,
     this.optionGroups = const [],
+    this.options = const [],
     this.variants = const [],
     this.variantGroups = const [],
     this.hasVariants = false,
@@ -130,8 +135,13 @@ class MenuItemModel {
       descriptionMm: json['descriptionMm'],
       descriptionTh: json['descriptionTh'],
       descriptionEn: json['descriptionEn'],
-      optionGroups: (json['optionGroups'] as List?)
-              ?.map((o) => MenuItemOptionGroupModel.fromJson(o))
+      optionGroups: OptionGroupMapper.fromJson(json),
+      options: (json['options'] as List?)
+              ?.map(
+                (o) => MenuItemOptionModel.fromJson(
+                  Map<String, dynamic>.from(o as Map),
+                ),
+              )
               .toList() ??
           [],
       variantGroups: (json['variantGroups'] as List?)
@@ -238,6 +248,7 @@ class MenuItemModel {
     String? descriptionTh,
     String? descriptionEn,
     List<MenuItemOptionGroupModel>? optionGroups,
+    List<MenuItemOptionModel>? options,
     List<MenuItemVariantModel>? variants,
     List<MenuItemVariantGroupModel>? variantGroups,
     bool? hasVariants,
@@ -287,6 +298,7 @@ class MenuItemModel {
       descriptionTh: descriptionTh ?? this.descriptionTh,
       descriptionEn: descriptionEn ?? this.descriptionEn,
       optionGroups: optionGroups ?? this.optionGroups,
+      options: options ?? this.options,
       variants: variants ?? this.variants,
       variantGroups: variantGroups ?? this.variantGroups,
       hasVariants: hasVariants ?? this.hasVariants,
@@ -403,6 +415,7 @@ class MenuItemVariantGroupModel {
 
 class MenuItemVariantModel {
   final int id;
+  final String clientKey;
   final String? nameEn;
   final String? nameMm;
   final String? nameTh;
@@ -420,6 +433,7 @@ class MenuItemVariantModel {
 
   MenuItemVariantModel({
     required this.id,
+    String? clientKey,
     this.nameEn,
     this.nameMm,
     this.nameTh,
@@ -434,10 +448,14 @@ class MenuItemVariantModel {
     this.variantGroupDisplayOrder,
     this.variantGroup,
     this.isDeleted = false,
-  });
+  }) : clientKey = clientKey ??
+            (id > 0
+                ? MenuItemClientKey.forId('v', id)
+                : MenuItemClientKey.next('v'));
 
   MenuItemVariantModel copyWith({
     int? id,
+    String? clientKey,
     String? nameEn,
     String? nameMm,
     String? nameTh,
@@ -455,6 +473,7 @@ class MenuItemVariantModel {
   }) {
     return MenuItemVariantModel(
       id: id ?? this.id,
+      clientKey: clientKey ?? this.clientKey,
       nameEn: nameEn ?? this.nameEn,
       nameMm: nameMm ?? this.nameMm,
       nameTh: nameTh ?? this.nameTh,
@@ -499,7 +518,9 @@ class MenuItemVariantModel {
       variantGroupDisplayOrder: json['variantGroupDisplayOrder'] ??
           embeddedGroup?.displayOrder,
       variantGroup: embeddedGroup,
-      isDeleted: json['deleted'] == true || json['isDeleted'] == true,
+      isDeleted: json['deleted'] == true ||
+          json['isDeleted'] == true ||
+          json['deletedAt'] != null,
     );
   }
 
@@ -530,6 +551,7 @@ class MenuItemVariantModel {
 
 class MenuItemOptionGroupModel {
   final int id;
+  final String clientKey;
   final String? nameEn;
   final String? nameMm;
   final String? nameTh;
@@ -541,6 +563,7 @@ class MenuItemOptionGroupModel {
 
   MenuItemOptionGroupModel({
     required this.id,
+    String? clientKey,
     this.nameEn,
     this.nameMm,
     this.nameTh,
@@ -549,10 +572,14 @@ class MenuItemOptionGroupModel {
     this.price = 0.0,
     this.options = const [],
     this.isDeleted = false,
-  });
+  }) : clientKey = clientKey ??
+            (id > 0
+                ? MenuItemClientKey.forId('og', id)
+                : MenuItemClientKey.next('og'));
 
   MenuItemOptionGroupModel copyWith({
     int? id,
+    String? clientKey,
     String? nameEn,
     String? nameMm,
     String? nameTh,
@@ -564,6 +591,7 @@ class MenuItemOptionGroupModel {
   }) {
     return MenuItemOptionGroupModel(
       id: id ?? this.id,
+      clientKey: clientKey ?? this.clientKey,
       nameEn: nameEn ?? this.nameEn,
       nameMm: nameMm ?? this.nameMm,
       nameTh: nameTh ?? this.nameTh,
@@ -590,7 +618,9 @@ class MenuItemOptionGroupModel {
               .where((o) => !o.isDeleted)
               .toList() ??
           [],
-      isDeleted: json['deleted'] == true || json['isDeleted'] == true,
+      isDeleted: json['deleted'] == true ||
+          json['isDeleted'] == true ||
+          json['deletedAt'] != null,
     );
   }
 
@@ -614,52 +644,78 @@ class MenuItemOptionGroupModel {
 
 class MenuItemOptionModel {
   final int id;
+  final String clientKey;
   final String? nameEn;
   final String? nameMm;
   final String? nameTh;
   final double price;
   final String? displayPrice;
+  final bool isAvailable;
   final int? displayOrder;
   final int? linkedMenuItemId;
+  final int? optionGroupId;
+  final MenuItemOptionGroupModel? optionGroup;
   final bool isDeleted;
 
   MenuItemOptionModel({
     required this.id,
+    String? clientKey,
     this.nameEn,
     this.nameMm,
     this.nameTh,
     required this.price,
     this.displayPrice,
+    this.isAvailable = true,
     this.displayOrder,
     this.linkedMenuItemId,
+    this.optionGroupId,
+    this.optionGroup,
     this.isDeleted = false,
-  });
+  }) : clientKey = clientKey ??
+            (id > 0
+                ? MenuItemClientKey.forId('o', id)
+                : MenuItemClientKey.next('o'));
 
   MenuItemOptionModel copyWith({
     int? id,
+    String? clientKey,
     String? nameEn,
     String? nameMm,
     String? nameTh,
     double? price,
     String? displayPrice,
+    bool? isAvailable,
     int? displayOrder,
     int? linkedMenuItemId,
+    int? optionGroupId,
+    MenuItemOptionGroupModel? optionGroup,
     bool? isDeleted,
   }) {
     return MenuItemOptionModel(
       id: id ?? this.id,
+      clientKey: clientKey ?? this.clientKey,
       nameEn: nameEn ?? this.nameEn,
       nameMm: nameMm ?? this.nameMm,
       nameTh: nameTh ?? this.nameTh,
       price: price ?? this.price,
       displayPrice: displayPrice ?? this.displayPrice,
+      isAvailable: isAvailable ?? this.isAvailable,
       displayOrder: displayOrder ?? this.displayOrder,
       linkedMenuItemId: linkedMenuItemId ?? this.linkedMenuItemId,
+      optionGroupId: optionGroupId ?? this.optionGroupId,
+      optionGroup: optionGroup ?? this.optionGroup,
       isDeleted: isDeleted ?? this.isDeleted,
     );
   }
 
   factory MenuItemOptionModel.fromJson(Map<String, dynamic> json) {
+    final embeddedGroupRaw = json['optionGroup'] ?? json['group'];
+    final embeddedGroup = embeddedGroupRaw is Map
+        ? MenuItemOptionGroupModel.fromJson(
+            Map<String, dynamic>.from(embeddedGroupRaw),
+          )
+        : null;
+
     return MenuItemOptionModel(
       id: json['id'] ?? 0,
       nameEn: json['nameEn'],
@@ -667,9 +723,14 @@ class MenuItemOptionModel {
       nameTh: json['nameTh'],
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
       displayPrice: json['displayPrice'],
+      isAvailable: json['isAvailable'] ?? true,
       displayOrder: json['displayOrder'],
       linkedMenuItemId: json['linkedMenuItemId'],
-      isDeleted: json['deleted'] == true || json['isDeleted'] == true,
+      optionGroupId: json['optionGroupId'] ?? embeddedGroup?.id,
+      optionGroup: embeddedGroup,
+      isDeleted: json['deleted'] == true ||
+          json['isDeleted'] == true ||
+          json['deletedAt'] != null,
     );
   }
 
@@ -681,8 +742,11 @@ class MenuItemOptionModel {
       'nameTh': nameTh,
       'price': price,
       'displayPrice': displayPrice,
+      'isAvailable': isAvailable,
       'displayOrder': displayOrder,
       'linkedMenuItemId': linkedMenuItemId,
+      if (optionGroupId != null) 'optionGroupId': optionGroupId,
+      if (optionGroup != null) 'optionGroup': optionGroup!.toJson(),
       if (isDeleted) 'deleted': true,
     };
   }

@@ -37,6 +37,8 @@ import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart'
 import 'package:my_shop/features/chat/presentation/chat_navigation.dart';
 import 'package:my_shop/features/orders/presentation/screens/pickup_complete_screen.dart';
 import 'package:my_shop/features/orders/presentation/widgets/order_qr_scan_icon.dart';
+import 'package:my_shop/features/orders/presentation/widgets/far_order_delivery_banner.dart';
+import 'package:my_shop/features/profile/data/services/profile_service.dart';
 
 void _showAppNotInstalledSnackbar(BuildContext context, String name) {
   ScaffoldMessenger.of(context).showSnackBar(
@@ -96,9 +98,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   // Shop / user info needed to open the RiderFormSheet (add new driver)
   int? _shopId;
   int? _userId;
+  double? _shopLatitude;
+  double? _shopLongitude;
   bool _isLoadingRiders = false;
   bool _isScrolled = false;
   bool _hasShownCouponModal = false;
+  bool _hasShownPaymentModal = false;
+  bool _isInitialOrderFetch = true;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -129,12 +135,25 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         setState(() => _isScrolled = false);
       }
     });
+  }
 
+  void _maybeShowPaymentVerificationModal({String? previousStatus}) {
+    if (_hasShownPaymentModal || !mounted) return;
+    if (_currentOrder.status != 'AWAITING_APPROVAL') return;
+
+    final slipUrl = _currentOrder.paymentSlipUrl;
+    if (slipUrl == null || slipUrl.isEmpty) return;
+
+    // After the first detail fetch, only pop the existing modal when the order
+    // newly enters AWAITING_APPROVAL (e.g. customer just uploaded a slip).
+    if (previousStatus != null &&
+        previousStatus.toUpperCase() == 'AWAITING_APPROVAL') {
+      return;
+    }
+
+    _hasShownPaymentModal = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_currentOrder.status == 'AWAITING_APPROVAL' &&
-          _currentOrder.paymentSlipUrl != null) {
-        _showPaymentVerificationModal();
-      }
+      if (mounted) _showPaymentVerificationModal();
     });
   }
 
@@ -174,6 +193,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _shopId = await StorageService.instance.getSelectedShopId();
     final userInfo = await StorageService.instance.getUserInfo();
     _userId = userInfo?.id;
+    final profile = await ProfileService().getShopProfile();
+    if (!mounted || profile == null) return;
+    setState(() {
+      _shopLatitude = profile.latitude;
+      _shopLongitude = profile.longitude;
+    });
   }
 
   Future<void> _loadDrivers() async {
@@ -265,7 +290,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     String? previousStatus,
   }) async {
     if (showLoading) setState(() => _isFirstLoading = true);
-    final oldStatus = previousStatus ?? _currentOrder.status;
+    final statusBeforeFetch = previousStatus ?? _currentOrder.status;
     final updatedOrder = await OrderService().getOrderDetail(_currentOrder.id);
     if (updatedOrder != null && mounted) {
       setState(() {
@@ -278,11 +303,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       // saved rider, regardless of what the order payload carried.
       _loadDrivers();
 
-      if (oldStatus != 'AWAITING_APPROVAL' &&
-          _currentOrder.status == 'AWAITING_APPROVAL' &&
-          _currentOrder.paymentSlipUrl != null) {
-        _showPaymentVerificationModal();
-      }
+      _maybeShowPaymentVerificationModal(
+        previousStatus: _isInitialOrderFetch ? null : statusBeforeFetch,
+      );
+      _isInitialOrderFetch = false;
 
       if (_currentOrder.hasAppliedCoupon && !_hasShownCouponModal) {
         _hasShownCouponModal = true;
@@ -2690,6 +2714,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
             ),
           ],
+        ),
+        FarOrderDeliveryBanner(
+          order: _currentOrder,
+          shopLatitude: _shopLatitude,
+          shopLongitude: _shopLongitude,
         ),
         SizedBox(height: 8),
         Text(
