@@ -14,6 +14,7 @@ import 'package:my_shop/core/presentation/widgets/skeleton_list.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
+import 'package:my_shop/features/announcements/presentation/screens/announcements_page.dart';
 
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
@@ -22,7 +23,7 @@ class NotificationPage extends StatefulWidget {
   State<NotificationPage> createState() => _NotificationPageState();
 }
 
-class _NotificationPageState extends State<NotificationPage> {
+class _NotificationPageState extends State<NotificationPage> with SingleTickerProviderStateMixin {
   final NotificationRepository _notificationRepository = NotificationRepository();
   final ScrollController _scrollController = ScrollController();
   
@@ -34,6 +35,7 @@ class _NotificationPageState extends State<NotificationPage> {
   bool _isMarkingAllRead = false;
   int _currentPage = 0;
   bool _hasMore = true;
+  late TabController _tabController;
 
   @override
   void initState() {
@@ -41,6 +43,7 @@ class _NotificationPageState extends State<NotificationPage> {
     _startLoadingTimer();
     _fetchNotifications();
     _scrollController.addListener(_onScroll);
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   void _startLoadingTimer() {
@@ -54,6 +57,7 @@ class _NotificationPageState extends State<NotificationPage> {
   void dispose() {
     _loadingTimer?.cancel();
     _scrollController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -190,11 +194,26 @@ class _NotificationPageState extends State<NotificationPage> {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).cardColor : Colors.white,
-      appBar: BackTitleAppBar(
-        title: t?.translate('notifications') ?? 'Notifications',
-        onBack: () => Navigator.pop(context, true),
+      backgroundColor: isDark ? Theme.of(context).cardColor : Colors.white,
+      appBar: AppBar(
+        backgroundColor: isDark ? Theme.of(context).cardColor : Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black),
+          onPressed: () => Navigator.pop(context, true),
+        ),
+        title: Text(
+          t?.translate('notifications') ?? 'Notifications',
+          style: GoogleFonts.poppins(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).textTheme.bodyLarge?.color ?? AppColors.onSurface,
+          ),
+        ),
         actions: [
           if (_hasUnread && !_isLoading && _notifications.isNotEmpty)
             TextButton(
@@ -218,10 +237,24 @@ class _NotificationPageState extends State<NotificationPage> {
                     ),
             ),
         ],
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: AppColors.primary,
+          unselectedLabelColor: Colors.grey.shade600,
+          indicatorColor: AppColors.primary,
+          labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+          tabs: const [
+            Tab(text: 'Orders & Alerts'),
+            Tab(text: 'Announcements'),
+          ],
+        ),
       ),
-      body: RefreshIndicator(
-        onRefresh: () => _fetchNotifications(refresh: true),
-        color: AppColors.primary,
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          RefreshIndicator(
+            onRefresh: () => _fetchNotifications(refresh: true),
+            color: AppColors.primary,
         child: (_isLoading && _showLoadingThreshold)
             ? SkeletonList(
                 itemCount: 8,
@@ -283,6 +316,9 @@ class _NotificationPageState extends State<NotificationPage> {
                       return _buildNotificationItem(_notifications[index]);
                     },
                   ),
+          ),
+          const AnnouncementsPage(),
+        ],
       ),
     );
   }

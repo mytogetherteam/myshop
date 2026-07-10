@@ -19,6 +19,8 @@ import 'package:my_shop/features/orders/presentation/screens/order_detail_screen
 import 'package:audioplayers/audioplayers.dart';
 import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
 import 'package:my_shop/core/network/websocket_service.dart';
+import 'package:my_shop/features/announcements/data/models/announcement_model.dart';
+import 'package:my_shop/features/announcements/presentation/announcement_presenter.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -113,6 +115,15 @@ class NotificationService {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final String? type = message.data['type'];
       final String? subType = message.data['subType'];
+
+      if (type == 'BROADCAST') {
+        final announcement = _announcementFromMessage(message);
+        if (announcement != null) {
+          AnnouncementPresenter.present(announcement);
+        }
+        return;
+      }
+
       // Background silent data pushes
       if (type == 'ORDER_ACKNOWLEDGED') {
         cancelNotification(99999);
@@ -346,6 +357,14 @@ class NotificationService {
     final String? mainType = message.data['mainType'];
     final String? type = message.data['type'];
     final String? subType = message.data['subType'];
+
+    if (type == 'BROADCAST') {
+      final announcement = _announcementFromMessage(message);
+      if (announcement != null) {
+        AnnouncementPresenter.present(announcement, isNewArrival: false);
+      }
+      return;
+    }
     
     final bool isCancelledOrder = subType == 'CANCELED_ORDER' || type == 'CANCELED_ORDER';
     final bool isNewOrder = type == 'NEW_ORDER' || subType == 'PENDING_ORDER';
@@ -419,5 +438,26 @@ class NotificationService {
     } catch (e) {
       debugPrint('Failed to load order from notification: $e');
     }
+  }
+
+  AnnouncementModel? _announcementFromMessage(RemoteMessage message) {
+    final id = int.tryParse(message.data['broadcastId']?.toString() ?? '');
+    if (id == null) return null;
+    final String title =
+        message.notification?.title ?? message.data['title']?.toString() ?? '';
+    final String body = message.notification?.body ??
+        message.data['message']?.toString() ??
+        message.data['body']?.toString() ??
+        '';
+    final String? imageUrl = message.data['imageUrl']?.toString();
+    return AnnouncementModel(
+      id: id,
+      title: title,
+      message: body,
+      imageUrl: (imageUrl != null && imageUrl.isNotEmpty) ? imageUrl : null,
+      audience: message.data['audience']?.toString(),
+      createdAt: DateTime.now(),
+      isRead: false,
+    );
   }
 }

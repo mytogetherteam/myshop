@@ -1,8 +1,11 @@
 import 'dart:async';
 
+import 'package:any_link_preview/any_link_preview.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
@@ -426,8 +429,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   void _showMessageActions(ChatMessage message) {
-    // Only the shop's own, non-deleted messages can be edited/deleted.
-    if (!message.isMe || message.isDeleted) return;
+    if (message.isDeleted) return;
+
+    final urlRegExp = RegExp(r'(?:(?:https?|ftp)://)?[\w/\-?=%.]+\.[\w/\-?=%.]+');
+    final matches = urlRegExp.allMatches(message.content ?? '');
+    final urls = matches.map((m) => m.group(0)!).toList();
     showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).cardColor,
@@ -441,25 +447,47 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             SizedBox(height: 8),
             if (message.kind == ChatMessageKind.text)
               ListTile(
-                leading: Icon(Icons.edit_rounded,
-                    color: Color(0xFF475569)),
+                leading: Icon(Icons.copy_rounded, color: Color(0xFF475569)),
+                title: Text('Copy Text', style: GoogleFonts.poppins(fontSize: 15)),
+                onTap: () {
+                  Clipboard.setData(ClipboardData(text: message.content ?? ''));
+                  Navigator.pop(ctx);
+                  _showSnack('Copied to clipboard');
+                },
+              ),
+            for (var url in urls)
+              ListTile(
+                leading: Icon(Icons.open_in_browser_rounded, color: Color(0xFF475569)),
+                title: Text('Open link: $url', maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.poppins(fontSize: 15)),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final uri = Uri.parse(url.startsWith('http') ? url : 'https://$url');
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri);
+                  }
+                },
+              ),
+            if (message.isMe && message.kind == ChatMessageKind.text)
+              ListTile(
+                leading: Icon(Icons.edit_rounded, color: Color(0xFF475569)),
                 title: Text('Edit', style: GoogleFonts.poppins(fontSize: 15)),
                 onTap: () {
                   Navigator.pop(ctx);
                   _editMessage(message);
                 },
               ),
-            ListTile(
-              leading:
-                  Icon(Icons.delete_outline_rounded, color: Color(0xFFEF4444)),
-              title: Text('Delete',
-                  style: GoogleFonts.poppins(
-                      fontSize: 15, color: const Color(0xFFEF4444))),
-              onTap: () {
-                Navigator.pop(ctx);
-                _deleteMessage(message);
-              },
-            ),
+            if (message.isMe)
+              ListTile(
+                leading:
+                    Icon(Icons.delete_outline_rounded, color: Color(0xFFEF4444)),
+                title: Text('Delete',
+                    style: GoogleFonts.poppins(
+                        fontSize: 15, color: const Color(0xFFEF4444))),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _deleteMessage(message);
+                },
+              ),
             SizedBox(height: 8),
           ],
         ),
@@ -943,6 +971,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       );
     }
 
+    final urlRegExp = RegExp(r'(?:(?:https?|ftp)://)?[\w/\-?=%.]+\.[\w/\-?=%.]+');
+    final urls = urlRegExp.allMatches(message.content ?? '').map((m) => m.group(0)!).toList();
+    final firstUrl = urls.isNotEmpty ? urls.first : null;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
@@ -955,6 +987,35 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             height: 1.4,
           ),
         ),
+        if (firstUrl != null)
+          FutureBuilder(
+            future: AnyLinkPreview.getMetadata(
+              link: firstUrl.startsWith('http') ? firstUrl : 'https://$firstUrl',
+            ),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SizedBox.shrink();
+              }
+              final metadata = snapshot.data;
+              if (metadata == null || metadata.image == null || metadata.image!.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              return Container(
+                margin: const EdgeInsets.only(top: 4),
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.72,
+                ),
+                child: AnyLinkPreview(
+                  link: firstUrl.startsWith('http') ? firstUrl : 'https://$firstUrl',
+                  displayDirection: UIDirection.uiDirectionHorizontal,
+                  cache: const Duration(hours: 1),
+                  backgroundColor: Colors.white,
+                  errorWidget: const SizedBox.shrink(),
+                  borderRadius: 12,
+                ),
+              );
+            },
+          ),
         SizedBox(height: 4),
         _buildMetaRow(message, isMe),
       ],
