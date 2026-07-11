@@ -185,9 +185,10 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
     final now = DateTime.now();
     
     final todayConversations = _conversations.where((c) {
-      return c.timestamp.year == now.year &&
+      final isToday = c.timestamp.year == now.year &&
              c.timestamp.month == now.month &&
              c.timestamp.day == now.day;
+      return isToday || c.unreadCount > 0;
     }).toList();
 
     if (query.isEmpty) {

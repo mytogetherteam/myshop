@@ -44,7 +44,7 @@ class FarOrderDeliveryBanner extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(top: 12, bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: const Color(0xFFFEF3C7),
@@ -59,7 +59,7 @@ class FarOrderDeliveryBanner extends StatelessWidget {
           Expanded(
             child: Text(
               (t?.translate('order_far_delivery') ??
-                      'Delivery is {distance} km away — outside preferred range')
+                      'Delivery is {distance} km away — outside 6km preferred range')
                   .replaceAll('{distance}', distance),
               style: GoogleFonts.poppins(
                 fontSize: 12.5,

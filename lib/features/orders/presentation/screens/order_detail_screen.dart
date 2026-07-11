@@ -3444,23 +3444,38 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
             ),
             SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFEF2F2),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                _currentOrder.deliveryType == 'NORMAL'
-                    ? 'Estimate'
-                    : 'Delivery fee',
-                style: GoogleFonts.poppins(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFFEF4444),
+            if (_currentOrder.deliveryType == 'NORMAL' && !['ON_THE_WAY', 'DELIVERED', 'PICKED_UP'].contains(_currentOrder.status))
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF2F2),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  'Estimate',
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFFEF4444),
+                  ),
                 ),
               ),
-            ),
+            if (_currentOrder.deliveryType != 'NORMAL')
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF2F2),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  'Delivery fee',
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFFEF4444),
+                  ),
+                ),
+              ),
             const Spacer(),
             GradientText(
               _currentOrder.displayDeliveryFee.isNotEmpty
@@ -3479,7 +3494,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           children: [
             Expanded(
               child: Text(
-                _currentOrder.deliveryType == 'NORMAL' ? 'Est Total' : 'Total',
+                (_currentOrder.deliveryType == 'NORMAL' && !['ON_THE_WAY', 'DELIVERED', 'PICKED_UP'].contains(_currentOrder.status)) ? 'Est Total' : 'Total',
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -3492,9 +3507,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             Row(
               children: [
                 Text(
-                  _currentOrder.displayTotalAmount.isNotEmpty
-                      ? _currentOrder.displayTotalAmount
-                      : _currentOrder.checkoutTotal.toFormattedPrice(),
+                  (_currentOrder.deliveryType == 'NORMAL' && ['ON_THE_WAY', 'DELIVERED', 'PICKED_UP'].contains(_currentOrder.status))
+                      ? (_currentOrder.checkoutTotal + _currentOrder.deliveryFee).toFormattedPrice()
+                      : _currentOrder.displayTotalAmount.isNotEmpty
+                          ? _currentOrder.displayTotalAmount
+                          : _currentOrder.checkoutTotal.toFormattedPrice(),
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -4654,7 +4671,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           children: [
             Expanded(
               child: Text(
-                _currentOrder.deliveryType == 'NORMAL' ? 'Est Total' : 'Total',
+                (_currentOrder.deliveryType == 'NORMAL' && !['ON_THE_WAY', 'DELIVERED', 'PICKED_UP'].contains(_currentOrder.status)) ? 'Est Total' : 'Total',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   color: (Theme.of(context).brightness == Brightness.dark
@@ -4664,7 +4681,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
             ),
             Text(
-              _currentOrder.displayTotalAmount,
+              (_currentOrder.deliveryType == 'NORMAL' && ['ON_THE_WAY', 'DELIVERED', 'PICKED_UP'].contains(_currentOrder.status))
+                  ? (_currentOrder.checkoutTotal + _currentOrder.deliveryFee).toFormattedPrice()
+                  : _currentOrder.displayTotalAmount,
               style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
