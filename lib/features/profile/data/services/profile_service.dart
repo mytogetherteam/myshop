@@ -154,11 +154,14 @@ class ProfileService {
     required String newPassword,
     required String confirmPassword,
   }) async {
+    if (newPassword != confirmPassword) {
+      return {'success': false, 'message': 'Passwords do not match'};
+    }
+
     try {
       final payload = {
         'currentPassword': currentPassword,
         'newPassword': newPassword,
-        'confirmPassword': confirmPassword,
       };
 
       AppLogger.network('POST $_changePasswordPath');
