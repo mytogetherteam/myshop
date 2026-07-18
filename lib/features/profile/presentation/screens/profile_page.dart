@@ -24,6 +24,7 @@ import 'accepted_payment_page.dart';
 import 'help_support_page.dart';
 import 'feedback_page.dart';
 import 'rider_management_page.dart';
+import 'shop_myday_page.dart';
 
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
@@ -506,6 +507,14 @@ class ProfilePageState extends State<ProfilePage>
               CupertinoPageRoute(builder: (_) => const EditShopProfilePage()),
             ).then((_) => _loadUserInfo()),
           ),
+        _buildMenuOption(
+          icon: Icons.auto_stories_outlined,
+          title: 'MyDay',
+          onTap: () => Navigator.push(
+            context,
+            CupertinoPageRoute(builder: (_) => const ShopMyDayPage()),
+          ),
+        ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.clock,
           title: t?.translate('operating_hours') ?? 'Operating Hours',

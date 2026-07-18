@@ -13,7 +13,10 @@ import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/features/chat/data/models/chat_model.dart';
 import 'package:my_shop/features/chat/data/services/chat_service.dart';
 import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
+import 'package:my_shop/features/chat/data/services/chat_voice_recorder.dart';
+import 'package:my_shop/features/chat/presentation/widgets/audio_message_bubble.dart';
 import 'package:my_shop/features/chat/presentation/widgets/chat_order_summary_sheet.dart';
+import 'package:my_shop/features/chat/presentation/widgets/voice_record_button.dart';
 import 'package:my_shop/features/orders/data/models/order_model.dart';
 import 'package:my_shop/features/orders/data/services/order_service.dart';
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
@@ -27,9 +30,11 @@ class ChatDetailScreen extends StatefulWidget {
   State<ChatDetailScreen> createState() => _ChatDetailScreenState();
 }
 
-class _ChatDetailScreenState extends State<ChatDetailScreen> {
+class _ChatDetailScreenState extends State<ChatDetailScreen>
+    with WidgetsBindingObserver {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final ChatVoiceRecorder _voiceRecorder = ChatVoiceRecorder();
 
   /// Messages held in chronological order (oldest first).
   final List<ChatMessage> _messages = [];
@@ -55,8 +60,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     ChatUnreadController.instance.activeConversationId = widget.conversation.id;
     _scrollController.addListener(_onScroll);
+    _messageController.addListener(() {
+      if (mounted) setState(() {});
+    });
     _chatSub = WebSocketService().chatUpdates.listen(_onChatEvent);
     _orderSub = WebSocketService().orderUpdates.listen(_onOrderEvent);
     _loadMessages();
@@ -64,8 +73,19 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      _voiceRecorder.cancel();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     ChatUnreadController.instance.activeConversationId = null;
+    _voiceRecorder.dispose();
     _messageController.dispose();
     _scrollController.dispose();
     _chatSub?.cancel();
@@ -307,8 +327,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         // realtime events and reads target the right conversation.
         if (_conversationId <= 0 && sent.conversationId != null) {
           _conversationId = sent.conversationId!;
+          ChatUnreadController.instance.activeConversationId = _conversationId;
         }
-        _messages.add(sent);
+        final index = _messages.indexWhere((m) => m.id == sent.id);
+        if (index == -1) {
+          _messages.add(sent);
+        } else {
+          _messages[index] = sent;
+        }
       }
     });
 
@@ -317,6 +343,44 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     } else {
       _messageController.text = text;
       _showSnack('Failed to send message. Please try again.');
+    }
+  }
+
+  Future<void> _sendVoiceMessage(VoiceRecordingResult result) async {
+    if (_isSending || _isOrderClosed) {
+      await ChatVoiceRecorder.deleteFile(result.path);
+      return;
+    }
+
+    setState(() => _isSending = true);
+    final sent = await ChatService.instance.sendVoiceMessage(
+      _orderId,
+      result.path,
+      durationSeconds: result.durationSeconds,
+    );
+    await ChatVoiceRecorder.deleteFile(result.path);
+    if (!mounted) return;
+
+    setState(() {
+      _isSending = false;
+      if (sent != null) {
+        if (_conversationId <= 0 && sent.conversationId != null) {
+          _conversationId = sent.conversationId!;
+          ChatUnreadController.instance.activeConversationId = _conversationId;
+        }
+        final index = _messages.indexWhere((m) => m.id == sent.id);
+        if (index == -1) {
+          _messages.add(sent);
+        } else {
+          _messages[index] = sent;
+        }
+      }
+    });
+
+    if (sent != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    } else {
+      _showSnack('Failed to send voice message. Please try again.');
     }
   }
 
@@ -971,6 +1035,30 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       );
     }
 
+    if (message.isVoice &&
+        message.voiceUrl != null &&
+        message.voiceUrl!.isNotEmpty) {
+      final fg = isMe
+          ? Colors.white
+          : (Theme.of(context).brightness == Brightness.dark
+              ? Colors.white
+              : const Color(0xFF1E293B));
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          AudioMessageBubble(
+            url: message.voiceUrl!,
+            durationSeconds: message.voiceDurationSeconds,
+            isMine: isMe,
+            foreground: fg,
+            background: Colors.transparent,
+          ),
+          SizedBox(height: 4),
+          _buildMetaRow(message, isMe),
+        ],
+      );
+    }
+
     final urlRegExp = RegExp(r'(?:(?:https?|ftp)://)?[\w/\-?=%.]+\.[\w/\-?=%.]+');
     final urls = urlRegExp.allMatches(message.content ?? '').map((m) => m.group(0)!).toList();
     final firstUrl = urls.isNotEmpty ? urls.first : null;
@@ -1103,6 +1191,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   Widget _buildMessageInput(AppLocalizations? t) {
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     final safeBottom = MediaQuery.paddingOf(context).bottom;
+    final hasText = _messageController.text.trim().isNotEmpty;
 
     return Container(
       padding: EdgeInsets.only(
@@ -1121,89 +1210,129 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : Theme.of(context).dividerColor.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: TextField(
-                controller: _messageController,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
-                ),
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => _sendMessage(),
-                maxLines: 4,
-                minLines: 1,
-                decoration: InputDecoration(
-                  hintText:
-                      t?.translate('type_a_message') ?? 'Type a message...',
-                  hintStyle: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 10,
-                  ),
-                  suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: _messageController,
-                    builder: (context, value, child) {
-                      if (value.text.isEmpty) return const SizedBox.shrink();
-                      return IconButton(
-                        icon: Icon(Icons.clear, color: Colors.grey, size: 20),
-                        onPressed: () {
-                          _messageController.clear();
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: 8),
-          GestureDetector(
-            onTap: _sendMessage,
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: _isSending
-                    ? SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
+      child: ValueListenableBuilder<VoiceRecordPhase>(
+        valueListenable: _voiceRecorder.phaseNotifier,
+        builder: (context, phase, _) {
+          final recording = phase != VoiceRecordPhase.idle;
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // Messenger-style: recording replaces the text box entirely.
+              Expanded(
+                child: recording
+                    ? VoiceRecordingStrip(
+                        recorder: _voiceRecorder,
+                        isBusy: _isSending,
+                        onSend: _sendVoiceMessage,
                       )
-                    : PhosphorIcon(
-                        PhosphorIconsFill.paperPlaneTilt,
-                        size: 20,
-                        color: Theme.of(context).cardColor,
+                    : Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).brightness ==
+                                  Brightness.dark
+                              ? const Color(0xFF1E293B)
+                              : Theme.of(context)
+                                  .dividerColor
+                                  .withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: TextField(
+                          controller: _messageController,
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color:
+                                Theme.of(context).textTheme.bodyLarge?.color,
+                          ),
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: (_) => _sendMessage(),
+                          maxLines: 4,
+                          minLines: 1,
+                          decoration: InputDecoration(
+                            hintText: t?.translate('type_a_message') ??
+                                'Type a message...',
+                            hintStyle: GoogleFonts.poppins(
+                              fontSize: 14,
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? const Color(0xFF64748B)
+                                  : const Color(0xFF94A3B8),
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 10,
+                            ),
+                            suffixIcon:
+                                ValueListenableBuilder<TextEditingValue>(
+                              valueListenable: _messageController,
+                              builder: (context, value, child) {
+                                if (value.text.isEmpty) {
+                                  return const SizedBox.shrink();
+                                }
+                                return IconButton(
+                                  icon: Icon(Icons.clear,
+                                      color: Colors.grey, size: 20),
+                                  onPressed: () {
+                                    _messageController.clear();
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                        ),
                       ),
               ),
-            ),
-          ),
-        ],
+              SizedBox(width: 8),
+              if (hasText && !recording)
+                GestureDetector(
+                  onTap: _sendMessage,
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.primaryGradient,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: _isSending
+                          ? SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white),
+                              ),
+                            )
+                          : PhosphorIcon(
+                              PhosphorIconsFill.paperPlaneTilt,
+                              size: 20,
+                              color: Theme.of(context).cardColor,
+                            ),
+                    ),
+                  ),
+                )
+              else
+                VoiceRecordButton(
+                  recorder: _voiceRecorder,
+                  enabled: !_isSending && !_isOrderClosed,
+                  isBusy: _isSending,
+                  onSend: _sendVoiceMessage,
+                  onPermissionDenied: () {
+                    _showSnack(
+                      'Microphone permission is required to send voice messages.',
+                    );
+                  },
+                ),
+            ],
+          );
+        },
       ),
     );
   }

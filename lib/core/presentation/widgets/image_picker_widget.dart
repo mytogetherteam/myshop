@@ -94,6 +94,9 @@ class ImagePickerWidget extends StatefulWidget {
   /// JPEG compression quality (0–100). Default 85.
   final int imageQuality;
 
+  /// Maximum accepted file size after picking/cropping. Default 1 MB.
+  final int maxFileSizeMB;
+
   const ImagePickerWidget({
     super.key,
     this.imageUrl,
@@ -112,6 +115,7 @@ class ImagePickerWidget extends StatefulWidget {
     this.maxWidth = 1920,
     this.maxHeight = 1920,
     this.imageQuality = 85,
+    this.maxFileSizeMB = 1,
   });
 
   @override
@@ -155,11 +159,13 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
             maxWidth: widget.maxWidth,
             maxHeight: widget.maxHeight,
             imageQuality: widget.imageQuality,
+            maxFileSizeMB: widget.maxFileSizeMB,
           )
         : await service.pickFromCamera(
             maxWidth: widget.maxWidth,
             maxHeight: widget.maxHeight,
             imageQuality: widget.imageQuality,
+            maxFileSizeMB: widget.maxFileSizeMB,
           );
 
     if (!mounted) return;
@@ -175,7 +181,11 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
     }
     
     if (result.isTooLarge) {
-      AppDialog.showToast(context, 'Image size must be less than 1MB', isError: true);
+      AppDialog.showToast(
+        context,
+        'Image size must be less than ${widget.maxFileSizeMB}MB',
+        isError: true,
+      );
       return;
     }
 
