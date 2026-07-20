@@ -50,6 +50,13 @@ class WebSocketService {
   Stream<Map<String, dynamic>> get broadcastUpdates =>
       _broadcastUpdateController.stream;
 
+  final StreamController<Map<String, dynamic>> _callUpdateController =
+      StreamController<Map<String, dynamic>>.broadcast();
+
+  /// Incoming call signaling events on `/topic/shop/{shopId}/call`.
+  /// Emits CALL_INCOMING, CALL_OFFER, CALL_ICE, CALL_END events.
+  Stream<Map<String, dynamic>> get callUpdates => _callUpdateController.stream;
+
   bool _isConnecting = false;
   bool _shouldReconnect = true;
   int _reconnectAttempts = 0;
@@ -343,6 +350,27 @@ class WebSocketService {
     );
 
     AppLogger.realtime('[WS] Subscribed to $chatDestination');
+
+    // ──────────────────────────────────────────
+    // Call Signaling Setup
+    // ──────────────────────────────────────────
+    final callDestination = '/topic/shop/$shopId/call';
+    _stompClient?.subscribe(
+      destination: callDestination,
+      headers: {...headers, 'receipt': 'rcpt-shop-call'},
+      callback: (StompFrame frame) {
+        final body = _frameBody(frame);
+        if (body == null) return;
+        try {
+          final Map<String, dynamic> raw = json.decode(body);
+          AppLogger.realtime('[WS] CALL event: ${raw['type']}');
+          _callUpdateController.add(raw);
+        } catch (e) {
+          AppLogger.realtime('[WS] Error parsing call event: $e');
+        }
+      },
+    );
+    AppLogger.realtime('[WS] Subscribed to $callDestination');
   }
 
   /// Re-subscribe when the user switches shops.

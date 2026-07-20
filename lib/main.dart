@@ -12,7 +12,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:my_shop/core/services/background_service.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:my_shop/features/auth/data/services/auth_service.dart';
-import 'package:flutter_jailbreak_detection/flutter_jailbreak_detection.dart';
+import 'dart:io';
 import 'app.dart';
 
 @pragma('vm:entry-point')
@@ -28,6 +28,12 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       await NotificationService().cancelNotification(99999);
     }
     return; // Do not show anything
+  }
+
+  if (type == 'CALL_INCOMING') {
+    // Show a high priority local notification for incoming call
+    await NotificationService().showLocalNotification(message);
+    return;
   }
 
   // Manually show local notification to ensure sound plays even if data-only
@@ -72,9 +78,30 @@ void main() async {
   );
 
   bool isJailbroken = false;
-  if (!kIsWeb) {
+  if (!kIsWeb && Platform.isAndroid) {
     try {
-      isJailbroken = await FlutterJailbreakDetection.jailbroken;
+      // Pure-Dart root detection — no native .so needed.
+      // Checks for common root binaries / Magisk markers.
+      const rootPaths = [
+        '/system/app/Superuser.apk',
+        '/sbin/su',
+        '/system/bin/su',
+        '/system/xbin/su',
+        '/data/local/xbin/su',
+        '/data/local/bin/su',
+        '/system/sd/xbin/su',
+        '/system/bin/failsafe/su',
+        '/data/local/su',
+        '/su/bin/su',
+        '/data/adb/magisk',
+        '/sbin/.magisk',
+      ];
+      for (final path in rootPaths) {
+        if (await File(path).exists()) {
+          isJailbroken = true;
+          break;
+        }
+      }
     } catch (_) {}
   }
 

@@ -13,6 +13,14 @@ allprojects {
         google()
         mavenCentral()
     }
+    // Force ML Kit barcode scanning to 17.3.0+ which ships 16 KB-aligned native .so files.
+    // This fixes the Google Play "does not support 16 KB memory page sizes" error
+    // caused by libbarhopper_v3.so from older ML Kit versions.
+    configurations.all {
+        resolutionStrategy {
+            force("com.google.mlkit:barcode-scanning:17.3.0")
+        }
+    }
 }
 
 rootProject.layout.buildDirectory.set(rootProject.layout.projectDirectory.dir("../build"))

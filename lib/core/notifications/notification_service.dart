@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:my_shop/app.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
+import '../../features/call/presentation/incoming_call_screen.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
 import 'package:my_shop/features/notifications/data/repositories/notification_repository.dart';
@@ -111,6 +112,20 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(normalChannel);
 
+    // Create call channel for Android
+    const AndroidNotificationChannel callChannel = AndroidNotificationChannel(
+      'shop_call_channel_v1',
+      'Incoming Calls',
+      description: 'This channel is used for incoming calls.',
+      importance: Importance.max,
+      playSound: true,
+      sound: RawResourceAndroidNotificationSound('ringtone'),
+      enableVibration: true,
+    );
+    await _localNotifications
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(callChannel);
+
     // Handle foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final String? type = message.data['type'];
@@ -156,6 +171,12 @@ class NotificationService {
             return;
           }
         }
+      }
+
+      if (type == 'CALL_INCOMING') {
+        // Ignored in foreground because STOMP WebSocket will handle it 
+        // and trigger the IncomingCallScreen directly.
+        return;
       }
 
       if (message.notification != null) {
@@ -399,10 +420,41 @@ class NotificationService {
           _processOrderNotification(orderIdStr);
         }
       }
+      }
+    } else if (type == 'CALL_INCOMING') {
+      final String? callId = message.data['callId']?.toString();
+      final String? callerName = message.data['callerName']?.toString();
+      if (callId != null && callerName != null) {
+        // Wait until navigator context is available
+        BuildContext? context = App.navigatorKey.currentContext;
+        if (context == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _showIncomingCallScreen(callId, callerName);
+          });
+        } else {
+          _showIncomingCallScreen(callId, callerName);
+        }
+      }
     } else {
       // Default: Navigate to notifications screen
       App.navigatorKey.currentState?.pushNamed('/notifications');
     }
+  }
+
+  void _showIncomingCallScreen(String callId, String callerName) {
+    final context = App.navigatorKey.currentContext;
+    if (context == null) return;
+    
+    // Fallback if app was launched from terminated via notification
+    // It will push the IncomingCallScreen.
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => IncomingCallScreen(
+          callId: callId,
+          callerName: callerName,
+        ),
+      ),
+    );
   }
 
   void _processOrderNotification(String orderIdStr) async {

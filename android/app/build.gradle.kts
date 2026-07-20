@@ -57,6 +57,19 @@ android {
         }
     }
 
+    // Fix for Google Play 16 KB memory page sizes requirement (AGP 8.1+)
+    // useLegacyPackaging=true keeps .so files UNCOMPRESSED in the bundle,
+    // which is required when android:extractNativeLibs="false" in the manifest.
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+            // Exclude the armeabi-v7a (32-bit ARM) version of libbarhopper_v3.so
+            // from Google ML Kit — it is not 16 KB page-aligned.
+            // All Android devices since 2015 use arm64-v8a; armeabi-v7a is obsolete.
+            excludes += setOf("lib/armeabi-v7a/libbarhopper_v3.so")
+        }
+    }
+
     bundle {
         language {
             enableSplit = true
@@ -75,5 +88,5 @@ flutter {
 }
 
 dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

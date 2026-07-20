@@ -57,6 +57,20 @@ Future<void> initializeBackgroundService() async {
         vibrationPattern: Int64List.fromList([0, 1000, 1000]),
       ));
 
+  // Call channel
+  await plugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(const AndroidNotificationChannel(
+        'shop_call_channel_v1',
+        'Incoming Calls',
+        description: 'This channel is used for incoming calls.',
+        importance: Importance.max,
+        sound: RawResourceAndroidNotificationSound('ringtone'),
+        playSound: true,
+        enableVibration: true,
+      ));
+
   await service.configure(
     androidConfiguration: AndroidConfiguration(
       onStart: onStart,
