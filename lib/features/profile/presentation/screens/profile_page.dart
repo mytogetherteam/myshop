@@ -25,6 +25,7 @@ import 'help_support_page.dart';
 import 'feedback_page.dart';
 import 'rider_management_page.dart';
 import 'shop_myday_page.dart';
+import 'package:my_shop/features/job_posts/presentation/screens/job_posts_page.dart';
 
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
@@ -538,6 +539,14 @@ class ProfilePageState extends State<ProfilePage>
           onTap: () => Navigator.push(
             context,
             CupertinoPageRoute(builder: (_) => const ReviewsPage()),
+          ),
+        ),
+        _buildMenuOption(
+          icon: PhosphorIconsRegular.briefcase,
+          title: t?.translate('job_posts') ?? 'Job Posts',
+          onTap: () => Navigator.push(
+            context,
+            CupertinoPageRoute(builder: (_) => const JobPostsPage()),
           ),
         ),
         _buildMenuOption(
