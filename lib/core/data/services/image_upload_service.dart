@@ -63,6 +63,7 @@ class ImageUploadService {
     double? maxHeight = 1920,
     int imageQuality = 85,
     bool crop = true,
+    int maxFileSizeMB = 1,
   }) async {
     final granted = await _requestGalleryPermission();
     if (!granted.isGranted) {
@@ -78,6 +79,7 @@ class ImageUploadService {
       maxHeight: maxHeight,
       imageQuality: imageQuality,
       crop: crop,
+      maxFileSizeMB: maxFileSizeMB,
     );
   }
 
@@ -90,6 +92,7 @@ class ImageUploadService {
     double? maxHeight = 1920,
     int imageQuality = 85,
     bool crop = true,
+    int maxFileSizeMB = 1,
   }) async {
     final granted = await _requestCameraPermission();
     if (!granted.isGranted) {
@@ -105,6 +108,7 @@ class ImageUploadService {
       maxHeight: maxHeight,
       imageQuality: imageQuality,
       crop: crop,
+      maxFileSizeMB: maxFileSizeMB,
     );
   }
 
@@ -143,6 +147,7 @@ class ImageUploadService {
     double? maxHeight,
     int imageQuality = 85,
     bool crop = true,
+    int maxFileSizeMB = 1,
   }) async {
     try {
       final xFile = await _picker.pickImage(
@@ -163,7 +168,7 @@ class ImageUploadService {
         resultFile = cropped;
       }
 
-      final isValid = await isSizeValid(resultFile);
+      final isValid = await isSizeValid(resultFile, maxMB: maxFileSizeMB);
       if (!isValid) {
         return const ImagePickResult(isTooLarge: true);
       }
