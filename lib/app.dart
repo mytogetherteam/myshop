@@ -5,6 +5,7 @@ import 'features/notifications/presentation/screens/notification_permission_scre
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/localization/app_localizations.dart';
 import 'core/presentation/widgets/connectivity_wrapper.dart';
+import 'core/splash/branded_splash.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_service.dart';
 import 'package:upgrader/upgrader.dart';
@@ -91,7 +92,9 @@ class _AppState extends State<App> with WidgetsBindingObserver {
               ),
             );
           },
-          home: const AuthWrapper(),
+          home: const BrandedSplashGate(
+            child: AuthWrapper(),
+          ),
           routes: {
             '/home': (context) => const AuthWrapper(),
             '/login': (context) => const LoginPage(),
