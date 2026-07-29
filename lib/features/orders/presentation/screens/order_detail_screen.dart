@@ -2093,8 +2093,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                       _buildPaymentSummary(),
                                       SizedBox(height: 32),
 
-                                      // Calculate delivery fee box (hidden for DELIVERED & CANCELLED)
-                                      if (_currentOrder.status != 'CANCELED' &&
+                                      // Calculate delivery fee box (delivery only; hidden for pickup / DELIVERED / CANCELLED)
+                                      if (!_currentOrder.isPickupFulfillment &&
+                                          _currentOrder.status != 'CANCELED' &&
                                           _currentOrder.status !=
                                               'DELIVERED') ...[
                                         _buildDeliveryCalculator(),
