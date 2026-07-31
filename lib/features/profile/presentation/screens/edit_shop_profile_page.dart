@@ -18,6 +18,8 @@ import 'package:my_shop/core/data/models/master_data_model.dart';
 import 'package:my_shop/core/data/services/master_data_service.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:my_shop/core/utils/app_colors.dart';
 import '../widgets/image_action_sheet.dart';
 import '../widgets/logo_picker_sheet.dart';
 import '../widgets/shop_profile_image_header.dart';
@@ -44,6 +46,7 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   ShopProfileModel? _currentProfile;
 
   final _scrollController = ScrollController();
+  bool _isScrolled = false;
 
   // GlobalKeys for scroll-to-error
   final _nameKey = GlobalKey();
@@ -250,6 +253,15 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
   @override
   void initState() {
     super.initState();
+    
+    _scrollController.addListener(() {
+      if (!mounted) return;
+      final scrolled = _scrollController.offset > 80;
+      if (scrolled != _isScrolled) {
+        setState(() => _isScrolled = scrolled);
+      }
+    });
+
     _currentProfile = widget.shopProfile;
     _initializeFields(_currentProfile);
 
@@ -734,12 +746,75 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
         if (should && context.mounted) Navigator.pop(context);
       },
       child: Scaffold(
-        
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF0B1120) // Deep background for dark mode
+            : const Color(0xFFF1F5F9), // Subtle grey for light mode
         extendBodyBehindAppBar: true,
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
+          backgroundColor: _isScrolled
+              ? (Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFF0B1120)
+                  : Colors.white)
+              : Colors.transparent,
+          elevation: _isScrolled ? 1 : 0,
+          shadowColor: Colors.black.withValues(alpha: 0.1),
           scrolledUnderElevation: 0,
+          title: AnimatedOpacity(
+            opacity: _isScrolled ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 200),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_currentProfile?.logoUrl != null && _currentProfile!.logoUrl!.isNotEmpty)
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.2), width: 1.5),
+                    ),
+                    child: ClipOval(
+                      child: CachedNetworkImage(
+                        imageUrl: _currentProfile!.logoUrl!,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => const SizedBox(),
+                        errorWidget: (context, url, error) => const SizedBox(),
+                      ),
+                    ),
+                  )
+                else
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [AppColors.primary.withValues(alpha: 0.1), const Color(0xFFFB923C).withValues(alpha: 0.1)],
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        _currentProfile?.nameEn?.isNotEmpty == true ? _currentProfile!.nameEn![0].toUpperCase() : 'S',
+                        style: GoogleFonts.poppins(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                    ),
+                  ),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    _nameEnCtrl.text.isNotEmpty ? _nameEnCtrl.text : (_currentProfile?.nameEn ?? 'Shop Name'),
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
           leading: Padding(
             padding: const EdgeInsets.all(8),
             child: GestureDetector(
@@ -747,9 +822,10 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
                 final should = await _onWillPop();
                 if (should && context.mounted) Navigator.pop(context);
               },
-              child: Container(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
+                  color: _isScrolled ? Colors.transparent : Theme.of(context).cardColor,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -779,164 +855,167 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
               onPickLogo: _pickLogo,
             ),
 
-            SizedBox(height: 20),
-
-            FormSection(
-              key: _nameKey,
-              label: t?.translate('shop_name_label') ?? 'Shop Name',
-              child: LanguageTextField(
-                selectedLang: _nameLang,
-                onLangChanged: (l) => setState(() => _nameLang = l),
-                controller: _nameLang == 'EN'
-                    ? _nameEnCtrl
-                    : _nameLang == 'MM'
-                    ? _nameMmCtrl
-                    : _nameThCtrl,
-                hint: t?.translate('enter_shop_name_hint') ?? 'Enter shop name',
-                enabled: true,
-                maxLength: 100,
-                onChanged: _markChanged,
+            _buildSectionHeader(t?.translate('basic_info') ?? 'Basic Information'),
+            _buildFormCard([
+              FormSection(
+                key: _nameKey,
+                label: t?.translate('shop_name_label') ?? 'Shop Name',
+                child: LanguageTextField(
+                  selectedLang: _nameLang,
+                  onLangChanged: (l) => setState(() => _nameLang = l),
+                  controller: _nameLang == 'EN'
+                      ? _nameEnCtrl
+                      : _nameLang == 'MM'
+                      ? _nameMmCtrl
+                      : _nameThCtrl,
+                  hint: t?.translate('enter_shop_name_hint') ?? 'Enter shop name',
+                  enabled: true,
+                  maxLength: 100,
+                  onChanged: _markChanged,
+                ),
               ),
-            ),
-            SizedBox(height: 32),
-            FormSection(
-              key: _categoryKey,
-              label: t?.translate('category') ?? 'Category',
-              required: true,
-              child: _buildDropdown(
-                t?.translate('select_category') ?? 'Select Category',
-                _selectedCategory,
-                _categories,
-                t?.translate('choose_category') ?? 'Choose Category',
-                (v) => setState(() {
-                  _selectedCategory = v;
-                  _selectedSubcategory = null;
-                  _subcategories = v?.subCategories ?? [];
+              const SizedBox(height: 24),
+              FormSection(
+                label: t?.translate('description') ?? 'Description',
+                child: LanguageTextField(
+                  selectedLang: _descLang,
+                  onLangChanged: (l) => setState(() => _descLang = l),
+                  controller: _descLang == 'EN'
+                      ? _descEnCtrl
+                      : _descLang == 'MM'
+                      ? _descMmCtrl
+                      : _descThCtrl,
+                  hint: t?.translate('enter_description_hint') ?? 'Enter Description',
+                  maxLines: 3,
+                  maxLength: 500,
+                  onChanged: _markChanged,
+                ),
+              ),
+            ]),
+
+            _buildSectionHeader(t?.translate('classification') ?? 'Classification'),
+            _buildFormCard([
+              FormSection(
+                key: _categoryKey,
+                label: t?.translate('category') ?? 'Category',
+                required: true,
+                child: _buildDropdown(
+                  t?.translate('select_category') ?? 'Select Category',
+                  _selectedCategory,
+                  _categories,
+                  t?.translate('choose_category') ?? 'Choose Category',
+                  (v) => setState(() {
+                    _selectedCategory = v;
+                    _selectedSubcategory = null;
+                    _subcategories = v?.subCategories ?? [];
+                    _markChanged();
+                  }),
+                ),
+              ),
+              const SizedBox(height: 24),
+              FormSection(
+                key: _subCategoryKey,
+                label: t?.translate('sub_category') ?? 'SubCategory',
+                required: true,
+                child: _buildDropdown(
+                  t?.translate('select_subcategory') ?? 'Select SubCategory',
+                  _selectedSubcategory,
+                  _subcategories,
+                  t?.translate('choose_subcategory') ?? 'Choose SubCategory',
+                  (v) => setState(() {
+                    _selectedSubcategory = v;
+                    _markChanged();
+                  }),
+                ),
+              ),
+              const SizedBox(height: 24),
+              CuisineTypesSection(
+                key: _cuisineTypeKey,
+                cuisineTypes: _cuisineTypes,
+                initialSelectedCuisineTypes: _selectedCuisineTypes,
+                onChanged: (selected) {
+                  _selectedCuisineTypes = selected;
+                  _markChanged();
+                },
+              ),
+            ]),
+
+            _buildSectionHeader(t?.translate('contact_location') ?? 'Contact & Location'),
+            _buildFormCard([
+              PhoneNumbersSection(
+                key: _phoneKey,
+                phoneControllers: _phoneControllers,
+                onMarkChanged: _markChanged,
+              ),
+              const SizedBox(height: 24),
+              FormSection(
+                label: 'Email',
+                child: _buildTextField(
+                  _emailCtrl,
+                  'shop@example.com',
+                  icon: PhosphorIconsRegular.envelope,
+                  enabled: false,
+                  maxLength: 100,
+                ),
+              ),
+              const SizedBox(height: 24),
+              ShopLocationSection(
+                key: _addressKey,
+                addressLang: _addressLang,
+                onAddressLangChanged: (l) => setState(() => _addressLang = l),
+                addressEnCtrl: _addressEnCtrl,
+                addressMmCtrl: _addressMmCtrl,
+                addressThCtrl: _addressThCtrl,
+                selectedCity: _selectedCity,
+                cities: _cities,
+                selectedDistrict: _selectedDistrict,
+                districts: _districts,
+                onCityChanged: (v) => setState(() {
+                  _selectedCity = v;
+                  if (v != null) {
+                    _cityCtrl.text = v.nameEn ?? '';
+                    _selectedDistrict = null;
+                    _fetchDistricts(v.id);
+                  }
                   _markChanged();
                 }),
-              ),
-            ),
-            SizedBox(height: 32),
-            FormSection(
-              key: _subCategoryKey,
-              label: t?.translate('sub_category') ?? 'SubCategory',
-              required: true,
-              child: _buildDropdown(
-                t?.translate('select_subcategory') ?? 'Select SubCategory',
-                _selectedSubcategory,
-                _subcategories,
-                t?.translate('choose_subcategory') ?? 'Choose SubCategory',
-                (v) => setState(() {
-                  _selectedSubcategory = v;
+                onDistrictChanged: (v) => setState(() {
+                  _selectedDistrict = v;
+                  if (v != null) {
+                    _districtCtrl.text = v.nameEn ?? '';
+                  }
                   _markChanged();
                 }),
+                onMarkChanged: _markChanged,
               ),
-            ),
-            SizedBox(height: 32),
-            CuisineTypesSection(
-              key: _cuisineTypeKey,
-              cuisineTypes: _cuisineTypes,
-              initialSelectedCuisineTypes: _selectedCuisineTypes,
-              onChanged: (selected) {
-                _selectedCuisineTypes = selected;
-                _markChanged();
-              },
-            ),
-            SizedBox(height: 32),
+            ]),
 
-            FormSection(
-              label: t?.translate('description') ?? 'Description',
-              child: LanguageTextField(
-                selectedLang: _descLang,
-                onLangChanged: (l) => setState(() => _descLang = l),
-                controller: _descLang == 'EN'
-                    ? _descEnCtrl
-                    : _descLang == 'MM'
-                    ? _descMmCtrl
-                    : _descThCtrl,
-                hint: t?.translate('enter_description_hint') ?? 'Enter Description',
-                maxLines: 3,
-                maxLength: 500,
-                onChanged: _markChanged,
+            _buildSectionHeader(t?.translate('shop_features') ?? 'Shop Features'),
+            _buildFormCard([
+              AmenitiesAndDietarySection(
+                hasParking: _hasParking,
+                hasWifi: _hasWifi,
+                deliveryEnabled: _deliveryEnabled,
+                isHalal: _isHalal,
+                isVegetarian: _isVegetarian,
+                onChanged: (parking, wifi, delivery, halal, vegetarian) {
+                  _hasParking = parking;
+                  _hasWifi = wifi;
+                  _deliveryEnabled = delivery;
+                  _isHalal = halal;
+                  _isVegetarian = vegetarian;
+                  _markChanged();
+                },
               ),
-            ),
-            SizedBox(height: 32),
-
-            PhoneNumbersSection(
-              key: _phoneKey,
-              phoneControllers: _phoneControllers,
-              onMarkChanged: _markChanged,
-            ),
-            SizedBox(height: 32),
-
-            FormSection(
-              label: 'Email',
-              child: _buildTextField(
-                _emailCtrl,
-                'shop@example.com',
-                icon: PhosphorIconsRegular.envelope,
-                enabled: false,
-                maxLength: 100,
+              const SizedBox(height: 24),
+              PriceRangeSection(
+                initialPriceRange: _priceRange,
+                onChanged: (v) {
+                  _priceRange = v;
+                  _markChanged();
+                },
               ),
-            ),
-            SizedBox(height: 32),
-
-            ShopLocationSection(
-              key: _addressKey,
-              addressLang: _addressLang,
-              onAddressLangChanged: (l) => setState(() => _addressLang = l),
-              addressEnCtrl: _addressEnCtrl,
-              addressMmCtrl: _addressMmCtrl,
-              addressThCtrl: _addressThCtrl,
-              selectedCity: _selectedCity,
-              cities: _cities,
-              selectedDistrict: _selectedDistrict,
-              districts: _districts,
-              onCityChanged: (v) => setState(() {
-                _selectedCity = v;
-                if (v != null) {
-                  _cityCtrl.text = v.nameEn ?? '';
-                  _selectedDistrict = null;
-                  _fetchDistricts(v.id);
-                }
-                _markChanged();
-              }),
-              onDistrictChanged: (v) => setState(() {
-                _selectedDistrict = v;
-                if (v != null) {
-                  _districtCtrl.text = v.nameEn ?? '';
-                }
-                _markChanged();
-              }),
-              onMarkChanged: _markChanged,
-            ),
-            SizedBox(height: 32),
-
-             AmenitiesAndDietarySection(
-               hasParking: _hasParking,
-               hasWifi: _hasWifi,
-               deliveryEnabled: _deliveryEnabled,
-               isHalal: _isHalal,
-               isVegetarian: _isVegetarian,
-               onChanged: (parking, wifi, delivery, halal, vegetarian) {
-                 _hasParking = parking;
-                 _hasWifi = wifi;
-                 _deliveryEnabled = delivery;
-                 _isHalal = halal;
-                 _isVegetarian = vegetarian;
-                 _markChanged();
-               },
-             ),
-             SizedBox(height: 32),
-
-             PriceRangeSection(
-              initialPriceRange: _priceRange,
-              onChanged: (v) {
-                _priceRange = v;
-                _markChanged();
-              },
-            ),
-            SizedBox(height: 32),
+            ]),
           ],
         ),
         bottomNavigationBar: Container(
@@ -963,6 +1042,48 @@ class _EditShopProfilePageState extends State<EditShopProfilePage> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+      child: Text(
+        title.toUpperCase(),
+        style: GoogleFonts.poppins(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
+          color: Theme.of(context).textTheme.bodySmall?.color,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFormCard(List<Widget> children) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.transparent
+                : Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
       ),
     );
   }

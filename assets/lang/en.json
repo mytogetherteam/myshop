@@ -642,5 +642,9 @@
   "job_validation_contact": "Please enter a contact phone number.",
   "job_validation_phone": "Phone number must be 9 to 11 digits.",
   "job_validation_link": "Apply link must be a valid URL (https://...).",
-  "save_changes": "Save Changes"
+  "save_changes": "Save Changes",
+  "basic_info": "Basic Information",
+  "classification": "Classification",
+  "contact_location": "Contact & Location",
+  "shop_features": "Shop Features"
 }

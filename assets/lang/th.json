@@ -634,5 +634,9 @@
   "job_validation_contact": "กรุณากรอกเบอร์ติดต่อ",
   "job_validation_phone": "เบอร์โทรต้องมี 9 ถึง 11 หลัก",
   "job_validation_link": "ลิงก์สมัครต้องเป็น URL ที่ถูกต้อง (https://...)",
-  "save_changes": "บันทึกการเปลี่ยนแปลง"
+  "save_changes": "บันทึกการเปลี่ยนแปลง",
+  "basic_info": "ข้อมูลพื้นฐาน",
+  "classification": "การจัดหมวดหมู่",
+  "contact_location": "ติดต่อและสถานที่",
+  "shop_features": "คุณสมบัติของร้านค้า"
 }

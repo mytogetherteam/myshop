@@ -26,6 +26,7 @@ class ShopCallSession {
 
   RTCPeerConnection? _peerConnection;
   MediaStream? _localStream;
+  MediaStream? _remoteStream;
   StreamSubscription<Map<String, dynamic>>? _callSub;
 
   // Notifiers for UI
@@ -150,6 +151,13 @@ class ShopCallSession {
       await _peerConnection!.addTrack(track, _localStream!);
     }
 
+    // Handle remote audio stream
+    _peerConnection!.onTrack = (RTCTrackEvent event) {
+      if (event.track.kind == 'audio' && event.streams.isNotEmpty) {
+        _remoteStream = event.streams.first;
+      }
+    };
+
     // ICE candidates
     _peerConnection!.onIceCandidate = (RTCIceCandidate candidate) async {
       if (_currentCallId == null) return;
@@ -191,6 +199,11 @@ class ShopCallSession {
     _localStream?.getTracks().forEach((t) => t.stop());
     _localStream?.dispose();
     _localStream = null;
+
+    _remoteStream?.getTracks().forEach((t) => t.stop());
+    _remoteStream?.dispose();
+    _remoteStream = null;
+
     _currentCallId = null;
     _callerName = null;
     isMuted.value = false;

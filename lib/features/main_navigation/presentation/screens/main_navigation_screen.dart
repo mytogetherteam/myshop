@@ -29,6 +29,9 @@ import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/data/services/storage_service.dart';
 import 'package:my_shop/features/orders/data/services/order_service.dart';
 import 'package:my_shop/core/presentation/widgets/phone_setup_guide_sheet.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:my_shop/features/profile/data/services/profile_service.dart';
+import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
 
 enum MainTab { order, menu, report, chat, profile }
 
@@ -118,19 +121,23 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     });
   }
 
+  ShopProfileModel? _shopProfile;
+
   Future<void> _loadUserInfo() async {
     final userInfo = await StorageService.instance.getUserInfo();
-    if (mounted && userInfo != null) {
-      if (userInfo.role == 'OperationAdmin') {
-        setState(() {
+    final profile = await ProfileService().getShopProfile();
+    if (mounted) {
+      setState(() {
+        _shopProfile = profile;
+        if (userInfo != null && userInfo.role == 'OperationAdmin') {
           _isOperationAdmin = true;
           // If we somehow were on an out-of-bounds index, reset to 0
           if (_currentIndex >= _activeTabs.length) {
             _currentIndex = 0;
             _visited[_currentIndex] = true;
           }
-        });
-      }
+        }
+      });
     }
   }
 
@@ -673,6 +680,137 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     );
   }
 
+  Widget _buildProfileImageItem(String? logoUrl, String label, {required bool isActive}) {
+    final inactiveColor = Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.3) ?? Colors.grey;
+    final bgColor = Theme.of(context).bottomNavigationBarTheme.backgroundColor
+        ?? Theme.of(context).cardColor;
+
+    // Build the avatar image separately (no color tinting)
+    Widget avatarInner = ClipOval(
+      child: (logoUrl != null && logoUrl.isNotEmpty)
+          ? CachedNetworkImage(
+              imageUrl: logoUrl,
+              width: 24,
+              height: 24,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => _buildInitialPlaceholder(isActive),
+              errorWidget: (context, url, error) => _buildInitialPlaceholder(isActive),
+            )
+          : SizedBox(width: 24, height: 24, child: _buildInitialPlaceholder(isActive)),
+    );
+
+    Widget ring;
+    if (isActive) {
+      // Stack: gradient filled outer circle → opaque background inner circle → avatar
+      // This creates a gradient ring WITHOUT coloring the image
+      ring = SizedBox(
+        width: 34,
+        height: 34,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // 1. Gradient outer circle (the ring)
+            Container(
+              width: 34,
+              height: 34,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [AppColors.primary, Color(0xFFFB923C)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+            ),
+            // 2. Solid background inner circle (cuts out the center, leaving only the ring)
+            Container(
+              width: 29,
+              height: 29,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: bgColor,
+              ),
+            ),
+            // 3. Avatar image (sits on top, unaffected by gradient)
+            SizedBox(width: 25, height: 25, child: avatarInner),
+          ],
+        ),
+      );
+    } else {
+      ring = SizedBox(
+        width: 34,
+        height: 34,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: inactiveColor, width: 1.5),
+              ),
+            ),
+            SizedBox(width: 25, height: 25, child: avatarInner),
+          ],
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ring,
+          const SizedBox(height: 2),
+          if (isActive)
+            ShaderMask(
+              blendMode: BlendMode.srcIn,
+              shaderCallback: (bounds) => const LinearGradient(
+                colors: [AppColors.primary, Color(0xFFFB923C)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ).createShader(bounds),
+              child: Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            )
+          else
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Theme.of(context).textTheme.bodySmall?.color,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildInitialPlaceholder(bool isActive) {
+    return Center(
+      child: Text(
+        _shopProfile?.displayName.isNotEmpty == true
+            ? _shopProfile!.displayName[0].toUpperCase()
+            : 'S',
+        style: GoogleFonts.poppins(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: isActive ? AppColors.primary : Theme.of(context).textTheme.bodySmall?.color,
+        ),
+      ),
+    );
+  }
+
 
 
   /// Overlays the live unread-chat count on top of the Chat tab icon.
@@ -755,8 +893,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         );
       case MainTab.profile:
         return BottomNavigationBarItem(
-          icon: _buildInactiveItem(PhosphorIconsRegular.storefront, title),
-          activeIcon: _buildGradientItem(PhosphorIconsFill.storefront, title),
+          icon: _buildProfileImageItem(_shopProfile?.logoUrl, title, isActive: false),
+          activeIcon: _buildProfileImageItem(_shopProfile?.logoUrl, title, isActive: true),
           label: title,
         );
     }

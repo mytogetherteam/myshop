@@ -1,13 +1,13 @@
 import 'package:my_shop/core/utils/file_url_util.dart';
 
-class ShopMyDay {
+class ShopStory {
   final int id;
   final int shopId;
   final String imageUrl;
   final DateTime createdAt;
   final DateTime expiresAt;
 
-  const ShopMyDay({
+  const ShopStory({
     required this.id,
     required this.shopId,
     required this.imageUrl,
@@ -22,8 +22,8 @@ class ShopMyDay {
     return remaining.isNegative ? Duration.zero : remaining;
   }
 
-  factory ShopMyDay.fromJson(Map<String, dynamic> json) {
-    return ShopMyDay(
+  factory ShopStory.fromJson(Map<String, dynamic> json) {
+    return ShopStory(
       id: (json['id'] as num).toInt(),
       shopId: (json['shopId'] as num).toInt(),
       imageUrl: FileUrlUtil.resolve(json['imageUrl']) ?? '',

@@ -76,6 +76,7 @@ dependencies:
 
   # In-app WebRTC calling
   flutter_webrtc: ^1.5.2
+  record: ^7.1.1
 
 dev_dependencies:
   flutter_test:

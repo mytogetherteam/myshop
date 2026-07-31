@@ -24,7 +24,7 @@ import 'accepted_payment_page.dart';
 import 'help_support_page.dart';
 import 'feedback_page.dart';
 import 'rider_management_page.dart';
-import 'shop_myday_page.dart';
+import 'shop_story_page.dart';
 import 'package:my_shop/features/job_posts/presentation/screens/job_posts_page.dart';
 
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
@@ -210,8 +210,6 @@ class ProfilePageState extends State<ProfilePage>
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
@@ -282,6 +280,7 @@ class ProfilePageState extends State<ProfilePage>
               SizedBox(height: 20),
               _buildProfileHeader(),
               SizedBox(height: 24),
+              _buildQuickActionsSection(),
               _buildShopSection(),
               SizedBox(height: 8),
               _buildMenuItems(),
@@ -359,98 +358,134 @@ class ProfilePageState extends State<ProfilePage>
   Widget _buildProfileHeader() {
     final t = AppLocalizations.of(context);
     final isOpAdmin = _userInfo?.role == 'OperationAdmin';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     
-    return InkWell(
-      onTap: isOpAdmin ? null : () {
-        HapticFeedback.lightImpact();
-        Navigator.push(
-          context,
-          CupertinoPageRoute(builder: (_) => const EditShopProfilePage()),
-        ).then((_) => _loadUserInfo());
-      },
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
-          border: Border.symmetric(
-            horizontal: BorderSide(color: Theme.of(context).dividerColor, width: 1),
-          ),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.04),
+              blurRadius: 16,
+              spreadRadius: 0,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
-      child: Row(
-        children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  AppColors.primary.withValues(alpha: 0.1),
-                  const Color(0xFFFB923C).withValues(alpha: 0.1),
-                ],
-              ),
-              shape: BoxShape.circle,
-            ),
-            child: ClipOval(
-              child: (_shopProfile?.logoUrl != null && _shopProfile!.logoUrl!.isNotEmpty)
-                  ? CachedNetworkImage(
-                      imageUrl: _shopProfile!.logoUrl!,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => const SizedBox(),
-                      errorWidget: (context, url, error) => _buildInitialPlaceholder(),
-                    )
-                  : _buildInitialPlaceholder(),
-            ),
-          ),
-          SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _shopProfile?.displayName.isNotEmpty == true
-                      ? _shopProfile!.displayName
-                      : (t?.translate('shop_name') ?? 'Shop Name'),
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                  ),
-                ),
-                Text(
-                  _userInfo?.email ?? 'admin@shop.com',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: Theme.of(context).textTheme.bodySmall?.color,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    _userInfo?.role ?? t?.translate('admin') ?? 'ADMIN',
-                    style: GoogleFonts.poppins(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).textTheme.bodyMedium?.color,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: isOpAdmin ? null : () {
+              HapticFeedback.lightImpact();
+              Navigator.push(
+                context,
+                CupertinoPageRoute(builder: (_) => const EditShopProfilePage()),
+              ).then((_) => _loadUserInfo());
+            },
+            borderRadius: BorderRadius.circular(24),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Container(
+                    width: 76,
+                    height: 76,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.2),
+                        width: 2,
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(3),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              AppColors.primary.withValues(alpha: 0.1),
+                              const Color(0xFFFB923C).withValues(alpha: 0.1),
+                            ],
+                          ),
+                          shape: BoxShape.circle,
+                        ),
+                        child: ClipOval(
+                          child: (_shopProfile?.logoUrl != null && _shopProfile!.logoUrl!.isNotEmpty)
+                              ? CachedNetworkImage(
+                                  imageUrl: _shopProfile!.logoUrl!,
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, url) => const SizedBox(),
+                                  errorWidget: (context, url, error) => _buildInitialPlaceholder(),
+                                )
+                              : _buildInitialPlaceholder(),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _shopProfile?.displayName.isNotEmpty == true
+                              ? _shopProfile!.displayName
+                              : (t?.translate('shop_name') ?? 'Shop Name'),
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _userInfo?.email ?? 'admin@shop.com',
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Theme.of(context).textTheme.bodySmall?.color,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            _userInfo?.role ?? t?.translate('admin') ?? 'ADMIN',
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (!isOpAdmin)
+                    Icon(
+                      PhosphorIconsRegular.caretRight,
+                      size: 20,
+                      color: Theme.of(context).textTheme.bodySmall?.color,
+                    ),
+                ],
+              ),
             ),
           ),
-        ],
+        ),
       ),
-    ),
     );
   }
 
@@ -467,6 +502,169 @@ class ProfilePageState extends State<ProfilePage>
             fontSize: 28,
             fontWeight: FontWeight.w700,
             color: Theme.of(context).cardColor,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActionsSection() {
+    final t = AppLocalizations.of(context);
+    
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionCard(
+                  icon: PhosphorIconsFill.shoppingBag,
+                  title: 'Delivery',
+                  subtitle: _deliveryEnabled ? 'Online' : 'Offline',
+                  trailing: _isTogglingDelivery
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2.5),
+                        )
+                      : Transform.scale(
+                          scale: 0.85,
+                          child: PrimaryGradientSwitch(
+                            value: _deliveryEnabled,
+                            onChanged: _toggleDelivery,
+                          ),
+                        ),
+                  onTap: () => _toggleDelivery(!_deliveryEnabled),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildActionCard(
+                  icon: PhosphorIconsFill.clock,
+                  title: t?.translate('operating_hours') ?? 'Hours',
+                  subtitle: 'Manage times',
+                  onTap: () => Navigator.push(
+                    context,
+                    CupertinoPageRoute(builder: (_) => const OperatingHoursPage()),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildActionCard(
+                  icon: Icons.auto_stories_rounded,
+                  title: 'Story',
+                  subtitle: 'Share updates',
+                  onTap: () => Navigator.push(
+                    context,
+                    CupertinoPageRoute(builder: (_) => const ShopStoryPage()),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildActionCard(
+                  icon: PhosphorIconsFill.briefcase,
+                  title: t?.translate('job_posts') ?? 'Job Posts',
+                  subtitle: 'Find staffs',
+                  onTap: () => Navigator.push(
+                    context,
+                    CupertinoPageRoute(builder: (_) => const JobPostsPage()),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    Widget? trailing,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.04),
+            blurRadius: 16,
+            spreadRadius: 0,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onTap();
+          },
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ShaderMask(
+                        shaderCallback: (bounds) => AppColors.primaryGradient.createShader(bounds),
+                        child: Icon(
+                          icon,
+                          size: 26,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    if (trailing != null) trailing,
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).textTheme.bodySmall?.color,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -492,38 +690,6 @@ class ProfilePageState extends State<ProfilePage>
             ),
           ),
         ),
-        _buildToggleOption(
-          icon: PhosphorIconsRegular.shoppingBag,
-          title: t?.translate('delivery_enabled') ?? 'Delivery / Pick up Enabled',
-          value: _deliveryEnabled,
-          isLoading: _isTogglingDelivery,
-          onChanged: _toggleDelivery,
-        ),
-        if (!isOpAdmin)
-          _buildMenuOption(
-            icon: PhosphorIconsRegular.storefront,
-            title: t?.translate('edit_shop_profile') ?? 'Edit Shop Profile',
-            onTap: () => Navigator.push(
-              context,
-              CupertinoPageRoute(builder: (_) => const EditShopProfilePage()),
-            ).then((_) => _loadUserInfo()),
-          ),
-        _buildMenuOption(
-          icon: Icons.auto_stories_outlined,
-          title: 'MyDay',
-          onTap: () => Navigator.push(
-            context,
-            CupertinoPageRoute(builder: (_) => const ShopMyDayPage()),
-          ),
-        ),
-        _buildMenuOption(
-          icon: PhosphorIconsRegular.clock,
-          title: t?.translate('operating_hours') ?? 'Operating Hours',
-          onTap: () => Navigator.push(
-            context,
-            CupertinoPageRoute(builder: (_) => const OperatingHoursPage()),
-          ),
-        ),
         if (!isOpAdmin)
           _buildMenuOption(
             icon: PhosphorIconsRegular.creditCard,
@@ -539,14 +705,6 @@ class ProfilePageState extends State<ProfilePage>
           onTap: () => Navigator.push(
             context,
             CupertinoPageRoute(builder: (_) => const ReviewsPage()),
-          ),
-        ),
-        _buildMenuOption(
-          icon: PhosphorIconsRegular.briefcase,
-          title: t?.translate('job_posts') ?? 'Job Posts',
-          onTap: () => Navigator.push(
-            context,
-            CupertinoPageRoute(builder: (_) => const JobPostsPage()),
           ),
         ),
         _buildMenuOption(

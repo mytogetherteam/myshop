@@ -194,7 +194,10 @@ class _JobPostsPageState extends State<JobPostsPage> {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF0B1120) : const Color(0xFFF1F5F9),
       appBar: BackTitleAppBar(
         title: t?.translate('job_posts') ?? 'Job Posts',
         actions: [GradientAddIconButton(onPressed: () => _openForm())],
@@ -205,89 +208,182 @@ class _JobPostsPageState extends State<JobPostsPage> {
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
+            // ── Header Banner ───────────────────────────────────────
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: _onSearchChanged,
-                  decoration: InputDecoration(
-                    hintText: t?.translate('search_job_posts') ??
-                        'Search job posts…',
-                    prefixIcon: PhosphorIcon(
-                      PhosphorIconsRegular.magnifyingGlass,
-                      color: AppColors.outline,
-                      size: 20,
-                    ),
-                    filled: true,
-                    fillColor: Theme.of(context).brightness == Brightness.dark
-                        ? const Color(0xFF1E293B)
-                        : const Color(0xFFF8FAFC),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Theme.of(context).dividerColor),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Theme.of(context).dividerColor),
-                    ),
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.primary, Color(0xFFFB923C)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                 child: Row(
                   children: [
-                    _FilterChip(
-                      label: t?.translate('filter_all') ?? 'All',
-                      selected:
-                          _selectedJobType == null && _selectedStatus == null,
-                      onTap: () => _onFilterChanged(clearAll: true),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const PhosphorIcon(
+                        PhosphorIconsFill.briefcase,
+                        color: Colors.white,
+                        size: 28,
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    _FilterChip(
-                      label: t?.translate('job_full_time') ?? 'Full Time',
-                      selected: _selectedJobType == JobType.fullTime,
-                      onTap: () => _onFilterChanged(jobType: JobType.fullTime),
-                    ),
-                    const SizedBox(width: 8),
-                    _FilterChip(
-                      label: t?.translate('job_part_time') ?? 'Part Time',
-                      selected: _selectedJobType == JobType.partTime,
-                      onTap: () => _onFilterChanged(jobType: JobType.partTime),
-                    ),
-                    const SizedBox(width: 8),
-                    _FilterChip(
-                      label: t?.translate('job_status_active') ?? 'Active',
-                      selected: _selectedStatus == JobPostStatus.active,
-                      onTap: () =>
-                          _onFilterChanged(status: JobPostStatus.active),
-                    ),
-                    const SizedBox(width: 8),
-                    _FilterChip(
-                      label: t?.translate('job_status_closed') ?? 'Closed',
-                      selected: _selectedStatus == JobPostStatus.inactive,
-                      onTap: () =>
-                          _onFilterChanged(status: JobPostStatus.inactive),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            t?.translate('job_posts') ?? 'Job Posts',
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 18,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Text(
+                            '${_items.length} ${t?.translate('job_posts') ?? 'Posts'}',
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w400,
+                              fontSize: 13,
+                              color: Colors.white.withValues(alpha: 0.85),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
+
+            // ── Search Bar ──────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0 : 0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: _onSearchChanged,
+                    style: GoogleFonts.poppins(fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: t?.translate('search_job_posts') ?? 'Search job posts…',
+                      hintStyle: GoogleFonts.poppins(
+                        color: Theme.of(context).textTheme.bodySmall?.color,
+                        fontSize: 14,
+                      ),
+                      prefixIcon: const PhosphorIcon(
+                        PhosphorIconsRegular.magnifyingGlass,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(
+                          color: AppColors.primary.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      filled: false,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // ── Filter Chips ────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: Row(
+                  children: [
+                    _GradientFilterChip(
+                      label: t?.translate('filter_all') ?? 'All',
+                      selected: _selectedJobType == null && _selectedStatus == null,
+                      onTap: () => _onFilterChanged(clearAll: true),
+                    ),
+                    const SizedBox(width: 8),
+                    _GradientFilterChip(
+                      label: t?.translate('job_full_time') ?? 'Full Time',
+                      icon: PhosphorIconsRegular.clock,
+                      selected: _selectedJobType == JobType.fullTime,
+                      onTap: () => _onFilterChanged(jobType: JobType.fullTime),
+                    ),
+                    const SizedBox(width: 8),
+                    _GradientFilterChip(
+                      label: t?.translate('job_part_time') ?? 'Part Time',
+                      icon: PhosphorIconsRegular.clockCountdown,
+                      selected: _selectedJobType == JobType.partTime,
+                      onTap: () => _onFilterChanged(jobType: JobType.partTime),
+                    ),
+                    const SizedBox(width: 8),
+                    _GradientFilterChip(
+                      label: t?.translate('job_status_active') ?? 'Active',
+                      icon: PhosphorIconsRegular.checkCircle,
+                      selected: _selectedStatus == JobPostStatus.active,
+                      onTap: () => _onFilterChanged(status: JobPostStatus.active),
+                    ),
+                    const SizedBox(width: 8),
+                    _GradientFilterChip(
+                      label: t?.translate('job_status_closed') ?? 'Closed',
+                      icon: PhosphorIconsRegular.xCircle,
+                      selected: _selectedStatus == JobPostStatus.inactive,
+                      onTap: () => _onFilterChanged(status: JobPostStatus.inactive),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // ── List ────────────────────────────────────────────────
             if (_isLoading)
-              SliverFillRemaining(
-                child: SkeletonList(
-                  itemCount: 6,
-                  itemBuilder: (_, _) => _buildSkeletonCard(),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (_, i) => _buildSkeletonCard(),
+                    childCount: 5,
+                  ),
                 ),
               )
             else if (_items.isEmpty)
               SliverFillRemaining(
                 child: EmptyState(
-                  icon: PhosphorIcon(
+                  icon: const PhosphorIcon(
                     PhosphorIconsRegular.briefcase,
                     size: 64,
                     color: AppColors.iconDisabled,
@@ -305,16 +401,16 @@ class _JobPostsPageState extends State<JobPostsPage> {
                     (context, index) {
                       if (index >= _items.length) {
                         if (_isLoadingMore) {
-                          return const Padding(
-                            padding: EdgeInsets.all(16),
-                            child: Center(child: CircularProgressIndicator()),
+                          return Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Center(
+                              child: CircularProgressIndicator(color: AppColors.primary),
+                            ),
                           );
                         }
                         return const SizedBox.shrink();
                       }
-                      if (index == _items.length - 1 &&
-                          !_isLoadingMore &&
-                          _hasMore) {
+                      if (index == _items.length - 1 && !_isLoadingMore && _hasMore) {
                         WidgetsBinding.instance.addPostFrameCallback((_) {
                           _loadMore();
                         });
@@ -334,20 +430,23 @@ class _JobPostsPageState extends State<JobPostsPage> {
   Widget _buildSkeletonCard() {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).dividerColor),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Skeleton(height: 16, width: 180),
-          SizedBox(height: 8),
-          Skeleton(height: 12, width: 120),
-          SizedBox(height: 8),
-          Skeleton(height: 12, width: 90),
+          Skeleton(height: 16, width: 200),
+          SizedBox(height: 10),
+          Skeleton(height: 12, width: 130),
+          SizedBox(height: 10),
+          Row(children: [
+            Skeleton(height: 24, width: 80),
+            SizedBox(width: 8),
+            Skeleton(height: 24, width: 70),
+          ]),
         ],
       ),
     );
@@ -355,28 +454,40 @@ class _JobPostsPageState extends State<JobPostsPage> {
 
   Widget _buildJobCard(JobPostModel job) {
     final t = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final dateFmt = DateFormat('d MMM yyyy');
+    final isActive = job.isActive;
+
     final jobTypeLabel = job.jobType == JobType.fullTime
         ? (t?.translate('job_full_time') ?? 'Full Time')
         : (t?.translate('job_part_time') ?? 'Part Time');
-    final statusLabel = job.isActive
+    final statusLabel = isActive
         ? (t?.translate('job_status_active') ?? 'Active')
         : (t?.translate('job_status_closed') ?? 'Closed');
-    final statusColor =
-        job.isActive ? const Color(0xFF059669) : AppColors.outline;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).dividerColor),
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isActive
+              ? AppColors.primary.withValues(alpha: 0.15)
+              : Theme.of(context).dividerColor.withValues(alpha: 0.5),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0 : 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           onTap: () => _openForm(job),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -384,72 +495,96 @@ class _JobPostsPageState extends State<JobPostsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(
-                        job.title,
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                        ),
+                    // Left icon
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        gradient: isActive
+                            ? const LinearGradient(
+                                colors: [AppColors.primary, Color(0xFFFB923C)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                            : null,
+                        color: isActive ? null : AppColors.outline.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: PhosphorIcon(
+                        PhosphorIconsFill.briefcase,
+                        color: isActive ? Colors.white : AppColors.outline,
+                        size: 20,
                       ),
                     ),
-                    PopupMenuButton<String>(
-                      onSelected: (value) {
-                        switch (value) {
-                          case 'edit':
-                            _openForm(job);
-                            break;
-                          case 'close':
-                            if (job.isActive) _closeJob(job);
-                            break;
-                          case 'delete':
-                            _deleteJob(job);
-                            break;
-                        }
-                      },
-                      itemBuilder: (_) => [
-                        PopupMenuItem(
-                          value: 'edit',
-                          child: Text(t?.translate('edit') ?? 'Edit'),
-                        ),
-                        if (job.isActive)
-                          PopupMenuItem(
-                            value: 'close',
-                            child: Text(
-                              t?.translate('close_position') ?? 'Close Position',
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            job.title,
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
                             ),
                           ),
-                        PopupMenuItem(
-                          value: 'delete',
-                          child: Text(
-                            t?.translate('delete') ?? 'Delete',
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      ],
+                          if (job.closingDate != null) ...[
+                            const SizedBox(height: 3),
+                            Row(
+                              children: [
+                                PhosphorIcon(
+                                  PhosphorIconsRegular.calendarBlank,
+                                  size: 12,
+                                  color: Theme.of(context).textTheme.bodySmall?.color,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${t?.translate('closing_date') ?? 'Closing'}: ${dateFmt.format(job.closingDate!.toLocal())}',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    color: Theme.of(context).textTheme.bodySmall?.color,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
+                    // Action menu
+                    _buildPopupMenu(job, t),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+                const SizedBox(height: 12),
+                // Chips row
+                Row(
                   children: [
-                    _chip(jobTypeLabel, AppColors.primary),
-                    _chip(statusLabel, statusColor),
+                    _buildGradientChip(
+                      jobTypeLabel,
+                      job.jobType == JobType.fullTime
+                          ? PhosphorIconsRegular.clock
+                          : PhosphorIconsRegular.clockCountdown,
+                      gradient: true,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildStatusChip(statusLabel, isActive),
+                    if (job.salaryMin != null || job.salaryMax != null) ...[
+                      const SizedBox(width: 8),
+                      _buildSalaryChip(job),
+                    ] else if (job.salaryNegotiable) ...[
+                      const SizedBox(width: 8),
+                      _buildGradientChip(
+                        t?.translate('salary_negotiable') ?? 'Negotiable',
+                        PhosphorIconsRegular.handshake,
+                        gradient: false,
+                        color: const Color(0xFF059669),
+                      ),
+                    ],
                   ],
                 ),
-                if (job.closingDate != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    '${t?.translate('closing_date') ?? 'Closing date'}: ${dateFmt.format(job.closingDate!.toLocal())}',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: AppColors.outline,
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
@@ -458,53 +593,220 @@ class _JobPostsPageState extends State<JobPostsPage> {
     );
   }
 
-  Widget _chip(String label, Color color) {
+  Widget _buildPopupMenu(JobPostModel job, AppLocalizations? t) {
+    return PopupMenuButton<String>(
+      onSelected: (value) {
+        switch (value) {
+          case 'edit':
+            _openForm(job);
+            break;
+          case 'close':
+            if (job.isActive) _closeJob(job);
+            break;
+          case 'delete':
+            _deleteJob(job);
+            break;
+        }
+      },
+      icon: PhosphorIcon(
+        PhosphorIconsRegular.dotsThree,
+        color: Theme.of(context).textTheme.bodySmall?.color,
+        size: 22,
+      ),
+      itemBuilder: (_) => [
+        PopupMenuItem(
+          value: 'edit',
+          child: Row(children: [
+            const PhosphorIcon(PhosphorIconsRegular.pencil, size: 16),
+            const SizedBox(width: 8),
+            Text(t?.translate('edit') ?? 'Edit', style: GoogleFonts.poppins()),
+          ]),
+        ),
+        if (job.isActive)
+          PopupMenuItem(
+            value: 'close',
+            child: Row(children: [
+              const PhosphorIcon(PhosphorIconsRegular.xCircle, size: 16),
+              const SizedBox(width: 8),
+              Text(t?.translate('close_position') ?? 'Close', style: GoogleFonts.poppins()),
+            ]),
+          ),
+        PopupMenuItem(
+          value: 'delete',
+          child: Row(children: [
+            const PhosphorIcon(PhosphorIconsRegular.trash, size: 16, color: Colors.red),
+            const SizedBox(width: 8),
+            Text(
+              t?.translate('delete') ?? 'Delete',
+              style: GoogleFonts.poppins(color: Colors.red),
+            ),
+          ]),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGradientChip(String label, IconData icon, {required bool gradient, Color? color}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        gradient: gradient
+            ? LinearGradient(
+                colors: [
+                  AppColors.primary.withValues(alpha: 0.12),
+                  const Color(0xFFFB923C).withValues(alpha: 0.10),
+                ],
+              )
+            : null,
+        color: gradient ? null : (color ?? AppColors.primary).withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          PhosphorIcon(icon, size: 12, color: gradient ? AppColors.primary : (color ?? AppColors.primary)),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: gradient ? AppColors.primary : (color ?? AppColors.primary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusChip(String label, bool isActive) {
+    final color = isActive ? const Color(0xFF059669) : AppColors.outline;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSalaryChip(JobPostModel job) {
+    final fmt = NumberFormat('#,###');
+    String salaryText = '';
+    if (job.salaryMin != null && job.salaryMax != null) {
+      salaryText = '฿${fmt.format(job.salaryMin)}-${fmt.format(job.salaryMax)}';
+    } else if (job.salaryMin != null) {
+      salaryText = '฿${fmt.format(job.salaryMin)}+';
+    } else if (job.salaryMax != null) {
+      salaryText = '฿${fmt.format(job.salaryMax)}';
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFF059669).withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        label,
+        salaryText,
         style: GoogleFonts.poppins(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: color,
+          color: const Color(0xFF059669),
         ),
       ),
     );
   }
 }
 
-class _FilterChip extends StatelessWidget {
+// ── Premium Gradient Filter Chip ─────────────────────────────────────────────
+
+class _GradientFilterChip extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final IconData? icon;
 
-  const _FilterChip({
+  const _GradientFilterChip({
     required this.label,
     required this.selected,
     required this.onTap,
+    this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary : const Color(0xFFF5F5F5),
+          gradient: selected
+              ? const LinearGradient(
+                  colors: [AppColors.primary, Color(0xFFFB923C)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          color: selected ? null : (isDark ? const Color(0xFF1E293B) : Colors.white),
           borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: selected ? Colors.white : AppColors.onSurface,
+          border: Border.all(
+            color: selected ? Colors.transparent : Theme.of(context).dividerColor,
           ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : [],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              PhosphorIcon(
+                icon!,
+                size: 13,
+                color: selected ? Colors.white : AppColors.outline,
+              ),
+              const SizedBox(width: 5),
+            ],
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: selected ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color,
+              ),
+            ),
+          ],
         ),
       ),
     );

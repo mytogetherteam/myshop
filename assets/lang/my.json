@@ -641,5 +641,9 @@
   "job_validation_contact": "ဆက်သွယ်ရန် ဖုန်းနံပါတ် ထည့်ပါ။",
   "job_validation_phone": "ဖုန်းနံပါတ်သည် ၉ လုံးမှ ၁၁ လုံးအတွင်း ဖြစ်ရမည်။",
   "job_validation_link": "Apply link သည် မှန်ကန်သော URL (https://...) ဖြစ်ရမည်။",
-  "save_changes": "ပြောင်းလဲမှုများ သိမ်းရန်"
+  "save_changes": "ပြောင်းလဲမှုများ သိမ်းရန်",
+  "basic_info": "အခြေခံအချက်အလက်",
+  "classification": "အမျိုးအစားနှင့် အစားအစာ",
+  "contact_location": "ဆက်သွယ်ရန်နှင့် နေရာ",
+  "shop_features": "ဆိုင်၏ ဝန်ဆောင်မှုများ"
 }

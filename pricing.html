@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyTogether Shop - Pricing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS reset and base styles */
+        :root {
+            --bg-color: #0b0b0d;
+            --card-bg: #141417;
+            --card-border: #27272a;
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+            --accent: #8b5cf6; /* purple for Growth */
+            --accent-hover: #7c3aed;
+            --pro-accent: #fbbf24; /* gold for Pro */
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 4rem 1rem;
+        }
+
+        .pricing-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .pricing-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .pricing-header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        /* Toggle Switch */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .toggle-label {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            transition: color 0.3s;
+            cursor: pointer;
+        }
+
+        .toggle-label.active {
+            color: var(--text-main);
+        }
+        
+        .save-badge {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--card-border);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Pricing Cards */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            width: 100%;
+            align-items: stretch;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 2.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .card.popular {
+            border-color: var(--accent);
+            background: linear-gradient(180deg, rgba(139,92,246,0.05) 0%, rgba(20,20,23,1) 100%);
+            transform: scale(1.02);
+        }
+        
+        .card.popular:hover {
+            transform: scale(1.02) translateY(-5px);
+            box-shadow: 0 10px 30px -10px rgba(139, 92, 246, 0.3);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--accent);
+            color: white;
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .tier-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        
+        .card.popular .tier-name {
+            color: var(--accent);
+        }
+        
+        .card.pro .tier-name {
+            color: var(--pro-accent);
+        }
+
+        .tier-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            min-height: 40px;
+        }
+
+        .price-container {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 2rem;
+        }
+
+        .currency {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-right: 0.2rem;
+        }
+
+        .price {
+            font-size: 3rem;
+            font-weight: 700;
+        }
+
+        .period {
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .price-subtext {
+            display: none;
+            color: var(--accent);
+            font-size: 0.85rem;
+            margin-top: -1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        body.annual .price-subtext {
+            display: block;
+        }
+
+        .features {
+            list-style: none;
+            flex-grow: 1;
+            margin-bottom: 2rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .feature-icon {
+            color: var(--text-muted);
+            margin-right: 0.75rem;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        
+        .feature-item.included .feature-icon {
+            color: #10b981; /* Green check */
+        }
+        
+        .feature-text {
+            color: var(--text-muted);
+        }
+        
+        .feature-item.included .feature-text {
+            color: var(--text-main);
+        }
+        
+        .feature-highlight {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        
+        .pro-highlight {
+            color: var(--pro-accent);
+            font-weight: 600;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            border-bottom: 1px dotted var(--text-muted);
+            cursor: help;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.8rem;
+            font-weight: normal;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            pointer-events: none;
+        }
+        
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 1rem;
+            text-align: center;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            border: 1px solid var(--card-border);
+            background: transparent;
+            color: var(--text-main);
+        }
+
+        .btn:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+            border-color: var(--accent-hover);
+        }
+        
+        .btn-pro {
+            border-color: var(--pro-accent);
+            color: var(--pro-accent);
+        }
+        
+        .btn-pro:hover {
+            background-color: rgba(251, 191, 36, 0.1);
+        }
+
+        @media (max-width: 900px) {
+            .card.popular {
+                transform: scale(1);
+            }
+            .card.popular:hover {
+                transform: translateY(-5px);
+            }
+        }
+        /* One-Time Packages Section */
+        .addon-section {
+            width: 100%;
+            max-width: 1200px;
+            margin-top: 6rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .addon-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .addon-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .addon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+        }
+        
+        .addon-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        
+        .addon-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent);
+        }
+        
+        .addon-category {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .addon-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+        
+        .addon-price {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .addon-price-sub {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+        
+        .addon-features {
+            list-style: none;
+            margin-bottom: 1.5rem;
+        }
+        
+        .addon-features li {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .addon-features li svg {
+            width: 14px;
+            height: 14px;
+            margin-right: 8px;
+            margin-top: 3px;
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+        
+        .btn-addon {
+            width: 100%;
+            padding: 0.75rem;
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-addon:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="pricing-header">
+        <h1>Grow your shop with us</h1>
+        <p>Choose the perfect plan to boost your sales, manage orders, and reach more customers.</p>
+        
+        <div class="toggle-container">
+            <span class="toggle-label active" id="monthly-label" onclick="setBilling('monthly')">Monthly</span>
+            <label class="switch">
+                <input type="checkbox" id="billing-toggle" onchange="toggleBilling()">
+                <span class="slider"></span>
+            </label>
+            <span class="toggle-label" id="annual-label" onclick="setBilling('annual')">
+                Annually <span class="save-badge">Save 20%</span>
+            </span>
+        </div>
+    </div>
+
+    <div class="pricing-grid">
+        
+        <!-- Starter Plan -->
+        <div class="card">
+            <h3 class="tier-name">Starter</h3>
+            <p class="tier-desc">Perfect for small shops just getting started with digital marketing.</p>
+            
+            <div class="price-container">
+                <span class="currency">฿</span>
+                <span class="price" data-monthly="999" data-annual="799">999</span>
+                <span class="period">/ mo</span>
+            </div>
+            <div class="price-subtext">Billed annually</div>
+
+            <ul class="features">
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Boosting x3</span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Reminder Alert x3 - Choose 3 districts</span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Analytic Report - Basic</span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">
+                        <span class="tooltip">Flash Drop<span class="tooltiptext">Push notifications sent to local users about sudden discounts.</span></span> x3
+                    </span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">
+                        <span class="tooltip">Flash Deals<span class="tooltiptext">Special limited-time promotions featured on the app home screen.</span></span> x1
+                    </span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Website (QR) for shop menu</span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">No Ads</span>
+                </li>
+            </ul>
+            
+            <a href="#" class="btn">Start Basic</a>
+        </div>
+
+        <!-- Growth Plan -->
+        <div class="card popular">
+            <div class="popular-badge">Most Popular</div>
+            <h3 class="tier-name">Growth</h3>
+            <p class="tier-desc">Level up your reach with smarter tools and broader audience targeting.</p>
+            
+            <div class="price-container">
+                <span class="currency">฿</span>
+                <span class="price" data-monthly="2,999" data-annual="2,399">2,999</span>
+                <span class="period">/ mo</span>
+            </div>
+            <div class="price-subtext">Billed annually</div>
+
+            <ul class="features">
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Boosting <span class="feature-highlight">x6</span></span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Reminder Alert <span class="feature-highlight">x3 districts + x2 all users</span></span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Analytic Report - <span class="feature-highlight">Mid</span></span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Flash Drop <span class="feature-highlight">x6</span></span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Flash Deals <span class="feature-highlight">x3</span></span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">
+                        <span class="tooltip">Flash Menu<span class="tooltiptext">Highlight specific menu items at discounted rates during off-peak hours.</span></span> <span class="feature-highlight">x1</span>
+                    </span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Website (QR) for shop menu</span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Banner <span class="feature-highlight">x2/day</span></span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">
+                        <span class="tooltip">Social Media package <span class="feature-highlight">(Choose 2)</span>
+                            <span class="tooltiptext" style="width: 270px; text-align: left; padding: 12px; margin-left: -135px; line-height: 1.4;">
+                                <strong style="display:block; margin-bottom: 6px; color: white;">Package Options:</strong>
+                                <ul style="margin-left: 18px; color: #e4e4e7;">
+                                    <li style="margin-bottom: 4px;">Facebook post x 2</li>
+                                    <li style="margin-bottom: 4px;">Reels x 2 (Food reviews, Cooking & special form for marketing)</li>
+                                    <li>Promote in all Social media channels</li>
+                                </ul>
+                            </span>
+                        </span>
+                    </span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">No Ads</span>
+                </li>
+            </ul>
+            
+            <a href="#" class="btn btn-primary">Start Growing Now</a>
+        </div>
+
+        <!-- Pro Plan -->
+        <div class="card pro">
+            <h3 class="tier-name">Pro</h3>
+            <p class="tier-desc">The full arsenal for serious businesses ready to dominate their market.</p>
+            
+            <div class="price-container">
+                <span class="currency">฿</span>
+                <span class="price" data-monthly="9,999" data-annual="7,999">9,999</span>
+                <span class="period">/ mo</span>
+            </div>
+            <div class="price-subtext">Billed annually</div>
+
+            <ul class="features">
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Boosting <span class="pro-highlight">x10</span></span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Reminder Alert <span class="pro-highlight">x5 - All users</span></span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Analytic Report - <span class="pro-highlight">Super</span></span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Flash Drop <span class="pro-highlight">x15</span></span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Flash Deals <span class="pro-highlight">x6</span></span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Flash Menu <span class="pro-highlight">x3</span></span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Exclusive Event <span class="pro-highlight">x1</span></span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Banner <span class="pro-highlight">x6</span></span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Website Local Ads <span class="pro-highlight">x3</span></span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">
+                        <span class="tooltip">Social Media package <span class="pro-highlight">(All)</span>
+                            <span class="tooltiptext" style="width: 270px; text-align: left; padding: 12px; margin-left: -135px; line-height: 1.4;">
+                                <strong style="display:block; margin-bottom: 6px; color: white;">Package Options:</strong>
+                                <ul style="margin-left: 18px; color: #e4e4e7;">
+                                    <li style="margin-bottom: 4px;">Facebook post x 2</li>
+                                    <li style="margin-bottom: 4px;">Reels x 2 (Food reviews, Cooking & special form for marketing)</li>
+                                    <li>Promote in all Social media channels</li>
+                                </ul>
+                            </span>
+                        </span>
+                    </span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">2 Dedicated Accounts <span class="pro-highlight">(฿10,000 Value Included)</span></span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">No Ads</span>
+                </li>
+            </ul>
+            
+            <a href="#" class="btn btn-pro">Upgrade to Pro</a>
+        </div>
+        
+        <!-- Enterprise Plan -->
+        <div class="card">
+            <h3 class="tier-name">Enterprise</h3>
+            <p class="tier-desc">Tailored solutions for large-scale operations with custom requirements.</p>
+            
+            <div class="price-container">
+                <span class="price" style="font-size: 2.2rem; font-style: italic; font-weight: 500;">Let's talk</span>
+            </div>
+            
+            <p style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px;">Everything in PRO, plus:</p>
+
+            <ul class="features">
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Custom volume & unlimited scale</span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Dedicated account manager</span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Priority support & onboarding</span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">Custom integrations & reporting</span>
+                </li>
+                <li class="feature-item included">
+                    <svg class="feature-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span class="feature-text">SLA & service guarantees</span>
+                </li>
+            </ul>
+            
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">Our team will craft a package that fits your exact needs. Reach out and let's build something together.</p>
+            
+            <a href="#" class="btn">Contact Us</a>
+        </div>
+
+    </div>
+
+    <div class="addon-section">
+        <div class="addon-header">
+            <h2>One-Time Services & Add-ons</h2>
+            <p style="color: var(--text-muted);">Boost your shop's performance anytime with our pay-as-you-go packages.</p>
+        </div>
+        
+        <div class="addon-grid">
+            <!-- Flash Drops -->
+            <div class="addon-card">
+                <div class="addon-category">Marketing</div>
+                <h4 class="addon-title">Flash Drop Package</h4>
+                <div class="addon-price">฿100 - ฿1,000<span class="addon-price-sub">/ depending on duration</span></div>
+                <ul class="addon-features">
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> 1 Hour: ฿100</li>
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> 2 Hours: ฿200</li>
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> 1 Day: Custom / Contact Us</li>
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Max 5 menus allowed</li>
+                </ul>
+                <button class="btn-addon">Add to Plan</button>
+            </div>
+
+            <!-- Targeted Boosting -->
+            <div class="addon-card">
+                <div class="addon-category">Visibility</div>
+                <h4 class="addon-title">Targeted Boosting</h4>
+                <div class="addon-price">Custom<span class="addon-price-sub">/ per view</span></div>
+                <ul class="addon-features">
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Notification on App directly to users</li>
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Pay per view (Reach based)</li>
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Target specific districts</li>
+                </ul>
+                <button class="btn-addon">Add to Plan</button>
+            </div>
+
+            <!-- Flash Deals & Menus -->
+            <div class="addon-card">
+                <div class="addon-category">Promotions</div>
+                <h4 class="addon-title">Flash Deals & Menus</h4>
+                <div class="addon-price">Custom<span class="addon-price-sub">/ per menu</span></div>
+                <ul class="addon-features">
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Flash Deals specifically for Takeaway</li>
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Flash Menu pricing applied per item</li>
+                </ul>
+                <button class="btn-addon">Add to Plan</button>
+            </div>
+
+            <!-- Ads & Website -->
+            <div class="addon-card">
+                <div class="addon-category">Advertising</div>
+                <h4 class="addon-title">Ads & Website</h4>
+                <div class="addon-price">Custom<span class="addon-price-sub">/ campaign</span></div>
+                <ul class="addon-features">
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Google Ads for Shop App Website</li>
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Local Ads (for customers & shops)</li>
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Custom Page Banners</li>
+                </ul>
+                <button class="btn-addon">Add to Plan</button>
+            </div>
+
+            <!-- Reminder Alerts -->
+            <div class="addon-card">
+                <div class="addon-category">Engagement</div>
+                <h4 class="addon-title">Reminder Alerts</h4>
+                <div class="addon-price">Custom<span class="addon-price-sub">/ per alert</span></div>
+                <ul class="addon-features">
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Send to All Users or Custom lists</li>
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Target per district (priced accordingly)</li>
+                </ul>
+                <button class="btn-addon">Add to Plan</button>
+            </div>
+
+            <!-- Festival Promos -->
+            <div class="addon-card">
+                <div class="addon-category">Events</div>
+                <h4 class="addon-title">Festival Promos</h4>
+                <div class="addon-price">฿1,000<span class="addon-price-sub">/ per day</span></div>
+                <ul class="addon-features">
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Feature in special Festival sections</li>
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Maximize daily visibility during holidays</li>
+                </ul>
+                <button class="btn-addon">Add to Plan</button>
+            </div>
+
+            <!-- Fan Service -->
+            <div class="addon-card">
+                <div class="addon-category">Customer Loyalty</div>
+                <h4 class="addon-title">Fan Service</h4>
+                <div class="addon-price">Custom<span class="addon-price-sub">/ setup</span></div>
+                <ul class="addon-features">
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Birthday month deals with restaurants</li>
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Upgrade visibility based on good reviews</li>
+                </ul>
+                <button class="btn-addon">Add to Plan</button>
+            </div>
+
+            <!-- Dedicated Account -->
+            <div class="addon-card">
+                <div class="addon-category">Support</div>
+                <h4 class="addon-title">Dedicated Account</h4>
+                <div class="addon-price">฿5,000<span class="addon-price-sub">/ one-time</span></div>
+                <ul class="addon-features">
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Personal account manager setup</li>
+                    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Priority support & consultation</li>
+                </ul>
+                <button class="btn-addon">Add to Plan</button>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        function toggleBilling() {
+            const toggle = document.getElementById('billing-toggle');
+            const monthlyLabel = document.getElementById('monthly-label');
+            const annualLabel = document.getElementById('annual-label');
+            const prices = document.querySelectorAll('.price[data-monthly]');
+            const body = document.body;
+            
+            if (toggle.checked) {
+                // Annual
+                monthlyLabel.classList.remove('active');
+                annualLabel.classList.add('active');
+                body.classList.add('annual');
+                
+                prices.forEach(p => {
+                    animateValue(p, p.innerText.replace(/,/g, ''), p.getAttribute('data-annual').replace(/,/g, ''), 300);
+                });
+            } else {
+                // Monthly
+                monthlyLabel.classList.add('active');
+                annualLabel.classList.remove('active');
+                body.classList.remove('annual');
+                
+                prices.forEach(p => {
+                    animateValue(p, p.innerText.replace(/,/g, ''), p.getAttribute('data-monthly').replace(/,/g, ''), 300);
+                });
+            }
+        }
+        
+        function setBilling(type) {
+            const toggle = document.getElementById('billing-toggle');
+            if (type === 'monthly' && toggle.checked) {
+                toggle.checked = false;
+                toggleBilling();
+            } else if (type === 'annual' && !toggle.checked) {
+                toggle.checked = true;
+                toggleBilling();
+            }
+        }
+        
+        function animateValue(obj, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                // Simple ease out
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const currentVal = Math.floor(parseInt(start) + (parseInt(end) - parseInt(start)) * easeOut);
+                
+                // Format with commas
+                obj.innerHTML = currentVal.toLocaleString();
+                
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    obj.innerHTML = parseInt(end).toLocaleString();
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+    </script>
+</body>
+</html>

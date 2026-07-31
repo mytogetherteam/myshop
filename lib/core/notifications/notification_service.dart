@@ -420,7 +420,6 @@ class NotificationService {
           _processOrderNotification(orderIdStr);
         }
       }
-      }
     } else if (type == 'CALL_INCOMING') {
       final String? callId = message.data['callId']?.toString();
       final String? callerName = message.data['callerName']?.toString();

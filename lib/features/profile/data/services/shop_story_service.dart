@@ -4,15 +4,15 @@ import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
-import 'package:my_shop/features/profile/data/models/shop_myday.dart';
+import 'package:my_shop/features/profile/data/models/shop_story.dart';
 import 'package:path/path.dart' as p;
 
-class ShopMyDayService {
+class ShopStoryService {
   static const _path = '/api/shop/mydays';
 
   final Dio _dio = ApiClient().dio;
 
-  Future<List<ShopMyDay>> list() async {
+  Future<List<ShopStory>> list() async {
     try {
       final response = await _dio.get(_path);
       final body = response.data;
@@ -22,16 +22,16 @@ class ShopMyDayService {
 
       return (body['data'] as List)
           .whereType<Map>()
-          .map((json) => ShopMyDay.fromJson(json.cast<String, dynamic>()))
+          .map((json) => ShopStory.fromJson(json.cast<String, dynamic>()))
           .where((item) => item.imageUrl.isNotEmpty && item.isActive)
           .toList();
     } on DioException catch (error) {
-      ApiHelper.handleError(error, context: 'ShopMyDayService.list');
+      ApiHelper.handleError(error, context: 'ShopStoryService.list');
       rethrow;
     }
   }
 
-  Future<ShopMyDay> create(XFile photo) async {
+  Future<ShopStory> create(XFile photo) async {
     try {
       final extension = p.extension(photo.name).toLowerCase();
       final subtype = switch (extension) {
@@ -64,13 +64,13 @@ class ShopMyDayService {
       );
       final body = response.data;
       if (body is Map && body['success'] == true && body['data'] is Map) {
-        return ShopMyDay.fromJson(
+        return ShopStory.fromJson(
           (body['data'] as Map).cast<String, dynamic>(),
         );
       }
-      throw StateError('The server returned an invalid MyDay response.');
+      throw StateError('The server returned an invalid Story response.');
     } on DioException catch (error) {
-      ApiHelper.handleError(error, context: 'ShopMyDayService.create');
+      ApiHelper.handleError(error, context: 'ShopStoryService.create');
       rethrow;
     }
   }
@@ -83,7 +83,7 @@ class ShopMyDayService {
         throw StateError(body['message']?.toString() ?? 'Delete failed.');
       }
     } on DioException catch (error) {
-      ApiHelper.handleError(error, context: 'ShopMyDayService.delete');
+      ApiHelper.handleError(error, context: 'ShopStoryService.delete');
       rethrow;
     }
   }
