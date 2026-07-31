@@ -4,7 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:my_shop/core/notifications/notification_service.dart';
+import 'package:my_shop/core/splash/branded_splash.dart';
 import 'package:my_shop/core/utils/app_version.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/core/theme/theme_service.dart';
@@ -43,7 +45,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   
   // Enable Wakelock to keep the screen awake for this merchant app
   WakelockPlus.enable();
@@ -106,6 +109,7 @@ void main() async {
   }
 
   if (isJailbroken) {
+    FlutterNativeSplash.remove();
     runApp(
       const MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -128,6 +132,18 @@ void main() async {
 
   // Disable Google Fonts CDN — use locally bundled Poppins from assets/fonts/
   GoogleFonts.config.allowRuntimeFetching = false;
+
+  debugPrint('[BOOT] Prefetching Splash banner...');
+  try {
+    await BrandedSplash.prefetch().timeout(const Duration(seconds: 6));
+  } catch (e) {
+    debugPrint('[BOOT] Splash banner prefetch timed out/failed: $e');
+  }
+
+  // If no remote splash, drop native splash before first frame of App.
+  if (!BrandedSplash.hasSplash) {
+    FlutterNativeSplash.remove();
+  }
 
   runApp(const App());
 }

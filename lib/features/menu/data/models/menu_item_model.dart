@@ -560,6 +560,9 @@ class MenuItemOptionGroupModel {
   final double price;
   final List<MenuItemOptionModel> options;
   final bool isDeleted;
+  final int minSelection;
+  /// null = unlimited
+  final int? maxSelection;
 
   MenuItemOptionGroupModel({
     required this.id,
@@ -572,6 +575,8 @@ class MenuItemOptionGroupModel {
     this.price = 0.0,
     this.options = const [],
     this.isDeleted = false,
+    this.minSelection = 0,
+    this.maxSelection,
   }) : clientKey = clientKey ??
             (id > 0
                 ? MenuItemClientKey.forId('og', id)
@@ -588,6 +593,8 @@ class MenuItemOptionGroupModel {
     double? price,
     List<MenuItemOptionModel>? options,
     bool? isDeleted,
+    int? minSelection,
+    int? maxSelection,
   }) {
     return MenuItemOptionGroupModel(
       id: id ?? this.id,
@@ -600,6 +607,8 @@ class MenuItemOptionGroupModel {
       price: price ?? this.price,
       options: options ?? this.options,
       isDeleted: isDeleted ?? this.isDeleted,
+      minSelection: minSelection ?? this.minSelection,
+      maxSelection: maxSelection ?? this.maxSelection,
     );
   }
 
@@ -621,6 +630,8 @@ class MenuItemOptionGroupModel {
       isDeleted: json['deleted'] == true ||
           json['isDeleted'] == true ||
           json['deletedAt'] != null,
+      minSelection: (json['minSelection'] as num?)?.toInt() ?? 0,
+      maxSelection: (json['maxSelection'] as num?)?.toInt(),
     );
   }
 
@@ -633,6 +644,8 @@ class MenuItemOptionGroupModel {
       'isAvailable': isAvailable,
       'displayOrder': displayOrder,
       'price': price,
+      'minSelection': minSelection,
+      if (maxSelection != null) 'maxSelection': maxSelection,
       'options': options.map((o) => o.toJson()).toList(),
       if (isDeleted) 'deleted': true,
     };

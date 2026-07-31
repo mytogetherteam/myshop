@@ -2093,8 +2093,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                       _buildPaymentSummary(),
                                       SizedBox(height: 32),
 
-                                      // Calculate delivery fee box (hidden for DELIVERED & CANCELLED)
-                                      if (_currentOrder.status != 'CANCELED' &&
+                                      // Calculate delivery fee box (delivery only; hidden for pickup / DELIVERED / CANCELLED)
+                                      if (!_currentOrder.isPickupFulfillment &&
+                                          _currentOrder.status != 'CANCELED' &&
                                           _currentOrder.status !=
                                               'DELIVERED') ...[
                                         _buildDeliveryCalculator(),
@@ -3220,6 +3221,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     ),
                   ],
                 ),
+                if (item.variant != null &&
+                    item.variant!.displayName.isNotEmpty)
+                  Text(
+                    item.variant!.displayName,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: (Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFFCBD5E1)
+                          : const Color(0xFF64748B)),
+                    ),
+                  ),
                 if (item.optionsString != null &&
                     item.optionsString!.isNotEmpty)
                   Text(
@@ -3427,67 +3440,69 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ],
           ),
         ],
-        SizedBox(height: 12),
-        Row(
-          children: [
-            const GradientWidget(
-              child: Icon(PhosphorIconsFill.moped, size: 20),
-            ),
-            SizedBox(width: 8),
-            Text(
-              _currentOrder.deliveryFee > 0 ? 'Delivery Fee' : 'Est. Amount',
-              style: GoogleFonts.poppins(
-                fontSize: 15,
-                color: (Theme.of(context).brightness == Brightness.dark
-                    ? const Color(0xFFCBD5E1)
-                    : const Color(0xFF64748B)),
+        if (!_currentOrder.isPickupFulfillment) ...[
+          SizedBox(height: 12),
+          Row(
+            children: [
+              const GradientWidget(
+                child: Icon(PhosphorIconsFill.moped, size: 20),
               ),
-            ),
-            SizedBox(width: 8),
-            if (_currentOrder.deliveryType == 'NORMAL' && !['ON_THE_WAY', 'DELIVERED', 'PICKED_UP'].contains(_currentOrder.status))
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEF2F2),
-                  borderRadius: BorderRadius.circular(4),
+              SizedBox(width: 8),
+              Text(
+                _currentOrder.deliveryFee > 0 ? 'Delivery Fee' : 'Est. Amount',
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? const Color(0xFFCBD5E1)
+                      : const Color(0xFF64748B)),
                 ),
-                child: Text(
-                  'Estimate',
-                  style: GoogleFonts.poppins(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFFEF4444),
+              ),
+              SizedBox(width: 8),
+              if (_currentOrder.deliveryType == 'NORMAL' && !['ON_THE_WAY', 'DELIVERED', 'PICKED_UP'].contains(_currentOrder.status))
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'Estimate',
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFFEF4444),
+                    ),
                   ),
                 ),
-              ),
-            if (_currentOrder.deliveryType != 'NORMAL')
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEF2F2),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  'Delivery fee',
-                  style: GoogleFonts.poppins(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFFEF4444),
+              if (_currentOrder.deliveryType != 'NORMAL')
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'Delivery fee',
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFFEF4444),
+                    ),
                   ),
                 ),
+              const Spacer(),
+              GradientText(
+                _currentOrder.displayDeliveryFee.isNotEmpty
+                    ? _currentOrder.displayDeliveryFee
+                    : '+฿ 0',
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            const Spacer(),
-            GradientText(
-              _currentOrder.displayDeliveryFee.isNotEmpty
-                  ? _currentOrder.displayDeliveryFee
-                  : '+฿ 0',
-              style: GoogleFonts.poppins(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
         SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

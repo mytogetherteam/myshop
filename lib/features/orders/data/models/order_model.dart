@@ -202,7 +202,11 @@ class OrderModel {
         ? Map<String, dynamic>.from(json['user'] as Map)
         : null;
 
-    final deliveryFee = (json['deliveryFee'] as num?)?.toDouble() ?? 0.0;
+    final orderType = json['orderType']?.toString() ?? 'DELIVERY';
+    final isPickup = orderType.toUpperCase() == 'PICK_UP' ||
+        orderType.toUpperCase() == 'PICKUP';
+    final deliveryFee =
+        isPickup ? 0.0 : (json['deliveryFee'] as num?)?.toDouble() ?? 0.0;
     final itemPrice = (json['itemPrice'] as num?)?.toDouble() ??
         (json['items'] is List
             ? (json['items'] as List).fold<double>(
@@ -448,6 +452,7 @@ class OrderItemModel {
   final String? specialInstructions;
   final String? optionsString;
   final List<OrderItemOptionModel> options;
+  final OrderItemVariantModel? variant;
 
   OrderItemModel({
     required this.id,
@@ -461,6 +466,7 @@ class OrderItemModel {
     this.specialInstructions,
     this.optionsString,
     this.options = const [],
+    this.variant,
   });
 
   factory OrderItemModel.fromJson(Map<String, dynamic> json) {
@@ -484,6 +490,13 @@ class OrderItemModel {
 
     final price = (json['price'] as num?)?.toDouble() ?? 0.0;
 
+    OrderItemVariantModel? variant;
+    if (json['variant'] is Map) {
+      variant = OrderItemVariantModel.fromJson(
+        Map<String, dynamic>.from(json['variant'] as Map),
+      );
+    }
+
     return OrderItemModel(
       id: json['id'] as int? ?? 0,
       menuItemId: json['menuItemId'] as int? ?? menuItem?['id'] as int? ?? 0,
@@ -496,6 +509,7 @@ class OrderItemModel {
       specialInstructions: json['specialInstructions']?.toString(),
       optionsString: json['options']?.toString(),
       options: optionsList,
+      variant: variant,
     );
   }
 
@@ -520,6 +534,34 @@ class OrderItemOptionModel {
       displayPrice: (json['displayPrice']?.toString() ?? '').toFormattedPrice(),
     );
   }
+}
+
+class OrderItemVariantModel {
+  final int id;
+  final String? nameEn;
+  final String? nameMm;
+  final String? nameTh;
+  final double price;
+
+  OrderItemVariantModel({
+    required this.id,
+    this.nameEn,
+    this.nameMm,
+    this.nameTh,
+    required this.price,
+  });
+
+  factory OrderItemVariantModel.fromJson(Map<String, dynamic> json) {
+    return OrderItemVariantModel(
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      nameEn: json['nameEn']?.toString(),
+      nameMm: json['nameMm']?.toString(),
+      nameTh: json['nameTh']?.toString(),
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  String get displayName => nameEn ?? nameMm ?? nameTh ?? '';
 }
 
 class DeliveryAddressModel {
