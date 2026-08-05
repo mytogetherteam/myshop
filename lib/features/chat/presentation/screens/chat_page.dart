@@ -7,6 +7,7 @@ import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/features/chat/data/models/chat_model.dart';
+import 'package:my_shop/features/chat/data/models/chat_window.dart';
 import 'package:my_shop/features/chat/data/services/chat_service.dart';
 import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
 import 'package:my_shop/features/chat/presentation/chat_navigation.dart';
@@ -33,6 +34,7 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
 
   StreamSubscription<Map<String, dynamic>>? _chatSub;
   StreamSubscription<int>? _readSub;
+  Timer? _countdownTicker;
 
   @override
   bool get wantKeepAlive => true;
@@ -44,8 +46,12 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
     _scrollController.addListener(_onScroll);
     _chatSub = WebSocketService().chatUpdates.listen(_onChatEvent);
     // A read elsewhere (e.g. from the order-detail chat icon) clears the badge.
-    _readSub = ChatUnreadController.instance.conversationRead
-        .listen(_onConversationRead);
+    _readSub = ChatUnreadController.instance.conversationRead.listen(
+      _onConversationRead,
+    );
+    _countdownTicker = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) setState(() {});
+    });
     _loadConversations();
   }
 
@@ -55,6 +61,7 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
     _scrollController.dispose();
     _chatSub?.cancel();
     _readSub?.cancel();
+    _countdownTicker?.cancel();
     super.dispose();
   }
 
@@ -62,8 +69,7 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
     final index = _conversations.indexWhere((c) => c.id == conversationId);
     if (index == -1 || _conversations[index].unreadCount == 0) return;
     setState(() {
-      _conversations[index] =
-          _conversations[index].copyWith(unreadCount: 0);
+      _conversations[index] = _conversations[index].copyWith(unreadCount: 0);
       _applyFilter();
     });
   }
@@ -123,8 +129,9 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
 
   Future<void> _loadMore() async {
     setState(() => _isLoadingMore = true);
-    final result =
-        await ChatService.instance.getConversations(page: _currentPage + 1);
+    final result = await ChatService.instance.getConversations(
+      page: _currentPage + 1,
+    );
     if (!mounted) return;
     setState(() {
       _isLoadingMore = false;
@@ -183,22 +190,36 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
   void _applyFilter() {
     final query = _searchController.text.toLowerCase().trim();
     final now = DateTime.now();
-    
+
     final todayConversations = _conversations.where((c) {
-      final isToday = c.timestamp.year == now.year &&
-             c.timestamp.month == now.month &&
-             c.timestamp.day == now.day;
-      return isToday || c.unreadCount > 0;
+      final isToday =
+          c.timestamp.year == now.year &&
+          c.timestamp.month == now.month &&
+          c.timestamp.day == now.day;
+      final status = c.orderStatus?.toUpperCase();
+      final isActiveOrder =
+          status != null &&
+          !ChatWindow.isCompletedStatus(status) &&
+          status != 'CANCELED' &&
+          status != 'CANCELLED';
+      final isOpenPostOrderChat =
+          ChatWindow.isCompletedStatus(status) && c.isChatWritable;
+      return isToday ||
+          c.unreadCount > 0 ||
+          isActiveOrder ||
+          isOpenPostOrderChat;
     }).toList();
 
     if (query.isEmpty) {
       _filteredConversations = todayConversations;
     } else {
       _filteredConversations = todayConversations
-          .where((c) =>
-              c.name.toLowerCase().contains(query) ||
-              c.lastMessage.toLowerCase().contains(query) ||
-              (c.orderNo?.toLowerCase().contains(query) ?? false))
+          .where(
+            (c) =>
+                c.name.toLowerCase().contains(query) ||
+                c.lastMessage.toLowerCase().contains(query) ||
+                (c.orderNo?.toLowerCase().contains(query) ?? false),
+          )
           .toList();
     }
   }
@@ -224,14 +245,21 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(Icons.info_outline_rounded, color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFF59E0B), size: 18),
+          Icon(
+            Icons.info_outline_rounded,
+            color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFF59E0B),
+            size: 18,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              t?.translate('chat_history_warning') ?? 'Chat messages are only appear for today.',
+              t?.translate('chat_history_warning') ??
+                  'Active and recent chats appear here. Completed chats become read-only after 4 hours.',
               style: GoogleFonts.poppins(
                 fontSize: 12,
-                color: isDark ? const Color(0xFFFDE68A) : const Color(0xFFD97706),
+                color: isDark
+                    ? const Color(0xFFFDE68A)
+                    : const Color(0xFFD97706),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -247,7 +275,6 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
     final t = AppLocalizations.of(context);
 
     return Scaffold(
-      
       body: Column(
         children: [
           // Search bar
@@ -257,13 +284,17 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
             child: Container(
               height: 44,
               decoration: BoxDecoration(
-                color: Theme.of(context).dividerColor.withOpacity(0.3),
+                color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: TextField(
                 controller: _searchController,
                 style: GoogleFonts.poppins(
-                    fontSize: 14, color: (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1E293B))),
+                  fontSize: 14,
+                  color: (Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : const Color(0xFF1E293B)),
+                ),
                 decoration: InputDecoration(
                   hintText: t?.translate('search_hint') ?? 'Search...',
                   hintStyle: GoogleFonts.poppins(
@@ -280,7 +311,11 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
                     builder: (context, value, child) {
                       if (value.text.isEmpty) return const SizedBox.shrink();
                       return IconButton(
-                        icon: Icon(Icons.clear_rounded, color: const Color(0xFF94A3B8), size: 18),
+                        icon: Icon(
+                          Icons.clear_rounded,
+                          color: const Color(0xFF94A3B8),
+                          size: 18,
+                        ),
                         onPressed: () {
                           _searchController.clear();
                         },
@@ -323,15 +358,17 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
               physics: const AlwaysScrollableScrollPhysics(),
               children: [
                 SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.6,
-                    child: _buildEmptyState(t)),
+                  height: MediaQuery.of(context).size.height * 0.6,
+                  child: _buildEmptyState(t),
+                ),
               ],
             )
           : ListView.builder(
               controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.only(top: 8, bottom: 20),
-              itemCount: _filteredConversations.length + (_isLoadingMore ? 1 : 0),
+              itemCount:
+                  _filteredConversations.length + (_isLoadingMore ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index >= _filteredConversations.length) {
                   return Padding(
@@ -417,7 +454,9 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
                   'When customers message you, their conversations will appear here.',
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
-                color: (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                color: (Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF94A3B8)
+                    : const Color(0xFF64748B)),
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
                 height: 1.4,
@@ -429,8 +468,43 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
     );
   }
 
+  String? _chatWindowLabel(ChatConversation conversation) {
+    final status = conversation.orderStatus?.toUpperCase();
+    if (status == null) return null;
+
+    final t = AppLocalizations.of(context);
+    if (!ChatWindow.isCompletedStatus(status)) {
+      return t?.translate('active_order') ?? 'Active order';
+    }
+    if (!conversation.isChatWritable) {
+      return t?.translate('chat_closed_read_only') ?? 'Closed · Read only';
+    }
+
+    final statusLabel = status == 'PICKED_UP'
+        ? (t?.translate('picked_up') ?? 'Picked up')
+        : (t?.translate('delivered') ?? 'Delivered');
+    final timeLeft = ChatWindow.compactTimeLeft(conversation.chatClosesAt);
+    return timeLeft.isEmpty
+        ? statusLabel
+        : '$statusLabel · $timeLeft ${t?.translate('left') ?? 'left'}';
+  }
+
+  Color _chatWindowColor(ChatConversation conversation) {
+    if (!ChatWindow.isCompletedStatus(conversation.orderStatus)) {
+      return const Color(0xFF16A34A);
+    }
+    if (!conversation.isChatWritable) return const Color(0xFF94A3B8);
+
+    final remaining = conversation.chatClosesAt?.difference(DateTime.now());
+    if (remaining != null && remaining <= const Duration(hours: 1)) {
+      return const Color(0xFFF59E0B);
+    }
+    return AppColors.primary;
+  }
+
   Widget _buildConversationTile(ChatConversation conversation) {
     final hasUnread = conversation.unreadCount > 0;
+    final windowLabel = _chatWindowLabel(conversation);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -443,7 +517,10 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           decoration: BoxDecoration(
             border: Border(
-              bottom: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.3), width: 1),
+              bottom: BorderSide(
+                color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
+                width: 1,
+              ),
             ),
           ),
           child: Row(
@@ -463,9 +540,12 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.poppins(
                               fontSize: 15,
-                              fontWeight:
-                                  hasUnread ? FontWeight.w600 : FontWeight.w500,
-                              color: Theme.of(context).textTheme.bodyLarge?.color,
+                              fontWeight: hasUnread
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyLarge?.color,
                             ),
                           ),
                         ),
@@ -480,6 +560,19 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
                           ),
                       ],
                     ),
+                    if (windowLabel != null) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        windowLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: _chatWindowColor(conversation),
+                        ),
+                      ),
+                    ],
                     SizedBox(height: 3),
                     Text(
                       conversation.lastMessage,
@@ -487,10 +580,13 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.poppins(
                         fontSize: 13,
-                        fontWeight:
-                            hasUnread ? FontWeight.w500 : FontWeight.w400,
+                        fontWeight: hasUnread
+                            ? FontWeight.w500
+                            : FontWeight.w400,
                         color: hasUnread
-                            ? (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF475569))
+                            ? (Theme.of(context).brightness == Brightness.dark
+                                  ? const Color(0xFFCBD5E1)
+                                  : const Color(0xFF475569))
                             : const Color(0xFF94A3B8),
                       ),
                     ),
@@ -505,8 +601,7 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
                     _formatTimestamp(conversation.timestamp),
                     style: GoogleFonts.poppins(
                       fontSize: 12,
-                      fontWeight:
-                          hasUnread ? FontWeight.w600 : FontWeight.w400,
+                      fontWeight: hasUnread ? FontWeight.w600 : FontWeight.w400,
                       color: hasUnread
                           ? AppColors.primary
                           : const Color(0xFF94A3B8),
@@ -545,8 +640,9 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
 
   Widget _buildAvatar(ChatConversation conversation, bool hasUnread) {
     final url = conversation.avatarUrl;
-    final initial =
-        conversation.name.isNotEmpty ? conversation.name[0].toUpperCase() : '?';
+    final initial = conversation.name.isNotEmpty
+        ? conversation.name[0].toUpperCase()
+        : '?';
     return Container(
       width: 52,
       height: 52,
@@ -564,7 +660,8 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
           ? CachedNetworkImage(
               imageUrl: url,
               fit: BoxFit.cover,
-              placeholder: (_, _) => ColoredBox(color: Theme.of(context).dividerColor),
+              placeholder: (_, _) =>
+                  ColoredBox(color: Theme.of(context).dividerColor),
               errorWidget: (_, _, _) => _avatarInitial(initial, hasUnread),
             )
           : _avatarInitial(initial, hasUnread),
@@ -578,7 +675,11 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
         style: GoogleFonts.poppins(
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: hasUnread ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B)),
+          color: hasUnread
+              ? Colors.white
+              : (Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFFCBD5E1)
+                    : const Color(0xFF64748B)),
         ),
       ),
     );

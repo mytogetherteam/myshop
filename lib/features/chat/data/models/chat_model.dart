@@ -6,6 +6,7 @@
 library;
 
 import 'package:my_shop/core/utils/file_url_util.dart';
+import 'package:my_shop/features/chat/data/models/chat_window.dart';
 
 enum ChatSenderType { user, shop, system }
 
@@ -171,11 +172,12 @@ class ChatMessage {
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
     final sender = (json['senderUser'] ?? json['senderAdmin']) as Map?;
-    final attachments = (json['attachments'] as List? ?? [])
-        .whereType<Map>()
-        .map((e) => ChatAttachment.fromJson(e.cast<String, dynamic>()))
-        .toList()
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    final attachments =
+        (json['attachments'] as List? ?? [])
+            .whereType<Map>()
+            .map((e) => ChatAttachment.fromJson(e.cast<String, dynamic>()))
+            .toList()
+          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
     ChatAttachment? firstVoice;
     ChatAttachment? firstImage;
@@ -187,9 +189,7 @@ class ChatMessage {
     final legacyUrl = FileUrlUtil.resolve(json['attachmentUrl']);
     final resolvedUrl = firstVoice?.url.isNotEmpty == true
         ? firstVoice!.url
-        : (firstImage?.url.isNotEmpty == true
-            ? firstImage!.url
-            : legacyUrl);
+        : (firstImage?.url.isNotEmpty == true ? firstImage!.url : legacyUrl);
 
     return ChatMessage(
       id: json['id'].toString(),
@@ -199,8 +199,8 @@ class ChatMessage {
       content: json['content'] as String?,
       attachmentUrl: resolvedUrl,
       attachments: attachments,
-      durationSeconds: firstVoice?.durationSeconds ??
-          (json['duration'] as num?)?.toInt(),
+      durationSeconds:
+          firstVoice?.durationSeconds ?? (json['duration'] as num?)?.toInt(),
       isRead: json['isRead'] == true,
       isDeleted: json['isDeleted'] == true,
       editedAt: _parseDate(json['editedAt']),
@@ -244,6 +244,7 @@ class ChatConversation {
   final String? avatarUrl;
   final String? orderNo;
   final String? orderStatus;
+  final DateTime? orderUpdatedAt;
   final String lastMessage;
   final DateTime timestamp;
   final int unreadCount;
@@ -257,11 +258,17 @@ class ChatConversation {
     this.avatarUrl,
     this.orderNo,
     this.orderStatus,
+    this.orderUpdatedAt,
     required this.lastMessage,
     required this.timestamp,
     this.unreadCount = 0,
     this.isOnline = false,
   });
+
+  bool get isChatWritable => ChatWindow.isWritable(orderStatus, orderUpdatedAt);
+
+  DateTime? get chatClosesAt =>
+      ChatWindow.closesAt(orderStatus, orderUpdatedAt);
 
   static String previewFor(Map<String, dynamic>? message) {
     if (message == null) return '';
@@ -272,9 +279,7 @@ class ChatConversation {
     if (kind == ChatMessageKind.mixed) {
       final attachments = message['attachments'] as List? ?? const [];
       final hasVoice = attachments.any(
-        (a) =>
-            a is Map &&
-            (a['type'] as String?)?.toUpperCase() == 'VOICE',
+        (a) => a is Map && (a['type'] as String?)?.toUpperCase() == 'VOICE',
       );
       if (hasVoice) return '🎤 Voice message';
       return '📷 Photo';
@@ -300,8 +305,10 @@ class ChatConversation {
       avatarUrl: FileUrlUtil.resolve(user?['profileUrl']),
       orderNo: order?['lastOrderNo'] as String?,
       orderStatus: order?['status'] as String?,
+      orderUpdatedAt: _parseDate(order?['updatedAt']),
       lastMessage: previewFor(latest),
-      timestamp: _parseDate(json['lastMessageAt']) ??
+      timestamp:
+          _parseDate(json['lastMessageAt']) ??
           _parseDate(latest?['createdAt']) ??
           _parseDate(json['createdAt']) ??
           _parseDate(order?['createdAt']) ??
@@ -323,6 +330,7 @@ class ChatConversation {
       avatarUrl: avatarUrl,
       orderNo: orderNo,
       orderStatus: orderStatus,
+      orderUpdatedAt: orderUpdatedAt,
       lastMessage: lastMessage ?? this.lastMessage,
       timestamp: timestamp ?? this.timestamp,
       unreadCount: unreadCount ?? this.unreadCount,

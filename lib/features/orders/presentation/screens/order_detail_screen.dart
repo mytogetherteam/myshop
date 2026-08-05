@@ -32,6 +32,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:my_shop/core/presentation/widgets/image_picker_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:my_shop/features/chat/data/models/chat_model.dart';
+import 'package:my_shop/features/chat/data/models/chat_window.dart';
 import 'package:my_shop/features/chat/data/services/chat_service.dart';
 import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
 import 'package:my_shop/features/chat/presentation/chat_navigation.dart';
@@ -76,6 +77,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   StreamSubscription? _wsSubscription;
   StreamSubscription? _chatSubscription;
   StreamSubscription<int>? _chatReadSubscription;
+  Timer? _chatWindowTicker;
   int _chatUnreadCount = 0;
   int _chatConversationId = 0;
   bool _isUpdating = false;
@@ -121,6 +123,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _setupChatListener();
     _fetchOrderDetails();
     _fetchChatUnreadCount();
+    _startChatWindowTicker();
     _initControllers();
     _addFormListeners();
     _loadShopAndUser();
@@ -299,6 +302,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         _initControllers();
         _isFirstLoading = false;
       });
+      _startChatWindowTicker();
       // Always (re)load the shop's full rider roster so the picker shows every
       // saved rider, regardless of what the order payload carried.
       _loadDrivers();
@@ -325,6 +329,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _wsSubscription?.cancel();
     _chatSubscription?.cancel();
     _chatReadSubscription?.cancel();
+    _chatWindowTicker?.cancel();
     _deliveryFeeController.dispose();
     _deliveryCycleNoController.dispose();
     _deliveryRiderNameController.dispose();
@@ -332,6 +337,24 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _deliveryTrackingUrlController.dispose();
     _waitingTimeMinutesController.dispose();
     super.dispose();
+  }
+
+  DateTime? get _chatClosesAt =>
+      ChatWindow.closesAt(_currentOrder.status, _currentOrder.updatedAt);
+
+  bool get _isChatWritable =>
+      ChatWindow.isWritable(_currentOrder.status, _currentOrder.updatedAt);
+
+  String get _chatTimeLeft => ChatWindow.compactTimeLeft(_chatClosesAt);
+
+  void _startChatWindowTicker() {
+    _chatWindowTicker?.cancel();
+    if (_chatClosesAt == null) return;
+    _chatWindowTicker = Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (!mounted) return;
+      setState(() {});
+      if (!_isChatWritable) timer.cancel();
+    });
   }
 
   void _addFormListeners() {
@@ -1191,7 +1214,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFED3973).withOpacity(0.1),
+                  color: const Color(0xFFED3973).withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -1215,7 +1238,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                   fontSize: 15,
-                  color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B),
+                  color: isDark
+                      ? const Color(0xFFCBD5E1)
+                      : const Color(0xFF64748B),
                 ),
               ),
               const SizedBox(height: 24),
@@ -1623,10 +1648,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       isDismissible: true,
       enableDrag: true,
       backgroundColor: Colors.transparent,
-      builder: (sheetContext) => MediaQuery(
-        data: staticMediaQuery,
-        child: const CancelOrderDialog(),
-      ),
+      builder: (sheetContext) =>
+          MediaQuery(data: staticMediaQuery, child: const CancelOrderDialog()),
     );
 
     if (reason != null && mounted) {
@@ -1885,7 +1908,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Theme.of(context).cardColor,
-                          image: _currentOrder.customerAvatar != null && _currentOrder.customerAvatar!.isNotEmpty
+                          image:
+                              _currentOrder.customerAvatar != null &&
+                                  _currentOrder.customerAvatar!.isNotEmpty
                               ? DecorationImage(
                                   image: NetworkImage(
                                     _currentOrder.customerAvatar!,
@@ -1954,6 +1979,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   _buildCustomerSection(),
+                                  if (ChatWindow.isCompletedStatus(
+                                    _currentOrder.status,
+                                  )) ...[
+                                    SizedBox(height: 12),
+                                    _buildCompletedOrderChatAction(),
+                                  ],
                                   SizedBox(height: 16),
                                   _buildAddressSection(context),
                                 ],
@@ -2355,6 +2386,89 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
+  Widget _buildCompletedOrderChatAction() {
+    if (!_isChatWritable && _chatConversationId <= 0) {
+      return const SizedBox.shrink();
+    }
+
+    final t = AppLocalizations.of(context);
+    final timeLeft = _chatTimeLeft;
+    final isOpen = _isChatWritable;
+    final label = isOpen
+        ? [
+            t?.translate('message_customer') ?? 'Message customer',
+            if (timeLeft.isNotEmpty)
+              '$timeLeft ${t?.translate('left') ?? 'left'}',
+          ].join(' · ')
+        : (t?.translate('view_chat') ?? 'View chat');
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isOpen
+            ? AppColors.primary.withValues(alpha: 0.07)
+            : Theme.of(context).dividerColor.withValues(alpha: 0.25),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isOpen
+              ? AppColors.primary.withValues(alpha: 0.22)
+              : Theme.of(context).dividerColor,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isOpen ? PhosphorIconsRegular.chatCircleDots : Icons.forum_outlined,
+            color: isOpen ? AppColors.primary : const Color(0xFF64748B),
+            size: 22,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              isOpen
+                  ? (t?.translate('post_order_chat_help') ??
+                        'Order support is still available')
+                  : (t?.translate('chat_read_only') ??
+                        'This conversation is now read-only'),
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFFCBD5E1)
+                    : const Color(0xFF475569),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          OutlinedButton(
+            onPressed: _openCustomerChat,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: isOpen
+                  ? AppColors.primary
+                  : const Color(0xFF64748B),
+              side: BorderSide(
+                color: isOpen
+                    ? AppColors.primary.withValues(alpha: 0.55)
+                    : const Color(0xFFCBD5E1),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+            ),
+            child: Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCustomerSection() {
     return Row(
       children: [
@@ -2376,16 +2490,25 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         ),
                       ),
                       InteractiveViewer(
-                        child: _currentOrder.customerAvatar != null && _currentOrder.customerAvatar!.isNotEmpty
+                        child:
+                            _currentOrder.customerAvatar != null &&
+                                _currentOrder.customerAvatar!.isNotEmpty
                             ? CachedNetworkImage(
                                 imageUrl: _currentOrder.customerAvatar!,
                                 fit: BoxFit.contain,
                                 placeholder: (context, url) =>
                                     const CustomLoadingIndicator(size: 32),
                                 errorWidget: (context, url, error) =>
-                                    const Icon(Icons.error, color: Colors.white),
+                                    const Icon(
+                                      Icons.error,
+                                      color: Colors.white,
+                                    ),
                               )
-                            : const Icon(Icons.person, color: Colors.white, size: 64),
+                            : const Icon(
+                                Icons.person,
+                                color: Colors.white,
+                                size: 64,
+                              ),
                       ),
                       Positioned(
                         top: 40,
@@ -2411,7 +2534,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: Theme.of(context).cardColor,
-              image: _currentOrder.customerAvatar != null && _currentOrder.customerAvatar!.isNotEmpty
+              image:
+                  _currentOrder.customerAvatar != null &&
+                      _currentOrder.customerAvatar!.isNotEmpty
                   ? DecorationImage(
                       image: NetworkImage(_currentOrder.customerAvatar!),
                       fit: BoxFit.cover,
@@ -2536,6 +2661,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           name: _currentOrder.customerName,
           orderNo: _currentOrder.lastOrderNo,
           orderStatus: _currentOrder.status,
+          orderUpdatedAt: _currentOrder.updatedAt,
           lastMessage: '',
           timestamp: DateTime.now(),
         );
@@ -3090,7 +3216,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         children: [
           GestureDetector(
             onTap: () {
-              if (item.menuItemImageUrl != null && item.menuItemImageUrl!.isNotEmpty) {
+              if (item.menuItemImageUrl != null &&
+                  item.menuItemImageUrl!.isNotEmpty) {
                 showDialog(
                   context: context,
                   builder: (context) => Dialog(
@@ -3122,9 +3249,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                       imageUrl: item.menuItemImageUrl!,
                                       fit: BoxFit.cover,
                                       placeholder: (context, url) =>
-                                          const Center(child: CustomLoadingIndicator(size: 32)),
+                                          const Center(
+                                            child: CustomLoadingIndicator(
+                                              size: 32,
+                                            ),
+                                          ),
                                       errorWidget: (context, url, error) =>
-                                          const Center(child: Icon(Icons.error, color: Colors.grey)),
+                                          const Center(
+                                            child: Icon(
+                                              Icons.error,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
                                     ),
                                   ),
                                 ),
@@ -3134,9 +3270,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                 right: -15,
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.7),
+                                    color: Colors.black.withValues(alpha: 0.7),
                                     shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white, width: 2),
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 2,
+                                    ),
                                   ),
                                   child: IconButton(
                                     padding: const EdgeInsets.all(4),
@@ -3316,11 +3455,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 : const Color(0xFF1E293B)),
           ),
         ),
-        if (_currentOrder.paymentSlipUrl != null && _currentOrder.paymentSlipUrl!.isNotEmpty) ...[
+        if (_currentOrder.paymentSlipUrl != null &&
+            _currentOrder.paymentSlipUrl!.isNotEmpty) ...[
           SizedBox(height: 16),
           Row(
             children: [
-              if (_currentOrder.paymentMethodIconUrl != null && _currentOrder.paymentMethodIconUrl!.isNotEmpty)
+              if (_currentOrder.paymentMethodIconUrl != null &&
+                  _currentOrder.paymentMethodIconUrl!.isNotEmpty)
                 CachedNetworkImage(
                   imageUrl: _currentOrder.paymentMethodIconUrl!,
                   width: 24,
@@ -3375,7 +3516,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           ),
         ],
         SizedBox(height: 16),
-        _buildSummaryRow('Food Price', _currentOrder.foodPrice.toFormattedPrice()),
+        _buildSummaryRow(
+          'Food Price',
+          _currentOrder.foodPrice.toFormattedPrice(),
+        ),
         if (_currentOrder.taxEnable) ...[
           SizedBox(height: 12),
           _buildSummaryRow(
@@ -3416,7 +3560,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         _couponDetailHint(),
                         style: GoogleFonts.poppins(
                           fontSize: 12,
-                          color: (Theme.of(context).brightness == Brightness.dark
+                          color:
+                              (Theme.of(context).brightness == Brightness.dark
                               ? const Color(0xFF94A3B8)
                               : const Color(0xFF94A3B8)),
                         ),
@@ -3430,7 +3575,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 _currentOrder.discountAmount > 0
                     ? '- ${_currentOrder.displayDiscountAmount.isNotEmpty ? _currentOrder.displayDiscountAmount : _currentOrder.discountAmount.toFormattedPrice()}'
                     : (AppLocalizations.of(context)?.translate('coupon_free') ??
-                        'FREE'),
+                          'FREE'),
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -3458,9 +3603,17 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 ),
               ),
               SizedBox(width: 8),
-              if (_currentOrder.deliveryType == 'NORMAL' && !['ON_THE_WAY', 'DELIVERED', 'PICKED_UP'].contains(_currentOrder.status))
+              if (_currentOrder.deliveryType == 'NORMAL' &&
+                  ![
+                    'ON_THE_WAY',
+                    'DELIVERED',
+                    'PICKED_UP',
+                  ].contains(_currentOrder.status))
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFEF2F2),
                     borderRadius: BorderRadius.circular(4),
@@ -3476,7 +3629,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 ),
               if (_currentOrder.deliveryType != 'NORMAL')
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFEF2F2),
                     borderRadius: BorderRadius.circular(4),
@@ -3509,7 +3665,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           children: [
             Expanded(
               child: Text(
-                (_currentOrder.deliveryType == 'NORMAL' && !['ON_THE_WAY', 'DELIVERED', 'PICKED_UP'].contains(_currentOrder.status)) ? 'Est Total' : 'Total',
+                (_currentOrder.deliveryType == 'NORMAL' &&
+                        ![
+                          'ON_THE_WAY',
+                          'DELIVERED',
+                          'PICKED_UP',
+                        ].contains(_currentOrder.status))
+                    ? 'Est Total'
+                    : 'Total',
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -3522,11 +3685,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             Row(
               children: [
                 Text(
-                  (_currentOrder.deliveryType == 'NORMAL' && ['ON_THE_WAY', 'DELIVERED', 'PICKED_UP'].contains(_currentOrder.status))
-                      ? (_currentOrder.checkoutTotal + _currentOrder.deliveryFee).toFormattedPrice()
+                  (_currentOrder.deliveryType == 'NORMAL' &&
+                          [
+                            'ON_THE_WAY',
+                            'DELIVERED',
+                            'PICKED_UP',
+                          ].contains(_currentOrder.status))
+                      ? (_currentOrder.checkoutTotal +
+                                _currentOrder.deliveryFee)
+                            .toFormattedPrice()
                       : _currentOrder.displayTotalAmount.isNotEmpty
-                          ? _currentOrder.displayTotalAmount
-                          : _currentOrder.checkoutTotal.toFormattedPrice(),
+                      ? _currentOrder.displayTotalAmount
+                      : _currentOrder.checkoutTotal.toFormattedPrice(),
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -3620,6 +3790,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         try {
           await launchUrl(url, mode: LaunchMode.externalApplication);
         } catch (e) {
+          if (!mounted) return;
           _showAppNotInstalledSnackbar(context, name);
         }
       },
@@ -4650,7 +4821,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ),
             Row(
               children: [
-                if (_currentOrder.paymentMethodIconUrl != null && _currentOrder.paymentMethodIconUrl!.isNotEmpty)
+                if (_currentOrder.paymentMethodIconUrl != null &&
+                    _currentOrder.paymentMethodIconUrl!.isNotEmpty)
                   CachedNetworkImage(
                     imageUrl: _currentOrder.paymentMethodIconUrl!,
                     width: 20,
@@ -4686,7 +4858,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           children: [
             Expanded(
               child: Text(
-                (_currentOrder.deliveryType == 'NORMAL' && !['ON_THE_WAY', 'DELIVERED', 'PICKED_UP'].contains(_currentOrder.status)) ? 'Est Total' : 'Total',
+                (_currentOrder.deliveryType == 'NORMAL' &&
+                        ![
+                          'ON_THE_WAY',
+                          'DELIVERED',
+                          'PICKED_UP',
+                        ].contains(_currentOrder.status))
+                    ? 'Est Total'
+                    : 'Total',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   color: (Theme.of(context).brightness == Brightness.dark
@@ -4696,8 +4875,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
             ),
             Text(
-              (_currentOrder.deliveryType == 'NORMAL' && ['ON_THE_WAY', 'DELIVERED', 'PICKED_UP'].contains(_currentOrder.status))
-                  ? (_currentOrder.checkoutTotal + _currentOrder.deliveryFee).toFormattedPrice()
+              (_currentOrder.deliveryType == 'NORMAL' &&
+                      [
+                        'ON_THE_WAY',
+                        'DELIVERED',
+                        'PICKED_UP',
+                      ].contains(_currentOrder.status))
+                  ? (_currentOrder.checkoutTotal + _currentOrder.deliveryFee)
+                        .toFormattedPrice()
                   : _currentOrder.displayTotalAmount,
               style: GoogleFonts.poppins(
                 fontSize: 16,
@@ -4857,7 +5042,6 @@ class _FullScreenTextInputState extends State<_FullScreenTextInput> {
     super.dispose();
   }
 
-
   Widget _buildAppIcon({
     required String name,
     required Color color,
@@ -4964,6 +5148,7 @@ class _FullScreenTextInputState extends State<_FullScreenTextInput> {
                           mode: LaunchMode.externalApplication,
                         );
                       } catch (e) {
+                        if (!context.mounted) return;
                         _showAppNotInstalledSnackbar(context, 'Bolt');
                       }
                     },
@@ -4980,6 +5165,7 @@ class _FullScreenTextInputState extends State<_FullScreenTextInput> {
                           mode: LaunchMode.externalApplication,
                         );
                       } catch (e) {
+                        if (!context.mounted) return;
                         _showAppNotInstalledSnackbar(context, 'Grab');
                       }
                     },
