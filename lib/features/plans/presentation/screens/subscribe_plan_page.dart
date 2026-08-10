@@ -8,6 +8,7 @@ import 'package:my_shop/core/data/services/image_upload_service.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
 import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/presentation/widgets/back_title_app_bar.dart';
+import 'package:my_shop/core/presentation/widgets/image_source_sheet.dart';
 import 'package:my_shop/core/presentation/widgets/primary_gradient_button.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -173,33 +174,12 @@ class _SubscribePlanPageState extends State<SubscribePlanPage> {
   Future<ImageSource?> _askSlipSource(AppLocalizations? t) async {
     return showModalBottomSheet<ImageSource>(
       context: context,
-      backgroundColor: Theme.of(context).cardColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_library_outlined),
-                title: Text(
-                  t?.translate('choose_from_gallery') ?? 'Choose from Gallery',
-                  style: GoogleFonts.poppins(),
-                ),
-                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
-              ),
-              ListTile(
-                leading: const Icon(Icons.camera_alt_outlined),
-                title: Text(
-                  t?.translate('take_photo') ?? 'Take a Photo',
-                  style: GoogleFonts.poppins(),
-                ),
-                onTap: () => Navigator.pop(ctx, ImageSource.camera),
-              ),
-            ],
-          ),
+        return ImageSourceSheet(
+          title: t?.translate('plans_payment_slip') ?? 'Payment slip',
+          onGallery: () => Navigator.pop(ctx, ImageSource.gallery),
+          onCamera: () => Navigator.pop(ctx, ImageSource.camera),
         );
       },
     );
@@ -295,9 +275,6 @@ class _SubscribePlanPageState extends State<SubscribePlanPage> {
         : (_plan?.displayName ?? '');
     final selectedAccount = _selectedAccount;
 
-    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
-    final bottomSafe = MediaQuery.paddingOf(context).bottom;
-
     return Scaffold(
       backgroundColor: bg,
       resizeToAvoidBottomInset: true,
@@ -307,12 +284,7 @@ class _SubscribePlanPageState extends State<SubscribePlanPage> {
         behavior: HitTestBehavior.deferToChild,
         child: ListView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          padding: EdgeInsets.fromLTRB(
-            20,
-            12,
-            20,
-            32 + bottomSafe + bottomInset,
-          ),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
           children: [
             _sectionCard(
               isDark: isDark,
@@ -876,17 +848,31 @@ class _SubscribePlanPageState extends State<SubscribePlanPage> {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            PrimaryGradientButton(
+          ],
+        ),
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          border: Border(
+            top: BorderSide(color: Colors.black.withValues(alpha: 0.05)),
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: PrimaryGradientButton(
               text: _isResubmit
                   ? (t?.translate('plans_resubmit_payment') ??
                       'Resubmit Payment')
                   : (t?.translate('plans_submit_purchase') ??
                       'Submit Payment'),
+              height: 64,
+              borderRadius: 18,
               isLoading: _submitting,
               onPressed: _submitting ? null : _submit,
             ),
-          ],
+          ),
         ),
       ),
     );
