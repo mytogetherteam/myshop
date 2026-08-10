@@ -15,7 +15,8 @@ class CertificatePinningInterceptor extends Interceptor {
 
   void _initPins() {
     _hostPins['api.mytogether.org'] = [
-      'd7f995e9f25477b57a7e4208412706f09bf8cf8b168d867a97e6a44f9268fe73',
+      // Leaf cert for api.mytogether.org (Let's Encrypt, expires 2026-10-29)
+      'a85f2d9db386ec3e2e52eed3e7beef1fab4aea4d07ce383c932c9fb29451dce0',
     ];
 
     // TODO: Add real certificate pin for staging server
