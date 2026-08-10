@@ -26,6 +26,7 @@ import 'feedback_page.dart';
 import 'rider_management_page.dart';
 import 'shop_story_page.dart';
 import 'package:my_shop/features/job_posts/presentation/screens/job_posts_page.dart';
+import 'package:my_shop/features/plans/presentation/screens/plans_page.dart';
 
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
@@ -699,6 +700,14 @@ class ProfilePageState extends State<ProfilePage>
               CupertinoPageRoute(builder: (_) => const AcceptedPaymentPage()),
             ).then((_) => refresh()),
           ),
+        _buildMenuOption(
+          icon: PhosphorIconsRegular.crown,
+          title: t?.translate('plans') ?? 'Plans',
+          onTap: () => Navigator.push(
+            context,
+            CupertinoPageRoute(builder: (_) => const PlansPage()),
+          ),
+        ),
         _buildMenuOption(
           icon: PhosphorIconsRegular.star,
           title: t?.translate('reviews') ?? 'Reviews',

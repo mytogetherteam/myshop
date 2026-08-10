@@ -66,7 +66,8 @@ class ImageUploadService {
     int maxFileSizeMB = 1,
   }) async {
     final granted = await _requestGalleryPermission();
-    if (!granted.isGranted) {
+    // iOS 14+ "Limited Photos" is usable — isGranted alone is false for it.
+    if (!_isPhotosAccessAllowed(granted)) {
       return ImagePickResult(
         permissionDenied: true,
         permanentlyDenied: granted.isPermanentlyDenied,
@@ -130,13 +131,18 @@ class ImageUploadService {
       // Android uses the system Photo Picker which does not require permissions.
       return PermissionStatus.granted;
     }
-    // iOS
+    // iOS — request read access; limited access is still enough to pick images.
     return Permission.photos.request();
   }
 
   Future<PermissionStatus> _requestCameraPermission() async {
     if (kIsWeb) return PermissionStatus.granted;
     return Permission.camera.request();
+  }
+
+  /// Full grant or iOS Limited Photos both allow gallery picking.
+  bool _isPhotosAccessAllowed(PermissionStatus status) {
+    return status.isGranted || status.isLimited;
   }
 
 
