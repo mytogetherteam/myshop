@@ -61,6 +61,10 @@ class ApiException implements Exception {
             message = 'Not found';
             type = ApiErrorType.notFound;
             break;
+          case 409:
+            message = details ?? 'Conflict';
+            type = ApiErrorType.validation;
+            break;
           case 500:
           case 502:
           case 503:

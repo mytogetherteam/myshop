@@ -952,4 +952,4 @@ class _AnimatedNewBadgeState extends State<AnimatedNewBadge> with SingleTickerPr
       ),
     );
   }
-}
+}
