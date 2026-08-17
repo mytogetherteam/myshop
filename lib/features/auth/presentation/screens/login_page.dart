@@ -111,160 +111,235 @@ class _LoginPageState extends State<LoginPage>
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            FadeTransition(
-          opacity: _fadeAnim,
-          child: SlideTransition(
-            position: _slideAnim,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 28),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 64),
-
-                    // Logo
-                    Center(child: AppLogo(size: 88)),
-
-                    SizedBox(height: 48),
-
-                    // Welcome text
-                    Text(
-                      t?.translate('login_title') ?? 'Shop Admin Login 👋',
-                      style: GoogleFonts.poppins(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
-                        color: Theme.of(context).textTheme.bodyLarge?.color,
-                      ),
-                    ),
-                    SizedBox(height: 6),
-                    Text(
-                      t?.translate('login_subtitle') ?? 'Manage your shop with ease',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: Theme.of(context).textTheme.bodyMedium?.color,
-                      ),
-                    ),
-
-                    SizedBox(height: 40),
-
-                    // Username / Email field
-                    _buildLabel(t?.translate('username_or_email') ?? 'Username or Email'),
-                    SizedBox(height: 8),
-                    _buildTextField(
-                      controller: _identifierController,
-                      hint: t?.translate('username_email_hint') ?? 'admin@shop.com',
-                      icon: Icons.person_outline_rounded,
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) {
-                          return t?.translate('please_enter_username_email') ?? 'Please enter your username or email';
-                        }
-                        return null;
-                      },
-                    ),
-
-                    SizedBox(height: 20),
-
-                    // Password field
-                    _buildLabel(t?.translate('password') ?? 'Password'),
-                    SizedBox(height: 8),
-                    _buildTextField(
-                      controller: _passwordController,
-                      hint: t?.translate('enter_your_password') ?? 'Enter your password',
-                      icon: Icons.lock_outline_rounded,
-                      obscure: _obscurePassword,
-                      suffixWidget: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
-                          color: Colors.grey[500],
-                          size: 20,
-                        ),
-                        onPressed: () => setState(
-                          () => _obscurePassword = !_obscurePassword,
-                        ),
-                      ),
-                      validator: (v) {
-                        if (v == null || v.isEmpty) {
-                          return t?.translate('please_enter_password') ?? 'Please enter your password';
-                        }
-                        return null;
-                      },
-                    ),
-
-                    SizedBox(height: 32),
-
-                    // Login Button
-                    _buildLoginButton(),
-
-                    SizedBox(height: 24),
-
-                    // Register Link
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+      backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.grey[100],
+      body: Stack(
+        children: [
+          // Banner Image Background
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 320,
+            child: Image.asset(
+              'assets/images/ChatGPT Image Aug 8, 2026, 12_46.png',
+              fit: BoxFit.cover,
+            ),
+          ),
+          
+          // Main Scrollable Content
+          SafeArea(
+            bottom: false,
+            child: Stack(
+              children: [
+                FadeTransition(
+                  opacity: _fadeAnim,
+                  child: SlideTransition(
+                    position: _slideAnim,
+                    child: Column(
                       children: [
-                        Text(
-                          t?.translate('no_account') ?? "Don't have a shop account? ",
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            color: Theme.of(context).textTheme.bodyMedium?.color,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const RegisterPage(),
+                        // Space for the header image
+                        const SizedBox(height: 180),
+                        
+                        // The main login card
+                        Expanded(
+                          child: Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).cardColor,
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(32),
+                                topRight: Radius.circular(32),
                               ),
-                            );
-                          },
-                          child: GradientText(
-                            t?.translate('apply_now') ?? "Apply Now",
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, -8),
+                                ),
+                              ],
+                            ),
+                            child: SingleChildScrollView(
+                              physics: const BouncingScrollPhysics(),
+                              padding: const EdgeInsets.fromLTRB(28, 0, 28, 32),
+                              child: Form(
+                                key: _formKey,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Logo overlapping the top of the card
+                                    Stack(
+                                      clipBehavior: Clip.none,
+                                      alignment: Alignment.topCenter,
+                                      children: [
+                                        const SizedBox(width: double.infinity, height: 60),
+                                        Positioned(
+                                          top: -44,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(
+                                              color: Theme.of(context).cardColor,
+                                              shape: BoxShape.circle,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withValues(alpha: 0.08),
+                                                  blurRadius: 16,
+                                                  offset: const Offset(0, 8),
+                                                ),
+                                              ],
+                                            ),
+                                            child: const AppLogo(size: 72),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    
+                                    // Welcome Text
+                                    Center(
+                                      child: Text(
+                                        t?.translate('login_title') ?? 'Shop Admin Login',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.w700,
+                                          color: Theme.of(context).textTheme.bodyLarge?.color,
+                                          letterSpacing: -0.5,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Center(
+                                      child: Text(
+                                        t?.translate('login_subtitle') ?? 'Manage your shop efficiently',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                          color: Theme.of(context).textTheme.bodyMedium?.color,
+                                        ),
+                                      ),
+                                    ),
+                                    
+                                    const SizedBox(height: 48),
+                                    
+                                    // Username / Email field
+                                    _buildLabel(t?.translate('username_or_email') ?? 'Username or Email'),
+                                    const SizedBox(height: 8),
+                                    _buildTextField(
+                                      controller: _identifierController,
+                                      hint: t?.translate('username_email_hint') ?? 'admin@shop.com',
+                                      icon: PhosphorIconsRegular.user,
+                                      validator: (v) {
+                                        if (v == null || v.trim().isEmpty) {
+                                          return t?.translate('please_enter_username_email') ?? 'Please enter your username or email';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                    
+                                    const SizedBox(height: 24),
+                                    
+                                    // Password field
+                                    _buildLabel(t?.translate('password') ?? 'Password'),
+                                    const SizedBox(height: 8),
+                                    _buildTextField(
+                                      controller: _passwordController,
+                                      hint: t?.translate('enter_your_password') ?? 'Enter your password',
+                                      icon: PhosphorIconsRegular.lockKey,
+                                      obscure: _obscurePassword,
+                                      suffixWidget: IconButton(
+                                        icon: Icon(
+                                          _obscurePassword
+                                              ? PhosphorIconsRegular.eyeClosed
+                                              : PhosphorIconsRegular.eye,
+                                          color: AppColors.outline,
+                                          size: 22,
+                                        ),
+                                        onPressed: () => setState(
+                                          () => _obscurePassword = !_obscurePassword,
+                                        ),
+                                      ),
+                                      validator: (v) {
+                                        if (v == null || v.isEmpty) {
+                                          return t?.translate('please_enter_password') ?? 'Please enter your password';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                    
+                                    const SizedBox(height: 40),
+                                    
+                                    // Login Button
+                                    _buildLoginButton(),
+                                    
+                                    const SizedBox(height: 32),
+                                    
+                                    // Register Link
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          t?.translate('no_account') ?? "Don't have a shop account? ",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            color: Theme.of(context).textTheme.bodyMedium?.color,
+                                          ),
+                                        ),
+                                        GestureDetector(
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => const RegisterPage(),
+                                              ),
+                                            );
+                                          },
+                                          child: GradientText(
+                                            t?.translate('apply_now') ?? "Apply Now",
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    
+                                    const SizedBox(height: 40),
+                                    
+                                    // Version Info
+                                    Center(
+                                      child: Text(
+                                        AppVersion.fullVersion,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                          color: AppColors.outline,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ],
                     ),
-
-                    SizedBox(height: 48),
-
-                    // Version Info
-                    Center(
-                      child: Text(
-                        AppVersion.fullVersion,
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: Colors.grey[400],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 24),
-                  ],
+                  ),
                 ),
-              ),
+                
+                // Language FAB
+                Positioned(
+                  top: 8,
+                  right: 24,
+                  child: _buildLanguageFab(),
+                ),
+              ],
             ),
           ),
-        ),
-        Positioned(
-          top: 16,
-          right: 24,
-          child: _buildLanguageFab(),
-        ),
-      ],
-    ),
-  ),
+        ],
+      ),
     );
   }
 
@@ -287,21 +362,35 @@ class _LoginPageState extends State<LoginPage>
     Widget? suffixWidget,
     String? Function(String?)? validator,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return TextFormField(
       controller: controller,
       obscureText: obscure,
       validator: validator,
-      style: GoogleFonts.poppins(fontSize: 15, color: Theme.of(context).textTheme.bodyLarge?.color),
+      style: GoogleFonts.poppins(
+        fontSize: 15, 
+        color: Theme.of(context).textTheme.bodyLarge?.color,
+        fontWeight: FontWeight.w500,
+      ),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: GoogleFonts.poppins(color: Colors.grey[400], fontSize: 14),
-        prefixIcon: Icon(icon, color: Colors.grey[500], size: 20),
+        hintStyle: GoogleFonts.poppins(
+          color: AppColors.outline, 
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+        ),
+        prefixIcon: ShaderMask(
+          blendMode: BlendMode.srcIn,
+          shaderCallback: (bounds) => AppColors.primaryGradient.createShader(bounds),
+          child: Icon(icon, size: 22),
+        ),
         suffixIcon: suffixWidget ?? ValueListenableBuilder<TextEditingValue>(
           valueListenable: controller,
           builder: (context, value, child) {
             if (value.text.isEmpty) return const SizedBox.shrink();
             return IconButton(
-              icon: Icon(Icons.clear, color: Colors.grey, size: 20),
+              icon: Icon(PhosphorIconsRegular.xCircle, color: AppColors.outline, size: 20),
               onPressed: () {
                 controller.clear();
               },
@@ -309,30 +398,33 @@ class _LoginPageState extends State<LoginPage>
           },
         ),
         filled: true,
-        fillColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : Colors.grey[50],
+        fillColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
+          horizontal: 20,
+          vertical: 18,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : Colors.grey[200]!, width: 1),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(
+            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0), 
+            width: 1,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.red, width: 1),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.error, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.red, width: 1.5),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
       ),
     );
@@ -341,13 +433,15 @@ class _LoginPageState extends State<LoginPage>
   Widget _buildLoginButton() {
     final t = AppLocalizations.of(context);
     return PrimaryGradientButton(
-      text: t?.translate('login_btn') ?? 'Login',
+      text: t?.translate('login_btn') ?? 'Login to Dashboard',
       isLoading: _isLoading,
       onPressed: _handleLogin,
     );
   }
 
   Widget _buildLanguageFab() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return ValueListenableBuilder<Locale>(
       valueListenable: LocalizationService.instance.localeNotifier,
       builder: (context, locale, _) {
@@ -362,34 +456,37 @@ class _LoginPageState extends State<LoginPage>
             );
           },
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-              border: Border.all(color: Theme.of(context).dividerColor),
+              color: isDark ? const Color(0xFF1E293B).withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.9),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isDark ? const Color(0xFF334155) : Colors.grey[200]!,
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                PhosphorIcon(PhosphorIconsRegular.globe, color: Theme.of(context).textTheme.bodyLarge?.color, size: 20),
-                SizedBox(width: 8),
+                Icon(
+                  PhosphorIconsRegular.globe, 
+                  color: isDark ? Colors.white : Colors.black87, 
+                  size: 18,
+                ),
+                const SizedBox(width: 6),
                 Text(
                   langCode,
                   style: GoogleFonts.poppins(
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                    color: isDark ? Colors.white : Colors.black87,
                   ),
                 ),
-                SizedBox(width: 4),
-                PhosphorIcon(PhosphorIconsRegular.caretDown, color: Theme.of(context).textTheme.bodySmall?.color, size: 16),
+                const SizedBox(width: 4),
+                Icon(
+                  PhosphorIconsRegular.caretDown, 
+                  color: isDark ? Colors.grey[400] : Colors.grey[600], 
+                  size: 14,
+                ),
               ],
             ),
           ),

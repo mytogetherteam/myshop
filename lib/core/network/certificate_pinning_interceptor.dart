@@ -15,6 +15,7 @@ class CertificatePinningInterceptor extends Interceptor {
 
   void _initPins() {
     _hostPins['api.mytogether.org'] = [
+      'a85f2d9db386ec3e2e52eed3e7beef1fab4aea4d07ce383c932c9fb29451dce0', // New cert
       'd7f995e9f25477b57a7e4208412706f09bf8cf8b168d867a97e6a44f9268fe73',
     ];
 

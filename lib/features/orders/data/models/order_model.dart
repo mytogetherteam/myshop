@@ -79,6 +79,7 @@ class OrderModel {
   final String? shopPhone;
   final String customerName;
   final String customerPhone;
+  final int? customerId;
   final String? customerEmail;
   final String? customerAvatar;
   final String? customerUsername;
@@ -140,6 +141,7 @@ class OrderModel {
     this.shopPhone,
     this.customerName = 'Customer',
     this.customerPhone = '-',
+    this.customerId,
     this.customerEmail,
     this.customerAvatar,
     this.customerUsername,
@@ -334,6 +336,7 @@ class OrderModel {
       shopPhone: json['shopPhone']?.toString(),
       customerName: json['customerName']?.toString() ?? user?['name']?.toString() ?? 'Customer',
       customerPhone: json['customerPhone']?.toString() ?? user?['phone']?.toString() ?? '-',
+      customerId: json['customerId'] as int? ?? user?['id'] as int?,
       customerEmail: json['customerEmail']?.toString() ?? user?['email']?.toString(),
       customerAvatar: _resolveUrl(json['customerAvatar'] ?? user?['profileUrl']),
       customerUsername: json['customerUsername']?.toString(),

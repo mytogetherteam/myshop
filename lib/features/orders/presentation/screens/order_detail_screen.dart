@@ -38,6 +38,8 @@ import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart'
 import 'package:my_shop/features/chat/presentation/chat_navigation.dart';
 import 'package:my_shop/features/orders/presentation/screens/pickup_complete_screen.dart';
 import 'package:my_shop/features/orders/presentation/widgets/order_qr_scan_icon.dart';
+import 'package:my_shop/features/call/data/shop_call_session.dart';
+import 'package:my_shop/features/call/presentation/outgoing_call_screen.dart';
 import 'package:my_shop/features/orders/presentation/widgets/far_order_delivery_banner.dart';
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
 
@@ -2614,24 +2616,49 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Future<void> _callCustomer() async {
-    final phone = _currentOrder.customerPhone.trim();
-    if (phone.isEmpty || phone == '-') {
-      AppDialog.showToast(context, 'No phone number available', isError: true);
+    final customerId = _currentOrder.customerId;
+    final customerName = _currentOrder.customerName;
+
+    if (customerId == null || customerId <= 0) {
+      // Fallback to regular phone call if customer ID is unavailable
+      final phone = _currentOrder.customerPhone.trim();
+      if (phone.isEmpty || phone == '-') {
+        AppDialog.showToast(context, 'No contact information available', isError: true);
+        return;
+      }
+      final uri = Uri(scheme: 'tel', path: phone);
+      try {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } catch (_) {
+        if (mounted) AppDialog.showToast(context, 'Could not open dialer', isError: true);
+      }
       return;
     }
-    final uri = Uri(scheme: 'tel', path: phone);
-    try {
-      final launched = await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
+
+    // Use in-app VoIP call
+    final session = ShopCallSession();
+    if (session.state.value != ShopCallState.idle) {
+      AppDialog.showToast(context, 'You are already on a call', isError: true);
+      return;
+    }
+
+    final started = await session.initiateCallToUser(
+      userId: customerId,
+      customerName: customerName,
+    );
+
+    if (!started) {
+      if (mounted) AppDialog.showToast(context, 'Could not start the call', isError: true);
+      return;
+    }
+
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OutgoingCallScreen(customerName: customerName),
+        ),
       );
-      if (!launched && mounted) {
-        AppDialog.showToast(context, 'Could not open dialer', isError: true);
-      }
-    } catch (_) {
-      if (mounted) {
-        AppDialog.showToast(context, 'Could not open dialer', isError: true);
-      }
     }
   }
 

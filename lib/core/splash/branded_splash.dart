@@ -68,12 +68,12 @@ class BrandedSplash {
 /// otherwise loads [BrandedSplash.imageUrl]. Removes native splash on first frame.
 class BrandedSplashGate extends StatefulWidget {
   final Widget child;
-  final Duration minDisplay;
+  final Duration displayDuration;
 
   const BrandedSplashGate({
     super.key,
     required this.child,
-    this.minDisplay = const Duration(milliseconds: 2200),
+    this.displayDuration = const Duration(seconds: 10),
   });
 
   @override
@@ -93,10 +93,14 @@ class _BrandedSplashGateState extends State<BrandedSplashGate> {
     _visible = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       FlutterNativeSplash.remove();
-      Future<void>.delayed(widget.minDisplay, () {
-        if (mounted) setState(() => _visible = false);
-      });
+      // The timeout is now handled by the _SkipButton's AnimationController
     });
+  }
+
+  void _hideSplash() {
+    if (mounted && _visible) {
+      setState(() => _visible = false);
+    }
   }
 
   Widget _buildSplashImage() {
@@ -121,7 +125,7 @@ class _BrandedSplashGateState extends State<BrandedSplashGate> {
       placeholder: (_, _) => const ColoredBox(color: Colors.white),
       errorWidget: (_, _, _) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && _visible) setState(() => _visible = false);
+          _hideSplash();
         });
         return const ColoredBox(color: Colors.white);
       },
@@ -143,13 +147,118 @@ class _BrandedSplashGateState extends State<BrandedSplashGate> {
           child: AnimatedOpacity(
             opacity: _visible ? 1 : 0,
             duration: const Duration(milliseconds: 350),
-            child: ColoredBox(
-              color: Colors.white,
-              child: _buildSplashImage(),
+            child: Material(
+              type: MaterialType.transparency,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  ColoredBox(
+                    color: Colors.white,
+                    child: _buildSplashImage(),
+                  ),
+                  Positioned(
+                    top: MediaQuery.of(context).padding.top + 16,
+                    right: 16,
+                    child: _SkipButton(
+                      duration: widget.displayDuration,
+                      onSkip: _hideSplash,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _SkipButton extends StatefulWidget {
+  final VoidCallback onSkip;
+  final Duration duration;
+
+  const _SkipButton({required this.onSkip, required this.duration});
+
+  @override
+  State<_SkipButton> createState() => _SkipButtonState();
+}
+
+class _SkipButtonState extends State<_SkipButton> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: widget.duration)
+      ..forward()
+      ..addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          widget.onSkip();
+        }
+      });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onSkip,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Skip',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  final remaining = (widget.duration.inSeconds * (1 - _controller.value)).ceil();
+                  return Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        value: 1 - _controller.value,
+                        strokeWidth: 2.5,
+                        color: Colors.white,
+                        backgroundColor: Colors.white.withOpacity(0.3),
+                      ),
+                      Text(
+                        '$remaining',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -18,6 +18,9 @@ import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart'
 import 'package:my_shop/features/notifications/presentation/widgets/notification_badge_icon.dart';
 import 'package:my_shop/features/orders/presentation/widgets/order_qr_scan_icon.dart';
 import 'package:flutter/services.dart';
+import 'package:my_shop/app.dart';
+import 'package:my_shop/features/call/data/shop_call_session.dart';
+import 'package:my_shop/features/call/presentation/incoming_call_screen.dart';
 import 'package:my_shop/core/presentation/widgets/app_bar_title_with_logo.dart';
 import 'package:my_shop/core/utils/app_logger.dart';
 import 'dart:async';
@@ -108,6 +111,20 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     // and the stream listener is active before any events can arrive).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       WebSocketService().connect();
+      ShopCallSession().startListening();
+      ShopCallSession().onIncomingCall = (callId, callerName) {
+        final currentContext = App.navigatorKey.currentContext;
+        if (currentContext != null) {
+          Navigator.of(currentContext).push(
+            MaterialPageRoute(
+              builder: (_) => IncomingCallScreen(
+                callId: callId,
+                callerName: callerName,
+              ),
+            ),
+          );
+        }
+      };
       _checkMissedOrders();
     });
 

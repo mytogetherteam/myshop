@@ -34,7 +34,9 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
     // Auto-dismiss if caller ends
     _call.state.addListener(() {
       if (_call.state.value == ShopCallState.idle && mounted) {
-        Navigator.of(context).pop();
+        if (Navigator.canPop(context)) {
+          Navigator.of(context).pop();
+        }
       }
     });
   }
@@ -48,81 +50,129 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1B2A),
-      body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 60),
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF22C55E).withValues(alpha: 0.2),
-                border: Border.all(color: const Color(0xFF22C55E), width: 2),
-              ),
-              child: Center(
-                child: Text(
-                  widget.callerName.isNotEmpty
-                      ? widget.callerName[0].toUpperCase()
-                      : '?',
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 38,
-                    fontWeight: FontWeight.bold,
+      body: Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0F172A), // Slate 900
+              Color(0xFF1E1B4B), // Indigo 950
+              Color(0xFF0F172A), // Slate 900
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 100),
+              // Avatar
+              Container(
+                width: 130,
+                height: 130,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)], // Indigo to Violet
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                      blurRadius: 30,
+                      spreadRadius: 5,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    widget.callerName.isNotEmpty
+                        ? widget.callerName[0].toUpperCase()
+                        : '?',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 48,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              widget.callerName,
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.w600,
+              const SizedBox(height: 32),
+              // Name
+              Text(
+                widget.callerName,
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.5,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _formatElapsed(),
-              style: GoogleFonts.poppins(color: Colors.white60, fontSize: 14),
-            ),
-            const Spacer(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                // Mute
-                ValueListenableBuilder<bool>(
-                  valueListenable: _call.isMuted,
-                  builder: (_, muted, __) => _controlButton(
-                    icon: muted
-                        ? PhosphorIcons.microphoneSlash
-                        : PhosphorIcons.microphone,
-                    label: muted ? 'Unmute' : 'Mute',
-                    color: muted ? Colors.white : Colors.white24,
-                    iconColor: muted ? Colors.red : Colors.white,
-                    onTap: _call.toggleMute,
+              const SizedBox(height: 12),
+              // Timer
+              Text(
+                _formatElapsed(),
+                style: GoogleFonts.poppins(
+                  color: Colors.white70,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 2.0,
+                ),
+              ),
+              const Spacer(),
+              // Controls
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // Mute
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _call.isMuted,
+                    builder: (_, muted, __) => _controlButton(
+                      icon: muted
+                          ? PhosphorIcons.microphoneSlash
+                          : PhosphorIcons.microphone,
+                      label: muted ? 'Unmute' : 'Mute',
+                      color: muted ? Colors.white : Colors.white.withOpacity(0.15),
+                      iconColor: muted ? const Color(0xFFEF4444) : Colors.white,
+                      onTap: _call.toggleMute,
+                    ),
                   ),
-                ),
-                // End call
-                _controlButton(
-                  icon: PhosphorIcons.phoneFill,
-                  label: 'End',
-                  color: Colors.red,
-                  iconColor: Colors.white,
-                  size: 68,
-                  onTap: () async {
-                    await _call.endCall();
-                    if (context.mounted) Navigator.of(context).pop();
-                  },
-                ),
-                // Spacer
-                const SizedBox(width: 56),
-              ],
-            ),
-            const SizedBox(height: 50),
-          ],
+                  // End call
+                  _controlButton(
+                    icon: PhosphorIcons.phoneSlash,
+                    label: 'End Call',
+                    color: const Color(0xFFEF4444),
+                    iconColor: Colors.white,
+                    size: 72,
+                    onTap: () async {
+                      await _call.endCall();
+                      if (context.mounted && Navigator.canPop(context)) {
+                        Navigator.of(context).pop();
+                      }
+                    },
+                  ),
+                  // Speaker
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _call.isSpeakerOn,
+                    builder: (_, speaker, __) => _controlButton(
+                      icon: speaker
+                          ? PhosphorIcons.speakerHigh
+                          : PhosphorIcons.speakerLow,
+                      label: speaker ? 'Speaker On' : 'Speaker Off',
+                      color: speaker ? Colors.white : Colors.white.withOpacity(0.15),
+                      iconColor: speaker ? const Color(0xFF3B82F6) : Colors.white,
+                      onTap: () => _call.isSpeakerOn.value = !_call.isSpeakerOn.value,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 60),
+            ],
+          ),
         ),
       ),
     );

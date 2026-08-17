@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:my_shop/core/auth/auth_interceptor.dart';
 import 'package:my_shop/core/config/env_config.dart';
 import 'package:my_shop/core/network/shop_interceptor.dart';
-import 'package:my_shop/core/network/certificate_pinning_interceptor.dart';
+
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'dart:io';
 
@@ -36,7 +36,6 @@ class ApiClient {
       ),
     );
 
-    _dio.interceptors.add(CertificatePinningInterceptor(_dio));
 
     _dio.interceptors.add(AuthInterceptor(_dio));
 
