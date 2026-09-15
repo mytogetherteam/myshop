@@ -5,8 +5,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+import 'package:my_shop/core/data/services/image_upload_service.dart';
 import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/core/localization/app_localizations.dart';
@@ -417,6 +419,95 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     } else {
       _showSnack('Failed to send voice message. Please try again.');
+    }
+  }
+
+  Future<void> _pickAndSendImage() async {
+    if (_isSending || _isOrderClosed) return;
+
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: Theme.of(context).cardColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Choose from Gallery'),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined),
+              title: const Text('Take a Photo'),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (source == null || !mounted) return;
+
+    final result = source == ImageSource.gallery
+        ? await ImageUploadService().pickFromGallery(
+            crop: false,
+            maxFileSizeMB: 20,
+          )
+        : await ImageUploadService().pickFromCamera(
+            crop: false,
+            maxFileSizeMB: 20,
+          );
+    if (!mounted) return;
+
+    if (result.permanentlyDenied || result.permissionDenied) {
+      _showSnack('Photo permission is required to send images.');
+      return;
+    }
+    if (result.isTooLarge) {
+      _showSnack('Image is too large. Please choose a smaller photo.');
+      return;
+    }
+    final file = result.file;
+    if (file == null) return;
+
+    final ext = file.name.toLowerCase();
+    if (ext.endsWith('.mp4') ||
+        ext.endsWith('.mov') ||
+        ext.endsWith('.m4v') ||
+        ext.endsWith('.webm') ||
+        ext.endsWith('.avi')) {
+      _showSnack('Videos cannot be sent in chat. Please send a photo.');
+      return;
+    }
+
+    setState(() => _isSending = true);
+    final sent = await ChatService.instance.sendImageMessage(_orderId, file);
+    if (!mounted) return;
+
+    setState(() {
+      _isSending = false;
+      if (sent != null) {
+        if (_conversationId <= 0 && sent.conversationId != null) {
+          _conversationId = sent.conversationId!;
+          ChatUnreadController.instance.activeConversationId = _conversationId;
+        }
+        final index = _messages.indexWhere((m) => m.id == sent.id);
+        if (index == -1) {
+          _messages.add(sent);
+        } else {
+          _messages[index] = sent;
+        }
+      }
+    });
+
+    if (sent != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    } else {
+      _showSnack('Failed to send image. Please try again.');
     }
   }
 
@@ -1054,7 +1145,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                   maxWidth: MediaQuery.of(context).size.width * 0.72,
                 ),
                 padding:
-                    message.kind == ChatMessageKind.image && !message.isDeleted
+                    message.imageUrls.isNotEmpty && !message.isDeleted
                     ? const EdgeInsets.all(4)
                     : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
@@ -1123,42 +1214,42 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       );
     }
 
-    if (message.kind == ChatMessageKind.image &&
-        message.attachmentUrl != null &&
-        message.attachmentUrl!.isNotEmpty) {
+    final imageUrls = message.imageUrls;
+    if (imageUrls.isNotEmpty) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          GestureDetector(
-            onTap: () => _openImage(message.attachmentUrl!),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child: CachedNetworkImage(
-                imageUrl: message.attachmentUrl!,
-                width: 200,
-                fit: BoxFit.cover,
-                placeholder: (_, _) => Container(
+          for (final url in imageUrls)
+            GestureDetector(
+              onTap: () => _openImage(url),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: CachedNetworkImage(
+                  imageUrl: url,
                   width: 200,
-                  height: 200,
-                  color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
-                  child: Center(
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                  fit: BoxFit.cover,
+                  placeholder: (_, _) => Container(
+                    width: 200,
+                    height: 200,
+                    color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
+                    child: Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   ),
-                ),
-                errorWidget: (_, _, _) => Container(
-                  width: 200,
-                  height: 120,
-                  color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
-                  child: Icon(
-                    Icons.broken_image_outlined,
-                    color: (Theme.of(context).brightness == Brightness.dark
-                        ? const Color(0xFF94A3B8)
-                        : const Color(0xFF64748B)),
+                  errorWidget: (_, _, _) => Container(
+                    width: 200,
+                    height: 120,
+                    color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
+                    child: Icon(
+                      Icons.broken_image_outlined,
+                      color: (Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF64748B)),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
           if ((message.content ?? '').isNotEmpty) ...[
             SizedBox(height: 6),
             Padding(
@@ -1428,6 +1519,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           return Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
+              if (!recording && !_isOrderClosed)
+                IconButton(
+                  onPressed: _isSending ? null : _pickAndSendImage,
+                  tooltip: 'Send a photo',
+                  icon: Icon(
+                    Icons.photo_outlined,
+                    color: _isSending
+                        ? Colors.grey
+                        : AppColors.primary,
+                  ),
+                ),
               // Messenger-style: recording replaces the text box entirely.
               Expanded(
                 child: recording

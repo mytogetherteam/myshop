@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/api_helper.dart';
 import 'package:my_shop/features/chat/data/models/chat_model.dart';
@@ -136,6 +137,66 @@ class ChatService {
       return null;
     } catch (e) {
       ApiHelper.handleError(e, context: 'ChatService.sendTextMessage');
+      return null;
+    }
+  }
+
+  /// Uploads a still image as an `IMAGE` message. Videos are rejected.
+  Future<ChatMessage?> sendImageMessage(int orderId, XFile file) async {
+    final filename = file.name.trim().isNotEmpty
+        ? file.name
+        : p.basename(file.path);
+    final ext = p.extension(filename).toLowerCase();
+    if (const {'.mp4', '.mov', '.m4v', '.webm', '.avi', '.mkv', '.mpeg'}.contains(
+      ext,
+    )) {
+      return null;
+    }
+
+    final mime = switch (ext) {
+      '.png' => MediaType('image', 'png'),
+      '.webp' => MediaType('image', 'webp'),
+      '.gif' => MediaType('image', 'gif'),
+      '.heic' => MediaType('image', 'heic'),
+      '.heif' => MediaType('image', 'heif'),
+      _ => MediaType('image', 'jpeg'),
+    };
+
+    try {
+      final bytes = await file.readAsBytes();
+      final formData = FormData();
+      formData.fields.add(const MapEntry('type', 'IMAGE'));
+      formData.files.add(
+        MapEntry(
+          'attachments',
+          MultipartFile.fromBytes(
+            bytes,
+            filename: filename,
+            contentType: mime,
+          ),
+        ),
+      );
+
+      final response = await _dio.post(
+        '$_basePath/orders/$orderId/messages',
+        data: formData,
+      );
+      final body = _body(response);
+      if (body != null && body['success'] == true && body['data'] is Map) {
+        return ChatMessage.fromJson(
+          (body['data'] as Map).cast<String, dynamic>(),
+        );
+      }
+      return null;
+    } on DioException catch (e) {
+      ApiHelper.handleError(
+        e,
+        context:
+            'ChatService.sendImageMessage ${e.response?.statusCode} ${e.response?.data}',
+      );
+      return null;
+    } catch (e) {
+      ApiHelper.handleError(e, context: 'ChatService.sendImageMessage');
       return null;
     }
   }
