@@ -48,6 +48,9 @@ class OrderModel {
   // Applied shop coupon (read-only on the shop side).
   final double discountAmount;
   final String displayDiscountAmount;
+  // Shop-entered per-order discount at confirm time (separate from coupons).
+  final double transactionDiscount;
+  final String displayTransactionDiscount;
   final String? couponName;
   final String? couponCode;
   final OrderShopCouponInfo? shopCoupon;
@@ -111,6 +114,8 @@ class OrderModel {
     this.displayTotalAmount = '',
     this.discountAmount = 0.0,
     this.displayDiscountAmount = '',
+    this.transactionDiscount = 0.0,
+    this.displayTransactionDiscount = '',
     this.couponName,
     this.couponCode,
     this.shopCoupon,
@@ -267,6 +272,8 @@ class OrderModel {
     final discountAmount = (json['discountAmount'] as num?)?.toDouble() ??
         (shopCoupon?['discountAmount'] as num?)?.toDouble() ??
         0.0;
+    final transactionDiscount =
+        (json['transactionDiscount'] as num?)?.toDouble() ?? 0.0;
 
     final shopPaymentMethodMap = json['shopPaymentMethod'] as Map?;
     final paymentMethodMap = shopPaymentMethodMap?['paymentMethod'] as Map? ?? shopPaymentMethodMap;
@@ -294,6 +301,11 @@ class OrderModel {
       discountAmount: discountAmount,
       displayDiscountAmount:
           discountAmount > 0 ? discountAmount.toFormattedPrice() : '',
+      transactionDiscount: transactionDiscount,
+      displayTransactionDiscount: transactionDiscount > 0
+          ? (json['displayTransactionDiscount']?.toString() ??
+                transactionDiscount.toFormattedPrice())
+          : '',
       couponName: shopCoupon?['name']?.toString(),
       couponCode: shopCoupon?['code']?.toString(),
       shopCoupon: shopCoupon != null
@@ -398,7 +410,8 @@ class OrderModel {
                 deliveryFee: deliveryFee,
                 taxEnable: taxEnable,
               ) -
-              discountAmount)
+              discountAmount -
+              transactionDiscount)
           .clamp(0, double.infinity)
           .toDouble();
 

@@ -92,6 +92,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   final _deliveryPhoneNoController = TextEditingController();
   final _deliveryTrackingUrlController = TextEditingController();
   final _waitingTimeMinutesController = TextEditingController();
+  final _transactionDiscountController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isFormValid = false;
   String _deliveryOption = 'PREPAID'; // 'PREPAID' (FAST) or 'NORMAL' (FLEXIBLE)
@@ -284,6 +285,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _waitingTimeMinutesController.text = _currentOrder.waitingTimeMinutes > 0
         ? _currentOrder.waitingTimeMinutes.toString()
         : '';
+    _transactionDiscountController.text = _currentOrder.transactionDiscount > 0
+        ? formatter.format(_currentOrder.transactionDiscount)
+        : '';
     _deliveryOption = _currentOrder.deliveryType == 'NORMAL'
         ? 'NORMAL'
         : 'PREPAID';
@@ -338,6 +342,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _deliveryPhoneNoController.dispose();
     _deliveryTrackingUrlController.dispose();
     _waitingTimeMinutesController.dispose();
+    _transactionDiscountController.dispose();
     super.dispose();
   }
 
@@ -1137,7 +1142,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Future<void> _handleConfirmOrder() async {
-    if (_deliveryOption == 'PREPAID' && !_formKey.currentState!.validate()) {
+    if (!(_formKey.currentState?.validate() ?? true)) {
       return;
     }
 
@@ -1155,10 +1160,30 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         deliveryFee: deliveryFee,
         waitingTimeMinutes:
             int.tryParse(_waitingTimeMinutesController.text) ?? 0,
+        transactionDiscount: _parsedTransactionDiscount(),
         driverId: _selectedDriverId,
       ),
       errorMessage: 'Failed to confirm order. Please try again.',
     );
+  }
+
+  double _parsedTransactionDiscount() {
+    final raw = _transactionDiscountController.text.replaceAll(',', '').trim();
+    if (raw.isEmpty) return 0;
+    return double.tryParse(raw) ?? 0;
+  }
+
+  double _payableBeforeTransactionDiscount() {
+    final itemPrice = _currentOrder.foodPrice;
+    final tax = _currentOrder.taxEnable ? _currentOrder.resolvedTaxAmount : 0.0;
+    final coupon = _currentOrder.discountAmount;
+    final isPickup = _currentOrder.isPickupFulfillment;
+    final isFlexible = _deliveryOption == 'NORMAL';
+    final fee = isPickup || isFlexible
+        ? 0.0
+        : (double.tryParse(_deliveryFeeController.text.replaceAll(',', '')) ??
+              0);
+    return ((itemPrice + fee + tax - coupon) * 100).round() / 100;
   }
 
   String _formatTimeAgo(DateTime? date) {
@@ -1625,6 +1650,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           orderDeliveryType: orderDeliveryType,
           deliveryFee: _currentOrder.deliveryFee,
           waitingTimeMinutes: _currentOrder.waitingTimeMinutes,
+          transactionDiscount: _currentOrder.transactionDiscount,
         ),
         errorMessage: 'Failed to request new slip. Please try again.',
       );
@@ -3612,6 +3638,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ],
           ),
         ],
+        if (_currentOrder.transactionDiscount > 0) ...[
+          SizedBox(height: 12),
+          _buildSummaryRow(
+            AppLocalizations.of(context)?.translate('transaction_discount') ??
+                'Transaction Discount',
+            '- ${_currentOrder.displayTransactionDiscount.isNotEmpty ? _currentOrder.displayTransactionDiscount : _currentOrder.transactionDiscount.toFormattedPrice()}',
+          ),
+        ],
         if (!_currentOrder.isPickupFulfillment) ...[
           SizedBox(height: 12),
           Row(
@@ -4334,6 +4368,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       'Set the estimated preparation time for the order.',
                   placeholder: 'e.g. 15',
                 ),
+                SizedBox(height: 12),
+                _buildTransactionDiscountField(),
               ] else ...[
                 Row(
                   children: [
@@ -4543,6 +4579,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   ),
                 ],
               ),
+              SizedBox(height: 12),
+              _buildTransactionDiscountField(),
 
               // ── Fast Delivery (PENDING): fee + waiting only ─────────────
             ] else if (_deliveryOption == 'PREPAID' &&
@@ -4589,6 +4627,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   ),
                 ],
               ),
+              SizedBox(height: 12),
+              _buildTransactionDiscountField(),
 
               // ── COOKING / dispatch (single driver selection point) ─────
             ] else if (_currentOrder.status == 'COOKING' &&
@@ -4690,6 +4730,34 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTransactionDiscountField() {
+    final t = AppLocalizations.of(context);
+    return _buildInputField(
+      '${t?.translate('transaction_discount') ?? 'Transaction Discount'} (optional)',
+      _transactionDiscountController,
+      keyboardType: TextInputType.number,
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        ThousandsSeparatorInputFormatter(),
+      ],
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) return null;
+        final parsed = double.tryParse(value.replaceAll(',', ''));
+        if (parsed == null) return 'Invalid number';
+        if (parsed > _payableBeforeTransactionDiscount()) {
+          return t?.translate('transaction_discount_exceeds') ??
+              'Cannot exceed the payable order total';
+        }
+        return null;
+      },
+      description:
+          t?.translate('transaction_discount_desc') ??
+          'Optional amount to take off this order total. Leave blank if none.',
+      placeholder: 'e.g. 20',
+      suffixText: 'THB',
     );
   }
 
