@@ -164,6 +164,7 @@ class OrderService {
     String? orderDeliveryType,
     double? deliveryFee,
     int? waitingTimeMinutes,
+    double? transactionDiscount,
     int? driverId,
     XFile? proofImage,
   }) async {
@@ -194,6 +195,11 @@ class OrderService {
       if (waitingTimeMinutes != null) {
         formData.fields.add(
           MapEntry('waitingTimeMinutes', waitingTimeMinutes.toString()),
+        );
+      }
+      if (transactionDiscount != null) {
+        formData.fields.add(
+          MapEntry('transactionDiscount', transactionDiscount.toString()),
         );
       }
       if (driverId != null) {
@@ -243,6 +249,7 @@ class OrderService {
     required String orderDeliveryType,
     required double deliveryFee,
     required int waitingTimeMinutes,
+    double transactionDiscount = 0,
     int? driverId,
   }) {
     return updateStatus(
@@ -251,6 +258,7 @@ class OrderService {
       orderDeliveryType: orderDeliveryType,
       deliveryFee: deliveryFee,
       waitingTimeMinutes: waitingTimeMinutes,
+      transactionDiscount: transactionDiscount,
       driverId: driverId,
     );
   }
@@ -269,6 +277,7 @@ class OrderService {
     required String orderDeliveryType,
     required double deliveryFee,
     required int waitingTimeMinutes,
+    double transactionDiscount = 0,
   }) {
     // The backend's status endpoint requires the delivery fields whenever the
     // status is PAYMENT_SLIP_REQUESTED. The order was already confirmed, so we
@@ -280,6 +289,7 @@ class OrderService {
       orderDeliveryType: orderDeliveryType,
       deliveryFee: deliveryFee,
       waitingTimeMinutes: waitingTimeMinutes,
+      transactionDiscount: transactionDiscount,
     );
   }
 
