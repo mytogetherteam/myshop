@@ -17,6 +17,7 @@ import 'package:my_shop/features/chat/data/models/chat_window.dart';
 import 'package:my_shop/features/chat/data/services/chat_service.dart';
 import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
 import 'package:my_shop/features/chat/data/services/chat_voice_recorder.dart';
+import 'package:my_shop/features/chat/presentation/chat_ui_tokens.dart';
 import 'package:my_shop/features/chat/presentation/widgets/audio_message_bubble.dart';
 import 'package:my_shop/features/chat/presentation/widgets/chat_order_summary_sheet.dart';
 import 'package:my_shop/features/chat/presentation/widgets/voice_record_button.dart';
@@ -840,6 +841,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).scaffoldBackgroundColor
+          : ChatUiTokens.screenBg,
       appBar: _buildAppBar(),
       body: Column(
         children: [
@@ -861,7 +865,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           ? Theme.of(context).cardColor
           : Colors.white,
       elevation: 0,
-      scrolledUnderElevation: 0.5,
+      scrolledUnderElevation: 0,
       leadingWidth: 36,
       leading: Padding(
         padding: const EdgeInsets.only(left: 8),
@@ -886,10 +890,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                     c.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                    style: ChatUiTokens.headerTitle(
+                      color: Theme.of(context).textTheme.bodyLarge?.color ??
+                          ChatUiTokens.textPrimary,
                     ),
                   ),
                   if (subtitle != null && subtitle.isNotEmpty)
@@ -897,13 +900,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                       subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFF94A3B8)
-                            : const Color(0xFF94A3B8),
-                      ),
+                      style: ChatUiTokens.headerSubtitle(),
                     ),
                 ],
               ),
@@ -948,6 +945,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         ),
         SizedBox(width: 4),
       ],
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Theme.of(context).dividerColor
+              : ChatUiTokens.hairline,
+          height: 1,
+        ),
+      ),
     );
   }
 
@@ -1028,12 +1034,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       return Center(
         child: Text(
           'Say hello 👋',
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            color: (Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xFF94A3B8)
-                : const Color(0xFF64748B)),
-          ),
+          style: ChatUiTokens.hint(),
         ),
       );
     }
@@ -1062,11 +1063,23 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           return _buildSystemMessage(message);
         }
 
+        final prev = msgIndex > 0 ? _messages[msgIndex - 1] : null;
+        final newSender = prev == null ||
+            prev.kind == ChatMessageKind.system ||
+            prev.isMe != message.isMe;
+
         return Column(
           children: [
             if (_shouldShowDateSeparator(msgIndex))
               _buildDateSeparator(message.createdAt),
-            _buildMessageBubble(message),
+            Padding(
+              padding: EdgeInsets.only(
+                bottom: newSender
+                    ? ChatUiTokens.gapNewSender
+                    : ChatUiTokens.gapSameSender,
+              ),
+              child: _buildMessageBubble(message),
+            ),
           ],
         );
       },
@@ -1086,12 +1099,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           child: Text(
             message.content ?? '',
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              color: (Theme.of(context).brightness == Brightness.dark
-                  ? const Color(0xFFCBD5E1)
-                  : const Color(0xFF64748B)),
-            ),
+            style: ChatUiTokens.hint(),
           ),
         ),
       ),
@@ -1110,13 +1118,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(
               _formatDateSeparator(timestamp),
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: (Theme.of(context).brightness == Brightness.dark
-                    ? const Color(0xFF94A3B8)
-                    : const Color(0xFF64748B)),
-              ),
+              style: ChatUiTokens.hint().copyWith(fontWeight: FontWeight.w500),
             ),
           ),
           Expanded(
@@ -1130,84 +1132,67 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   Widget _buildMessageBubble(ChatMessage message) {
     final isMe = message.isMe;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        mainAxisAlignment: isMe
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (!isMe) ...[
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: Theme.of(context).dividerColor,
-                shape: BoxShape.circle,
+    return Row(
+      mainAxisAlignment: isMe
+          ? MainAxisAlignment.end
+          : MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        if (!isMe) ...[
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: ChatUiTokens.incomingSurface(
+                Theme.of(context).brightness,
               ),
-              child: Center(
-                child: Text(
-                  widget.conversation.name.isNotEmpty
-                      ? widget.conversation.name[0].toUpperCase()
-                      : '?',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).textTheme.bodySmall?.color,
-                  ),
-                ),
-              ),
+              shape: BoxShape.circle,
             ),
-            SizedBox(width: 8),
-          ],
-          Flexible(
-            child: GestureDetector(
-              onLongPress: () => _showMessageActions(message),
-              child: Container(
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.72,
-                ),
-                padding:
-                    message.imageUrls.isNotEmpty && !message.isDeleted
-                    ? const EdgeInsets.all(4)
-                    : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  gradient: isMe && !message.isDeleted
-                      ? AppColors.primaryGradient
-                      : null,
-                  color: message.isDeleted
-                      ? Theme.of(context).dividerColor
-                      : (isMe
-                            ? null
-                            : (Theme.of(context).brightness == Brightness.dark
-                                  ? const Color(0xFF1E293B)
-                                  : Colors.white)),
-                  borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(18),
-                    topRight: const Radius.circular(18),
-                    bottomLeft: Radius.circular(isMe ? 18 : 4),
-                    bottomRight: Radius.circular(isMe ? 4 : 18),
-                  ),
-                  boxShadow: message.isDeleted
-                      ? null
-                      : [
-                          BoxShadow(
-                            color: isMe
-                                ? AppColors.primary.withValues(alpha: 0.15)
-                                : Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                ),
-                child: _buildBubbleContent(message, isMe),
+            child: Center(
+              child: Text(
+                widget.conversation.name.isNotEmpty
+                    ? widget.conversation.name[0].toUpperCase()
+                    : '?',
+                style: ChatUiTokens.meta(
+                  color: Theme.of(context).textTheme.bodySmall?.color ??
+                      ChatUiTokens.textSecondary,
+                ).copyWith(fontWeight: FontWeight.w600),
               ),
             ),
           ),
-          if (isMe) SizedBox(width: 8),
+          SizedBox(width: 8),
         ],
-      ),
+        Flexible(
+          child: GestureDetector(
+            onLongPress: () => _showMessageActions(message),
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width *
+                    ChatUiTokens.maxBubbleWidthFactor,
+              ),
+              padding:
+                  message.imageUrls.isNotEmpty && !message.isDeleted
+                  ? const EdgeInsets.all(4)
+                  : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                gradient: isMe && !message.isDeleted
+                    ? AppColors.primaryGradient
+                    : null,
+                color: message.isDeleted
+                    ? Theme.of(context).dividerColor
+                    : (isMe
+                          ? null
+                          : ChatUiTokens.incomingSurface(
+                              Theme.of(context).brightness,
+                            )),
+                borderRadius: ChatUiTokens.bubbleRadiusFor(isMine: isMe),
+              ),
+              child: _buildBubbleContent(message, isMe),
+            ),
+          ),
+        ),
+        if (isMe) SizedBox(width: 8),
+      ],
     );
   }
 
@@ -1226,13 +1211,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
           SizedBox(width: 6),
           Text(
             'This message was deleted',
-            style: GoogleFonts.poppins(
-              fontSize: 13,
-              fontStyle: FontStyle.italic,
-              color: (Theme.of(context).brightness == Brightness.dark
-                  ? const Color(0xFF94A3B8)
-                  : const Color(0xFF64748B)),
-            ),
+            style: ChatUiTokens.hint().copyWith(fontStyle: FontStyle.italic),
           ),
         ],
       );
@@ -1247,7 +1226,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
             GestureDetector(
               onTap: () => _openImage(url),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(ChatUiTokens.imageRadius),
                 child: CachedNetworkImage(
                   imageUrl: url,
                   width: 200,
@@ -1280,13 +1259,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Text(
                 message.content!,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
+                style: ChatUiTokens.messageBody(
                   color: isMe
                       ? Colors.white
                       : (Theme.of(context).brightness == Brightness.dark
                             ? Colors.white
-                            : const Color(0xFF1E293B)),
+                            : ChatUiTokens.textPrimary),
                 ),
               ),
             ),
@@ -1338,15 +1316,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       children: [
         Text(
           message.content ?? '',
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
+          style: ChatUiTokens.messageBody(
             color: isMe
                 ? Colors.white
                 : (Theme.of(context).brightness == Brightness.dark
                       ? Colors.white
-                      : const Color(0xFF1E293B)),
-            height: 1.4,
+                      : ChatUiTokens.textPrimary),
           ),
         ),
         if (firstUrl != null)
@@ -1392,31 +1367,22 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
   Widget _buildMetaRow(ChatMessage message, bool isMe) {
     final mutedColor = isMe
-        ? Colors.white.withValues(alpha: 0.7)
-        : (Theme.of(context).brightness == Brightness.dark
-              ? const Color(0xFF94A3B8)
-              : const Color(0xFF64748B));
+        ? Colors.white.withValues(alpha: 0.75)
+        : ChatUiTokens.textMuted;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (message.isEdited) ...[
           Text(
             'edited',
-            style: GoogleFonts.poppins(
-              fontSize: 10,
-              fontStyle: FontStyle.italic,
-              color: mutedColor,
-            ),
+            style: ChatUiTokens.meta(color: mutedColor)
+                .copyWith(fontStyle: FontStyle.italic),
           ),
           SizedBox(width: 4),
         ],
         Text(
           _formatMessageTime(message.createdAt),
-          style: GoogleFonts.poppins(
-            fontSize: 10,
-            fontWeight: FontWeight.w400,
-            color: mutedColor,
-          ),
+          style: ChatUiTokens.meta(color: mutedColor),
         ),
         if (isMe) ...[
           SizedBox(width: 4),
@@ -1464,20 +1430,20 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: Theme.of(context).brightness == Brightness.dark
-              ? const Color(0xFF1E293B)
-              : const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(12),
+              ? ChatUiTokens.incomingBubbleDark
+              : ChatUiTokens.composerFill,
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Theme.of(context).dividerColor
+                : ChatUiTokens.hairline,
           ),
         ),
         child: Row(
           children: [
             Icon(
               Icons.lock_outline_rounded,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? const Color(0xFF94A3B8)
-                  : const Color(0xFF64748B),
+              color: ChatUiTokens.textSecondary,
               size: 20,
             ),
             const SizedBox(width: 12),
@@ -1487,23 +1453,16 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
+                    style: ChatUiTokens.hint(
                       color: Theme.of(context).brightness == Brightness.dark
                           ? const Color(0xFFE2E8F0)
-                          : const Color(0xFF334155),
-                    ),
+                          : ChatUiTokens.textPrimary,
+                    ).copyWith(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     message,
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? const Color(0xFFCBD5E1)
-                          : const Color(0xFF64748B),
-                    ),
+                    style: ChatUiTokens.hint(),
                   ),
                 ],
               ),
@@ -1521,18 +1480,26 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
 
     return Container(
       padding: EdgeInsets.only(
-        left: 16,
+        left: 12,
         right: 8,
-        top: 12,
+        top: 10,
         bottom: bottomInset > 0 ? 12 : safeBottom + 12,
       ),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Theme.of(context).dividerColor
+                : ChatUiTokens.hairline,
+            width: 1,
+          ),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, -1),
           ),
         ],
       ),
@@ -1554,7 +1521,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                         : AppColors.primary,
                   ),
                 ),
-              // Messenger-style: recording replaces the text box entirely.
               Expanded(
                 child: recording
                     ? VoiceRecordingStrip(
@@ -1565,16 +1531,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                     : Container(
                         decoration: BoxDecoration(
                           color: Theme.of(context).brightness == Brightness.dark
-                              ? const Color(0xFF1E293B)
-                              : Theme.of(
-                                  context,
-                                ).dividerColor.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(24),
+                              ? ChatUiTokens.incomingBubbleDark
+                              : ChatUiTokens.composerFill,
+                          borderRadius: BorderRadius.circular(
+                            ChatUiTokens.composerRadius,
+                          ),
                         ),
                         child: TextField(
                           controller: _messageController,
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
+                          style: ChatUiTokens.composer(
                             color: Theme.of(context).textTheme.bodyLarge?.color,
                           ),
                           textInputAction: TextInputAction.send,
@@ -1585,18 +1550,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                             hintText:
                                 t?.translate('type_a_message') ??
                                 'Type a message...',
-                            hintStyle: GoogleFonts.poppins(
-                              fontSize: 14,
-                              color:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? const Color(0xFF64748B)
-                                  : const Color(0xFF94A3B8),
+                            hintStyle: ChatUiTokens.composer(
+                              color: ChatUiTokens.textMuted,
                             ),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 18,
-                              vertical: 10,
+                              vertical: 12,
                             ),
                             suffixIcon:
                                 ValueListenableBuilder<TextEditingValue>(
@@ -1626,18 +1586,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                 GestureDetector(
                   onTap: _sendMessage,
                   child: Container(
-                    width: 44,
-                    height: 44,
+                    width: ChatUiTokens.composerActionSize,
+                    height: ChatUiTokens.composerActionSize,
                     decoration: BoxDecoration(
                       gradient: AppColors.primaryGradient,
                       shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
                     ),
                     child: Center(
                       child: _isSending

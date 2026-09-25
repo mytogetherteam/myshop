@@ -271,9 +271,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   void _initControllers() {
     final formatter = NumberFormat('#,##0');
-    _deliveryFeeController.text = _currentOrder.deliveryFee > 0
-        ? formatter.format(_currentOrder.deliveryFee)
-        : '';
+    if (_isFreeDeliveryLocked) {
+      _deliveryFeeController.text = 'FREE';
+    } else {
+      _deliveryFeeController.text = _currentOrder.deliveryFee > 0
+          ? formatter.format(_currentOrder.deliveryFee)
+          : '';
+    }
     _deliveryCycleNoController.text = _currentOrder.deliveryCycleNo ?? '';
     _deliveryRiderNameController.text = _currentOrder.riderName ?? '';
     _deliveryPhoneNoController.text =
@@ -371,11 +375,29 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _deliveryPhoneNoController.addListener(_validateFormState);
     _waitingTimeMinutesController.addListener(_validateFormState);
     _deliveryTrackingUrlController.addListener(_validateFormState);
+    _transactionDiscountController.addListener(_onPricingFieldsChanged);
+  }
+
+  void _onPricingFieldsChanged() {
+    if (!mounted) return;
+    setState(() {});
+    _validateFormState();
+  }
+
+  /// Fee field lock: live promo only while PENDING (pre-confirm).
+  /// After confirm, only the order's [isFreeDelivery] snapshot applies.
+  bool get _isFreeDeliveryLocked {
+    if (!_currentOrder.isDeliveryFulfillment) return false;
+    if (_currentOrder.status == 'PENDING') {
+      return _currentOrder.freeDeliveryActive;
+    }
+    return _currentOrder.isFreeDelivery;
   }
 
   void _validateFormState() {
     final fee = _deliveryFeeController.text.replaceAll(',', '');
     final waiting = _waitingTimeMinutesController.text;
+    final freeDelivery = _isFreeDeliveryLocked;
 
     bool isValid = false;
 
@@ -386,12 +408,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         // Flexible Delivery: only need preparation time
         isValid = waiting.isNotEmpty && int.tryParse(waiting) != null;
       } else {
-        // Fast Delivery (PENDING): only need fee + waiting time
+        // Fast Delivery (PENDING): fee + waiting — fee skipped when FREE promo
         isValid =
-            fee.isNotEmpty &&
-            double.tryParse(fee) != null &&
+            (freeDelivery ||
+                (fee.isNotEmpty && double.tryParse(fee) != null)) &&
             waiting.isNotEmpty &&
             int.tryParse(waiting) != null;
+      }
+      if (isValid && _parsedTransactionDiscount() >
+          _payableBeforeTransactionDiscount()) {
+        isValid = false;
       }
     } else if (_currentOrder.status == 'AWAITING_APPROVAL') {
       isValid = true;
@@ -402,7 +428,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           _deliveryTrackingUrlController.text.trim().isNotEmpty;
       if (!_currentOrder.isPickupFulfillment &&
           _currentOrder.deliveryType == 'NORMAL') {
-        isValid = baseValid && fee.isNotEmpty && double.tryParse(fee) != null;
+        isValid = baseValid &&
+            (freeDelivery ||
+                (fee.isNotEmpty && double.tryParse(fee) != null));
       } else {
         isValid = baseValid;
       }
@@ -1148,7 +1176,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
     final orderDeliveryType = _deliveryOption == 'NORMAL' ? 'FLEXIBLE' : 'FAST';
     final isPickup = _currentOrder.isPickupFulfillment;
-    final deliveryFee = isPickup
+    final deliveryFee = isPickup || _isFreeDeliveryLocked
         ? 0.0
         : (double.tryParse(_deliveryFeeController.text.replaceAll(',', '')) ??
               0);
@@ -1179,11 +1207,44 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final coupon = _currentOrder.discountAmount;
     final isPickup = _currentOrder.isPickupFulfillment;
     final isFlexible = _deliveryOption == 'NORMAL';
-    final fee = isPickup || isFlexible
+    final fee = isPickup || isFlexible || _isFreeDeliveryLocked
         ? 0.0
         : (double.tryParse(_deliveryFeeController.text.replaceAll(',', '')) ??
               0);
     return ((itemPrice + fee + tax - coupon) * 100).round() / 100;
+  }
+
+  String _freeDeliveryExplanation() {
+    // After confirm, the order snapshot owns FREE — don't imply the promo is still live.
+    if (_currentOrder.status != 'PENDING' && _currentOrder.isFreeDelivery) {
+      return 'This order was confirmed with free delivery. The fee stays FREE.';
+    }
+
+    final source = _currentOrder.freeDeliverySource.toUpperCase();
+    final end = (source == 'GLOBAL' || source == 'BOTH')
+        ? (_currentOrder.globalFreeDeliveryEndsAt ??
+            _currentOrder.freeDeliveryEndsAt)
+        : _currentOrder.freeDeliveryEndsAt;
+    final endText = end != null
+        ? ' until ${DateFormat('d MMM yyyy, h:mm a').format(end.toLocal())}'
+        : '';
+
+    if (source == 'GLOBAL') {
+      return 'Platform free delivery is on$endText (set by MyTogether). The fee field is locked.';
+    }
+    if (source == 'BOTH') {
+      return 'Platform and shop free delivery are on$endText (set by MyTogether). The fee field is locked.';
+    }
+    if (end != null) {
+      return 'Free delivery is on for this shop$endText (set by MyTogether). The fee field is locked.';
+    }
+    final start = _currentOrder.freeDeliveryStartsAt;
+    if (start != null) {
+      final formatted =
+          DateFormat('d MMM yyyy, h:mm a').format(start.toLocal());
+      return 'Free delivery is on for this shop from $formatted (set by MyTogether). The fee field is locked.';
+    }
+    return 'Free delivery is on for this shop (set by MyTogether). The fee field is locked.';
   }
 
   String _formatTimeAgo(DateTime? date) {
@@ -1744,7 +1805,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     // order's fee can update too — not just FLEXIBLE. The backend bills it into
     // the total only for non-flexible orders, so this stays correct for both.
     double? finalDeliveryFee;
-    if (_deliveryFeeController.text.isNotEmpty) {
+    if (_isFreeDeliveryLocked) {
+      finalDeliveryFee = 0;
+    } else if (_deliveryFeeController.text.isNotEmpty &&
+        _deliveryFeeController.text.toUpperCase() != 'FREE') {
       final numStr = _deliveryFeeController.text.replaceAll(',', '');
       finalDeliveryFee = double.tryParse(numStr);
     }
@@ -3673,7 +3737,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
               SizedBox(width: 8),
               Text(
-                _currentOrder.deliveryFee > 0 ? 'Delivery Fee' : 'Est. Amount',
+                (_currentOrder.isFreeDelivery ||
+                        _currentOrder.deliveryFee > 0)
+                    ? 'Delivery Fee'
+                    : 'Est. Amount',
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   color: (Theme.of(context).brightness == Brightness.dark
@@ -4388,6 +4455,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 ),
                 SizedBox(height: 12),
                 _buildTransactionDiscountField(),
+                SizedBox(height: 12),
+                _buildLiveOrderTotalSummary(),
               ] else ...[
                 Row(
                   children: [
@@ -4558,27 +4627,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: _buildInputField(
-                      'Estimated Delivery Fee',
-                      _deliveryFeeController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        ThousandsSeparatorInputFormatter(),
-                      ],
-                      validator: (value) {
-                        if (value == null || value.isEmpty) return null;
-                        final numValue = value.replaceAll(',', '');
-                        if (double.tryParse(numValue) == null) {
-                          return 'Invalid number';
-                        }
-                        return null;
-                      },
+                    child: _buildDeliveryFeeInputField(
+                      label: 'Estimated Delivery Fee',
                       description:
                           'Enter the estimated delivery fee for this order.',
-                      placeholder: 'e.g. 50',
-                      showDeliveryApps: true,
-                      suffixText: 'THB',
+                      required: false,
                     ),
                   ),
                   SizedBox(width: 12),
@@ -4599,6 +4652,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
               SizedBox(height: 12),
               _buildTransactionDiscountField(),
+              SizedBox(height: 12),
+              _buildLiveOrderTotalSummary(),
 
               // ── Fast Delivery (PENDING): fee + waiting only ─────────────
             ] else if (_deliveryOption == 'PREPAID' &&
@@ -4607,26 +4662,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: _buildInputField(
-                      'Delivery Fee',
-                      _deliveryFeeController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        ThousandsSeparatorInputFormatter(),
-                      ],
-                      validator: (value) {
-                        if (value == null || value.isEmpty) return 'Required';
-                        final numValue = value.replaceAll(',', '');
-                        if (double.tryParse(numValue) == null) {
-                          return 'Invalid number';
-                        }
-                        return null;
-                      },
+                    child: _buildDeliveryFeeInputField(
+                      label: 'Delivery Fee',
                       description: 'Enter the delivery fee for this order.',
-                      placeholder: 'e.g. 50',
-                      showDeliveryApps: true,
-                      suffixText: 'THB',
+                      required: true,
                     ),
                   ),
                   SizedBox(width: 12),
@@ -4647,32 +4686,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
               SizedBox(height: 12),
               _buildTransactionDiscountField(),
+              SizedBox(height: 12),
+              _buildLiveOrderTotalSummary(),
 
               // ── COOKING / dispatch (single driver selection point) ─────
             ] else if (_currentOrder.status == 'COOKING' &&
                 _currentOrder.isDeliveryFulfillment) ...[
               if (_currentOrder.deliveryType == 'NORMAL') ...[
-                _buildInputField(
-                  'Real Delivery Fee',
-                  _deliveryFeeController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    ThousandsSeparatorInputFormatter(),
-                  ],
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return 'Required';
-                    final numValue = value.replaceAll(',', '');
-                    if (double.tryParse(numValue) == null) {
-                      return 'Invalid number';
-                    }
-                    return null;
-                  },
+                _buildDeliveryFeeInputField(
+                  label: 'Real Delivery Fee',
                   description:
                       'Enter the final real delivery fee for this flexible delivery.',
-                  placeholder: 'e.g. 50',
-                  showDeliveryApps: true,
-                  suffixText: 'THB',
+                  required: true,
                 ),
                 SizedBox(height: 12),
               ],
@@ -4776,6 +4801,185 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           'Optional amount to take off this order total. Leave blank if none.',
       placeholder: 'e.g. 20',
       suffixText: 'THB',
+    );
+  }
+
+  Widget _buildDeliveryFeeInputField({
+    required String label,
+    required String description,
+    required bool required,
+  }) {
+    if (_isFreeDeliveryLocked) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: (Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFFCBD5E1)
+                  : const Color(0xFF64748B)),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).disabledColor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Theme.of(context).dividerColor),
+            ),
+            child: Text(
+              'FREE',
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF10B981),
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            _freeDeliveryExplanation(),
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              height: 1.4,
+              color: (Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFF94A3B8)
+                  : const Color(0xFF64748B)),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return _buildInputField(
+      label,
+      _deliveryFeeController,
+      keyboardType: TextInputType.number,
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        ThousandsSeparatorInputFormatter(),
+      ],
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return required ? 'Required' : null;
+        }
+        final numValue = value.replaceAll(',', '');
+        if (double.tryParse(numValue) == null) {
+          return 'Invalid number';
+        }
+        return null;
+      },
+      description: description,
+      placeholder: 'e.g. 50',
+      showDeliveryApps: true,
+      suffixText: 'THB',
+    );
+  }
+
+  Widget _buildLiveOrderTotalSummary() {
+    final itemPrice = _currentOrder.foodPrice;
+    final tax = _currentOrder.taxEnable ? _currentOrder.resolvedTaxAmount : 0.0;
+    final coupon = _currentOrder.discountAmount;
+    final isPickup = _currentOrder.isPickupFulfillment;
+    final isFlexible = _deliveryOption == 'NORMAL';
+    final free = _isFreeDeliveryLocked;
+    final fee = isPickup || isFlexible || free
+        ? 0.0
+        : (double.tryParse(
+                _deliveryFeeController.text.replaceAll(',', '')) ??
+            0);
+    final txn = _parsedTransactionDiscount();
+    final payableBefore = _payableBeforeTransactionDiscount();
+    final total = ((payableBefore - txn) * 100).round() / 100;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+
+    Widget row(String label, String value, {bool emphasize = false}) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  color: dark
+                      ? const Color(0xFFCBD5E1)
+                      : const Color(0xFF64748B),
+                ),
+              ),
+            ),
+            Text(
+              value,
+              style: GoogleFonts.poppins(
+                fontSize: emphasize ? 15 : 13,
+                fontWeight: emphasize ? FontWeight.w700 : FontWeight.w500,
+                color: emphasize
+                    ? AppColors.primary
+                    : (dark ? Colors.white : const Color(0xFF1E293B)),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Theme.of(context).dividerColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Order total preview',
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: dark ? Colors.white : const Color(0xFF1E293B),
+            ),
+          ),
+          const SizedBox(height: 10),
+          row('Items', itemPrice.toFormattedPrice()),
+          if (tax > 0) row('Tax', tax.toFormattedPrice()),
+          row(
+            isFlexible ? 'Delivery (billed later)' : 'Delivery',
+            free
+                ? 'FREE'
+                : (isFlexible
+                    ? '—'
+                    : fee.toFormattedPrice()),
+          ),
+          if (coupon > 0) row('Coupon', '- ${coupon.toFormattedPrice()}'),
+          if (txn > 0)
+            row('Transaction discount', '- ${txn.toFormattedPrice()}'),
+          const Divider(height: 16),
+          row('New total', total.toFormattedPrice(), emphasize: true),
+          if (isFlexible && !free)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                'Estimated delivery fee is not included in this total for flexible delivery.',
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  height: 1.35,
+                  color: dark
+                      ? const Color(0xFF94A3B8)
+                      : const Color(0xFF64748B),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 

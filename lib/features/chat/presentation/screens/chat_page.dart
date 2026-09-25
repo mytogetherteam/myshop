@@ -11,6 +11,7 @@ import 'package:my_shop/features/chat/data/models/chat_window.dart';
 import 'package:my_shop/features/chat/data/services/chat_service.dart';
 import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
 import 'package:my_shop/features/chat/presentation/chat_navigation.dart';
+import 'package:my_shop/features/chat/presentation/chat_ui_tokens.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -255,13 +256,11 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
             child: Text(
               t?.translate('chat_history_warning') ??
                   'Active and recent chats appear here. Completed chats become read-only after 4 hours.',
-              style: GoogleFonts.poppins(
-                fontSize: 12,
+              style: ChatUiTokens.hint(
                 color: isDark
                     ? const Color(0xFFFDE68A)
                     : const Color(0xFFD97706),
-                fontWeight: FontWeight.w500,
-              ),
+              ).copyWith(fontWeight: FontWeight.w500),
             ),
           ),
         ],
@@ -284,26 +283,26 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
             child: Container(
               height: 44,
               decoration: BoxDecoration(
-                color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(12),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Theme.of(context).dividerColor.withValues(alpha: 0.3)
+                    : ChatUiTokens.composerFill,
+                borderRadius: BorderRadius.circular(14),
               ),
               child: TextField(
                 controller: _searchController,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
+                style: ChatUiTokens.composer(
                   color: (Theme.of(context).brightness == Brightness.dark
                       ? Colors.white
-                      : const Color(0xFF1E293B)),
+                      : ChatUiTokens.textPrimary),
                 ),
                 decoration: InputDecoration(
                   hintText: t?.translate('search_hint') ?? 'Search...',
-                  hintStyle: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: const Color(0xFF94A3B8),
+                  hintStyle: ChatUiTokens.composer(
+                    color: ChatUiTokens.textMuted,
                   ),
                   prefixIcon: Icon(
                     Icons.search_rounded,
-                    color: const Color(0xFF94A3B8),
+                    color: ChatUiTokens.textMuted,
                     size: 20,
                   ),
                   suffixIcon: ValueListenableBuilder<TextEditingValue>(
@@ -518,7 +517,9 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Theme.of(context).dividerColor.withValues(alpha: 0.3)
+                    : ChatUiTokens.hairline,
                 width: 1,
               ),
             ),
@@ -538,25 +539,22 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
                             conversation.name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.poppins(
-                              fontSize: 15,
-                              fontWeight: hasUnread
+                            style: ChatUiTokens.listTitle(
+                              color: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.color ??
+                                  ChatUiTokens.textPrimary,
+                              weight: hasUnread
                                   ? FontWeight.w600
                                   : FontWeight.w500,
-                              color: Theme.of(
-                                context,
-                              ).textTheme.bodyLarge?.color,
                             ),
                           ),
                         ),
                         if (conversation.orderNo != null)
                           Text(
                             conversation.orderNo!,
-                            style: GoogleFonts.poppins(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF94A3B8),
-                            ),
+                            style: ChatUiTokens.meta(),
                           ),
                       ],
                     ),
@@ -566,11 +564,9 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
                         windowLabel,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                        style: ChatUiTokens.meta(
                           color: _chatWindowColor(conversation),
-                        ),
+                        ).copyWith(fontWeight: FontWeight.w600),
                       ),
                     ],
                     SizedBox(height: 3),
@@ -578,16 +574,15 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
                       conversation.lastMessage,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        fontWeight: hasUnread
-                            ? FontWeight.w500
-                            : FontWeight.w400,
+                      style: ChatUiTokens.listPreview(
                         color: hasUnread
                             ? (Theme.of(context).brightness == Brightness.dark
                                   ? const Color(0xFFCBD5E1)
                                   : const Color(0xFF475569))
-                            : const Color(0xFF94A3B8),
+                            : ChatUiTokens.textMuted,
+                        weight: hasUnread
+                            ? FontWeight.w500
+                            : FontWeight.w400,
                       ),
                     ),
                   ],
@@ -599,12 +594,13 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
                 children: [
                   Text(
                     _formatTimestamp(conversation.timestamp),
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: hasUnread ? FontWeight.w600 : FontWeight.w400,
+                    style: ChatUiTokens.meta(
                       color: hasUnread
                           ? AppColors.primary
-                          : const Color(0xFF94A3B8),
+                          : ChatUiTokens.textMuted,
+                    ).copyWith(
+                      fontWeight:
+                          hasUnread ? FontWeight.w600 : FontWeight.w400,
                     ),
                   ),
                   SizedBox(height: 4),
@@ -620,11 +616,8 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
                       ),
                       child: Text(
                         '${conversation.unreadCount}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
+                        style: ChatUiTokens.meta(color: Colors.white)
+                            .copyWith(fontWeight: FontWeight.w600),
                       ),
                     )
                   else

@@ -39,6 +39,12 @@ class OrderModel {
   final DateTime? scheduledDeliveryTime;
   final double deliveryFee;
   final String displayDeliveryFee;
+  final bool isFreeDelivery;
+  final bool freeDeliveryActive;
+  final String freeDeliverySource;
+  final DateTime? freeDeliveryStartsAt;
+  final DateTime? freeDeliveryEndsAt;
+  final DateTime? globalFreeDeliveryEndsAt;
   final double itemPrice;
   final double taxAmount;
   final String displayTaxAmount;
@@ -106,6 +112,12 @@ class OrderModel {
     this.scheduledDeliveryTime,
     this.deliveryFee = 0.0,
     this.displayDeliveryFee = '',
+    this.isFreeDelivery = false,
+    this.freeDeliveryActive = false,
+    this.freeDeliverySource = 'NONE',
+    this.freeDeliveryStartsAt,
+    this.freeDeliveryEndsAt,
+    this.globalFreeDeliveryEndsAt,
     this.itemPrice = 0.0,
     this.taxAmount = 0.0,
     this.displayTaxAmount = '',
@@ -180,6 +192,10 @@ class OrderModel {
     final type = orderType.toUpperCase();
     return type == 'PICK_UP' || type == 'PICKUP';
   }
+
+  /// Promo is live for this shop (PENDING), or this order already snapped free.
+  bool get hasFreeDeliveryPromo =>
+      isFreeDelivery || freeDeliveryActive;
 
   String? get deliveryCycleNo => vehicleNo;
   String? get deliveryTrackingUrl => trackingUrl;
@@ -274,6 +290,28 @@ class OrderModel {
         0.0;
     final transactionDiscount =
         (json['transactionDiscount'] as num?)?.toDouble() ?? 0.0;
+    final isFreeDelivery = json['isFreeDelivery'] == true;
+    final freeDeliveryActive = json['freeDeliveryActive'] == true;
+    final freeDeliverySource =
+        json['freeDeliverySource']?.toString().toUpperCase() ?? 'NONE';
+    final freeDeliveryStartsAt = json['freeDeliveryStartsAt'] != null
+        ? DateTime.tryParse(json['freeDeliveryStartsAt'].toString())
+        : null;
+    final freeDeliveryEndsAt = json['freeDeliveryEndsAt'] != null
+        ? DateTime.tryParse(json['freeDeliveryEndsAt'].toString())
+        : null;
+    final globalFreeDeliveryEndsAt = json['globalFreeDeliveryEndsAt'] != null
+        ? DateTime.tryParse(json['globalFreeDeliveryEndsAt'].toString())
+        : null;
+    final apiDisplayDeliveryFee = json['displayDeliveryFee']?.toString();
+    final resolvedDisplayDeliveryFee =
+        (isFreeDelivery || freeDeliveryActive ||
+                (apiDisplayDeliveryFee?.toUpperCase() == 'FREE'))
+            ? 'FREE'
+            : (apiDisplayDeliveryFee != null &&
+                    apiDisplayDeliveryFee.trim().isNotEmpty
+                ? apiDisplayDeliveryFee
+                : deliveryFee.toFormattedPrice());
 
     final shopPaymentMethodMap = json['shopPaymentMethod'] as Map?;
     final paymentMethodMap = shopPaymentMethodMap?['paymentMethod'] as Map? ?? shopPaymentMethodMap;
@@ -291,7 +329,13 @@ class OrderModel {
           ? DateTime.tryParse(json['scheduledDeliveryTime'].toString())
           : null,
       deliveryFee: deliveryFee,
-      displayDeliveryFee: deliveryFee.toFormattedPrice(),
+      displayDeliveryFee: resolvedDisplayDeliveryFee,
+      isFreeDelivery: isFreeDelivery,
+      freeDeliveryActive: freeDeliveryActive,
+      freeDeliverySource: freeDeliverySource,
+      freeDeliveryStartsAt: freeDeliveryStartsAt,
+      freeDeliveryEndsAt: freeDeliveryEndsAt,
+      globalFreeDeliveryEndsAt: globalFreeDeliveryEndsAt,
       itemPrice: itemPrice,
       taxAmount: taxAmount,
       taxEnable: taxEnable,
