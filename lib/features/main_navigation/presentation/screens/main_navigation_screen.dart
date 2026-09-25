@@ -112,7 +112,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       WebSocketService().connect();
       ShopCallSession().startListening();
-      ShopCallSession().onIncomingCall = (callId, callerName) {
+      ShopCallSession().onIncomingCall = (callId, callerName, callerImageUrl) {
         final currentContext = App.navigatorKey.currentContext;
         if (currentContext != null) {
           Navigator.of(currentContext).push(
@@ -120,6 +120,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               builder: (_) => IncomingCallScreen(
                 callId: callId,
                 callerName: callerName,
+                callerImageUrl: callerImageUrl,
               ),
             ),
           );

@@ -1,30 +1,33 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:my_shop/features/call/data/shop_call_session.dart';
 import 'package:my_shop/features/call/presentation/active_call_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+import 'dart:async';
 
-/// Full-screen outgoing call screen shown when the shop calls a customer.
-/// Navigates to [ActiveCallScreen] once the user accepts, or pops if rejected/timed out.
+const _kBgTop    = Color(0xFFED3973); // app primary pink
+const _kBgBottom = Color(0xFF0D060A); // near-black at bottom
+const _kDeclineRed  = Color(0xFFE41E3F);
+
+/// Messenger-style outgoing call screen for Shop app.
 class OutgoingCallScreen extends StatefulWidget {
   final String customerName;
+  final String? customerImageUrl;
 
-  const OutgoingCallScreen({
-    super.key,
-    required this.customerName,
-  });
+  const OutgoingCallScreen({super.key, required this.customerName, this.customerImageUrl});
 
   @override
   State<OutgoingCallScreen> createState() => _OutgoingCallScreenState();
 }
 
 class _OutgoingCallScreenState extends State<OutgoingCallScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final _session = ShopCallSession();
   late final AnimationController _pulseController;
-  late final Animation<double> _pulseAnimation;
+  late final Animation<double> _ring1, _ring2, _ring3;
 
   @override
   void initState() {
@@ -32,40 +35,34 @@ class _OutgoingCallScreenState extends State<OutgoingCallScreen>
 
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat(reverse: true);
+      duration: const Duration(milliseconds: 2200),
+    )..repeat();
 
-    _pulseAnimation = Tween<double>(begin: 0.9, end: 1.15).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
+    _ring1 = Tween<double>(begin: 1.0, end: 1.55).animate(
+      CurvedAnimation(parent: _pulseController, curve: const Interval(0.0, 0.6, curve: Curves.easeOut)));
+    _ring2 = Tween<double>(begin: 1.0, end: 1.9).animate(
+      CurvedAnimation(parent: _pulseController, curve: const Interval(0.2, 0.8, curve: Curves.easeOut)));
+    _ring3 = Tween<double>(begin: 1.0, end: 2.25).animate(
+      CurvedAnimation(parent: _pulseController, curve: const Interval(0.4, 1.0, curve: Curves.easeOut)));
 
-    // Navigate to active call when user accepts
-    _session.onOutgoingCallAccepted = (callId, name) {
+    _session.onOutgoingCallAccepted = (callId, name, imageUrl) {
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => ActiveCallScreen(callerName: name),
-        ),
+        MaterialPageRoute(builder: (_) => ActiveCallScreen(callerName: name, callerImageUrl: imageUrl)),
       );
     };
 
-    // Pop back if user rejected / timed out
     _session.onOutgoingCallEnded = () {
       if (!mounted) return;
-      if (Navigator.canPop(context)) {
-        Navigator.of(context).pop();
-      }
+      if (Navigator.canPop(context)) Navigator.of(context).pop();
     };
 
-    // Listen to state for CALL_REJECTED / CALL_TIMEOUT coming via state notifier
     _session.state.addListener(_onStateChanged);
   }
 
   void _onStateChanged() {
     if (_session.state.value == ShopCallState.idle && mounted) {
-      if (Navigator.canPop(context)) {
-        Navigator.of(context).pop();
-      }
+      if (Navigator.canPop(context)) Navigator.of(context).pop();
     }
   }
 
@@ -80,167 +77,137 @@ class _OutgoingCallScreenState extends State<OutgoingCallScreen>
 
   Future<void> _hangUp() async {
     await _session.endCall();
-    if (mounted && Navigator.canPop(context)) {
-      Navigator.of(context).pop();
-    }
+    if (mounted && Navigator.canPop(context)) Navigator.of(context).pop();
+  }
+
+  Widget _buildRing(Animation<double> anim, double maxOpacity) {
+    return AnimatedBuilder(
+      animation: anim,
+      builder: (_, _) {
+        final t = ((anim.value - 1.0) / 1.25).clamp(0.0, 1.0);
+        return Transform.scale(
+          scale: anim.value,
+          child: Container(
+            width: 148, height: 148,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withValues(alpha: maxOpacity * (1.0 - t)),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0F172A), // Slate 900
-              Color(0xFF1E1B4B), // Indigo 950
-              Color(0xFF0F172A), // Slate 900
-            ],
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: _kBgTop,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: _kBgBottom,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        backgroundColor: _kBgBottom,
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.primary, AppColors.secondary, _kBgBottom],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              stops: [0.0, 0.38, 1.0],
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 80),
-
-              // Caller label
-              Text(
-                'Calling Customer...',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  color: Colors.white60,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 1.2,
+          child: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 40),
+                Text(
+                  widget.customerName,
+                  style: GoogleFonts.inter(
+                    fontSize: 24, fontWeight: FontWeight.w700,
+                    color: Colors.white, letterSpacing: -0.3,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 50),
-
-              // Pulsing avatar
-              ScaleTransition(
-                scale: _pulseAnimation,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Outer glow ring
-                    Container(
-                      width: 180,
-                      height: 180,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.primary.withOpacity(0.1),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withOpacity(0.2),
-                            blurRadius: 40,
-                            spreadRadius: 10,
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Inner ring
-                    Container(
-                      width: 140,
-                      height: 140,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.primary.withOpacity(0.25),
-                      ),
-                    ),
-                    // Avatar
-                    Container(
-                      width: 110,
-                      height: 110,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: AppColors.primaryGradient,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 10,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          widget.customerName.isNotEmpty
-                              ? widget.customerName[0].toUpperCase()
-                              : 'C',
-                          style: GoogleFonts.poppins(
-                            fontSize: 48,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
+                const SizedBox(height: 4),
+                Text(
+                  'Voice Call',
+                  style: GoogleFonts.inter(fontSize: 13, color: Colors.white.withValues(alpha: 0.72)),
+                ),
+                const Spacer(flex: 1),
+                SizedBox(
+                  width: 270, height: 270,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      _buildRing(_ring3, 0.07),
+                      _buildRing(_ring2, 0.13),
+                      _buildRing(_ring1, 0.22),
+                      Container(
+                        width: 148, height: 148,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.15),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.38), width: 3),
+                          boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.55), blurRadius: 44, spreadRadius: 10)],
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 40),
-
-              // Customer name
-              Text(
-                widget.customerName,
-                style: GoogleFonts.poppins(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  letterSpacing: -0.5,
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // Animated "Ringing..." dots
-              _RingingText(),
-
-              const Spacer(),
-
-              // Hang up button
-              GestureDetector(
-                onTap: _hangUp,
-                child: Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFFEF4444),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFEF4444).withOpacity(0.3),
-                        blurRadius: 20,
-                        spreadRadius: 2,
-                        offset: const Offset(0, 4),
+                        child: ClipOval(
+                          child: (widget.customerImageUrl != null && widget.customerImageUrl!.isNotEmpty)
+                              ? CachedNetworkImage(
+                                  imageUrl: widget.customerImageUrl!,
+                                  fit: BoxFit.cover,
+                                  placeholder: (_, __) => Center(
+                                    child: Text(
+                                      widget.customerName.isNotEmpty ? widget.customerName[0].toUpperCase() : 'C',
+                                      style: GoogleFonts.inter(fontSize: 56, fontWeight: FontWeight.w700, color: Colors.white),
+                                    ),
+                                  ),
+                                  errorWidget: (_, __, ___) => Center(
+                                    child: Text(
+                                      widget.customerName.isNotEmpty ? widget.customerName[0].toUpperCase() : 'C',
+                                      style: GoogleFonts.inter(fontSize: 56, fontWeight: FontWeight.w700, color: Colors.white),
+                                    ),
+                                  ),
+                                )
+                              : Center(
+                                  child: Text(
+                                    widget.customerName.isNotEmpty ? widget.customerName[0].toUpperCase() : 'C',
+                                    style: GoogleFonts.inter(fontSize: 56, fontWeight: FontWeight.w700, color: Colors.white),
+                                  ),
+                                ),
+                        ),
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    PhosphorIcons.phoneSlash,
-                    color: Colors.white,
-                    size: 32,
+                ),
+                const Spacer(flex: 1),
+                _CallingText(),
+                const SizedBox(height: 44),
+                GestureDetector(
+                  onTap: _hangUp,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 72, height: 72,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _kDeclineRed,
+                          boxShadow: [BoxShadow(color: _kDeclineRed.withValues(alpha: 0.45), blurRadius: 22, spreadRadius: 2, offset: const Offset(0, 6))],
+                        ),
+                        child: const Icon(PhosphorIcons.phoneX, color: Colors.white, size: 28),
+                      ),
+                      const SizedBox(height: 10),
+                      Text('Cancel', style: GoogleFonts.inter(fontSize: 13, color: Colors.white.withValues(alpha: 0.85), fontWeight: FontWeight.w500)),
+                    ],
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 16),
-
-              Text(
-                'Cancel Call',
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: Colors.white54,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-
-              const SizedBox(height: 60),
-            ],
+                const SizedBox(height: 60),
+              ],
+            ),
           ),
         ),
       ),
@@ -248,12 +215,12 @@ class _OutgoingCallScreenState extends State<OutgoingCallScreen>
   }
 }
 
-class _RingingText extends StatefulWidget {
+class _CallingText extends StatefulWidget {
   @override
-  State<_RingingText> createState() => _RingingTextState();
+  State<_CallingText> createState() => _CallingTextState();
 }
 
-class _RingingTextState extends State<_RingingText> {
+class _CallingTextState extends State<_CallingText> {
   int _dotCount = 1;
   late final Timer _timer;
 
@@ -261,27 +228,23 @@ class _RingingTextState extends State<_RingingText> {
   void initState() {
     super.initState();
     _timer = Timer.periodic(const Duration(milliseconds: 500), (_) {
-      if (mounted) {
-        setState(() => _dotCount = (_dotCount % 3) + 1);
-      }
+      if (mounted) setState(() => _dotCount = (_dotCount % 3) + 1);
     });
   }
 
   @override
-  void dispose() {
-    _timer.cancel();
-    super.dispose();
-  }
+  void dispose() { _timer.cancel(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
     return Text(
-      'Ringing${'.' * _dotCount}',
-      style: GoogleFonts.poppins(
-        fontSize: 16,
-        color: Colors.white54,
-        fontWeight: FontWeight.w400,
-      ),
+      'Calling${'.' * _dotCount}',
+      style: GoogleFonts.inter(fontSize: 16, color: Colors.white.withValues(alpha: 0.78)),
     );
   }
 }
+
+
+
+
+

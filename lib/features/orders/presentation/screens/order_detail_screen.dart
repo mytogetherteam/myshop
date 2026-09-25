@@ -2565,13 +2565,28 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
+              if (_currentOrder.customerPhone.isNotEmpty && _currentOrder.customerPhone != '-')
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    _currentOrder.customerPhone,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ),
               if (_currentOrder.queueNo > 0)
-                Text(
-                  'Queue No: #${_currentOrder.queueNo}',
-                  style: GoogleFonts.poppins(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.onSurfaceVariant,
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    'Queue No: #${_currentOrder.queueNo}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.onSurfaceVariant,
+                    ),
                   ),
                 ),
             ],
@@ -2656,7 +2671,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => OutgoingCallScreen(customerName: customerName),
+          builder: (_) => OutgoingCallScreen(
+            customerName: customerName,
+            customerImageUrl: _currentOrder.customerAvatar,
+          ),
         ),
       );
     }

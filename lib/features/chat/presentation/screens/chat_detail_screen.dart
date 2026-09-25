@@ -21,6 +21,7 @@ import 'package:my_shop/features/chat/presentation/widgets/voice_record_button.d
 import 'package:my_shop/features/orders/data/models/order_model.dart';
 import 'package:my_shop/features/orders/data/services/order_service.dart';
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
+import 'package:my_shop/features/call/data/shop_call_session.dart';
 
 class ChatDetailScreen extends StatefulWidget {
   final ChatConversation conversation;
@@ -820,6 +821,29 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         ),
       ),
       actions: [
+        IconButton(
+          onPressed: () {
+            final customerId = _order?.customerId ?? widget.conversation.userId;
+            final customerName = _order?.customerName ?? widget.conversation.name;
+            if (customerId != null && customerId > 0) {
+              ShopCallSession().initiateCallToUser(
+                userId: customerId,
+                customerName: customerName,
+                customerImageUrl: _order?.customerAvatar ?? widget.conversation.avatarUrl,
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Cannot call: Customer ID unavailable.')),
+              );
+            }
+          },
+          tooltip: 'Call Customer',
+          icon: Icon(
+            PhosphorIconsFill.phoneCall,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
+            size: 22,
+          ),
+        ),
         IconButton(
           onPressed: _openOrderSummarySheet,
           tooltip:

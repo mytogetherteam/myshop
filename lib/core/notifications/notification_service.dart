@@ -423,15 +423,16 @@ class NotificationService {
     } else if (type == 'CALL_INCOMING') {
       final String? callId = message.data['callId']?.toString();
       final String? callerName = message.data['callerName']?.toString();
+      final String? callerImageUrl = message.data['callerImageUrl']?.toString();
       if (callId != null && callerName != null) {
         // Wait until navigator context is available
         BuildContext? context = App.navigatorKey.currentContext;
         if (context == null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            _showIncomingCallScreen(callId, callerName);
+            _showIncomingCallScreen(callId, callerName, callerImageUrl);
           });
         } else {
-          _showIncomingCallScreen(callId, callerName);
+          _showIncomingCallScreen(callId, callerName, callerImageUrl);
         }
       }
     } else {
@@ -440,7 +441,7 @@ class NotificationService {
     }
   }
 
-  void _showIncomingCallScreen(String callId, String callerName) {
+  void _showIncomingCallScreen(String callId, String callerName, String? callerImageUrl) {
     final context = App.navigatorKey.currentContext;
     if (context == null) return;
     
@@ -451,6 +452,7 @@ class NotificationService {
         builder: (_) => IncomingCallScreen(
           callId: callId,
           callerName: callerName,
+          callerImageUrl: callerImageUrl,
         ),
       ),
     );
