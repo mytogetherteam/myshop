@@ -11,6 +11,8 @@ class StorageService {
       'notification_permission_handled';
   static const String _keySelectedShopId = 'selected_shop_id';
   static const String _keyLanguage = 'app_language';
+  static const String _keyLanguageForceToken = 'language_force_token';
+  static const String _keyLanguageBeforeForce = 'language_before_force';
   static const String _keyMenuWarningSeen = 'menu_warning_seen';
   static const String _keyThemeMode = 'app_theme_mode';
   static const String _keyLastMissedOrderCheck = 'last_missed_order_check_ms';
@@ -156,6 +158,32 @@ class StorageService {
   Future<String> getLanguage() async {
     await _ensureInitialized();
     return _prefs!.getString(_keyLanguage) ?? 'en'; // default English
+  }
+
+  Future<String?> getLanguageForceToken() async {
+    await _ensureInitialized();
+    return _prefs!.getString(_keyLanguageForceToken);
+  }
+
+  Future<void> setLanguageForceToken(String token) async {
+    await _ensureInitialized();
+    await _prefs!.setString(_keyLanguageForceToken, token);
+  }
+
+  Future<String?> getLanguageBeforeForce() async {
+    await _ensureInitialized();
+    return _prefs!.getString(_keyLanguageBeforeForce);
+  }
+
+  Future<void> setLanguageBeforeForce(String langCode) async {
+    await _ensureInitialized();
+    await _prefs!.setString(_keyLanguageBeforeForce, langCode);
+  }
+
+  Future<void> clearLanguageForce() async {
+    await _ensureInitialized();
+    await _prefs!.remove(_keyLanguageForceToken);
+    await _prefs!.remove(_keyLanguageBeforeForce);
   }
 
   Future<void> saveThemeMode(String themeModeStr) async {

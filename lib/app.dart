@@ -37,6 +37,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      LocalizationService.instance.refreshLanguagePolicy();
       // If the app comes to foreground, ensure the background service notification is brought back if swiped away
       AuthService.instance.isLoggedIn.then((isLoggedIn) {
         if (isLoggedIn) {

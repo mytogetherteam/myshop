@@ -9,10 +9,13 @@ class LanguageSelectorSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentLang = LocalizationService.instance.localeNotifier.value.languageCode;
     final t = AppLocalizations.of(context);
 
-    return Container(
+    return ValueListenableBuilder<Locale>(
+      valueListenable: LocalizationService.instance.localeNotifier,
+      builder: (context, locale, _) {
+        final currentLang = locale.languageCode;
+        return Container(
       padding: const EdgeInsets.symmetric(vertical: 24),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
@@ -75,6 +78,8 @@ class LanguageSelectorSheet extends StatelessWidget {
           SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
         ],
       ),
+    );
+      },
     );
   }
 

@@ -17,6 +17,7 @@ class AuthInterceptor extends Interceptor {
   static const _publicAuthPaths = {
     '/api/shop/auth/login',
     '/api/shop/auth/refresh',
+    '/api/app/language-policy',
   };
 
   final Dio dio;

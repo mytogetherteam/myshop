@@ -90,6 +90,7 @@ class ApiClient {
   }
 
   bool _shouldRetry(DioException err) {
+    if (err.requestOptions.extra['skipRetry'] == true) return false;
     if (err.type == DioExceptionType.cancel ||
         err.type == DioExceptionType.badResponse) {
       return false;
