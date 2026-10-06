@@ -6,6 +6,7 @@ import 'package:my_shop/features/call/data/shop_call_session.dart';
 import 'package:my_shop/features/call/presentation/active_call_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'dart:async';
 
 const _kBgTop    = Color(0xFFED3973); // app primary pink
@@ -28,6 +29,7 @@ class _OutgoingCallScreenState extends State<OutgoingCallScreen>
   final _session = ShopCallSession();
   late final AnimationController _pulseController;
   late final Animation<double> _ring1, _ring2, _ring3;
+  final AudioPlayer _ringPlayer = AudioPlayer();
 
   @override
   void initState() {
@@ -45,6 +47,8 @@ class _OutgoingCallScreenState extends State<OutgoingCallScreen>
     _ring3 = Tween<double>(begin: 1.0, end: 2.25).animate(
       CurvedAnimation(parent: _pulseController, curve: const Interval(0.4, 1.0, curve: Curves.easeOut)));
 
+    _playRingingTone();
+
     _session.onOutgoingCallAccepted = (callId, name, imageUrl) {
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
@@ -60,6 +64,17 @@ class _OutgoingCallScreenState extends State<OutgoingCallScreen>
     _session.state.addListener(_onStateChanged);
   }
 
+  Future<void> _playRingingTone() async {
+    try {
+      await _ringPlayer.setReleaseMode(ReleaseMode.loop);
+      await _ringPlayer.play(AssetSource('alert/ringing.mp3'));
+    } catch (_) {}
+  }
+
+  void _stopRingingTone() {
+    _ringPlayer.stop();
+  }
+
   void _onStateChanged() {
     if (_session.state.value == ShopCallState.idle && mounted) {
       if (Navigator.canPop(context)) Navigator.of(context).pop();
@@ -68,6 +83,8 @@ class _OutgoingCallScreenState extends State<OutgoingCallScreen>
 
   @override
   void dispose() {
+    _stopRingingTone();
+    _ringPlayer.dispose();
     _pulseController.dispose();
     _session.state.removeListener(_onStateChanged);
     _session.onOutgoingCallAccepted = null;
@@ -112,6 +129,7 @@ class _OutgoingCallScreenState extends State<OutgoingCallScreen>
       child: Scaffold(
         backgroundColor: _kBgBottom,
         body: Container(
+          width: double.infinity,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [AppColors.primary, AppColors.secondary, _kBgBottom],

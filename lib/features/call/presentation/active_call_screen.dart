@@ -72,6 +72,7 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
       child: Scaffold(
         backgroundColor: _kBgBottom,
         body: Container(
+          width: double.infinity,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [AppColors.primary, AppColors.secondary, _kBgBottom],
@@ -134,13 +135,23 @@ class _ActiveCallScreenState extends State<ActiveCallScreen> {
                   ),
                 ),
                 const Spacer(flex: 1),
-                // Timer
-                Text(
-                  _formatElapsed(),
-                  style: GoogleFonts.inter(
-                    color: Colors.white, fontSize: 20,
-                    fontWeight: FontWeight.w600, letterSpacing: 2.5,
-                  ),
+                ValueListenableBuilder<ShopCallState>(
+                  valueListenable: _call.state,
+                  builder: (context, state, _) {
+                    if (state == ShopCallState.reconnecting) {
+                      return Text(
+                        'Reconnecting...',
+                        style: GoogleFonts.inter(color: Colors.orangeAccent, fontSize: 18, fontWeight: FontWeight.w500),
+                      );
+                    }
+                    return Text(
+                      _formatElapsed(),
+                      style: GoogleFonts.inter(
+                        color: Colors.white, fontSize: 20,
+                        fontWeight: FontWeight.w600, letterSpacing: 2.5,
+                      ),
+                    );
+                  }
                 ),
                 const SizedBox(height: 52),
                 // Controls row: Mute | End | Speaker

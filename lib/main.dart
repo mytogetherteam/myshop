@@ -14,6 +14,8 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:my_shop/core/services/background_service.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:my_shop/features/auth/data/services/auth_service.dart';
+import 'package:my_shop/features/call/data/shop_call_session.dart';
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'dart:io';
 import 'app.dart';
 
@@ -33,8 +35,23 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   }
 
   if (type == 'CALL_INCOMING') {
-    // Show a high priority local notification for incoming call
-    await NotificationService().showLocalNotification(message);
+    final callId = message.data['callId'];
+    final callerName = message.data['callerName'] ?? 'Customer';
+    if (callId != null) {
+      final session = ShopCallSession();
+      session.startListening();
+      await session.showIncomingCallUI(callId: callId, callerName: callerName);
+    }
+    return;
+  }
+
+  if (type == 'CALL_END' || type == 'CALL_TIMEOUT') {
+    final callId = message.data['callId'];
+    if (callId != null) {
+      await FlutterCallkitIncoming.endCall(callId);
+    } else {
+      await FlutterCallkitIncoming.endAllCalls();
+    }
     return;
   }
 

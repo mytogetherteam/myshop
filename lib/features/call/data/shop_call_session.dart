@@ -5,13 +5,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:my_shop/core/network/api_client.dart';
 import 'package:my_shop/core/network/websocket_service.dart';
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+import 'package:flutter_callkit_incoming/entities/entities.dart';
 
 /// Manages a WebRTC voice call from the SHOP side.
 /// Supports two directions:
 ///   - Answerer (user-to-shop): user calls shop, shop answers (existing).
 ///   - Caller (shop-to-user): shop calls user, user answers (new).
 class ShopCallSession {
-  ShopCallSession._();
+  ShopCallSession._() {
+    _listenCallKitEvents();
+  }
   static final ShopCallSession _instance = ShopCallSession._();
   factory ShopCallSession() => _instance;
 
@@ -54,14 +58,19 @@ class ShopCallSession {
   // Call info
   String? _currentCallId;
   String? _callerName;       // Name of incoming caller (user-to-shop)
+  String? _callerImageUrl;   // Image URL of incoming caller
   String? _customerName;     // Name of customer being called (shop-to-user)
+  String? _customerImageUrl; // Image URL of customer being called
   String? _direction;        // 'incoming' | 'outgoing'
   Timer? _ringTimeout;
+  Timer? _reconnectTimer;
 
-  // Callback when an incoming call arrives (to show the incoming call screen)
-  void Function(String callId, String callerName)? onIncomingCall;
+  // Callback when incoming call arrives (removed in favor of CallKit)
+  // void Function(String callId, String callerName, String? callerImageUrl)? onIncomingCall;
+  // Callback when CallKit accepts the call, to navigate to ActiveCallScreen
+  void Function(String callId, String callerName, String? callerImageUrl)? onCallAcceptedFromOS;
   // Callback when shop-to-user call is accepted by user (to navigate to active call)
-  void Function(String callId, String customerName)? onOutgoingCallAccepted;
+  void Function(String callId, String customerName, String? customerImageUrl)? onOutgoingCallAccepted;
   // Callback when outgoing call was rejected/timed-out
   void Function()? onOutgoingCallEnded;
 
@@ -102,6 +111,7 @@ class ShopCallSession {
     try {
       await _dio.post('/api/call/reject/$_currentCallId');
     } catch (_) {}
+    FlutterCallkitIncoming.endAllCalls();
     _cleanup();
     state.value = ShopCallState.idle;
   }
@@ -111,10 +121,11 @@ class ShopCallSession {
   // ──────────────────────────────────────────────
 
   /// Shop initiates a call to [userId]. Returns false if call fails to start.
-  Future<bool> initiateCallToUser({required int userId, required String customerName}) async {
+  Future<bool> initiateCallToUser({required int userId, required String customerName, String? customerImageUrl}) async {
     if (state.value != ShopCallState.idle) return false;
 
     _customerName = customerName;
+    _customerImageUrl = customerImageUrl;
     _direction = 'outgoing';
     state.value = ShopCallState.calling;
 
@@ -126,8 +137,8 @@ class ShopCallSession {
         return false;
       }
 
-      // Timeout: user doesn't answer in 31s
-      _ringTimeout = Timer(const Duration(seconds: 31), () {
+      // Timeout: user doesn't answer in 61s
+      _ringTimeout = Timer(const Duration(seconds: 61), () {
         if (state.value == ShopCallState.calling) {
           state.value = ShopCallState.idle;
           onOutgoingCallEnded?.call();
@@ -165,6 +176,13 @@ class ShopCallSession {
     isMuted.value = !isMuted.value;
   }
 
+  void toggleSpeaker() {
+    isSpeakerOn.value = !isSpeakerOn.value;
+    try {
+      Helper.setSpeakerphoneOn(isSpeakerOn.value);
+    } catch (_) {}
+  }
+
   Future<void> _handleCallEvent(Map<String, dynamic> event) async {
     final type = event['type'] as String?;
     final callId = event['callId'] as String?;
@@ -175,9 +193,10 @@ class ShopCallSession {
         if (callId == null || state.value != ShopCallState.idle) return;
         _currentCallId = callId;
         _callerName = event['callerName'] as String? ?? 'Customer';
+        _callerImageUrl = event['callerImageUrl'] as String?;
         _direction = 'incoming';
         state.value = ShopCallState.ringing;
-        onIncomingCall?.call(callId, _callerName!);
+        showIncomingCallUI(callId: callId, callerName: _callerName!);
         break;
 
       // ── User accepted shop's call (shop-to-user) ──
@@ -187,7 +206,7 @@ class ShopCallSession {
         state.value = ShopCallState.connected;
         // Shop is now the offerer — start WebRTC and send offer
         await _startWebRTCAsOfferer();
-        onOutgoingCallAccepted?.call(_currentCallId!, _customerName ?? 'Customer');
+        onOutgoingCallAccepted?.call(_currentCallId!, _customerName ?? 'Customer', _customerImageUrl);
         break;
 
       // ── User rejected shop's call ──
@@ -248,10 +267,87 @@ class ShopCallSession {
         if (_direction == 'outgoing') {
           onOutgoingCallEnded?.call();
         }
+        FlutterCallkitIncoming.endAllCalls();
         _cleanup();
         state.value = ShopCallState.idle;
         break;
     }
+  }
+
+  Future<void> showIncomingCallUI({required String callId, required String callerName}) async {
+    final callKitParams = CallKitParams(
+      id: callId,
+      nameCaller: callerName,
+      appName: 'My Shop',
+      avatar: '',
+      handle: 'Incoming Call',
+      type: 0,
+      duration: 60000,
+      missedCallNotification: const NotificationParams(
+        showNotification: true,
+        isShowCallback: false,
+        subtitle: 'Missed call from customer',
+        callbackText: 'Call back',
+      ),
+      extra: <String, dynamic>{},
+      headers: <String, dynamic>{},
+      android: const AndroidParams(
+        isCustomNotification: true,
+        isShowLogo: false,
+        ringtonePath: 'system_ringtone_default',
+        backgroundColor: '#ED3973',
+        actionColor: '#22C55E',
+        textColor: '#ffffff',
+        incomingCallNotificationChannelName: "Incoming Call",
+        missedCallNotificationChannelName: "Missed Call",
+      ),
+      ios: const IOSParams(
+        iconName: 'AppIcon',
+        handleType: '',
+        supportsVideo: false,
+        maximumCallGroups: 2,
+        maximumCallsPerCallGroup: 1,
+        audioSessionMode: 'default',
+        audioSessionActive: true,
+        audioSessionPreferredSampleRate: 44100.0,
+        audioSessionPreferredIOBufferDuration: 0.005,
+        supportsDTMF: true,
+        supportsHolding: true,
+        supportsGrouping: false,
+        supportsUngrouping: false,
+        ringtonePath: 'system_ringtone_default',
+      ),
+    );
+    await FlutterCallkitIncoming.showCallkitIncoming(callKitParams);
+  }
+
+  void _listenCallKitEvents() {
+    FlutterCallkitIncoming.onEvent.listen((CallEvent? event) {
+      if (event == null) return;
+      switch (event) {
+        case CallEventActionCallAccept():
+          final id = event.callKitParams.id;
+          if (id == _currentCallId) {
+            acceptCall();
+            onCallAcceptedFromOS?.call(_currentCallId!, _callerName ?? 'Customer', _callerImageUrl);
+          }
+          break;
+        case CallEventActionCallDecline():
+          final id = event.callKitParams.id;
+          if (id == _currentCallId) {
+            rejectCall();
+          }
+          break;
+        case CallEventActionCallEnded():
+          final id = event.callKitParams.id;
+          if (id == _currentCallId) {
+            endCall();
+          }
+          break;
+        default:
+          break;
+      }
+    });
   }
 
   /// Shop is Answerer (user-to-shop): sets up PC ready to receive offer.
@@ -288,6 +384,27 @@ class ShopCallSession {
         });
       } catch (_) {}
     };
+
+    _peerConnection!.onIceConnectionState = (RTCIceConnectionState state) {
+      if (state == RTCIceConnectionState.RTCIceConnectionStateDisconnected) {
+        this.state.value = ShopCallState.reconnecting;
+        _reconnectTimer?.cancel();
+        _reconnectTimer = Timer(const Duration(seconds: 30), () {
+          if (this.state.value == ShopCallState.reconnecting) {
+            endCall();
+          }
+        });
+      } else if (state == RTCIceConnectionState.RTCIceConnectionStateConnected ||
+                 state == RTCIceConnectionState.RTCIceConnectionStateCompleted) {
+        _reconnectTimer?.cancel();
+        this.state.value = ShopCallState.connected;
+      } else if (state == RTCIceConnectionState.RTCIceConnectionStateFailed ||
+                 state == RTCIceConnectionState.RTCIceConnectionStateClosed) {
+        _reconnectTimer?.cancel();
+        endCall();
+      }
+    };
+
     // Offer will arrive via CALL_OFFER event — handled in _handleOffer
   }
 
@@ -326,6 +443,27 @@ class ShopCallSession {
       } catch (_) {}
     };
 
+    _peerConnection!.onIceConnectionState = (RTCIceConnectionState state) {
+      if (state == RTCIceConnectionState.RTCIceConnectionStateDisconnected) {
+        this.state.value = ShopCallState.reconnecting;
+        _reconnectTimer?.cancel();
+        _reconnectTimer = Timer(const Duration(seconds: 30), () {
+          if (this.state.value == ShopCallState.reconnecting) {
+            endCall();
+          }
+        });
+      } else if (state == RTCIceConnectionState.RTCIceConnectionStateConnected ||
+                 state == RTCIceConnectionState.RTCIceConnectionStateCompleted) {
+        _reconnectTimer?.cancel();
+        this.state.value = ShopCallState.connected;
+      } else if (state == RTCIceConnectionState.RTCIceConnectionStateFailed ||
+                 state == RTCIceConnectionState.RTCIceConnectionStateClosed) {
+        _reconnectTimer?.cancel();
+        endCall();
+      }
+    };
+
+
     final offer = await _peerConnection!.createOffer({'offerToReceiveAudio': true});
     await _peerConnection!.setLocalDescription(offer);
 
@@ -359,6 +497,8 @@ class ShopCallSession {
   void _cleanup() {
     _ringTimeout?.cancel();
     _ringTimeout = null;
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
     _peerConnection?.close();
     _peerConnection = null;
     _localStream?.getTracks().forEach((t) => t.stop());
@@ -371,7 +511,9 @@ class ShopCallSession {
 
     _currentCallId = null;
     _callerName = null;
+    _callerImageUrl = null;
     _customerName = null;
+    _customerImageUrl = null;
     _direction = null;
     isMuted.value = false;
     // Re-start listening for next call
@@ -384,4 +526,4 @@ class ShopCallSession {
   bool get isOutgoing => _direction == 'outgoing';
 }
 
-enum ShopCallState { idle, ringing, calling, connected }
+enum ShopCallState { idle, ringing, calling, connected, reconnecting }

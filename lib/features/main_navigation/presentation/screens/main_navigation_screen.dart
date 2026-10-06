@@ -21,6 +21,7 @@ import 'package:flutter/services.dart';
 import 'package:my_shop/app.dart';
 import 'package:my_shop/features/call/data/shop_call_session.dart';
 import 'package:my_shop/features/call/presentation/incoming_call_screen.dart';
+import 'package:my_shop/features/call/presentation/active_call_screen.dart';
 import 'package:my_shop/core/presentation/widgets/app_bar_title_with_logo.dart';
 import 'package:my_shop/core/utils/app_logger.dart';
 import 'dart:async';
@@ -112,13 +113,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       WebSocketService().connect();
       ShopCallSession().startListening();
-      ShopCallSession().onIncomingCall = (callId, callerName, callerImageUrl) {
+      ShopCallSession().onCallAcceptedFromOS = (callId, callerName, callerImageUrl) {
         final currentContext = App.navigatorKey.currentContext;
         if (currentContext != null) {
           Navigator.of(currentContext).push(
             MaterialPageRoute(
-              builder: (_) => IncomingCallScreen(
-                callId: callId,
+              builder: (_) => ActiveCallScreen(
                 callerName: callerName,
                 callerImageUrl: callerImageUrl,
               ),

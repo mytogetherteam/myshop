@@ -39,6 +39,7 @@ import '../widgets/language_selector_sheet.dart';
 import '../widgets/theme_selector_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:in_app_review/in_app_review.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -56,6 +57,8 @@ class ProfilePageState extends State<ProfilePage>
   bool _isTogglingDelivery = false;
   List<Shop> _userShops = [];
   ShopProfileModel? _shopProfile;
+  int _storyTapCount = 0;
+  int _jobPostsTapCount = 0;
 
   @override
   bool get wantKeepAlive => true;
@@ -75,6 +78,7 @@ class ProfilePageState extends State<ProfilePage>
   }
 
   Future<void> _loadUserInfo() async {
+    final prefs = await SharedPreferences.getInstance();
     final results = await Future.wait([
       StorageService.instance.getUserInfo(),
       _profileService.getShopProfile(),
@@ -87,6 +91,8 @@ class ProfilePageState extends State<ProfilePage>
 
     if (mounted) {
       setState(() {
+        _storyTapCount = prefs.getInt('story_tap_count') ?? 0;
+        _jobPostsTapCount = prefs.getInt('job_posts_tap_count') ?? 0;
         _userInfo = info;
         _shopProfile = profile;
         _deliveryEnabled = profile?.deliveryEnabled ?? false;
@@ -560,11 +566,22 @@ class ProfilePageState extends State<ProfilePage>
                   icon: Icons.auto_stories_rounded,
                   title: 'Story',
                   subtitle: 'Share updates',
-                  trailing: const AnimatedNewBadge(),
-                  onTap: () => Navigator.push(
-                    context,
-                    CupertinoPageRoute(builder: (_) => const ShopStoryPage()),
-                  ),
+                  trailing: _storyTapCount < 3 ? const AnimatedNewBadge() : null,
+                  onTap: () async {
+                    if (_storyTapCount < 3) {
+                      final prefs = await SharedPreferences.getInstance();
+                      setState(() {
+                        _storyTapCount++;
+                      });
+                      await prefs.setInt('story_tap_count', _storyTapCount);
+                    }
+                    if (mounted) {
+                      Navigator.push(
+                        context,
+                        CupertinoPageRoute(builder: (_) => const ShopStoryPage()),
+                      );
+                    }
+                  },
                 ),
               ),
               const SizedBox(width: 16),
@@ -573,11 +590,22 @@ class ProfilePageState extends State<ProfilePage>
                   icon: PhosphorIconsFill.briefcase,
                   title: t?.translate('job_posts') ?? 'Job Posts',
                   subtitle: 'Find staffs',
-                  trailing: const AnimatedNewBadge(),
-                  onTap: () => Navigator.push(
-                    context,
-                    CupertinoPageRoute(builder: (_) => const JobPostsPage()),
-                  ),
+                  trailing: _jobPostsTapCount < 3 ? const AnimatedNewBadge() : null,
+                  onTap: () async {
+                    if (_jobPostsTapCount < 3) {
+                      final prefs = await SharedPreferences.getInstance();
+                      setState(() {
+                        _jobPostsTapCount++;
+                      });
+                      await prefs.setInt('job_posts_tap_count', _jobPostsTapCount);
+                    }
+                    if (mounted) {
+                      Navigator.push(
+                        context,
+                        CupertinoPageRoute(builder: (_) => const JobPostsPage()),
+                      );
+                    }
+                  },
                 ),
               ),
             ],
