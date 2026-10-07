@@ -8,7 +8,6 @@ import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/core/presentation/widgets/back_title_app_bar.dart';
 import 'package:my_shop/core/presentation/widgets/empty_state.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
-import 'package:my_shop/core/presentation/widgets/skeleton_list.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
