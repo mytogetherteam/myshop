@@ -5401,22 +5401,27 @@ class _FullScreenTextInputState extends State<_FullScreenTextInput> {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final available =
+        media.size.height - media.viewInsets.bottom - media.padding.top - 16;
+    final maxHeight = available < 0 ? 0.0 : available;
+
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Container(
-        height: MediaQuery.of(context).size.height * 0.5,
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxHeight),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + media.padding.bottom),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
             Text(
               widget.label,
               style: GoogleFonts.poppins(
@@ -5586,7 +5591,7 @@ class _FullScreenTextInputState extends State<_FullScreenTextInput> {
                   ],
                 ),
               ),
-            const Spacer(),
+            const SizedBox(height: 24),
             PrimaryGradientButton(
               onPressed: () {
                 Navigator.pop(context, _controller.text);
@@ -5595,7 +5600,9 @@ class _FullScreenTextInputState extends State<_FullScreenTextInput> {
               height: 56,
               borderRadius: 16,
             ),
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );

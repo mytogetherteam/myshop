@@ -26,6 +26,7 @@ import 'feedback_page.dart';
 import 'rider_management_page.dart';
 import 'shop_story_page.dart';
 import 'package:my_shop/features/job_posts/presentation/screens/job_posts_page.dart';
+import 'package:my_shop/features/posts/presentation/screens/shop_posts_page.dart';
 
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
@@ -718,6 +719,14 @@ class ProfilePageState extends State<ProfilePage>
               color: Theme.of(context).textTheme.bodySmall?.color,
               letterSpacing: 0.8,
             ),
+          ),
+        ),
+        _buildMenuOption(
+          icon: PhosphorIconsRegular.shareNetwork,
+          title: t?.translate('posts') ?? 'Posts',
+          onTap: () => Navigator.push(
+            context,
+            CupertinoPageRoute(builder: (_) => const ShopPostsPage()),
           ),
         ),
         if (!isOpAdmin)
