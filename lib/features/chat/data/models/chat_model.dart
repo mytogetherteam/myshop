@@ -1,3 +1,4 @@
+import 'call_chat_payload.dart';
 /// Models mirroring the backend `shop/chat` contract.
 ///
 /// Conversations are keyed by `orderId` on the backend; messages are sent to
@@ -138,6 +139,8 @@ class ChatMessage {
 
   /// True when the message was sent by this shop (the current app user).
   bool get isMe => senderType == ChatSenderType.shop;
+
+  bool get isSystem => senderType == ChatSenderType.system;
 
   bool get isEdited => editedAt != null && !isDeleted;
 
@@ -298,7 +301,17 @@ class ChatConversation {
       if (hasVoice) return '🎤 Voice message';
       return '📷 Photo';
     }
-    return (message['content'] as String?)?.trim() ?? '';
+    final content = (message['content'] as String?)?.trim() ?? '';
+    if (content.startsWith(kCallChatPrefix)) {
+      final payload = CallChatPayload.tryParse(content);
+      if (payload != null) {
+        if (payload.event == CallChatEvent.ended) {
+          return '📞 Call ended (${CallChatPayload.formatDuration(payload.durationSec)})';
+        }
+        return '📞 Missed call';
+      }
+    }
+    return content;
   }
 
   factory ChatConversation.fromJson(Map<String, dynamic> json) {
