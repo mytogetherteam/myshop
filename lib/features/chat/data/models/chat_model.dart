@@ -1,4 +1,3 @@
-import 'call_chat_payload.dart';
 /// Models mirroring the backend `shop/chat` contract.
 ///
 /// Conversations are keyed by `orderId` on the backend; messages are sent to
@@ -6,6 +5,7 @@ import 'call_chat_payload.dart';
 /// carries its [orderId].
 library;
 
+import 'call_chat_payload.dart';
 import 'package:my_shop/core/utils/file_url_util.dart';
 import 'package:my_shop/features/chat/data/models/chat_window.dart';
 
