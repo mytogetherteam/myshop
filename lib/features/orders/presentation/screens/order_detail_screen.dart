@@ -2004,7 +2004,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                               _currentOrder.customerAvatar != null &&
                                   _currentOrder.customerAvatar!.isNotEmpty
                               ? DecorationImage(
-                                  image: NetworkImage(
+                                  image: CachedNetworkImageProvider(
                                     _currentOrder.customerAvatar!,
                                   ),
                                   fit: BoxFit.cover,
@@ -2630,7 +2630,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   _currentOrder.customerAvatar != null &&
                       _currentOrder.customerAvatar!.isNotEmpty
                   ? DecorationImage(
-                      image: NetworkImage(_currentOrder.customerAvatar!),
+                      image: CachedNetworkImageProvider(_currentOrder.customerAvatar!),
                       fit: BoxFit.cover,
                     )
                   : null,

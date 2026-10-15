@@ -57,12 +57,22 @@ class _CreateShopPostPageState extends State<CreateShopPostPage> {
       }
       if (source == ImageSource.gallery) {
         final remaining = 10 - _media.length;
-        final files = await _picker.pickMultiImage(imageQuality: 85, limit: remaining);
+        final files = await _picker.pickMultiImage(
+          maxWidth: 1200,
+          maxHeight: 1200,
+          imageQuality: 80,
+          limit: remaining,
+        );
         if (files.isEmpty) return;
         setState(() => _media.addAll(files.take(remaining)));
         return;
       }
-      final file = await _picker.pickImage(source: source, imageQuality: 85);
+      final file = await _picker.pickImage(
+        source: source,
+        maxWidth: 1200,
+        maxHeight: 1200,
+        imageQuality: 80,
+      );
       if (file != null) setState(() => _media.add(file));
     } catch (_) {
       if (!mounted) return;
