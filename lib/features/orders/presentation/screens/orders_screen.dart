@@ -57,6 +57,21 @@ class OrdersScreenState extends State<OrdersScreen>
 
   Future<void> _fetchInitialData() async {
     _selectedShopId = await StorageService.instance.getSelectedShopId();
+
+    // Fast-path: single roundtrip tab-counts endpoint
+    final counts = await _orderService.getOrderTabCounts();
+    if (counts != null && mounted) {
+      setState(() {
+        counts.forEach((key, val) {
+          if (_tabCounts.containsKey(key)) {
+            _tabCounts[key] = val;
+          }
+        });
+      });
+      return;
+    }
+
+    // Resilient fallback for older servers or offline errors
     final tabs = [
       'NEW',
       'PAYMENT',

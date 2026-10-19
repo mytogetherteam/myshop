@@ -104,6 +104,8 @@ class _MenuItemCardState extends State<MenuItemCard> {
                             imageUrl: widget.item.imageUrl!,
                             width: 76,
                             height: 76,
+                            memCacheWidth: 200,
+                            memCacheHeight: 200,
                             fit: BoxFit.cover,
                             placeholder: (context, url) => _buildPlaceholderImage(),
                             errorWidget: (context, url, error) => _buildPlaceholderImage(),

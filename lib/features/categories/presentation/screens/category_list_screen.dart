@@ -273,7 +273,7 @@ class _CategoryCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           border: Border.all(
-            color: Theme.of(context).dividerColor.withOpacity(0.3),
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
           ),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [

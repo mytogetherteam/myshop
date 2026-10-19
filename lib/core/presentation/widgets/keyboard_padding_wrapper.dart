@@ -17,8 +17,10 @@ class _KeyboardPaddingWrapperState extends State<KeyboardPaddingWrapper> with Wi
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     // Initialize with current padding
-    final view = WidgetsBinding.instance.platformDispatcher.views.first;
-    _bottomPadding = view.viewInsets.bottom / view.devicePixelRatio;
+    final view = WidgetsBinding.instance.platformDispatcher.views.firstOrNull;
+    if (view != null) {
+      _bottomPadding = view.viewInsets.bottom / view.devicePixelRatio;
+    }
   }
 
   @override
@@ -33,10 +35,12 @@ class _KeyboardPaddingWrapperState extends State<KeyboardPaddingWrapper> with Wi
     if (mounted) {
       // Avoid View.of(context) here because during Navigator.pop, 
       // this widget is unmounting and calling InheritedWidgets throws an error.
-      final view = WidgetsBinding.instance.platformDispatcher.views.first;
-      setState(() {
-        _bottomPadding = view.viewInsets.bottom / view.devicePixelRatio;
-      });
+      final view = WidgetsBinding.instance.platformDispatcher.views.firstOrNull;
+      if (view != null) {
+        setState(() {
+          _bottomPadding = view.viewInsets.bottom / view.devicePixelRatio;
+        });
+      }
     }
   }
 

@@ -375,6 +375,8 @@ class ProfilePageState extends State<ProfilePage>
                               ? CachedNetworkImage(
                                   imageUrl: _shopProfile!.logoUrl!,
                                   fit: BoxFit.cover,
+                                  memCacheWidth: 200,
+                                  memCacheHeight: 200,
                                   placeholder: (context, url) => const SizedBox(),
                                   errorWidget: (context, url, error) => _buildInitialPlaceholder(),
                                 )

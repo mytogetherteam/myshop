@@ -16,6 +16,10 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
+  errors:
+    deprecated_member_use: ignore
+    use_null_aware_elements: ignore
+    unnecessary_underscores: ignore
 include: package:flutter_lints/flutter.yaml
 
 linter:

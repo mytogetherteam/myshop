@@ -117,9 +117,10 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
                     child: OutlinedButton(
                       onPressed: () {
                         FocusScope.of(context).unfocus();
+                        final nav = Navigator.of(context);
                         Future.delayed(const Duration(milliseconds: 300), () {
                           if (mounted) {
-                            Navigator.pop(context);
+                            nav.pop();
                           }
                         });
                       },
@@ -146,10 +147,11 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
                       onPressed: () {
                         FocusScope.of(context).unfocus();
                         final reason = _reasonController.text.trim();
+                        final nav = Navigator.of(context);
                         // Delay pop slightly to allow keyboard dismissal animation to start
                         Future.delayed(const Duration(milliseconds: 100), () {
                           if (mounted) {
-                            Navigator.pop(context, reason);
+                            nav.pop(reason);
                           }
                         });
                       },

@@ -653,6 +653,8 @@ class ChatPageState extends State<ChatPage> with AutomaticKeepAliveClientMixin {
           ? CachedNetworkImage(
               imageUrl: url,
               fit: BoxFit.cover,
+              memCacheWidth: 150,
+              memCacheHeight: 150,
               placeholder: (_, _) =>
                   ColoredBox(color: Theme.of(context).dividerColor),
               errorWidget: (_, _, _) => _avatarInitial(initial, hasUnread),

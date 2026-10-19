@@ -108,7 +108,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
             width: 88,
             height: 88,
             decoration: BoxDecoration(
-              color: Theme.of(context).dividerColor.withOpacity(0.3),
+              color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
               shape: BoxShape.circle,
             ),
             child: Icon(

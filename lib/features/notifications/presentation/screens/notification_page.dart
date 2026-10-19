@@ -7,7 +7,7 @@ import 'package:my_shop/features/notifications/data/repositories/notification_re
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:my_shop/features/orders/data/services/order_service.dart';
 import 'package:my_shop/core/presentation/widgets/custom_loading_indicator.dart';
-import 'package:my_shop/core/presentation/widgets/back_title_app_bar.dart';
+
 import 'package:my_shop/core/presentation/widgets/empty_state.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton.dart';
 import 'package:my_shop/core/presentation/widgets/skeleton_list.dart';
@@ -333,7 +333,7 @@ class _NotificationPageState extends State<NotificationPage> with SingleTickerPr
               ? Theme.of(context).cardColor 
               : const Color(0xFFED3973).withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.15 : 0.04),
           border: Border(
-            bottom: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.3), width: 1),
+            bottom: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.3), width: 1),
           ),
         ),
         child: Row(

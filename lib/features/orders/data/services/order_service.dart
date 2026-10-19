@@ -90,6 +90,26 @@ class OrderService {
     return null;
   }
 
+  Future<Map<String, int>?> getOrderTabCounts() async {
+    try {
+      final response = await ApiClient().dio.get('$_ordersPath/tab-counts');
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        final body = Map<String, dynamic>.from(response.data as Map);
+        if (body['success'] == true && body['data'] is Map) {
+          final data = Map<String, dynamic>.from(body['data'] as Map);
+          return data.map(
+            (key, value) => MapEntry(key, (value as num?)?.toInt() ?? 0),
+          );
+        }
+      }
+    } catch (_) {
+      // Quietly fall back to legacy multi-request count in caller
+    }
+    return null;
+  }
+
   Future<Map<String, dynamic>?> getMissedRevenueToday() async {
     try {
       final response = await ApiClient().dio.get('$_ordersPath/missed-revenue');

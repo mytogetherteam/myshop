@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:my_shop/core/utils/app_colors.dart';
-import 'package:my_shop/core/config/env_config.dart';
+
 import '../../data/models/announcement_model.dart';
 
 /// Full-bleed announcement detail, styled after the early-access reference:

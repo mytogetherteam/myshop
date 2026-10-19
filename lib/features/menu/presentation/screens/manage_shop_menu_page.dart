@@ -432,8 +432,9 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                                         AddNewItemScreen(item: item),
                                   ),
                                 );
-                                if (result == true)
+                                if (result == true) {
                                   _fetchItems(isRefresh: true);
+                                }
                               },
                               onAvailabilityChanged: (available) {
                                 _toggleItemAvailability(item, available);

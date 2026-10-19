@@ -212,7 +212,7 @@ class _SkipButtonState extends State<_SkipButton> with SingleTickerProviderState
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.5),
+          color: Colors.black.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(24),
         ),
         child: Row(
@@ -241,7 +241,7 @@ class _SkipButtonState extends State<_SkipButton> with SingleTickerProviderState
                         value: 1 - _controller.value,
                         strokeWidth: 2.5,
                         color: Colors.white,
-                        backgroundColor: Colors.white.withOpacity(0.3),
+                        backgroundColor: Colors.white.withValues(alpha: 0.3),
                       ),
                       Text(
                         '$remaining',
