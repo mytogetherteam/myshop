@@ -121,7 +121,7 @@ class ShopCallSession {
   // ──────────────────────────────────────────────
 
   /// Shop initiates a call to [userId]. Returns false if call fails to start.
-  Future<bool> initiateCallToUser({required int userId, required String customerName, String? customerImageUrl}) async {
+  Future<bool> initiateCallToUser({required int userId, required String customerName, String? customerImageUrl, int? orderId}) async {
     if (state.value != ShopCallState.idle) return false;
 
     _customerName = customerName;
@@ -130,7 +130,10 @@ class ShopCallSession {
     state.value = ShopCallState.calling;
 
     try {
-      final resp = await _dio.post('/api/call/initiate-to-user/$userId');
+      final resp = await _dio.post(
+        '/api/call/initiate-to-user/$userId',
+        data: orderId != null ? {'orderId': orderId} : null,
+      );
       _currentCallId = resp.data['data']['callId'] as String?;
       if (_currentCallId == null) {
         state.value = ShopCallState.idle;

@@ -26,6 +26,7 @@ import 'feedback_page.dart';
 import 'rider_management_page.dart';
 import 'shop_story_page.dart';
 import 'package:my_shop/features/job_posts/presentation/screens/job_posts_page.dart';
+import 'package:my_shop/features/posts/presentation/screens/shop_posts_page.dart';
 
 import 'package:my_shop/features/profile/data/services/profile_service.dart';
 import 'package:my_shop/features/profile/data/models/shop_profile_model.dart';
@@ -309,57 +310,6 @@ class ProfilePageState extends State<ProfilePage>
     );
   }
 
-  Widget _buildToggleOption({
-    required IconData icon,
-    required String title,
-    required bool value,
-    required bool isLoading,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        border: Border(
-          bottom: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: 0.3), width: 1),
-        ),
-      ),
-      child: Row(
-        children: [
-          PhosphorIcon(
-            icon,
-            size: 24,
-            color: Theme.of(context).textTheme.bodyMedium?.color,
-          ),
-          SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              title,
-              style: GoogleFonts.poppins(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: Theme.of(context).textTheme.bodyLarge?.color,
-              ),
-            ),
-          ),
-          if (isLoading)
-            SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-              ),
-            )
-          else
-            PrimaryGradientSwitch(
-              value: value,
-              onChanged: onChanged,
-            ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildProfileHeader() {
     final t = AppLocalizations.of(context);
@@ -718,6 +668,14 @@ class ProfilePageState extends State<ProfilePage>
               color: Theme.of(context).textTheme.bodySmall?.color,
               letterSpacing: 0.8,
             ),
+          ),
+        ),
+        _buildMenuOption(
+          icon: PhosphorIconsRegular.shareNetwork,
+          title: t?.translate('posts') ?? 'Posts',
+          onTap: () => Navigator.push(
+            context,
+            CupertinoPageRoute(builder: (_) => const ShopPostsPage()),
           ),
         ),
         if (!isOpAdmin)

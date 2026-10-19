@@ -1,3 +1,4 @@
+import '../../data/models/call_chat_payload.dart';
 import 'dart:async';
 
 import 'package:any_link_preview/any_link_preview.dart';
@@ -1129,8 +1130,233 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     );
   }
 
+  
+  Widget _buildCallChatPill(ChatMessage message, CallChatPayload payload) {
+    final desc = describeForShop(payload);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final timeLabel = _formatMessageTime(message.createdAt);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      alignment: Alignment.center,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: () {
+            final customerId = _order?.customerId ?? widget.conversation.userId;
+            final customerName = _order?.customerName ?? widget.conversation.name;
+            final customerAvatar = _order?.customerAvatar ?? widget.conversation.avatarUrl;
+            if (customerId != null && customerId > 0) {
+              ShopCallSession().initiateCallToUser(
+                userId: customerId,
+                customerName: customerName,
+                customerImageUrl: customerAvatar,
+                orderId: widget.conversation.orderId,
+              );
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? const Color(0xFF27272A).withValues(alpha: 0.85)
+                  : const Color(0xFFF1F5F9).withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: isDark ? const Color(0xFF3F3F46) : const Color(0xFFE2E8F0),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 26,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    color: desc.isMissed
+                        ? (isDark ? const Color(0xFF450A0A) : const Color(0xFFFEE2E2))
+                        : (isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5)),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    desc.isMissed ? Icons.phone_missed_rounded : Icons.phone_rounded,
+                    size: 15,
+                    color: desc.isMissed
+                        ? const Color(0xFFDC2626)
+                        : const Color(0xFF059669),
+                  ),
+                ),
+                const SizedBox(width: 9),
+                Flexible(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        desc.title,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: desc.isMissed
+                              ? const Color(0xFFDC2626)
+                              : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                        ),
+                      ),
+                      if (desc.subtitle.isNotEmpty)
+                        Text(
+                          desc.subtitle,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  timeLabel,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildMessageBubble(ChatMessage message) {
     final isMe = message.isMe;
+    final isSystem = message.isSystem;
+
+    if (message.content != null && message.content!.startsWith(kCallChatPrefix)) {
+      final callPayload = CallChatPayload.tryParse(message.content);
+      if (callPayload != null) {
+        return _buildCallChatPill(message, callPayload);
+      }
+    }
+
+    if (isSystem) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // System Admin Header: Gray Glass Badge with Logo
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? const Color(0xFF27272A).withValues(alpha: 0.85)
+                    : const Color(0xFFE2E8F0).withValues(alpha: 0.85),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark ? const Color(0xFF3F3F46) : const Color(0xFFCBD5E1),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 16,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isDark ? const Color(0xFF52525B) : const Color(0xFF94A3B8),
+                        width: 0.8,
+                      ),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Image.asset(
+                      'assets/images/app_logo.png',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'System Admin',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : const Color(0xFF1E293B),
+                    ),
+                  ),
+                  if (message.senderName != null &&
+                      message.senderName!.isNotEmpty &&
+                      message.senderName != 'System') ...[
+                    const SizedBox(width: 4),
+                    Text(
+                      '• ${message.senderName!}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 6),
+
+            // Centered Card Container: Gray Glass Style like Web
+            GestureDetector(
+              onLongPress: () => _showMessageActions(message),
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.85,
+                ),
+                padding: message.imageUrls.isNotEmpty && !message.isDeleted
+                    ? const EdgeInsets.all(4)
+                    : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0xFF1E293B).withValues(alpha: 0.75)
+                      : const Color(0xFFF1F5F9).withValues(alpha: 0.95),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: _buildBubbleContent(message, false),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Row(
       mainAxisAlignment: isMe
@@ -1160,38 +1386,43 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
               ),
             ),
           ),
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
         ],
         Flexible(
-          child: GestureDetector(
-            onLongPress: () => _showMessageActions(message),
-            child: Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width *
-                    ChatUiTokens.maxBubbleWidthFactor,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GestureDetector(
+                onLongPress: () => _showMessageActions(message),
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width *
+                        ChatUiTokens.maxBubbleWidthFactor,
+                  ),
+                  padding:
+                      message.imageUrls.isNotEmpty && !message.isDeleted
+                      ? const EdgeInsets.all(4)
+                      : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    gradient: isMe && !message.isDeleted
+                        ? AppColors.primaryGradient
+                        : null,
+                    color: message.isDeleted
+                        ? Theme.of(context).dividerColor
+                        : (isMe
+                              ? null
+                              : ChatUiTokens.incomingSurface(
+                                  Theme.of(context).brightness,
+                                )),
+                    borderRadius: ChatUiTokens.bubbleRadiusFor(isMine: isMe),
+                  ),
+                  child: _buildBubbleContent(message, isMe),
+                ),
               ),
-              padding:
-                  message.imageUrls.isNotEmpty && !message.isDeleted
-                  ? const EdgeInsets.all(4)
-                  : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                gradient: isMe && !message.isDeleted
-                    ? AppColors.primaryGradient
-                    : null,
-                color: message.isDeleted
-                    ? Theme.of(context).dividerColor
-                    : (isMe
-                          ? null
-                          : ChatUiTokens.incomingSurface(
-                              Theme.of(context).brightness,
-                            )),
-                borderRadius: ChatUiTokens.bubbleRadiusFor(isMine: isMe),
-              ),
-              child: _buildBubbleContent(message, isMe),
-            ),
+            ],
           ),
         ),
-        if (isMe) SizedBox(width: 8),
+        if (isMe) const SizedBox(width: 8),
       ],
     );
   }
