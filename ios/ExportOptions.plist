@@ -20,7 +20,7 @@
     <key>compileBitcode</key>
     <false/>
     <key>uploadSymbols</key>
-    <true/>
+    <false/>
     <key>destination</key>
     <string>upload</string>
 </dict>
