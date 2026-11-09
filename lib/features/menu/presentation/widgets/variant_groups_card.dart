@@ -12,12 +12,14 @@ class VariantGroupsCard extends StatelessWidget {
   final List<MenuItemVariantGroupEditModel> variantGroups;
   final ValueChanged<List<MenuItemVariantGroupEditModel>> onChange;
   final bool isEditMode;
+  final double originalPrice;
 
   const VariantGroupsCard({
     super.key,
     required this.variantGroups,
     required this.onChange,
     this.isEditMode = false,
+    this.originalPrice = 0,
   });
 
   List<MenuItemVariantGroupEditModel> get _visibleGroups =>
@@ -226,7 +228,7 @@ class VariantGroupsCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         t?.translate('variants_description') ??
-                            'Group related options such as Size or Temperature, then add choices inside each group.',
+                            'Group related options such as Size or Temperature, then add choices inside each group. Use 0 for a free choice. Any other price must be at least the original price.',
                         style: GoogleFonts.poppins(
                           fontSize: 12,
                           color: isDark
@@ -576,6 +578,21 @@ class VariantGroupsCard extends StatelessWidget {
                                                   ),
                                                 ],
                                               ),
+                                              if (originalPrice > 0 &&
+                                                  variant.price > 0 &&
+                                                  variant.price <
+                                                      originalPrice) ...[
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  'Cannot cost less than the original price (${originalPrice % 1 == 0 ? originalPrice.toStringAsFixed(0) : originalPrice.toStringAsFixed(2)})',
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 11,
+                                                    color: const Color(
+                                                      0xFFEF4444,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
                                               const SizedBox(height: 4),
                                               Row(
                                                 children: [

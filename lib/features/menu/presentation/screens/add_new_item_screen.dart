@@ -367,6 +367,23 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
       return;
     }
 
+    for (final group in _variantGroups) {
+      if (group.isDeleted) continue;
+      for (final variant in group.variants) {
+        if (variant.isDeleted) continue;
+        if (variant.price == 0 || variant.price >= originalPriceVal) continue;
+        final name = (variant.nameEn ?? '').trim();
+        AppDialog.showToast(
+          context,
+          name.isEmpty
+              ? 'A variant price cannot be lower than the original price. Use 0 for a free choice.'
+              : 'Variant "$name" cannot cost less than the original price. Use 0 for a free choice.',
+          isError: true,
+        );
+        return;
+      }
+    }
+
     setState(() => _isSaving = true);
 
     // "Discount Price" is the final selling price. The backend has no price
@@ -658,6 +675,10 @@ class _AddNewItemScreenState extends State<AddNewItemScreen> {
                       VariantGroupsCard(
                         variantGroups: _variantGroups,
                         isEditMode: widget.item != null,
+                        originalPrice: double.tryParse(
+                              _originalPriceController.text.replaceAll(',', ''),
+                            ) ??
+                            0,
                         onChange: (groups) =>
                             setState(() => _variantGroups = groups),
                       ),
