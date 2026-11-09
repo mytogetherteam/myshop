@@ -510,58 +510,6 @@ class ProfilePageState extends State<ProfilePage>
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildActionCard(
-                  icon: Icons.auto_stories_rounded,
-                  title: 'Story',
-                  subtitle: 'Share updates',
-                  trailing: _storyTapCount < 3 ? const AnimatedNewBadge() : null,
-                  onTap: () async {
-                    if (_storyTapCount < 3) {
-                      final prefs = await SharedPreferences.getInstance();
-                      setState(() {
-                        _storyTapCount++;
-                      });
-                      await prefs.setInt('story_tap_count', _storyTapCount);
-                    }
-                    if (mounted) {
-                      Navigator.push(
-                        context,
-                        CupertinoPageRoute(builder: (_) => const ShopStoryPage()),
-                      );
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildActionCard(
-                  icon: PhosphorIconsFill.briefcase,
-                  title: t?.translate('job_posts') ?? 'Job Posts',
-                  subtitle: 'Find staffs',
-                  trailing: _jobPostsTapCount < 3 ? const AnimatedNewBadge() : null,
-                  onTap: () async {
-                    if (_jobPostsTapCount < 3) {
-                      final prefs = await SharedPreferences.getInstance();
-                      setState(() {
-                        _jobPostsTapCount++;
-                      });
-                      await prefs.setInt('job_posts_tap_count', _jobPostsTapCount);
-                    }
-                    if (mounted) {
-                      Navigator.push(
-                        context,
-                        CupertinoPageRoute(builder: (_) => const JobPostsPage()),
-                      );
-                    }
-                  },
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );

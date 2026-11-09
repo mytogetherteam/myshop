@@ -287,8 +287,8 @@ class OrderService {
     return updateStatus(orderId, status: 'PAYMENT_VERIFIED');
   }
 
-  Future<Map<String, dynamic>> prepareOrder(String orderId) {
-    return updateStatus(orderId, status: 'COOKING');
+  Future<Map<String, dynamic>> prepareOrder(String orderId, {int? waitingTimeMinutes}) {
+    return updateStatus(orderId, status: 'COOKING', waitingTimeMinutes: waitingTimeMinutes);
   }
 
   Future<Map<String, dynamic>> requestSlip(
@@ -328,6 +328,116 @@ class OrderService {
       deliveryFee: deliveryFee,
       waitingTimeMinutes: waitingTimeMinutes,
     );
+  }
+
+  
+  Future<Map<String, dynamic>> dispatchWithProvider(
+    String orderId, {
+    String provider = 'LALAMOVE',
+    int? driverId,
+  }) async {
+    try {
+      final response = await ApiClient().dio.post(
+        '$_ordersPath/$orderId/dispatch-provider',
+        data: {
+          'provider': provider,
+          if (driverId != null) 'driverId': driverId,
+        },
+      );
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        return Map<String, dynamic>.from(response.data as Map);
+      }
+      return {'success': false, 'message': 'Failed to dispatch $provider'};
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data is Map) {
+        return Map<String, dynamic>.from(e.response!.data as Map);
+      }
+      final error = ApiHelper.handleError(
+        e,
+        context: 'OrderService.dispatchWithProvider',
+      );
+      return {'success': false, 'message': error.message};
+    } catch (e) {
+      final error = ApiHelper.handleError(
+        e,
+        context: 'OrderService.dispatchWithProvider',
+      );
+      return {'success': false, 'message': error.message};
+    }
+  }
+
+  Future<Map<String, dynamic>> cancelDelivery(String orderId) async {
+    try {
+      final response = await ApiClient().dio.post(
+        '$_ordersPath/$orderId/cancel-delivery',
+      );
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        return Map<String, dynamic>.from(response.data as Map);
+      }
+      return {'success': false, 'message': 'Failed to cancel courier search'};
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data is Map) {
+        return Map<String, dynamic>.from(e.response!.data as Map);
+      }
+      final error = ApiHelper.handleError(
+        e,
+        context: 'OrderService.cancelDelivery',
+      );
+      return {'success': false, 'message': error.message};
+    } catch (e) {
+      final error = ApiHelper.handleError(
+        e,
+        context: 'OrderService.cancelDelivery',
+      );
+      return {'success': false, 'message': error.message};
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getDeliveryProviders() async {
+    try {
+      final response = await ApiClient().dio.get('$_ordersPath/delivery-providers');
+      if (response.data is List) {
+        return List<Map<String, dynamic>>.from(
+          (response.data as List).map((x) => Map<String, dynamic>.from(x as Map)),
+        );
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> dispatchLalamove(String orderId) async {
+    try {
+      final response = await ApiClient().dio.post(
+        '\$_ordersPath/\$orderId/dispatch-lalamove',
+      );
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        return Map<String, dynamic>.from(response.data as Map);
+      }
+      return {'success': false, 'message': 'Failed to dispatch Lalamove'};
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data is Map) {
+        return Map<String, dynamic>.from(e.response!.data as Map);
+      }
+      final error = ApiHelper.handleError(
+        e,
+        context: 'OrderService.dispatchLalamove',
+      );
+      return  {'success': false, 'message': error.message};
+    } catch (e) {
+      final error = ApiHelper.handleError(
+        e,
+        context: 'OrderSevice.dispatchLalamove',
+      );
+      return {'success': false, 'message': error.message};
+    }
   }
 
   Future<Map<String, dynamic>> cancelOrder(String orderId, String? reason) {

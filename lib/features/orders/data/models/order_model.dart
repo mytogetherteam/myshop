@@ -71,6 +71,8 @@ class OrderModel {
   final int? driverId;
   final String? trackingUrl;
   final String? proofPhotoUrl;
+  final String? lalamoveStatus;
+  final String? riderAvatar;
   final String? paymentMethodName;
   final String? paymentMethodIconUrl;
   final List<OrderReviseItemModel> reviseItems;
@@ -78,6 +80,9 @@ class OrderModel {
   final int queueNo;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String? paymentChannel;
+  final bool isVerified;
+  bool get isOmisePayment => (paymentChannel ?? '').toUpperCase() == 'OMISE';
 
   final int shopOwnerId;
   final String shopName;
@@ -142,6 +147,8 @@ class OrderModel {
     this.driverId,
     this.trackingUrl,
     this.proofPhotoUrl,
+    this.lalamoveStatus,
+    this.riderAvatar,
     this.paymentMethodName,
     this.paymentMethodIconUrl,
     this.reviseItems = const [],
@@ -169,6 +176,8 @@ class OrderModel {
     this.reviseReason,
     this.shopPaymentQrUrl,
     this.waitingTimeMinutes = 0,
+    this.paymentChannel,
+    this.isVerified = false,
   });
 
   /// Whether the customer applied a coupon (discount, BOGO, or gift menu).
@@ -199,6 +208,11 @@ class OrderModel {
 
   String? get deliveryCycleNo => vehicleNo;
   String? get deliveryTrackingUrl => trackingUrl;
+  bool get isLalamoveDelivery =>
+      (lalamoveStatus != null && lalamoveStatus!.trim().isNotEmpty) ||
+      (trackingUrl ?? '').toLowerCase().contains('lalamove') ||
+      (trackingUrl ?? '').toLowerCase().contains('http');
+  String? get customerAddress => deliveryAddress?.streetLine ?? deliveryAddress?.address;
 
   List<OrderModificationModel> get modifications {
     return reviseItems
@@ -213,6 +227,156 @@ class OrderModel {
           ),
         )
         .toList();
+  }
+
+  OrderModel copyWith({
+    String? id,
+    String? lastOrderNo,
+    String? status,
+    bool? ongoing,
+    String? statusLabel,
+    String? orderType,
+    String? orderDeliveryType,
+    bool? isScheduled,
+    DateTime? scheduledDeliveryTime,
+    double? deliveryFee,
+    String? displayDeliveryFee,
+    bool? isFreeDelivery,
+    bool? freeDeliveryActive,
+    String? freeDeliverySource,
+    DateTime? freeDeliveryStartsAt,
+    DateTime? freeDeliveryEndsAt,
+    DateTime? globalFreeDeliveryEndsAt,
+    double? itemPrice,
+    double? taxAmount,
+    String? displayTaxAmount,
+    bool? taxEnable,
+    double? totalAmount,
+    String? displayTotalAmount,
+    double? discountAmount,
+    String? displayDiscountAmount,
+    double? transactionDiscount,
+    String? displayTransactionDiscount,
+    String? couponName,
+    String? couponCode,
+    OrderShopCouponInfo? shopCoupon,
+    double? previousTotalAmount,
+    String? displayPreviousTotalAmount,
+    List<OrderItemModel>? items,
+    DeliveryAddressModel? deliveryAddress,
+    String? paymentSlipUrl,
+    String? riderName,
+    String? riderPhone,
+    String? vehicleNo,
+    int? driverId,
+    String? trackingUrl,
+    String? proofPhotoUrl,
+    String? lalamoveStatus,
+    String? riderAvatar,
+    String? paymentMethodName,
+    String? paymentMethodIconUrl,
+    List<OrderReviseItemModel>? reviseItems,
+    List<OrderDriverModel>? shopDeliveryDrivers,
+    int? queueNo,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    String? paymentChannel,
+    bool? isVerified,
+    int? shopOwnerId,
+    String? shopName,
+    String? shopLogo,
+    String? shopAddress,
+    double? lat,
+    double? lon,
+    String? shopPhone,
+    String? customerName,
+    String? customerPhone,
+    int? customerId,
+    String? customerEmail,
+    String? customerAvatar,
+    String? customerUsername,
+    String? shopOwnerEmail,
+    String? shopOwnerUsername,
+    String? estimatedDeliveryTime,
+    String? cancelReason,
+    String? reviseReason,
+    String? shopPaymentQrUrl,
+    int? waitingTimeMinutes,
+  }) {
+    return OrderModel(
+      id: id ?? this.id,
+      lastOrderNo: lastOrderNo ?? this.lastOrderNo,
+      status: status ?? this.status,
+      ongoing: ongoing ?? this.ongoing,
+      statusLabel: statusLabel ?? this.statusLabel,
+      orderType: orderType ?? this.orderType,
+      orderDeliveryType: orderDeliveryType ?? this.orderDeliveryType,
+      isScheduled: isScheduled ?? this.isScheduled,
+      scheduledDeliveryTime: scheduledDeliveryTime ?? this.scheduledDeliveryTime,
+      deliveryFee: deliveryFee ?? this.deliveryFee,
+      displayDeliveryFee: displayDeliveryFee ?? this.displayDeliveryFee,
+      isFreeDelivery: isFreeDelivery ?? this.isFreeDelivery,
+      freeDeliveryActive: freeDeliveryActive ?? this.freeDeliveryActive,
+      freeDeliverySource: freeDeliverySource ?? this.freeDeliverySource,
+      freeDeliveryStartsAt: freeDeliveryStartsAt ?? this.freeDeliveryStartsAt,
+      freeDeliveryEndsAt: freeDeliveryEndsAt ?? this.freeDeliveryEndsAt,
+      globalFreeDeliveryEndsAt: globalFreeDeliveryEndsAt ?? this.globalFreeDeliveryEndsAt,
+      itemPrice: itemPrice ?? this.itemPrice,
+      taxAmount: taxAmount ?? this.taxAmount,
+      displayTaxAmount: displayTaxAmount ?? this.displayTaxAmount,
+      taxEnable: taxEnable ?? this.taxEnable,
+      totalAmount: totalAmount ?? this.totalAmount,
+      displayTotalAmount: displayTotalAmount ?? this.displayTotalAmount,
+      discountAmount: discountAmount ?? this.discountAmount,
+      displayDiscountAmount: displayDiscountAmount ?? this.displayDiscountAmount,
+      transactionDiscount: transactionDiscount ?? this.transactionDiscount,
+      displayTransactionDiscount: displayTransactionDiscount ?? this.displayTransactionDiscount,
+      couponName: couponName ?? this.couponName,
+      couponCode: couponCode ?? this.couponCode,
+      shopCoupon: shopCoupon ?? this.shopCoupon,
+      previousTotalAmount: previousTotalAmount ?? this.previousTotalAmount,
+      displayPreviousTotalAmount: displayPreviousTotalAmount ?? this.displayPreviousTotalAmount,
+      items: items ?? this.items,
+      deliveryAddress: deliveryAddress ?? this.deliveryAddress,
+      paymentSlipUrl: paymentSlipUrl ?? this.paymentSlipUrl,
+      riderName: riderName ?? this.riderName,
+      riderPhone: riderPhone ?? this.riderPhone,
+      vehicleNo: vehicleNo ?? this.vehicleNo,
+      driverId: driverId ?? this.driverId,
+      trackingUrl: trackingUrl ?? this.trackingUrl,
+      proofPhotoUrl: proofPhotoUrl ?? this.proofPhotoUrl,
+      lalamoveStatus: lalamoveStatus ?? this.lalamoveStatus,
+      riderAvatar: riderAvatar ?? this.riderAvatar,
+      paymentMethodName: paymentMethodName ?? this.paymentMethodName,
+      paymentMethodIconUrl: paymentMethodIconUrl ?? this.paymentMethodIconUrl,
+      reviseItems: reviseItems ?? this.reviseItems,
+      shopDeliveryDrivers: shopDeliveryDrivers ?? this.shopDeliveryDrivers,
+      queueNo: queueNo ?? this.queueNo,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      paymentChannel: paymentChannel ?? this.paymentChannel,
+      isVerified: isVerified ?? this.isVerified,
+      shopOwnerId: shopOwnerId ?? this.shopOwnerId,
+      shopName: shopName ?? this.shopName,
+      shopLogo: shopLogo ?? this.shopLogo,
+      shopAddress: shopAddress ?? this.shopAddress,
+      lat: lat ?? this.lat,
+      lon: lon ?? this.lon,
+      shopPhone: shopPhone ?? this.shopPhone,
+      customerName: customerName ?? this.customerName,
+      customerPhone: customerPhone ?? this.customerPhone,
+      customerId: customerId ?? this.customerId,
+      customerEmail: customerEmail ?? this.customerEmail,
+      customerAvatar: customerAvatar ?? this.customerAvatar,
+      customerUsername: customerUsername ?? this.customerUsername,
+      shopOwnerEmail: shopOwnerEmail ?? this.shopOwnerEmail,
+      shopOwnerUsername: shopOwnerUsername ?? this.shopOwnerUsername,
+      estimatedDeliveryTime: estimatedDeliveryTime ?? this.estimatedDeliveryTime,
+      cancelReason: cancelReason ?? this.cancelReason,
+      reviseReason: reviseReason ?? this.reviseReason,
+      shopPaymentQrUrl: shopPaymentQrUrl ?? this.shopPaymentQrUrl,
+      waitingTimeMinutes: waitingTimeMinutes ?? this.waitingTimeMinutes,
+    );
   }
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -366,12 +530,16 @@ class OrderModel {
           [],
       deliveryAddress: address,
       paymentSlipUrl: _resolveUrl(json['paymentSlipUrl']),
-      riderName: driver?['name']?.toString() ?? json['deliveryRiderName']?.toString(),
-      riderPhone: driver?['phone']?.toString() ?? json['deliveryPhoneNo']?.toString(),
-      vehicleNo: driver?['vehicleNo']?.toString() ?? json['deliveryCycleNo']?.toString(),
+      riderName: driver?['name']?.toString() ?? json['deliveryRiderName']?.toString() ?? json['driverName']?.toString(),
+      riderPhone: driver?['phone']?.toString() ?? json['deliveryPhoneNo']?.toString() ?? json['driverPhone']?.toString(),
+      vehicleNo: driver?['vehicleNo']?.toString() ?? json['deliveryCycleNo']?.toString() ?? json['riderVehicleNumber']?.toString() ?? json['driverVehiclePlate']?.toString(),
       driverId: json['driverId'] as int? ?? driver?['id'] as int?,
       trackingUrl: json['trackingUrl']?.toString() ?? json['deliveryTrackingUrl']?.toString(),
       proofPhotoUrl: _resolveUrl(json['proofPhotoUrl']),
+      lalamoveStatus: json['lalamoveStatus']?.toString(),
+      riderAvatar: (json['lalamoveStatus'] != null && json['lalamoveStatus'].toString().trim().isNotEmpty)
+          ? _resolveUrl(json['lalamoveDriverAvatar'] ?? json['deliveryRiderAvatar'] ?? json['riderAvatar'])
+          : _resolveUrl(driver?['profileUrl'] ?? driver?['avatar'] ?? json['deliveryRiderAvatar'] ?? json['driverAvatar'] ?? json['riderAvatar']),
       paymentMethodName: paymentMethodMap?['name']?.toString(),
       paymentMethodIconUrl: _resolveUrl(paymentMethodMap?['iconUrl']),
       reviseItems: reviseItemsList,
@@ -404,6 +572,8 @@ class OrderModel {
       reviseReason: json['reviseReason']?.toString(),
       shopPaymentQrUrl: json['shopPaymentQrUrl']?.toString(),
       waitingTimeMinutes: waitingMins,
+      paymentChannel: json['paymentChannel']?.toString(),
+      isVerified: json['isVerified'] == true || json['isVerified'] == 1 || json['shop']?['isVerified'] == true || json['shop']?['isVerified'] == 1,
     );
   }
 
@@ -465,7 +635,12 @@ class OrderModel {
   }
   String get deliveryAddressTitle =>
       isPickupFulfillment ? 'Pickup' : 'Delivery Address';
-  String get statusName => statusLabel ?? status;
+  String get statusName {
+    if (isOmisePayment && status == 'PAYMENT_SLIP_REQUESTED') {
+      return 'Awaiting Direct Payment';
+    }
+    return statusLabel ?? status;
+  }
 }
 
 class OrderDriverModel {

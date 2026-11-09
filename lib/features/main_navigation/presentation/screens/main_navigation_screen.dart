@@ -13,6 +13,7 @@ import 'package:my_shop/features/orders/presentation/widgets/new_order_dialog.da
 import 'package:my_shop/features/orders/presentation/widgets/order_warning_dialog.dart';
 import 'package:my_shop/features/orders/presentation/widgets/order_cancelled_dialog.dart';
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
+import 'package:my_shop/features/orders/presentation/screens/order_focus_mode_screen.dart';
 import 'package:my_shop/core/network/websocket_service.dart';
 import 'package:my_shop/features/chat/data/services/chat_unread_controller.dart';
 import 'package:my_shop/features/notifications/presentation/widgets/notification_badge_icon.dart';
@@ -59,9 +60,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   
   List<MainTab> get _activeTabs {
     return [
-      MainTab.order,
       MainTab.menu,
-      if (!_isOperationAdmin) MainTab.report,
+      MainTab.order,
       MainTab.chat,
       MainTab.profile,
     ];
@@ -73,13 +73,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   Timer? _vibrationTimer;
   late final AppLifecycleListener _lifecycleListener;
 
-  final GlobalKey<OrdersScreenState> _ordersKey =
-      GlobalKey<OrdersScreenState>();
+  final GlobalKey<OrderFocusModeScreenState> _ordersKey =
+      GlobalKey<OrderFocusModeScreenState>();
   final GlobalKey<MenuPageState> _menuKey = GlobalKey<MenuPageState>();
-  final GlobalKey<ReportPageState> _reportKey = GlobalKey<ReportPageState>();
   final GlobalKey<ChatPageState> _chatKey = GlobalKey<ChatPageState>();
   final GlobalKey<ProfilePageState> _profileKey = GlobalKey<ProfilePageState>();
-  final List<bool> _visited = [false, false, false, false, false];
+  final List<bool> _visited = [false, false, false, false];
   bool _isIncomingOrderDialogOpen = false;
 
 
@@ -87,11 +86,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
-    _visited[_currentIndex] = true;
+    if (_currentIndex < _visited.length) {
+      _visited[_currentIndex] = true;
+    }
     _pageInstances = {
-      MainTab.order: OrdersScreen(key: _ordersKey),
+      MainTab.order: OrderFocusModeScreen(key: _ordersKey, isEmbedded: true),
       MainTab.menu: MenuPage(key: _menuKey),
-      MainTab.report: ReportPage(key: _reportKey),
       MainTab.chat: ChatPage(key: _chatKey),
       MainTab.profile: ProfilePage(key: _profileKey),
     };
@@ -166,6 +166,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     AppLogger.realtime('[Lifecycle] App resumed — reconnecting WS & syncing orders');
     await WebSocketService().connect(force: true);
     if (mounted) {
+      _loadUserInfo();
       _ordersKey.currentState?.refresh();
       _ordersKey.currentState?.syncCounts();
       // Check for any missed/auto-cancelled orders since last session
@@ -174,8 +175,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 
   void _returnToOrdersTab(String status) {
-    if (_currentIndex != 0) {
-      setState(() => _currentIndex = 0);
+    final orderIdx = _activeTabs.indexOf(MainTab.order);
+    if (orderIdx != -1 && _currentIndex != orderIdx) {
+      setState(() => _currentIndex = orderIdx);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _ordersKey.currentState?.refresh();
@@ -639,8 +641,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     );
 
     if (result != null && result is String) {
-      if (_currentIndex != 0) {
-        setState(() => _currentIndex = 0);
+      final orderIdx = _activeTabs.indexOf(MainTab.order);
+      if (orderIdx != -1 && _currentIndex != orderIdx) {
+        setState(() => _currentIndex = orderIdx);
       }
       // Wait for build if we just switched tab
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -875,7 +878,17 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   String _getTabTitle(MainTab tab, AppLocalizations? t) {
     switch (tab) {
       case MainTab.order: return t?.translate('order') ?? 'Order';
-      case MainTab.menu: return t?.translate('menu') ?? 'Menu';
+      case MainTab.menu: return t?.translate('home') ?? 'Home';
+      case MainTab.report: return t?.translate('report') ?? 'Report';
+      case MainTab.chat: return t?.translate('chat') ?? 'Chat';
+      case MainTab.profile: return t?.translate('profile') ?? 'Profile';
+    }
+  }
+
+  String _getAppBarTitle(MainTab tab, AppLocalizations? t) {
+    switch (tab) {
+      case MainTab.order: return t?.translate('order') ?? 'Order';
+      case MainTab.menu: return t?.translate('home') ?? 'Home';
       case MainTab.report: return t?.translate('report') ?? 'Report';
       case MainTab.chat: return t?.translate('chat') ?? 'Chat';
       case MainTab.profile: return t?.translate('profile') ?? 'Profile';
@@ -893,8 +906,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         );
       case MainTab.menu:
         return BottomNavigationBarItem(
-          icon: _buildInactiveItem(PhosphorIconsRegular.forkKnife, title),
-          activeIcon: _buildGradientItem(PhosphorIconsFill.forkKnife, title),
+          icon: _buildInactiveItem(PhosphorIconsRegular.houseLine, title),
+          activeIcon: _buildGradientItem(PhosphorIconsFill.houseLine, title),
           label: title,
         );
       case MainTab.report:
@@ -918,25 +931,87 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     }
   }
 
+  Widget _buildFocusModeButton(BuildContext context) {
+    if (_shopProfile?.isVerified != true) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () {
+          final orderIdx = _activeTabs.indexOf(MainTab.order);
+          if (orderIdx != -1) {
+            setState(() {
+              _currentIndex = orderIdx;
+              if (orderIdx < _visited.length) _visited[orderIdx] = true;
+            });
+            _ordersKey.currentState?.refreshAll();
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFF97316), Color(0xFFEF4444)],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFF97316).withValues(alpha: 0.35),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const PhosphorIcon(PhosphorIconsFill.lightning, size: 14, color: Colors.white),
+              const SizedBox(width: 4),
+              Text(
+                'Focus',
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     final activeTabs = _activeTabs;
+    final currentTab = activeTabs[_currentIndex];
+    final isNoAppBar = currentTab == MainTab.menu || currentTab == MainTab.order;
     
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        title: AppBarTitleWithLogo(title: _getTabTitle(activeTabs[_currentIndex], t)),
-        actions: const [
-          OrderQrScanIcon(),
-          NotificationBadgeIcon(),
-          SizedBox(width: 8),
-        ],
-      ),
+      appBar: isNoAppBar
+          ? null
+          : AppBar(
+              backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              centerTitle: false,
+              titleSpacing: 12,
+              title: AppBarTitleWithLogo(
+                title: _getAppBarTitle(currentTab, t),
+                fontSize: 17,
+              ),
+              actions: [
+                if (_shopProfile?.isVerified == true && currentTab != MainTab.order)
+                  _buildFocusModeButton(context),
+                const NotificationBadgeIcon(),
+                const SizedBox(width: 8),
+              ],
+            ),
       body: IndexedStack(
         index: _currentIndex,
         children: activeTabs.asMap().entries.map((entry) {
@@ -965,7 +1040,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 _menuKey.currentState?.refresh();
                 break;
               case MainTab.report:
-                _reportKey.currentState?.refresh();
                 break;
               case MainTab.chat:
                 _chatKey.currentState?.refresh();

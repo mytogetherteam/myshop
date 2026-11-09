@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "my_shop (Debug)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "--device-timeout",
+        "60"
+      ]
+    },
+    {
+      "name": "my_shop (Profile)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile"
+    },
+    {
+      "name": "my_shop (Release)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "release"
+    }
+  ]
+}

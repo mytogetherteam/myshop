@@ -15,18 +15,24 @@ class OrderCard extends StatelessWidget {
   final OrderModel order;
   final bool isPaymentTab;
   final bool isDeliveryTab;
+  final EdgeInsetsGeometry? margin;
+  final VoidCallback? onRefresh;
+  final ValueChanged<String>? onStatusChanged;
 
   const OrderCard({
     super.key,
     required this.order,
     this.isPaymentTab = false,
     this.isDeliveryTab = false,
+    this.margin,
+    this.onRefresh,
+    this.onStatusChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      margin: margin ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
@@ -61,6 +67,10 @@ class OrderCard extends StatelessWidget {
               ),
             );
             if (context.mounted) {
+              onRefresh?.call();
+              if (result != null && result is String) {
+                onStatusChanged?.call(result);
+              }
               final state = context.findAncestorStateOfType<OrdersScreenState>();
               if (state != null) {
                 state.refreshAll();
@@ -77,27 +87,33 @@ class OrderCard extends StatelessWidget {
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '#${order.lastOrderNo}',
-                          style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '#${order.lastOrderNo}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        GradientText(
-                          order.statusName,
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                          GradientText(
+                            order.statusName,
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     GradientText(
                       order.displayTotalAmount,
                       style: GoogleFonts.poppins(
@@ -126,9 +142,13 @@ class OrderCard extends StatelessWidget {
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 600),
                     child: StatusProgressIndicator(
-                      key: ValueKey(order.status),
+                      key: ValueKey('${order.status}_${order.isVerified}'),
                       status: order.status,
                       isPickup: order.isPickupFulfillment,
+                      isVerifiedDelivery: (order.isVerified ||
+                              order.isLalamoveDelivery ||
+                              order.isOmisePayment) &&
+                          order.isDeliveryFulfillment,
                     ),
                   ),
                 SizedBox(height: 16),
@@ -223,6 +243,10 @@ class OrderCard extends StatelessWidget {
               ),
             );
             if (context.mounted) {
+              onRefresh?.call();
+              if (result != null && result is String) {
+                onStatusChanged?.call(result);
+              }
               final state = context.findAncestorStateOfType<OrdersScreenState>();
               state?.refreshAll();
               if (result != null && result is String) {
@@ -259,26 +283,70 @@ class OrderCard extends StatelessWidget {
         mainButtonText = t?.translate('check_payment') ?? 'Check Payment';
         break;
       case 'PAYMENT_SLIP_REQUESTED':
-        mainButtonText = t?.translate('waiting_payment') ?? 'Waiting for Payment';
-        isMainButtonEnabled = false;
-        mainButtonIcon = Icons.access_time_outlined;
+        if (order.isOmisePayment) {
+          mainButtonText = 'Awaiting Direct Payment';
+          isMainButtonEnabled = false;
+          mainButtonIcon = Icons.payment_outlined;
+        } else {
+          mainButtonText = t?.translate('waiting_payment') ?? 'Waiting for Payment';
+          isMainButtonEnabled = false;
+          mainButtonIcon = Icons.access_time_outlined;
+        }
         break;
       case 'PAYMENT_VERIFIED':
-        mainButtonText = t?.translate('accept_order_to_cook') ?? 'Accept order to cook';
+        mainButtonText = (order.isVerified || order.isOmisePayment)
+            ? (t?.translate('accept_and_start_cooking') ?? 'Accept & Cook')
+            : (t?.translate('accept_order_to_cook') ?? 'Accept order to cook');
+        mainButtonIcon = PhosphorIconsFill.cookingPot;
         break;
       case 'COOKING':
         if (order.isPickupFulfillment) {
           mainButtonText =
               t?.translate('mark_ready_for_pickup') ?? 'Ready for Pickup';
         } else {
-          mainButtonText = t?.translate('picked_up_rider') ?? 'Picked Up by Rider';
+          final rawReady = t?.translate('ready_and_find_rider');
+          final lang = LocalizationService.instance.localeNotifier.value.languageCode;
+          final fallbackReady = (lang == 'my')
+              ? 'အဆင်သင့်ဖြစ်ပြီ Rider ရှာမည်'
+              : (lang == 'th' ? 'พร้อมแล้วและค้นหาไรเดอร์' : 'Ready & Find Rider');
+          final readyText = (rawReady != null && rawReady.isNotEmpty && rawReady != 'ready_and_find_rider')
+              ? rawReady
+              : fallbackReady;
+          mainButtonText = (order.isVerified || order.isLalamoveDelivery)
+              ? readyText
+              : (t?.translate('picked_up_rider') ?? 'Picked Up by Rider');
         }
         break;
       case 'READY_FOR_PICKUP':
-        mainButtonText = t?.translate('verify_pickup') ?? 'Verify Pickup';
+        if (order.isPickupFulfillment) {
+          mainButtonText = t?.translate('verify_pickup') ?? 'Verify Pickup';
+        } else if (order.isVerified || order.isLalamoveDelivery) {
+          final rawRider = t?.translate('request_rider');
+          final lang = LocalizationService.instance.localeNotifier.value.languageCode;
+          final fallbackRider = (lang == 'my')
+              ? 'Rider ခေါ်မည်'
+              : (lang == 'th' ? 'เรียกรถส่ง' : 'Request Rider');
+          final riderText = (rawRider != null && rawRider.isNotEmpty && rawRider != 'request_rider')
+              ? rawRider
+              : fallbackRider;
+          final rawTrack = t?.translate('track_live_delivery');
+          final fallbackTrack = (lang == 'my')
+              ? 'ပို့ဆောင်မှု တိုက်ရိုက်ကြည့်ရှုမည် 📍'
+              : (lang == 'th' ? 'ติดตามการจัดส่งแบบสด 📍' : 'Track Live Delivery 📍');
+          final trackText = (rawTrack != null && rawTrack.isNotEmpty && rawTrack != 'track_live_delivery')
+              ? '$rawTrack 📍'
+              : fallbackTrack;
+          mainButtonText = (order.trackingUrl != null && order.trackingUrl!.trim().isNotEmpty)
+              ? trackText
+              : riderText;
+        } else {
+          mainButtonText = t?.translate('picked_up_rider') ?? 'Picked Up by Rider';
+        }
         break;
       case 'ON_THE_WAY':
-        mainButtonText = isDeliveryTab ? (t?.translate('check_delivery') ?? 'Check Delivery') : (t?.translate('tab_delivered') ?? 'Delivered');
+        mainButtonText = (isDeliveryTab || order.isVerified || order.isLalamoveDelivery)
+            ? (t?.translate('check_delivery') ?? 'Check Delivery')
+            : (t?.translate('tab_delivered') ?? 'Delivered');
         break;
       case 'REVISED':
         mainButtonText = t?.translate('view_details') ?? 'View Details';
@@ -306,6 +374,10 @@ class OrderCard extends StatelessWidget {
                 ),
               );
               if (context.mounted) {
+                onRefresh?.call();
+                if (result != null && result is String) {
+                  onStatusChanged?.call(result);
+                }
                 final state = context.findAncestorStateOfType<OrdersScreenState>();
                 state?.refreshAll();
                 if (result != null && result is String) {

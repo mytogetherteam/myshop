@@ -22,10 +22,12 @@ import 'package:my_shop/features/chat/presentation/chat_ui_tokens.dart';
 import 'package:my_shop/features/chat/presentation/widgets/audio_message_bubble.dart';
 import 'package:my_shop/features/chat/presentation/widgets/chat_order_summary_sheet.dart';
 import 'package:my_shop/features/chat/presentation/widgets/voice_record_button.dart';
+import 'package:my_shop/core/presentation/widgets/app_dialog.dart';
 import 'package:my_shop/features/orders/data/models/order_model.dart';
 import 'package:my_shop/features/orders/data/services/order_service.dart';
 import 'package:my_shop/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:my_shop/features/call/data/shop_call_session.dart';
+import 'package:my_shop/features/call/presentation/outgoing_call_screen.dart';
 
 class ChatDetailScreen extends StatefulWidget {
   final ChatConversation conversation;
@@ -799,6 +801,68 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     return '${timestamp.day}/${timestamp.month}/${timestamp.year}';
   }
 
+  Future<void> _makeCallToCustomer() async {
+    final customerId = _order?.customerId ?? widget.conversation.userId;
+    final customerName = _order?.customerName ?? widget.conversation.name;
+    final customerAvatar = _order?.customerAvatar ?? widget.conversation.avatarUrl;
+    final orderId = widget.conversation.orderId > 0
+        ? widget.conversation.orderId
+        : (_order != null ? int.tryParse(_order!.id) : null);
+
+    if (customerId == null || customerId <= 0) {
+      if (mounted) {
+        AppDialog.showToast(
+          context,
+          'Cannot call: Customer ID unavailable.',
+          isError: true,
+        );
+      }
+      return;
+    }
+
+    final session = ShopCallSession();
+    if (session.state.value != ShopCallState.idle) {
+      if (mounted) {
+        AppDialog.showToast(
+          context,
+          'You are already on a call',
+          isError: true,
+        );
+      }
+      return;
+    }
+
+    final started = await session.initiateCallToUser(
+      userId: customerId,
+      customerName: customerName,
+      customerImageUrl: customerAvatar,
+      orderId: orderId,
+    );
+
+    if (!started) {
+      if (mounted) {
+        AppDialog.showToast(
+          context,
+          'Could not start the call',
+          isError: true,
+        );
+      }
+      return;
+    }
+
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OutgoingCallScreen(
+            customerName: customerName,
+            customerImageUrl: customerAvatar,
+          ),
+        ),
+      );
+    }
+  }
+
   void _openOrderSummarySheet() {
     ChatOrderSummarySheet.show(
       context,
@@ -911,21 +975,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
       ),
       actions: [
         IconButton(
-          onPressed: () {
-            final customerId = _order?.customerId ?? widget.conversation.userId;
-            final customerName = _order?.customerName ?? widget.conversation.name;
-            if (customerId != null && customerId > 0) {
-              ShopCallSession().initiateCallToUser(
-                userId: customerId,
-                customerName: customerName,
-                customerImageUrl: _order?.customerAvatar ?? widget.conversation.avatarUrl,
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Cannot call: Customer ID unavailable.')),
-              );
-            }
-          },
+          onPressed: _makeCallToCustomer,
           tooltip: 'Call Customer',
           icon: Icon(
             PhosphorIconsFill.phoneCall,
@@ -1060,13 +1110,34 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         final msgIndex = _isLoadingOlder ? index - 1 : index;
         final message = _messages[msgIndex];
 
+        // 1. Intercept Call log messages (whether typed as SYSTEM or CUSTOM)
+        if (message.content != null && message.content!.startsWith(kCallChatPrefix)) {
+          final callPayload = CallChatPayload.tryParse(message.content);
+          if (callPayload != null) {
+            return Column(
+              children: [
+                if (_shouldShowDateSeparator(msgIndex))
+                  _buildDateSeparator(message.createdAt),
+                _buildCallChatPill(message, callPayload),
+              ],
+            );
+          }
+        }
+
         if (message.kind == ChatMessageKind.system) {
-          return _buildSystemMessage(message);
+          return Column(
+            children: [
+              if (_shouldShowDateSeparator(msgIndex))
+                _buildDateSeparator(message.createdAt),
+              _buildSystemMessage(message),
+            ],
+          );
         }
 
         final prev = msgIndex > 0 ? _messages[msgIndex - 1] : null;
         final newSender = prev == null ||
             prev.kind == ChatMessageKind.system ||
+            prev.content?.startsWith(kCallChatPrefix) == true ||
             prev.isMe != message.isMe;
 
         return Column(
@@ -1088,6 +1159,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
   }
 
   Widget _buildSystemMessage(ChatMessage message) {
+    if (message.content != null && message.content!.startsWith(kCallChatPrefix)) {
+      final callPayload = CallChatPayload.tryParse(message.content);
+      if (callPayload != null) {
+        return _buildCallChatPill(message, callPayload);
+      }
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Center(
@@ -1135,6 +1213,25 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
     final desc = describeForShop(payload);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final timeLabel = _formatMessageTime(message.createdAt);
+    final isShopCaller = payload.direction == CallDirection.shopToUser;
+
+    final Color iconColor;
+    final Color iconBgColor;
+    final IconData callIcon;
+
+    if (desc.isMissed) {
+      iconColor = const Color(0xFFDC2626);
+      iconBgColor = isDark ? const Color(0xFF450A0A) : const Color(0xFFFEE2E2);
+      callIcon = isShopCaller
+          ? PhosphorIconsRegular.phoneSlash
+          : PhosphorIconsRegular.phoneCall;
+    } else {
+      iconColor = const Color(0xFF059669);
+      iconBgColor = isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5);
+      callIcon = isShopCaller
+          ? PhosphorIconsRegular.phoneOutgoing
+          : PhosphorIconsRegular.phoneIncoming;
+    }
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -1143,25 +1240,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(24),
-          onTap: () {
-            final customerId = _order?.customerId ?? widget.conversation.userId;
-            final customerName = _order?.customerName ?? widget.conversation.name;
-            final customerAvatar = _order?.customerAvatar ?? widget.conversation.avatarUrl;
-            if (customerId != null && customerId > 0) {
-              ShopCallSession().initiateCallToUser(
-                userId: customerId,
-                customerName: customerName,
-                customerImageUrl: customerAvatar,
-                orderId: widget.conversation.orderId,
-              );
-            }
-          },
+          onTap: _makeCallToCustomer,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
               color: isDark
-                  ? const Color(0xFF27272A).withValues(alpha: 0.85)
-                  : const Color(0xFFF1F5F9).withValues(alpha: 0.95),
+                  ? const Color(0xFF27272A).withValues(alpha: 0.9)
+                  : const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color: isDark ? const Color(0xFF3F3F46) : const Color(0xFFE2E8F0),
@@ -1170,8 +1255,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 4,
-                  offset: const Offset(0, 1),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
@@ -1179,23 +1264,19 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 26,
-                  height: 26,
+                  width: 30,
+                  height: 30,
                   decoration: BoxDecoration(
-                    color: desc.isMissed
-                        ? (isDark ? const Color(0xFF450A0A) : const Color(0xFFFEE2E2))
-                        : (isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5)),
+                    color: iconBgColor,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    desc.isMissed ? Icons.phone_missed_rounded : Icons.phone_rounded,
-                    size: 15,
-                    color: desc.isMissed
-                        ? const Color(0xFFDC2626)
-                        : const Color(0xFF059669),
+                    callIcon,
+                    size: 16,
+                    color: iconColor,
                   ),
                 ),
-                const SizedBox(width: 9),
+                const SizedBox(width: 10),
                 Flexible(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -1203,7 +1284,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                     children: [
                       Text(
                         desc.title,
-                        style: TextStyle(
+                        style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: desc.isMissed
@@ -1214,7 +1295,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                       if (desc.subtitle.isNotEmpty)
                         Text(
                           desc.subtitle,
-                          style: TextStyle(
+                          style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w400,
                             color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
@@ -1223,13 +1304,32 @@ class _ChatDetailScreenState extends State<ChatDetailScreen>
                     ],
                   ),
                 ),
-                const SizedBox(width: 10),
-                Text(
-                  timeLabel,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                  ),
+                const SizedBox(width: 12),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      timeLabel,
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        PhosphorIconsFill.phoneCall,
+                        size: 12,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

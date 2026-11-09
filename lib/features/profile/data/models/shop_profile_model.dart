@@ -193,7 +193,10 @@ class ShopProfileModel {
       baseDeliveryFee: (json['baseDeliveryFee'] ?? 0.0).toDouble(),
       googleMapsLink: json['googleMapsLink'],
       isActive: json['isActive'] ?? false,
-      isVerified: json['isVerified'] ?? false,
+      isVerified: json['isVerified'] == true ||
+          json['isVerified'] == 1 ||
+          json['is_verified'] == true ||
+          json['is_verified'] == 1,
       adminDisabled: json['adminDisabled'] ?? false,
       paymentQrUrl: json['paymentQrUrl'],
       viewCount: json['viewCount'] ?? 0,

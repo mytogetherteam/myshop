@@ -338,8 +338,29 @@ class ReportPageState extends State<ReportPage>
     super.build(context);
     final t = AppLocalizations.of(context);
     return Scaffold(
-      
-      body: Column(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: Navigator.canPop(context)
+          ? AppBar(
+              title: Text(
+                t?.translate('report') ?? 'Reports & Analytics',
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
+              ),
+              centerTitle: false,
+              elevation: 0,
+              backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                onPressed: () => Navigator.pop(context),
+              ),
+            )
+          : null,
+      body: SafeArea(
+        top: !Navigator.canPop(context),
+        child: Column(
         children: [
           Container(
             color: Theme.of(context).cardColor,
@@ -468,6 +489,7 @@ class ReportPageState extends State<ReportPage>
             ),
           ),
         ],
+      ),
       ),
     );
   }

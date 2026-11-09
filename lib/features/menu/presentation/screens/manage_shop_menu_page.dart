@@ -383,11 +383,14 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
                       color: AppColors.primary,
                       child: ListView.builder(
                         controller: _scrollController,
-                        padding: const EdgeInsets.only(bottom: 20),
+                        // No extra horizontal padding — items are edge-to-edge.
+                        padding: EdgeInsets.only(
+                          bottom: MediaQuery.paddingOf(context).bottom + 20,
+                        ),
                         itemCount: _listItems.length + (_isLoadingMore ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (index == _listItems.length) {
-                            return Padding(
+                            return const Padding(
                               padding: EdgeInsets.all(16.0),
                               child: Center(
                                 child: CircularProgressIndicator(
@@ -399,29 +402,59 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
 
                           final item = _listItems[index];
 
+                          // ── Category section header ────────────────────
                           if (item is MenuCategoryModel) {
                             final catIndex = _categories.indexOf(item);
+                            final isDark =
+                                Theme.of(context).brightness == Brightness.dark;
                             return Container(
                               key: _categoryKeys[catIndex],
-                              padding: const EdgeInsets.fromLTRB(
-                                20,
-                                24,
-                                20,
-                                12,
-                              ),
-                              color: Theme.of(context).scaffoldBackgroundColor,
-                              child: Text(
-                                item.displayName,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: Theme.of(
-                                    context,
-                                  ).textTheme.bodyLarge?.color,
-                                ),
+                              padding: const EdgeInsets.fromLTRB(16, 20, 16, 6),
+                              // Slightly tinted background to visually
+                              // separate section headers from list rows.
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.04)
+                                  : const Color(0xFFF8FAFC),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      item.displayName,
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 0.6,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                  ),
+                                  // Item count badge
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      '${_filteredItems.where((i) => i.menuCategoryId == item.id).length}',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             );
-                          } else if (item is MenuItemModel) {
+                          }
+
+                          // ── Menu item row ─────────────────────────────
+                          if (item is MenuItemModel) {
                             return MenuItemCard(
                               item: item,
                               onTap: () async {
@@ -492,31 +525,61 @@ class _ManageShopMenuPageState extends State<ManageShopMenuPage> {
   }
 
   Widget _buildSkeletonList({Key? key}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ListView.builder(
       key: key,
-      itemCount: 8,
-      padding: const EdgeInsets.symmetric(vertical: 0),
+      itemCount: 10,
+      padding: EdgeInsets.zero,
       itemBuilder: (context, index) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Row(
-            children: [
-              const Skeleton(width: 72, height: 72),
-              SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Skeleton(width: 140, height: 16),
-                    SizedBox(height: 8),
-                    Skeleton(width: double.infinity, height: 12),
-                    SizedBox(height: 4),
-                    Skeleton(width: 100, height: 12),
-                  ],
-                ),
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                children: [
+                  // Left accent bar placeholder
+                  const SizedBox(width: 3),
+                  const SizedBox(width: 12),
+                  // Thumbnail
+                  const Skeleton(width: 56, height: 56),
+                  const SizedBox(width: 12),
+                  // Text lines
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Skeleton(width: 130, height: 13),
+                        SizedBox(height: 6),
+                        Skeleton(width: 90, height: 11),
+                        SizedBox(height: 6),
+                        Skeleton(width: 70, height: 12),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // Switch column placeholders
+                  Column(
+                    children: const [
+                      Skeleton(width: 44, height: 24),
+                      SizedBox(height: 10),
+                      Skeleton(width: 44, height: 24),
+                    ],
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 3),
+              child: Divider(
+                height: 1,
+                thickness: 0.6,
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.07)
+                    : const Color(0xFFE2E8F0),
+              ),
+            ),
+          ],
         );
       },
     );
